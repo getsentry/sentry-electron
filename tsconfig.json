@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "rootDir": "./src/",
+    "outDir": "./dist/",
+    "sourceMap": true,
+    "inlineSources": true,
+    "target": "es6",
+    "module": "commonjs",
+    "declaration": true,
+    "noImplicitAny": true,
+    "removeComments": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "downlevelIteration": true,
+    "moduleResolution": "node",
+    "baseUrl": "./"
+  },
+  "include": [
+    "./src/**/*.ts"
+  ]
+}

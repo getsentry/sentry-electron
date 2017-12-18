@@ -1,0 +1,27 @@
+{
+  "name": "electron-sentry",
+  "version": "1.0.1",
+  "main": "./dist/index.js",
+  "repository": "https://github.com/timfish/electron-sentry.git",
+  "author": "Tim Fish",
+  "license": "MIT",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "clean": "del-cli ./dist/**",
+    "build": "yarn clean && tsc --pretty",
+    "watch": "yarn clean && tsc --pretty --watch",
+    "example1": "electron ./examples/1/",
+    "demo1": "electron ./examples/1/"
+  },
+  "dependencies": {
+    "raven": "^2.2.1",
+    "raven-js": "^3.20.1"
+  },
+  "devDependencies": {
+    "@types/raven": "^2.1.2",
+    "del-cli": "^1.1.0",
+    "electron": "^1.7.9",
+    "tslint": "^5.8.0",
+    "typescript": "^2.6.1"
+  }
+}

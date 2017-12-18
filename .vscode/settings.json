@@ -1,0 +1,22 @@
+{
+  "typescript.tsdk": "./node_modules/typescript/lib",
+  "files.exclude": {
+    "**/dist/": true,
+    "**/node_modules": true
+  },
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "editor.renderWhitespace": "all",
+  "editor.wordWrap": "on",
+  "editor.wrappingIndent": "indent",
+  "editor.formatOnType": true,
+  "editor.formatOnSave": true,
+  "editor.minimap.enabled": false,
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+  "editor.mouseWheelZoom": false,
+  "tslint.enable": true,
+  "tslint.autoFixOnSave": true,
+  "typescript.autoImportSuggestions.enabled": false
+}
