@@ -1,41 +1,75 @@
 import { app as appMain, BrowserWindow, crashReporter, ipcMain, ipcRenderer, remote, webContents } from 'electron';
-const app = process.type === 'renderer' ? remote.app : appMain;
+import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
+import * as Raven from 'raven';
 import * as RavenJs from 'raven-js';
 import { Lazy } from './lazy';
 import { defaults, IElectronSentryOptions } from './options';
 // tslint:disable-next-line:no-var-requires
-const Raven = require('raven');
+// const Raven = require('raven');
 // I couldn't get typings working here, but I didn't try that hard...
+const app = process.type === 'renderer' ? remote.app : appMain;
 
 const dsnPattern = /^(?:(\w+):)?\/\/(?:(\w+):(\w+)?@)?([\w\.-]+)(?::(\d+))?\/(.*)/;
-const ipcKey: string = 'electron-sentry-stop-in-other-process';
 
 export class ElectronSentry {
   private static singleton = new Lazy<ElectronSentry>(() => new ElectronSentry());
-
-  private hookedStop: boolean;
+  private static enabledFilePath = new Lazy<string>(() =>
+    path.join(app.getPath('userData'), 'electron-sentry.enabled'));
 
   public static start(dsnOrOptions?: string | IElectronSentryOptions) {
     this.singleton.value.start(dsnOrOptions);
   }
 
-  public static stop() {
-    this.singleton.value.stop();
+  public static isEnabled(): boolean {
+    return fs.existsSync(this.enabledFilePath.value);
+  }
+
+  public static setEnabled(uploadToServer: boolean) {
+    if (fs.existsSync(this.enabledFilePath.value)) {
+      if (!uploadToServer) {
+        fs.unlinkSync(this.enabledFilePath.value);
+      }
+    } else if (uploadToServer) {
+      fs.writeFileSync(this.enabledFilePath.value, '');
+    }
+  }
+
+  public static captureException(e: Error) {
+    if (process.type === 'renderer') {
+      RavenJs.captureException(e);
+    } else {
+      Raven.captureException(e);
+    }
+  }
+
+  public static captureMessage(e: string) {
+    if (process.type === 'renderer') {
+      RavenJs.captureMessage(e);
+    } else {
+      Raven.captureMessage(e);
+    }
   }
 
   public start(dsnOrOptions?: string | IElectronSentryOptions): void {
-    const options = this.getConfig(dsnOrOptions);
+    if (dsnOrOptions == undefined) {
+      const pkg = require(path.join(app.getAppPath(), 'package.json'));
+      dsnOrOptions = pkg.sentry;
+    }
 
-    // this will only happen once per instance
-    if (!this.hookedStop) {
-      this.listenForStopInOtherProcess();
+    const options = typeof dsnOrOptions === 'string'
+      ? { ...defaults, dsn: dsnOrOptions }
+      : { ...defaults, ...dsnOrOptions };
+
+    if (options.dsn == undefined) {
+      throw Error('Sentry DSN not found');
     }
 
     if (process.type === 'renderer') {
-      this.startSentryBrowser(options);
+      this.startJavaScript(options);
     } else {
-      this.startSentryNode(options);
+      this.startNode(options);
     }
 
     if (options.native) {
@@ -43,102 +77,7 @@ export class ElectronSentry {
     }
   }
 
-  public stop() {
-    if (process.type === 'renderer') {
-      this.stopSentryBrowser();
-      ipcRenderer.send(ipcKey);
-    } else {
-      this.stopSentryNode();
-      this.stopNative();
-      for (const webCon of webContents.getAllWebContents()) {
-        webCon.send(ipcKey);
-      }
-    }
-  }
-
-  private listenForStopInOtherProcess() {
-    this.hookedStop = true;
-
-    if (process.type === 'renderer') {
-      ipcRenderer.on(ipcKey, () => {
-        this.stopSentryBrowser();
-      });
-    } else {
-      ipcMain.on(ipcKey, () => {
-        this.stopSentryNode();
-        this.stopNative();
-      });
-    }
-  }
-
-  private getConfig(dsnOrOptions?: string | IElectronSentryOptions): IElectronSentryOptions {
-    let options = defaults;
-
-    if (typeof dsnOrOptions === 'string') {
-      options.dsn = dsnOrOptions;
-    } else {
-      options = { ...options, ...dsnOrOptions };
-    }
-
-    if (options.dsn == undefined) {
-      const pkg = require(path.join(ElectronSentry.getAppPath(), 'package.json'));
-      options.dsn = pkg.sentryDsn;
-    }
-
-    if (options.dsn == undefined) {
-      throw Error('Sentry DSN not found');
-    }
-
-    return options;
-  }
-
-  private startNative(options: IElectronSentryOptions) {
-    const match = options.dsn.match(dsnPattern);
-    if (match) {
-      const [full, proto, key, secret, site, nothing, project] = match;
-      const minidumpEndpoint = `${proto}://${site}/api/${project}/minidump?sentry_key=${key}`;
-
-      crashReporter.start({
-        productName: options.appName,
-        companyName: options.companyName,
-        submitURL: minidumpEndpoint,
-        uploadToServer: true,
-        extra: options.tags
-      });
-    } else {
-      throw Error('Could not parse Sentry DSN');
-    }
-  }
-
-  private stopNative() {
-    if (crashReporter.getUploadToServer()) {
-      crashReporter.setUploadToServer(false);
-    }
-  }
-
-  private startSentryNode(options: IElectronSentryOptions) {
-    const os = require('os');
-
-    Raven.disableConsoleAlerts();
-    Raven.config(options.dsn, {
-      release: options.release,
-      environment: options.environment,
-      autoBreadcrumbs: true,
-      captureUnhandledRejections: true,
-      maxBreadcrumbs: 100,
-      tags: {
-        arch: process.arch,
-        platform: os.type() + ' ' + os.release(),
-        ...options.tags
-      }
-    }).install();
-  }
-
-  private stopSentryNode() {
-    Raven.config();
-  }
-
-  private startSentryBrowser(options: IElectronSentryOptions) {
+  private startJavaScript(options: IElectronSentryOptions) {
     RavenJs.config(options.dsn, {
       release: options.release,
       environment: options.environment,
@@ -158,8 +97,50 @@ export class ElectronSentry {
     });
   }
 
-  private stopSentryBrowser() {
-    RavenJs.config(undefined);
+  private startNode(options: IElectronSentryOptions) {
+    Raven.disableConsoleAlerts();
+    Raven.config(options.dsn, {
+      release: options.release,
+      environment: options.environment,
+      autoBreadcrumbs: true,
+      captureUnhandledRejections: true,
+      tags: {
+        arch: process.arch,
+        platform: os.type() + ' ' + os.release(),
+        ...options.tags
+      }
+    }).install();
+  }
+
+  private startNative(options: IElectronSentryOptions) {
+    const match = options.dsn.match(dsnPattern);
+    if (match) {
+      const [full, proto, key, secret, site, nothing, project] = match;
+      const minidumpEndpoint = `${proto}://${site}/api/${project}/minidump?sentry_key=${key}`;
+
+      const extra: { [key: string]: string } = {};
+      extra['sentry[release]'] = options.release;
+      extra['sentry[environment]'] = options.environment;
+      extra['sentry[arch]'] = process.arch;
+
+      if (options.tags instanceof Object) {
+        for (const each of Object.keys(options.tags)) {
+          if (!(options.tags[each] instanceof Object)) {
+            extra[`sentry[tags][${each}]`] = options.tags[each];
+          }
+        }
+      }
+
+      crashReporter.start({
+        productName: options.appName,
+        companyName: options.companyName,
+        submitURL: minidumpEndpoint,
+        uploadToServer: true,
+        extra: extra
+      });
+    } else {
+      throw Error('Could not parse Sentry DSN');
+    }
   }
 
   private static normalizeData(data: any) {
@@ -180,10 +161,5 @@ export class ElectronSentry {
   // urls in stack traces need normalising so that they only have the app part of path
   private static normalizeUrl(url: string) {
     return url.replace(/^.*app\.asar/, '');
-  }
-
-  private static getAppPath() {
-    // Require due to https://github.com/electron-userland/electron-forge/issues/346
-    return app.getAppPath().replace(/^(.*)\\node_modules.*default_app\.asar$/, '$1');
   }
 }

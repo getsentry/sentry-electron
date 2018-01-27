@@ -1,5 +1,6 @@
 import { app as appMain, BrowserWindow, crashReporter, ipcMain, ipcRenderer, remote, webContents } from 'electron';
 const app = process.type === 'renderer' ? remote.app : appMain;
+const mainProcess = process.type === 'renderer' ? remote.process : process;
 
 export interface IElectronSentryOptions {
   dsn?: string;
@@ -17,6 +18,6 @@ export const defaults: IElectronSentryOptions = {
   companyName: app.getName(),
   native: true,
   release: app.getVersion(),
-  environment: process.defaultApp == undefined ? 'production' : 'development',
+  environment: mainProcess.defaultApp == undefined ? 'production' : 'development',
   tags: undefined
 };

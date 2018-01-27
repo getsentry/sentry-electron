@@ -1,9 +1,0 @@
-{
-  "name": "example1",
-  "displayName": "Example One",
-  "version": "1.0.0",
-  "sentryDsn": "https://xxxxxxxxxxxxxxxxxxxxxxx:xxxxxxxxxxxxxxxxxxxxxx@sentry.io/xxxxxx",
-  "dependencies": {
-    "electron-boilerplate": "^0.5.0"
-  }
-}
