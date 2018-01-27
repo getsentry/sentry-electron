@@ -1,12 +1,27 @@
 
-## JavaScript and native crash reporting from your Electron app to Sentry.
+## Electron JavaScript and native crash reporting to Sentry
+### Breadcrumbs and JavaScript instrumentation for native crashes too!
 
-* In the `main` process it starts [`raven`](https://www.npmjs.com/package/raven)
-* In the `renderer` process it starts [`raven-js`](https://www.npmjs.com/package/raven-js)
+Simply call `ElectronSentry.start()` as early as possible in the `main` and `renderer` processes.
+
+> **NOTE:** If you dont start the error reporter in both processes, native error reporting will not work on all platforms
+
+* Starts the Electron native [`crashReporter`](https://electronjs.org/docs/api/crash-reporter) in both processes and points it at the new [Sentry.io minidump endpoint](https://github.com/getsentry/sentry/pull/6416)
+* Starts [`raven-js`](https://www.npmjs.com/package/raven-js) in the `renderer` process
+  * Breadcrumbs and exceptions are passed to the main process. This means we can still report both if the renderer terminates due to a native crash.
   * Exception URLs are normalised to the app base so Sentry can group them correctly
-* In both processes it starts the Electron native [`crashReporter`](https://electronjs.org/docs/api/crash-reporter) and points it at the new [Sentry.io minidump endpoint](https://github.com/getsentry/sentry/pull/6416)
+    > **NOTE:** This normalisation only works with `asar` packaged apps!
+* Starts [`raven-node`](https://www.npmjs.com/package/raven) in the `main` process
+  * Hooks most `app`, `BrowserWindow`, `webContents`, `screen` and `powerMonitor` events and records breadcrumbs
+  * Breadcrumbs from all processes are combined
+  * If a render crashes due to a native exception, the native crash `id` is sent along with breadcrumbs so the two can me linked. Currently linking the two is manual.
 
-Simply call `ElectronSentry.start()` as early as possible in the `main` AND `renderer` processes. If you dont start the error reporter in both processes, native error reporting will not work correctly on all platforms.
+**TODO**
+* Offline support
+* Spectron tests
+* Better multiple renderer support?
+  * Means to identify identify renderers
+  * Keep breadcrumbs from different renderer separate
 
 Import it like this:
 ```typescript
@@ -15,7 +30,7 @@ const { ElectronSentry } = require('electron-sentry');
 import { ElectronSentry } from 'electron-sentry';
 ```
 
-If you don't supply any options, the `sentry` node in the root of your package.json is used. This can be either your non-public DSN string or an options object (options and defaults at bottom).
+If you don't supply any options, the `sentry` node in the root of your `package.json` is used. This can be your non-public DSN string or an options object (options and defaults at bottom).
 ```typescript
 ElectronSentry.start();
 // or
@@ -27,13 +42,13 @@ ElectronSentry.start({
   // ...
 });
 ```
-There are some helpers available which check for, save and delete an empty file to signify if reporting should be enabled or disabled. You can call these from either process but changes to the reporting state will not take effect until the app is restarted.
+There are some helpers available which check for, save and delete an empty file in `userData` to signify if reporting should be enabled or disabled. You can call these from either process but changes to the reporting state will not take effect until the app is restarted. This is to keep things simple as the native reporter cannot be stopped on Windows.
 ```typescript
 if (ElectronSentry.isEnabled()) {
   ElectronSentry.start();
 }
 
-// Disable error reporting, I don't like it when software improves.
+// Disable error reporting, I don't like to help devs...
 ElectronSentry.setEnabled(false);
 ```
 
@@ -46,25 +61,26 @@ const defaults = {
   // We need the non-public one for raven-node
   dsn: string = undefined,
 
-  // productName or appName from package.json
+  // productName || appName from package.json
+  // https://electronjs.org/docs/api/app#appgetname
   appName: string = app.getName(),
 
-  // productName or appName from package.json
+  // Defaults to the same as appName
   companyName: string: app.getName(),
 
   // Start the native crash reporter
   native: boolean = true,
 
   // Used by Sentry to identify this release
-  // It's common to use git hashes but the app version
-  // makes more sense in Electron
+  // It's common to use git hashes but for Electron the
+  // app version makes more sense
   release: string = app.getVersion(),
 
   // Environment string passed to Sentry
   // process.defaultApp is undefined when the app is packaged
   environment: string = process.defaultApp == undefined
                           ? 'production'
-                          : 'development',
+                          : 'development'
 
   // Extra tags passed through the crash reporters
   // Only first level properties make it through the native crash reporter

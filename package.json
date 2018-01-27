@@ -1,6 +1,6 @@
 {
   "name": "electron-sentry",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "main": "./dist/index.js",
   "repository": "https://github.com/timfish/electron-sentry.git",
   "author": "Tim Fish",
