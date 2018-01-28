@@ -9,8 +9,8 @@ import { defaults, IElectronSentryOptions } from './options';
 const app = process.type === 'renderer' ? remote.app : appMain;
 
 const dsnPattern = /^(?:(\w+):)?\/\/(?:(\w+):(\w+)?@)?([\w\.-]+)(?::(\d+))?\/(.*)/;
-const breadcrumbsFromRenderer = 'sentry-electron.breadcrumbs-from-renderer';
-const exceptionsFromRenderer = 'sentry-electron.exceptions-from-renderer';
+const breadcrumbsFromRenderer = 'sentry-electron.breadcrumbs';
+const exceptionsFromRenderer = 'sentry-electron.exceptions';
 
 export class ElectronSentry {
   private static singleton = new Lazy<ElectronSentry>(() => new ElectronSentry());
@@ -162,20 +162,22 @@ export class ElectronSentry {
     app.on('web-contents-created', (e, contents) => {
       this.breadcrumbsFromEvents('WebContents', contents, 'dom-ready', 'load-url', 'destroyed');
 
-      contents.on('crashed', (event, killed) => {
-        this.reportNativeCrashWithId();
-        // Without offline support the only way we can ensure native crash is sent is to
-        // reload the webContents. This is a good idea anyway since a crashed white frameless
-        // window looks bad. This leaves the possibility of an infinite crash loop so we
-        // bail out after a few
-        this.nativeCrashCount++;
-        if (this.nativeCrashCount < 4) {
-          contents.reload();
-        } else {
-          const window = BrowserWindow.fromWebContents(contents);
-          window.destroy();
-        }
-      });
+      if (options.native) {
+        contents.on('crashed', (event, killed) => {
+          this.reportNativeCrashWithId();
+          // Without offline support the only way we can ensure native crash is sent is to
+          // reload the webContents. This is a good idea anyway since a crashed white frameless
+          // window looks bad. This leaves the possibility of an infinite crash loop so we
+          // bail out after a few tries
+          this.nativeCrashCount++;
+          if (this.nativeCrashCount < 4) {
+            contents.reload();
+          } else {
+            const window = BrowserWindow.fromWebContents(contents);
+            window.destroy();
+          }
+        });
+      }
     });
   }
 

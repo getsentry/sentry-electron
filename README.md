@@ -1,10 +1,8 @@
 
-## Electron JavaScript and native crash reporting to Sentry
+# JavaScript and native crash reporting from Electron to Sentry
 ### Breadcrumbs and JavaScript instrumentation for native crashes too!
 
-Simply call `ElectronSentry.start()` as early as possible in the `main` and `renderer` processes.
-
-> **NOTE:** If you dont start the error reporter in both processes, native error reporting will not work on all platforms
+Simply call `ElectronSentry.start()` as early as possible in the `main` AND `renderer` processes.
 
 * Starts the Electron native [`crashReporter`](https://electronjs.org/docs/api/crash-reporter) in both processes and points it at the new [Sentry.io minidump endpoint](https://github.com/getsentry/sentry/pull/6416)
 * Starts [`raven-js`](https://www.npmjs.com/package/raven-js) in the `renderer` process
@@ -14,7 +12,7 @@ Simply call `ElectronSentry.start()` as early as possible in the `main` and `ren
 * Starts [`raven-node`](https://www.npmjs.com/package/raven) in the `main` process
   * Hooks most `app`, `BrowserWindow`, `webContents`, `screen` and `powerMonitor` events and records breadcrumbs
   * Breadcrumbs from all processes are combined
-  * If a render crashes due to a native exception, the native crash `id` is sent along with breadcrumbs so the two can me linked. Currently linking the two is manual.
+  * If a render crashes due to a native exception, the native crash `id` is sent along with breadcrumbs so the two can be linked. Currently two errors are reported in Sentry and linking the two is manual.
 
 **TODO**
 * Offline support
@@ -42,7 +40,7 @@ ElectronSentry.start({
   // ...
 });
 ```
-There are some helpers available which check for, save and delete an empty file in `userData` to signify if reporting should be enabled or disabled. You can call these from either process but changes to the reporting state will not take effect until the app is restarted. This is to keep things simple as the native reporter cannot be stopped on Windows.
+There are some helpers available which check for, save and delete an empty file in `userData` to signify if reporting should be enabled or disabled. You can call these from either process but changes to the reporting state will not take effect until the app is restarted. This keeps things simple as the native reporter cannot be stopped once its started on Windows.
 ```typescript
 if (ElectronSentry.isEnabled()) {
   ElectronSentry.start();
@@ -88,7 +86,7 @@ const defaults = {
 };
 ```
 
-Example package.json
+Example configuration in package.json
 ```json
 {
   "name": "example-app",
@@ -97,6 +95,7 @@ Example package.json
   "sentry": {
     "dsn": "https://xxxxxxxxxxxxxxxxxxxxxxx:xxxxxxxxxxxxxxxxxxxxxx@sentry.io/xxxxxx",
     "native": false
+    ...
   },
   "dependencies": {
     "sentry-electron": "^1.0.0"
