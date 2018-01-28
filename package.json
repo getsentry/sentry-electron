@@ -1,7 +1,7 @@
 {
   "name": "electron-sentry",
   "description": "JavaScript and native crash reporting from Electron to Sentry",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "main": "./dist/index.js",
   "repository": "https://github.com/timfish/electron-sentry.git",
   "author": "Tim Fish",
