@@ -204,7 +204,9 @@ export class ElectronSentry {
     const reports: { date: Date, id: string }[] = crashReporter.getUploadedReports() as any;
     const latest = reports.length > 0 ? reports[reports.length - 1] : undefined;
 
-    return (latest.date.getTime() > (Date.now() - (withinLastSeconds * 1000))) ? latest : undefined;
+    return latest && (latest.date.getTime() > (Date.now() - (withinLastSeconds * 1000)))
+      ? latest
+      : undefined;
   }
 
   private breadcrumbsFromEvents(category: string, emitter: Electron.EventEmitter, ...include: string[]) {
