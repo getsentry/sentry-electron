@@ -21,5 +21,5 @@ export const defaults: IElectronSentryOptions = {
   release: app.getVersion(),
   environment: mainProcess.defaultApp == undefined ? 'production' : 'development',
   tags: undefined,
-  ignoreErrors: undefined
+  ignoreErrors: []
 };
