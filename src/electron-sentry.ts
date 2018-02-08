@@ -84,6 +84,7 @@ export class ElectronSentry {
       environment: options.environment,
       allowSecretKey: true,
       tags: options.tags,
+      ignoreErrors: options.ignoreErrors,
       breadcrumbCallback: crumb => {
         // we record breadcrumbs in the main process
         ipcRenderer.send(breadcrumbsFromRenderer, crumb);
@@ -119,6 +120,7 @@ export class ElectronSentry {
         'http': false,
       },
       captureUnhandledRejections: true,
+      ignoreErrors: options.ignoreErrors,
       maxBreadcrumbs: 100,
       dataCallback: (data) => {
         // delete the machine name

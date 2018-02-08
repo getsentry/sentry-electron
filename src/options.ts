@@ -10,6 +10,7 @@ export interface IElectronSentryOptions {
   companyName?: string;
   environment?: string;
   tags?: any;
+  ignoreErrors?: any;
 }
 
 export const defaults: IElectronSentryOptions = {
@@ -19,5 +20,6 @@ export const defaults: IElectronSentryOptions = {
   native: true,
   release: app.getVersion(),
   environment: mainProcess.defaultApp == undefined ? 'production' : 'development',
-  tags: undefined
+  tags: undefined,
+  ignoreErrors: undefined
 };
