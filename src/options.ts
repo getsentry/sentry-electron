@@ -10,7 +10,7 @@ export interface IElectronSentryOptions {
   companyName?: string;
   environment?: string;
   tags?: any;
-  ignoreErrors?: any;
+  ignoreErrors?: (string | RegExp)[];
 }
 
 export const defaults: IElectronSentryOptions = {
