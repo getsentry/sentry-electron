@@ -1,4 +1,4 @@
-import { platform } from 'os';
+import { platform, type, release } from 'os';
 
 import {
   Adapter,
@@ -10,7 +10,7 @@ import {
 } from '@sentry/core';
 import { SentryBrowser, SentryBrowserOptions } from '@sentry/browser';
 import { SentryNode, SentryNodeOptions } from '@sentry/node';
-import { crashReporter, ipcMain, ipcRenderer } from 'electron';
+import { crashReporter, ipcMain, ipcRenderer, powerMonitor, remote, screen, webContents, app } from 'electron';
 
 import Store from './store';
 
@@ -138,6 +138,10 @@ export class SentryElectron implements Adapter {
   private async installRenderHandler(): Promise<boolean> {
     const options = {
       ...this.options,
+      autoBreadcrumbs: {
+        'console': true,
+        'http': false,
+      },
       shouldAddBreadcrumb: this.interceptBreadcrumb.bind(this),
     };
 
@@ -159,6 +163,37 @@ export class SentryElectron implements Adapter {
     }
 
     return callback(this.inner);
+  }
+
+  private enrichContext(context: Context): Context {
+    if (context.tags) {
+      context.tags = {
+        arch: process.arch,
+        'os.name': type(),
+        os: `${type()} ${release()}`,
+        ...context.tags
+      }
+    }
+    return context;
+  }
+
+  private breadcrumbsFromEvents(category: string, emitter: Electron.EventEmitter, ...include: string[]) {
+    const originalEmit = emitter.emit;
+    const that = this;
+    // tslint:disable:only-arrow-functions
+    // tslint:disable-next-line:space-before-function-paren
+    emitter.emit = function (event) {
+      // tslint:enable:only-arrow-functions
+      if (include.length === 0 || include.indexOf(event) > -1) {
+        that.captureBreadcrumb({
+          message: `${category}.${event}`,
+          type: `ui`,
+          category: `electron`,
+          timestamp: (new Date().getTime() / 1000)
+        });
+      }
+      return originalEmit.apply(emitter, arguments);
+    };
   }
 
   async install(): Promise<boolean> {
@@ -187,6 +222,18 @@ export class SentryElectron implements Adapter {
 
       ipcMain.on(IPC_CONTEXT, (_: Event, context: Context) => {
         this.setContext(context).catch(e => this.client.log(e));
+      });
+
+      this.breadcrumbsFromEvents('app', app);
+
+      app.on('ready', info => {
+        // we can't access these until 'ready'
+        this.breadcrumbsFromEvents('Screen', screen);
+        this.breadcrumbsFromEvents('PowerMonitor', powerMonitor);
+      });
+
+      app.on('web-contents-created', (e, contents) => {
+        this.breadcrumbsFromEvents('WebContents', contents, 'dom-ready', 'load-url', 'destroyed');
       });
     }
 
@@ -221,7 +268,7 @@ export class SentryElectron implements Adapter {
       return;
     }
 
-    const context = this.context.get();
+    const context = this.enrichContext(this.context.get());
     const mergedEvent = {
       ...event,
       user: { ...context.user, ...event.user },
@@ -231,6 +278,7 @@ export class SentryElectron implements Adapter {
       breadcrumbs: this.breadcrumbs.get(),
     };
 
+    console.log(mergedEvent);
     return this.callInner(inner => inner.send(mergedEvent));
   }
 
@@ -251,7 +299,6 @@ export class SentryElectron implements Adapter {
 
   async getContext(): Promise<Context> {
     // The context is managed by the main process only
-    // TODO: Sync from disk
     return this.isMainProcess() ? this.context.get() : {};
   }
 
