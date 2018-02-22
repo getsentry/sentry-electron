@@ -11,8 +11,8 @@ import {
 import { SentryBrowser, SentryBrowserOptions } from '@sentry/browser';
 import { SentryNode, SentryNodeOptions } from '@sentry/node';
 import { crashReporter, ipcMain, ipcRenderer } from 'electron';
-import { BreadcrumbStore } from './breadcrumb-store';
-import { ElectronContext } from './context';
+
+import Store from './store';
 
 /**
  * Maximum number of breadcrumbs that get added to an event. Can be overwritten
@@ -58,16 +58,13 @@ export interface SentryElectronOptions
 
 export class SentryElectron implements Adapter {
   private inner?: Adapter;
-  private context: ElectronContext;
-  private breadcrumbStore: BreadcrumbStore;
+  private context: Store<Context> = new Store('context.json', {});
+  private breadcrumbs: Store<Breadcrumb[]> = new Store('crumbs.json', []);
 
   constructor(
     private client: Client,
     public options: SentryElectronOptions = {},
-  ) {
-    this.breadcrumbStore = new BreadcrumbStore(this);
-    this.context = new ElectronContext();
-  }
+  ) {}
 
   private isMainProcess(): boolean {
     return process.type === 'browser';
@@ -211,7 +208,9 @@ export class SentryElectron implements Adapter {
       return breadcrumb;
     }
 
-    const crumb = this.breadcrumbStore.addBreadcrumb(breadcrumb);
+    const crumb = JSON.parse(JSON.stringify(breadcrumb));
+    const max = this.options.maxBreadcrumbs || MAX_BREADCRUMBS;
+    this.breadcrumbs.update(crumbs => [...crumbs.slice(-max), crumb]);
 
     return crumb;
   }
@@ -222,16 +221,14 @@ export class SentryElectron implements Adapter {
       return;
     }
 
-    // TODO: Sync from disk
     const context = this.context.get();
-
     const mergedEvent = {
       ...event,
       user: { ...context.user, ...event.user },
       tags: { ...context.tags, ...event.tags },
       extra: { ...context.extra, ...event.extra },
       sdk: { name: SDK_NAME, version: SDK_VERSION },
-      breadcrumbs: this.breadcrumbStore.getBreadcrumbs(),
+      breadcrumbs: this.breadcrumbs.get(),
     };
 
     return this.callInner(inner => inner.send(mergedEvent));
