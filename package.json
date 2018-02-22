@@ -1,28 +1,29 @@
 {
-  "name": "electron-sentry",
-  "description": "JavaScript and native crash reporting from Electron to Sentry",
-  "version": "1.1.2",
+  "name": "@sentry/electron",
+  "description": "Offical Sentry SDK for Electron",
+  "version": "0.1.0",
   "main": "./dist/index.js",
   "repository": "https://github.com/timfish/electron-sentry.git",
   "author": "Tim Fish",
   "license": "MIT",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "clean": "del-cli ./dist/**",
-    "build": "yarn clean && tsc --pretty",
-    "watch": "yarn clean && tsc --pretty --watch",
-    "example1": "electron ./examples/1/",
-    "demo1": "electron ./examples/1/"
+    "build": "tsc",
+    "clean": "rimraf dist"
   },
   "dependencies": {
-    "raven": "^2.2.1",
-    "raven-js": "^3.20.1"
+    "@sentry/browser": "^0.3.0",
+    "@sentry/core": "^0.3.0",
+    "@sentry/node": "^0.3.0"
   },
   "devDependencies": {
-    "@types/raven": "^2.1.2",
-    "del-cli": "^1.1.0",
     "electron": "^1.7.9",
-    "tslint": "^5.8.0",
-    "typescript": "^2.6.1"
+    "prettier": "^1.10.2",
+    "rimraf": "^2.6.2",
+    "tslint": "^5.9.1",
+    "tslint-config-prettier": "^1.8.0",
+    "tslint-eslint-rules": "^5.0.0",
+    "typescript": "^2.7.2",
+    "vrsource-tslint-rules": "^5.8.0"
   }
 }
