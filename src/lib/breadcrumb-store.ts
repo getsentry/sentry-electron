@@ -57,7 +57,6 @@ export class BreadcrumbStore {
   private handleLimit(maxCount = 100) {
     const breadcrumbFiles = this.readDir();
     const numberOfFilesToRemove = breadcrumbFiles.length - maxCount;
-    console.log(numberOfFilesToRemove);
     for (let i = 0; i < numberOfFilesToRemove; i++) {
       fs.unlinkSync(breadcrumbFiles[i]);
     }
@@ -66,9 +65,7 @@ export class BreadcrumbStore {
   public addBreadcrumb(breadcrumb: Breadcrumb): Breadcrumb {
     const stringifyedCrumb = JSON.stringify(breadcrumb);
     const crumb = JSON.parse(stringifyedCrumb);
-
     fs.writeFileSync(path.join(this.storagePath, this.uniqueAcendingJsonName()), stringifyedCrumb);
-
     this.handleLimit(this.maxBreadcrumbs);
     return crumb;
   }

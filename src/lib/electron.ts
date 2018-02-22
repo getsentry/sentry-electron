@@ -12,6 +12,7 @@ import { SentryBrowser, SentryBrowserOptions } from '@sentry/browser';
 import { SentryNode, SentryNodeOptions } from '@sentry/node';
 import { crashReporter, ipcMain, ipcRenderer } from 'electron';
 import { BreadcrumbStore } from './breadcrumb-store';
+import { ElectronContext } from './context';
 
 /**
  * Maximum number of breadcrumbs that get added to an event. Can be overwritten
@@ -57,7 +58,7 @@ export interface SentryElectronOptions
 
 export class SentryElectron implements Adapter {
   private inner?: Adapter;
-  private context: Context = {};
+  private context: ElectronContext;
   private breadcrumbStore: BreadcrumbStore;
 
   constructor(
@@ -65,6 +66,7 @@ export class SentryElectron implements Adapter {
     public options: SentryElectronOptions = {},
   ) {
     this.breadcrumbStore = new BreadcrumbStore(this);
+    this.context = new ElectronContext();
   }
 
   private isMainProcess(): boolean {
@@ -221,7 +223,7 @@ export class SentryElectron implements Adapter {
     }
 
     // TODO: Sync from disk
-    const { context } = this;
+    const context = this.context.get();
 
     const mergedEvent = {
       ...event,
@@ -253,7 +255,7 @@ export class SentryElectron implements Adapter {
   async getContext(): Promise<Context> {
     // The context is managed by the main process only
     // TODO: Sync from disk
-    return this.isMainProcess() ? this.context : {};
+    return this.isMainProcess() ? this.context.get() : {};
   }
 
   async setContext(context: Context): Promise<void> {
@@ -262,7 +264,6 @@ export class SentryElectron implements Adapter {
       return;
     }
 
-    this.context = JSON.parse(JSON.stringify(context));
-    // TODO: Sync to disk
+    this.context.set(context);
   }
 }
