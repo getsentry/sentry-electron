@@ -132,18 +132,6 @@ export class SentryElectron implements Adapter {
       return false;
     }
 
-    ipcMain.on(IPC_CRUMB, (_: Event, crumb: Breadcrumb) => {
-      this.captureBreadcrumb(crumb).catch(e => this.client.log(e));
-    });
-
-    ipcMain.on(IPC_EVENT, (_: Event, event: SentryEvent) => {
-      this.send(event).catch(e => this.client.log(e));
-    });
-
-    ipcMain.on(IPC_CONTEXT, (_: Event, context: Context) => {
-      this.setContext(context).catch(e => this.client.log(e));
-    });
-
     this.inner = node;
     return true;
   }
@@ -187,6 +175,20 @@ export class SentryElectron implements Adapter {
 
     if (this.isRenderEnabled()) {
       success = (await this.installRenderHandler()) && success;
+    }
+
+    if (this.isMainProcess()) {
+      ipcMain.on(IPC_CRUMB, (_: Event, crumb: Breadcrumb) => {
+        this.captureBreadcrumb(crumb).catch(e => this.client.log(e));
+      });
+
+      ipcMain.on(IPC_EVENT, (_: Event, event: SentryEvent) => {
+        this.send(event).catch(e => this.client.log(e));
+      });
+
+      ipcMain.on(IPC_CONTEXT, (_: Event, context: Context) => {
+        this.setContext(context).catch(e => this.client.log(e));
+      });
     }
 
     // TODO: Submit recent crash reports from disk
