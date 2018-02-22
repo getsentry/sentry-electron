@@ -10,9 +10,19 @@ import {
 } from '@sentry/core';
 import { SentryBrowser, SentryBrowserOptions } from '@sentry/browser';
 import { SentryNode, SentryNodeOptions } from '@sentry/node';
-import { crashReporter, ipcMain, ipcRenderer, powerMonitor, remote, screen, webContents, app } from 'electron';
+import {
+  app,
+  crashReporter,
+  ipcMain,
+  ipcRenderer,
+  powerMonitor,
+  remote,
+  screen,
+  webContents,
+} from 'electron';
 
 import Store from './store';
+import MinidumpUploader from './uploader';
 
 /**
  * Maximum number of breadcrumbs that get added to an event. Can be overwritten
@@ -60,6 +70,7 @@ export class SentryElectron implements Adapter {
   private inner?: Adapter;
   private context: Store<Context> = new Store('context.json', {});
   private breadcrumbs: Store<Breadcrumb[]> = new Store('crumbs.json', []);
+  private uploader: MinidumpUploader;
 
   constructor(
     private client: Client,
@@ -104,17 +115,52 @@ export class SentryElectron implements Adapter {
     return false;
   }
 
+  private async sendNativeCrashes(): Promise<void> {
+    const event = {
+      ...this.getEnrichedContext(),
+      release: this.options.release,
+      environment: this.options.environment,
+      sdk: { name: SDK_NAME, version: SDK_VERSION },
+      breadcrumbs: this.breadcrumbs.get(),
+    };
+
+    const paths = await this.uploader.getNewMinidumps();
+    await Promise.all(
+      paths.map(path => this.uploader.uploadMinidump(path, event)),
+    );
+  }
+
   private async installNativeHandler(): Promise<boolean> {
     // We will manually submit errors, but CrashReporter requires a submitURL in
     // some versions. Also, provide a productName and companyName, which we will
     // add manually to the event's context during submission.
     crashReporter.start({
-      productName: '',
+      productName: app.getName(),
       companyName: '',
       submitURL: '',
       uploadToServer: false,
       ignoreSystemCrashHandler: true,
     });
+
+    if (this.isMainProcess()) {
+      // The crashReporter has an undocumented method to retrieve the directory
+      // it uses to store minidumps in. The structure in this directory depends
+      // on the crash library being used (Crashpad or Breakpad).
+      let crashesDirectory = (crashReporter as any).getCrashesDirectory();
+      this.uploader = new MinidumpUploader(this.client.dsn, crashesDirectory);
+
+      // Start to submit recent minidump crashes. This will load breadcrumbs
+      // and context information that was cached on disk prior to the crash.
+      this.sendNativeCrashes();
+
+      // Every time a subprocess or renderer crashes, start sending minidumps
+      // right away.
+      app.on('web-contents-created', (event, contents) => {
+        contents.on('crashed', (event, killed) => {
+          this.sendNativeCrashes();
+        });
+      });
+    }
 
     return true;
   }
@@ -138,10 +184,6 @@ export class SentryElectron implements Adapter {
   private async installRenderHandler(): Promise<boolean> {
     const options = {
       ...this.options,
-      autoBreadcrumbs: {
-        'console': true,
-        'http': false,
-      },
       shouldAddBreadcrumb: this.interceptBreadcrumb.bind(this),
     };
 
@@ -165,31 +207,36 @@ export class SentryElectron implements Adapter {
     return callback(this.inner);
   }
 
-  private enrichContext(context: Context): Context {
-    if (context.tags) {
-      context.tags = {
-        arch: process.arch,
-        'os.name': type(),
-        os: `${type()} ${release()}`,
-        ...context.tags
-      }
-    }
+  private getEnrichedContext(): Context {
+    const context = this.context.get();
+
+    context.tags = {
+      arch: process.arch,
+      'os.name': type(),
+      os: `${type()} ${release()}`,
+      ...context.tags,
+    };
+
     return context;
   }
 
-  private breadcrumbsFromEvents(category: string, emitter: Electron.EventEmitter, ...include: string[]) {
+  private breadcrumbsFromEvents(
+    category: string,
+    emitter: Electron.EventEmitter,
+    ...include: string[]
+  ) {
     const originalEmit = emitter.emit;
     const that = this;
     // tslint:disable:only-arrow-functions
     // tslint:disable-next-line:space-before-function-paren
-    emitter.emit = function (event) {
+    emitter.emit = function(event) {
       // tslint:enable:only-arrow-functions
       if (include.length === 0 || include.indexOf(event) > -1) {
         that.captureBreadcrumb({
           message: `${category}.${event}`,
           type: `ui`,
           category: `electron`,
-          timestamp: (new Date().getTime() / 1000)
+          timestamp: new Date().getTime() / 1000,
         });
       }
       return originalEmit.apply(emitter, arguments);
@@ -233,11 +280,16 @@ export class SentryElectron implements Adapter {
       });
 
       app.on('web-contents-created', (e, contents) => {
-        this.breadcrumbsFromEvents('WebContents', contents, 'dom-ready', 'load-url', 'destroyed');
+        this.breadcrumbsFromEvents(
+          'WebContents',
+          contents,
+          'dom-ready',
+          'load-url',
+          'destroyed',
+        );
       });
     }
 
-    // TODO: Submit recent crash reports from disk
     return success;
   }
 
@@ -268,7 +320,7 @@ export class SentryElectron implements Adapter {
       return;
     }
 
-    const context = this.enrichContext(this.context.get());
+    const context = this.getEnrichedContext();
     const mergedEvent = {
       ...event,
       user: { ...context.user, ...event.user },
@@ -278,7 +330,6 @@ export class SentryElectron implements Adapter {
       breadcrumbs: this.breadcrumbs.get(),
     };
 
-    console.log(mergedEvent);
     return this.callInner(inner => inner.send(mergedEvent));
   }
 
