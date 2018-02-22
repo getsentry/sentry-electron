@@ -9,6 +9,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
+    "example": "electron example",
     "clean": "rimraf dist"
   },
   "dependencies": {
