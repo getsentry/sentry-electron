@@ -1,21 +1,22 @@
 {
   "compilerOptions": {
-    "rootDir": "./src/",
-    "outDir": "./dist/",
+    "baseUrl": ".",
+    "rootDir": "src",
+    "outDir": "dist",
     "sourceMap": true,
     "inlineSources": true,
     "target": "es6",
     "module": "commonjs",
     "declaration": true,
+    "noFallthroughCasesInSwitch": true,
     "noImplicitAny": true,
-    "removeComments": false,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "strictNullChecks": true,
+    "stripInternal": true,
     "downlevelIteration": true,
     "moduleResolution": "node",
-    "baseUrl": "./"
+    "allowJs": false
   },
-  "include": [
-    "./src/**/*.ts"
-  ]
+  "include": ["./src/**/*.ts"]
 }
