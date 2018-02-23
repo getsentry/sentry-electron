@@ -34,17 +34,13 @@ export default class Store<T> {
     if (this._path) {
       return this._path;
     }
-    let folder = BASE_PATH;
     if (!existsSync(USER_DATA_PATH)) {
-      // AppData is not created until makeSingleInstance is called or you
-      // create BrowserWindows and a few other assorted APIs. cc @timfish
-      // We fallback to temp dir.
-      folder = join((app || remote.app).getPath('temp'), 'sentry');
+      mkdirSync(USER_DATA_PATH);
     }
-    if (!existsSync(folder)) {
-      mkdirSync(folder);
+    if (!existsSync(BASE_PATH)) {
+      mkdirSync(BASE_PATH);
     }
-    this._path = join(folder, this.filename);
+    this._path = join(BASE_PATH, this.filename);
     return this._path;
   }
 
