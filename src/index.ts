@@ -1,2 +1,1 @@
-export { ElectronSentry } from './electron-sentry';
-export { IElectronSentryOptions } from './options';
+export * from './lib/electron';
