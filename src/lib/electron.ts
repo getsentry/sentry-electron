@@ -114,13 +114,11 @@ export class SentryElectron implements Adapter {
       });
 
       app.on('web-contents-created', (e, contents) => {
-        this.breadcrumbsFromEvents(
-          'WebContents',
-          contents,
+        this.breadcrumbsFromEvents('WebContents', contents, [
           'dom-ready',
           'load-url',
           'destroyed',
-        );
+        ]);
       });
     }
 
@@ -275,9 +273,7 @@ export class SentryElectron implements Adapter {
       // Every time a subprocess or renderer crashes, start sending minidumps
       // right away.
       app.on('web-contents-created', (event, contents) => {
-        contents.on('crashed', () => {
-          this.sendNativeCrashes();
-        });
+        contents.on('crashed', () => this.sendNativeCrashes());
       });
     }
 
@@ -342,23 +338,20 @@ export class SentryElectron implements Adapter {
   private breadcrumbsFromEvents(
     category: string,
     emitter: Electron.EventEmitter,
-    ...include: string[]
+    events: string[] = [],
   ) {
     const originalEmit = emitter.emit;
-    // tslint:disable-next-line:no-this-assignment
-    const that = this;
-    // tslint:disable:only-arrow-functions
-    emitter.emit = function(event) {
-      // tslint:enable:only-arrow-functions
-      if (include.length === 0 || include.indexOf(event) > -1) {
-        that.captureBreadcrumb({
+    emitter.emit = (event, ...args) => {
+      if (events.length === 0 || events.indexOf(event) > -1) {
+        this.captureBreadcrumb({
           message: `${category}.${event}`,
           type: `ui`,
           category: `electron`,
           timestamp: new Date().getTime() / 1000,
         });
       }
-      return originalEmit.apply(emitter, arguments);
+
+      return originalEmit.call(emitter, event, ...args);
     };
   }
 }
