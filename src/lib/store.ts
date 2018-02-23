@@ -4,7 +4,8 @@ import { join } from 'path';
 import { app, remote } from 'electron';
 
 /** App-specific directory to store information in. */
-const BASE_PATH = join((app || remote.app).getPath('userData'), 'sentry');
+const USER_DATA_PATH = (app || remote.app).getPath('userData');
+const BASE_PATH = join(USER_DATA_PATH, 'sentry');
 
 /**
  * Lazily serializes data to a JSON file to persist it beyond application
@@ -13,6 +14,8 @@ const BASE_PATH = join((app || remote.app).getPath('userData'), 'sentry');
 export default class Store<T> {
   /** Current state of the data. */
   private data: T;
+  /** Internal path for JSON file. */
+  private _path?: string;
   /** State whether a flush to disk has been requested in this cycle. */
   private flushing: boolean = false;
 
@@ -28,10 +31,21 @@ export default class Store<T> {
    * Return the path to the JSON file storing the information.
    */
   private get path(): string {
-    if (!existsSync(BASE_PATH)) {
-      mkdirSync(BASE_PATH);
+    if (this._path) {
+      return this._path;
     }
-    return join(BASE_PATH, this.filename);
+    let folder = BASE_PATH;
+    if (!existsSync(USER_DATA_PATH)) {
+      // AppData is not created until makeSingleInstance is called or you
+      // create BrowserWindows and a few other assorted APIs. cc @timfish
+      // We fallback to temp
+      folder = join((app || remote.app).getPath('temp'), 'sentry');
+    }
+    if (!existsSync(folder)) {
+      mkdirSync(folder);
+    }
+    this._path = join(folder, this.filename);
+    return this._path;
   }
 
   /**
@@ -74,7 +88,9 @@ export default class Store<T> {
 
   /** Serializes the current data into the JSON file. */
   private flush() {
-    writeFileSync(this.path, JSON.stringify(this.data));
+    if (existsSync(this.path)) {
+      writeFileSync(this.path, JSON.stringify(this.data));
+    }
     this.flushing = false;
   }
 }

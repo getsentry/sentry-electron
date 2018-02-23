@@ -385,7 +385,7 @@ export class SentryElectron implements Adapter {
     // some versions. Also, provide a productName and companyName, which we will
     // add manually to the event's context during submission.
     crashReporter.start({
-      productName: app.getName(),
+      productName: (app || remote.app).getName(),
       companyName: '',
       submitURL: '',
       uploadToServer: false,
