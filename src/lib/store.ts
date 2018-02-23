@@ -38,7 +38,7 @@ export default class Store<T> {
     if (!existsSync(USER_DATA_PATH)) {
       // AppData is not created until makeSingleInstance is called or you
       // create BrowserWindows and a few other assorted APIs. cc @timfish
-      // We fallback to temp
+      // We fallback to temp dir.
       folder = join((app || remote.app).getPath('temp'), 'sentry');
     }
     if (!existsSync(folder)) {
@@ -88,9 +88,7 @@ export default class Store<T> {
 
   /** Serializes the current data into the JSON file. */
   private flush() {
-    if (existsSync(this.path)) {
-      writeFileSync(this.path, JSON.stringify(this.data));
-    }
+    writeFileSync(this.path, JSON.stringify(this.data));
     this.flushing = false;
   }
 }
