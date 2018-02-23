@@ -2,20 +2,22 @@
 # yarn lockfile v1
 
 
-"@sentry/browser@^0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-0.3.0.tgz#c308d232d50bfd4f55ab6ed9a0a90bace1cfc613"
+"@sentry/browser@0.4.0-beta.2":
+  version "0.4.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-0.4.0-beta.2.tgz#647d45f2bbf45e27ad113f54c06cea8e041c2b0a"
   dependencies:
-    "@sentry/core" "^0.3.0"
+    "@sentry/core" "^0.4.0-beta.2"
     raven-js "^3.22.1"
 
-"@sentry/core@^0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-0.3.0.tgz#83c46eab5d83f8dbe4b8c762cd9ddc83ab40ec6b"
+"@sentry/core@0.4.0-beta.2", "@sentry/core@^0.4.0-beta.2":
+  version "0.4.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-0.4.0-beta.2.tgz#a17dc5e4718f5d580a1a4683cf7f6944105058ed"
 
-"@sentry/node@../raven-js/packages/node":
-  version "0.3.0"
+"@sentry/node@0.4.0-beta.2":
+  version "0.4.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-0.4.0-beta.2.tgz#592db31494ffd6e8432eeacd6b0c662fd10f9c21"
   dependencies:
+    "@sentry/core" "^0.4.0-beta.2"
     raven "^2.4.0"
 
 "@types/form-data@^2.2.1":
