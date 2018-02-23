@@ -13,8 +13,6 @@ const BASE_PATH = join((app || remote.app).getPath('userData'), 'sentry');
 export default class Store<T> {
   /** Current state of the data. */
   private data: T;
-  /** Path the JSON file storing the information. */
-  private path: string;
   /** State whether a flush to disk has been requested in this cycle. */
   private flushing: boolean = false;
 
@@ -24,12 +22,16 @@ export default class Store<T> {
    * @param filename A unique filename to store this data.
    * @param initial An initial value to initialize data with.
    */
-  constructor(filename: string, private initial?: T) {
+  constructor(public filename: string, private initial?: T) {}
+
+  /**
+   * Return the path to the JSON file storing the information.
+   */
+  private get path(): string {
     if (!existsSync(BASE_PATH)) {
       mkdirSync(BASE_PATH);
     }
-
-    this.path = join(BASE_PATH, filename);
+    return join(BASE_PATH, this.filename);
   }
 
   /**
