@@ -1,3 +1,4 @@
+// tslint:disable-next-line:no-submodule-imports
 require('util.promisify/shim')();
 
 import * as fs from 'fs';

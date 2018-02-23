@@ -345,12 +345,13 @@ export class SentryElectron implements Adapter {
     ...include: string[]
   ) {
     const originalEmit = emitter.emit;
+    // tslint:disable-next-line:no-this-assignment
+    const that = this;
     // tslint:disable:only-arrow-functions
-    // tslint:disable-next-line:space-before-function-paren
-    emitter.emit = event => {
+    emitter.emit = function(event) {
       // tslint:enable:only-arrow-functions
       if (include.length === 0 || include.indexOf(event) > -1) {
-        this.captureBreadcrumb({
+        that.captureBreadcrumb({
           message: `${category}.${event}`,
           type: `ui`,
           category: `electron`,
