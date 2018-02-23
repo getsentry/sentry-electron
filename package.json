@@ -9,8 +9,10 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
+    "clean": "rimraf dist",
     "example": "electron example",
-    "clean": "rimraf dist"
+    "lint": "tslint --config ./tslint.json src/**/*",
+    "format": "prettier --config /.prettierrc.json src/**/* --write"
   },
   "dependencies": {
     "@sentry/browser": "^0.3.0",
