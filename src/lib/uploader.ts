@@ -14,8 +14,10 @@ const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
 const unlink = promisify(fs.unlink);
 
+/** Maximum number of days to keep a minidump before deleting it. */
 const MAX_AGE = 30;
 
+/** Helper to filter an array with asynchronous callbacks. */
 export async function filterAsync<T>(
   array: T[],
   predicate: (item: T) => Promise<boolean>,
@@ -25,13 +27,26 @@ export async function filterAsync<T>(
   return array.filter((element, index) => verdicts[index]);
 }
 
+/** Supported types of Electron CrashReporters. */
 type CrashReporterType = 'crashpad' | 'breakpad';
 
+/**
+ * A service that discovers Minidump crash reports and uploads them to Sentry.
+ */
 export default class MinidumpUploader {
+  /** The minidump ingestion endpoint URL. */
   private url: string;
+  /** The type of the Electron CrashReporter used to search for Minidumps. */
   private type: CrashReporterType;
+  /** List of minidumps that have been found already. */
   private knownPaths: string[];
 
+  /**
+   * Creates a new uploader instance.
+   *
+   * @param dsn The Sentry DSN
+   * @param crashesDirectory The directory Electron stores crashes in.
+   */
   constructor(dsn: DSN, private crashesDirectory: string) {
     this.type = platform() === 'darwin' ? 'crashpad' : 'breakpad';
     this.knownPaths = [];
@@ -42,6 +57,13 @@ export default class MinidumpUploader {
       `/api/${path}/minidump?sentry_key=${user}`;
   }
 
+  /**
+   * Uploads a minidump file to Sentry.
+   *
+   * @param path Absolute path to the minidump file.
+   * @param event Event data to attach to the minidump.
+   * @returns A promise that resolves when the upload is complete.
+   */
   public async uploadMinidump(path: string, event: SentryEvent): Promise<void> {
     // TODO: Queue and hold if there is no internet connection.
     // TODO: Only queue up to 10 events
@@ -51,11 +73,15 @@ export default class MinidumpUploader {
     body.append('sentry', JSON.stringify(event));
     const response = await fetch(this.url, { method: 'POST', body });
 
-    // TODO: Retry if the server responded with status code 429
+    // TODO: Retry if the server responds with status code 429
     await unlink(path);
     this.knownPaths.splice(this.knownPaths.indexOf(path), 1);
   }
 
+  /**
+   * Searches for new, unknown minidump files in the crash directory.
+   * @returns A promise that resolves to absolute paths of those dumps.
+   */
   public async getNewMinidumps(): Promise<string[]> {
     const minidumps =
       this.type === 'crashpad'
@@ -83,6 +109,7 @@ export default class MinidumpUploader {
     });
   }
 
+  /** Scans the Crashpad directory structure for minidump files. */
   private async scanCrashpadFolder(): Promise<string[]> {
     // Crashpad moves minidump files directly into the completed/ folder. We
     // can load them from there, upload to the server, and then delete it.
@@ -93,6 +120,7 @@ export default class MinidumpUploader {
       .map(file => join(dumpDirectory, file));
   }
 
+  /** Scans the Breakpad directory structure for minidump files. */
   private async scanBreakpadFolder(): Promise<string[]> {
     // Breakpad stores all minidump files along with a metadata file directly
     // in the crashes directory.
