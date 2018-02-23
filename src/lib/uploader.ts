@@ -32,38 +32,13 @@ export default class MinidumpUploader {
   private knownPaths: string[];
 
   constructor(dsn: DSN, private crashesDirectory: string) {
-    this.type = platform() == 'darwin' ? 'crashpad' : 'breakpad';
+    this.type = platform() === 'darwin' ? 'crashpad' : 'breakpad';
     this.knownPaths = [];
 
     const { host, path, port, protocol, user } = dsn;
     this.url =
       `${protocol}://${host}${port ? ':' + port : ''}` +
       `/api/${path}/minidump?sentry_key=${user}`;
-  }
-
-  private async scanCrashpadFolder(): Promise<string[]> {
-    // Crashpad moves minidump files directly into the completed/ folder. We
-    // can load them from there, upload to the server, and then delete it.
-    const dumpDirectory = join(this.crashesDirectory, 'completed');
-    const files = await readdir(dumpDirectory);
-    return files
-      .filter(file => file.endsWith('.dmp'))
-      .map(file => join(dumpDirectory, file));
-  }
-
-  private async scanBreakpadFolder(): Promise<string[]> {
-    // Breakpad stores all minidump files along with a metadata file directly
-    // in the crashes directory.
-    const files = await readdir(this.crashesDirectory);
-
-    // Remove all metadata files (asynchronously) and forget about them.
-    files
-      .filter(file => file.endsWith('.txt') && !file.endsWith('log.txt'))
-      .forEach(file => unlink(join(this.crashesDirectory, file)));
-
-    return files
-      .filter(file => file.endsWith('.dmp'))
-      .map(file => join(this.crashesDirectory, file));
   }
 
   public async uploadMinidump(path: string, event: SentryEvent): Promise<void> {
@@ -105,5 +80,30 @@ export default class MinidumpUploader {
       this.knownPaths.push(path);
       return true;
     });
+  }
+
+  private async scanCrashpadFolder(): Promise<string[]> {
+    // Crashpad moves minidump files directly into the completed/ folder. We
+    // can load them from there, upload to the server, and then delete it.
+    const dumpDirectory = join(this.crashesDirectory, 'completed');
+    const files = await readdir(dumpDirectory);
+    return files
+      .filter(file => file.endsWith('.dmp'))
+      .map(file => join(dumpDirectory, file));
+  }
+
+  private async scanBreakpadFolder(): Promise<string[]> {
+    // Breakpad stores all minidump files along with a metadata file directly
+    // in the crashes directory.
+    const files = await readdir(this.crashesDirectory);
+
+    // Remove all metadata files (asynchronously) and forget about them.
+    files
+      .filter(file => file.endsWith('.txt') && !file.endsWith('log.txt'))
+      .forEach(file => unlink(join(this.crashesDirectory, file)));
+
+    return files
+      .filter(file => file.endsWith('.dmp'))
+      .map(file => join(this.crashesDirectory, file));
   }
 }

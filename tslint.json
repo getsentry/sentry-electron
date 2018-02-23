@@ -18,7 +18,8 @@
     "ordered-imports": [true],
     "no-var-requires": false,
     "object-literal-sort-keys": false,
-    "no-switch-case-fall-through": true
+    "no-switch-case-fall-through": true,
+    "interface-name": false
   },
   "jsRules": {
     "no-console": [true, "log"],

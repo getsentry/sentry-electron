@@ -1,14 +1,14 @@
-import { platform, type, release } from 'os';
+import { platform, release, type } from 'os';
 
+import { SentryBrowser, SentryBrowserOptions } from '@sentry/browser';
 import {
   Adapter,
   Breadcrumb,
   Client,
   Context,
-  SentryEvent,
   Options,
+  SentryEvent,
 } from '@sentry/core';
-import { SentryBrowser, SentryBrowserOptions } from '@sentry/browser';
 import { SentryNode, SentryNodeOptions } from '@sentry/node';
 import {
   app,
@@ -76,6 +76,125 @@ export class SentryElectron implements Adapter {
     private client: Client,
     public options: SentryElectronOptions = {},
   ) {}
+
+  public async install(): Promise<boolean> {
+    let success = true;
+
+    if (this.isNativeEnabled()) {
+      success = (await this.installNativeHandler()) && success;
+    }
+
+    if (this.isMainEnabled()) {
+      success = (await this.installMainHandler()) && success;
+    }
+
+    if (this.isRenderEnabled()) {
+      success = (await this.installRenderHandler()) && success;
+    }
+
+    if (this.isMainProcess()) {
+      ipcMain.on(IPC_CRUMB, (_: Event, crumb: Breadcrumb) => {
+        this.captureBreadcrumb(crumb).catch(e => this.client.log(e));
+      });
+
+      ipcMain.on(IPC_EVENT, (_: Event, event: SentryEvent) => {
+        this.send(event).catch(e => this.client.log(e));
+      });
+
+      ipcMain.on(IPC_CONTEXT, (_: Event, context: Context) => {
+        this.setContext(context).catch(e => this.client.log(e));
+      });
+
+      this.breadcrumbsFromEvents('app', app);
+
+      app.on('ready', info => {
+        // we can't access these until 'ready'
+        this.breadcrumbsFromEvents('Screen', screen);
+        this.breadcrumbsFromEvents('PowerMonitor', powerMonitor);
+      });
+
+      app.on('web-contents-created', (e, contents) => {
+        this.breadcrumbsFromEvents(
+          'WebContents',
+          contents,
+          'dom-ready',
+          'load-url',
+          'destroyed',
+        );
+      });
+    }
+
+    return success;
+  }
+
+  public captureException(exception: any): Promise<SentryEvent> {
+    return this.callInner(inner => inner.captureException(exception));
+  }
+
+  public captureMessage(message: string): Promise<SentryEvent> {
+    return this.callInner(inner => inner.captureMessage(message));
+  }
+
+  public async captureBreadcrumb(breadcrumb: Breadcrumb): Promise<Breadcrumb> {
+    if (this.isRenderProcess()) {
+      ipcRenderer.send(IPC_CRUMB, breadcrumb);
+      return breadcrumb;
+    }
+
+    const crumb = JSON.parse(JSON.stringify(breadcrumb));
+    const max = this.options.maxBreadcrumbs || MAX_BREADCRUMBS;
+    this.breadcrumbs.update(crumbs => [...crumbs.slice(-max), crumb]);
+
+    return crumb;
+  }
+
+  public async send(event: SentryEvent): Promise<void> {
+    if (this.isRenderProcess()) {
+      ipcRenderer.send(IPC_EVENT, event);
+      return;
+    }
+
+    const context = this.getEnrichedContext();
+    const mergedEvent = {
+      ...event,
+      user: { ...context.user, ...event.user },
+      tags: { ...context.tags, ...event.tags },
+      extra: { ...context.extra, ...event.extra },
+      sdk: { name: SDK_NAME, version: SDK_VERSION },
+      breadcrumbs: this.breadcrumbs.get(),
+    };
+
+    return this.callInner(inner => inner.send(mergedEvent));
+  }
+
+  public async setOptions(options: SentryElectronOptions): Promise<void> {
+    this.options = options;
+
+    if (this.isNativeEnabled()) {
+      // We can safely re-install the native CrashReporter. If it had been
+      // started before, this will effectively be a no-op. Otherwise, it will
+      // start a new instance.
+      await this.installNativeHandler();
+    } else {
+      this.client.log('Native CrashReporter cannot be stopped once started.');
+    }
+
+    return this.callInner(inner => inner.setOptions(options));
+  }
+
+  public async getContext() {
+    // The context is managed by the main process only
+    return this.isMainProcess() ? this.context.get() : {};
+  }
+
+  public async setContext(context: Context): Promise<void> {
+    if (this.isRenderProcess()) {
+      ipcRenderer.send(IPC_CONTEXT, context);
+      return;
+    }
+
+    this.context.set(context);
+  }
 
   private isMainProcess(): boolean {
     return process.type === 'browser';
@@ -146,7 +265,7 @@ export class SentryElectron implements Adapter {
       // The crashReporter has an undocumented method to retrieve the directory
       // it uses to store minidumps in. The structure in this directory depends
       // on the crash library being used (Crashpad or Breakpad).
-      let crashesDirectory = (crashReporter as any).getCrashesDirectory();
+      const crashesDirectory = (crashReporter as any).getCrashesDirectory();
       this.uploader = new MinidumpUploader(this.client.dsn, crashesDirectory);
 
       // Start to submit recent minidump crashes. This will load breadcrumbs
@@ -156,7 +275,7 @@ export class SentryElectron implements Adapter {
       // Every time a subprocess or renderer crashes, start sending minidumps
       // right away.
       app.on('web-contents-created', (event, contents) => {
-        contents.on('crashed', (event, killed) => {
+        contents.on('crashed', () => {
           this.sendNativeCrashes();
         });
       });
@@ -226,13 +345,12 @@ export class SentryElectron implements Adapter {
     ...include: string[]
   ) {
     const originalEmit = emitter.emit;
-    const that = this;
     // tslint:disable:only-arrow-functions
     // tslint:disable-next-line:space-before-function-paren
-    emitter.emit = function(event) {
+    emitter.emit = event => {
       // tslint:enable:only-arrow-functions
       if (include.length === 0 || include.indexOf(event) > -1) {
-        that.captureBreadcrumb({
+        this.captureBreadcrumb({
           message: `${category}.${event}`,
           type: `ui`,
           category: `electron`,
@@ -241,124 +359,5 @@ export class SentryElectron implements Adapter {
       }
       return originalEmit.apply(emitter, arguments);
     };
-  }
-
-  async install(): Promise<boolean> {
-    let success = true;
-
-    if (this.isNativeEnabled()) {
-      success = (await this.installNativeHandler()) && success;
-    }
-
-    if (this.isMainEnabled()) {
-      success = (await this.installMainHandler()) && success;
-    }
-
-    if (this.isRenderEnabled()) {
-      success = (await this.installRenderHandler()) && success;
-    }
-
-    if (this.isMainProcess()) {
-      ipcMain.on(IPC_CRUMB, (_: Event, crumb: Breadcrumb) => {
-        this.captureBreadcrumb(crumb).catch(e => this.client.log(e));
-      });
-
-      ipcMain.on(IPC_EVENT, (_: Event, event: SentryEvent) => {
-        this.send(event).catch(e => this.client.log(e));
-      });
-
-      ipcMain.on(IPC_CONTEXT, (_: Event, context: Context) => {
-        this.setContext(context).catch(e => this.client.log(e));
-      });
-
-      this.breadcrumbsFromEvents('app', app);
-
-      app.on('ready', info => {
-        // we can't access these until 'ready'
-        this.breadcrumbsFromEvents('Screen', screen);
-        this.breadcrumbsFromEvents('PowerMonitor', powerMonitor);
-      });
-
-      app.on('web-contents-created', (e, contents) => {
-        this.breadcrumbsFromEvents(
-          'WebContents',
-          contents,
-          'dom-ready',
-          'load-url',
-          'destroyed',
-        );
-      });
-    }
-
-    return success;
-  }
-
-  captureException(exception: any): Promise<SentryEvent> {
-    return this.callInner(inner => inner.captureException(exception));
-  }
-
-  captureMessage(message: string): Promise<SentryEvent> {
-    return this.callInner(inner => inner.captureMessage(message));
-  }
-
-  async captureBreadcrumb(breadcrumb: Breadcrumb): Promise<Breadcrumb> {
-    if (this.isRenderProcess()) {
-      ipcRenderer.send(IPC_CRUMB, breadcrumb);
-      return breadcrumb;
-    }
-
-    const crumb = JSON.parse(JSON.stringify(breadcrumb));
-    const max = this.options.maxBreadcrumbs || MAX_BREADCRUMBS;
-    this.breadcrumbs.update(crumbs => [...crumbs.slice(-max), crumb]);
-
-    return crumb;
-  }
-
-  async send(event: SentryEvent): Promise<void> {
-    if (this.isRenderProcess()) {
-      ipcRenderer.send(IPC_EVENT, event);
-      return;
-    }
-
-    const context = this.getEnrichedContext();
-    const mergedEvent = {
-      ...event,
-      user: { ...context.user, ...event.user },
-      tags: { ...context.tags, ...event.tags },
-      extra: { ...context.extra, ...event.extra },
-      sdk: { name: SDK_NAME, version: SDK_VERSION },
-      breadcrumbs: this.breadcrumbs.get(),
-    };
-
-    return this.callInner(inner => inner.send(mergedEvent));
-  }
-
-  async setOptions(options: SentryElectronOptions): Promise<void> {
-    this.options = options;
-
-    if (this.isNativeEnabled()) {
-      // We can safely re-install the native CrashReporter. If it had been
-      // started before, this will effectively be a no-op. Otherwise, it will
-      // start a new instance.
-      await this.installNativeHandler();
-    } else {
-      this.client.log('Native CrashReporter cannot be stopped once started.');
-    }
-
-    return this.callInner(inner => inner.setOptions(options));
-  }
-
-  async getContext(): Promise<Context> {
-    // The context is managed by the main process only
-    return this.isMainProcess() ? this.context.get() : {};
-  }
-
-  async setContext(context: Context): Promise<void> {
-    if (this.isRenderProcess()) {
-      ipcRenderer.send(IPC_CONTEXT, context);
-      return;
-    }
-
-    this.context.set(context);
   }
 }

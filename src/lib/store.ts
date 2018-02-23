@@ -1,7 +1,7 @@
-import { join } from 'path';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { join } from 'path';
 
-import { remote, app } from 'electron';
+import { app, remote } from 'electron';
 const BASE_PATH = join((app || remote.app).getPath('userData'), 'sentry');
 
 export default class Store<T> {
@@ -15,11 +15,6 @@ export default class Store<T> {
     }
 
     this.path = join(BASE_PATH, filename);
-  }
-
-  private flush() {
-    writeFileSync(this.path, JSON.stringify(this.data));
-    this.flushing = false;
   }
 
   public set(next: T) {
@@ -45,5 +40,10 @@ export default class Store<T> {
     }
 
     return this.data;
+  }
+
+  private flush() {
+    writeFileSync(this.path, JSON.stringify(this.data));
+    this.flushing = false;
   }
 }
