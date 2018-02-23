@@ -32,11 +32,9 @@ export default class Store<T> {
 
   public get(): T {
     if (this.data === undefined) {
-      if (existsSync(this.path)) {
-        this.data = JSON.parse(readFileSync(this.path, 'utf8'));
-      } else {
-        this.data = this.initial;
-      }
+      this.data = existsSync(this.path)
+        ? JSON.parse(readFileSync(this.path, 'utf8'))
+        : this.initial;
     }
 
     return this.data;
