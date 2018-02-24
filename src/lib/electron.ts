@@ -166,11 +166,14 @@ export class SentryElectron implements Adapter {
       });
 
       app.on('web-contents-created', (e, contents) => {
-        this.breadcrumbsFromEvents('WebContents', contents, [
-          'dom-ready',
-          'load-url',
-          'destroyed',
-        ]);
+        // setImmediate is required for contents.id to be correct
+        setImmediate(() => {
+          this.breadcrumbsFromEvents(`WebContents[${contents.id}]`, contents, [
+            'dom-ready',
+            'load-url',
+            'destroyed',
+          ]);
+        });
       });
     }
 
@@ -231,6 +234,8 @@ export class SentryElectron implements Adapter {
    */
   public async send(event: SentryEvent): Promise<void> {
     if (this.isRenderProcess()) {
+      const id = remote.getCurrentWebContents().id;
+      event.tags = { ...event.tags, process: `renderer[${id}]` };
       ipcRenderer.send(IPC_EVENT, event);
       return;
     }
@@ -239,7 +244,7 @@ export class SentryElectron implements Adapter {
     const mergedEvent = {
       ...event,
       user: { ...context.user, ...event.user },
-      tags: { ...context.tags, ...event.tags },
+      tags: { process: 'browser', ...context.tags, ...event.tags },
       extra: { ...context.extra, ...event.extra },
       sdk: { name: SDK_NAME, version: SDK_VERSION },
       breadcrumbs: this.breadcrumbs.get(),
@@ -352,7 +357,7 @@ export class SentryElectron implements Adapter {
   }
 
   /** Loads new native crashes from disk and sends them to Sentry. */
-  private async sendNativeCrashes(): Promise<void> {
+  private async sendNativeCrashes(processId: string = 'browser'): Promise<void> {
     // Whenever we are called, assume that the crashes we are going to load down
     // below have occurred recently. This means, we can use the same event data
     // for all minidumps that we load now. There are two conditions:
@@ -365,8 +370,11 @@ export class SentryElectron implements Adapter {
     //     about it. Just use the breadcrumbs and context information we have
     //     right now and hope that the delay was not too long.
 
+    const context = this.getEnrichedContext();
     const event = {
-      ...this.getEnrichedContext(),
+      user: context.user,
+      tags: { process: processId, ...context.tags },
+      extra: context.extra,
       release: this.options.release,
       environment: this.options.environment,
       sdk: { name: SDK_NAME, version: SDK_VERSION },
@@ -406,7 +414,7 @@ export class SentryElectron implements Adapter {
       // Every time a subprocess or renderer crashes, start sending minidumps
       // right away.
       app.on('web-contents-created', (event, contents) => {
-        contents.on('crashed', () => this.sendNativeCrashes());
+        contents.on('crashed', () => this.sendNativeCrashes(`renderer[${contents.id}]`));
       });
     }
 
