@@ -236,7 +236,7 @@ export class SentryElectron implements Adapter {
     }
 
     const context = this.getEnrichedContext();
-    const mergedEvent = {
+    let mergedEvent = {
       ...event,
       user: { ...context.user, ...event.user },
       tags: { ...context.tags, ...event.tags },
@@ -244,6 +244,8 @@ export class SentryElectron implements Adapter {
       sdk: { name: SDK_NAME, version: SDK_VERSION },
       breadcrumbs: this.breadcrumbs.get(),
     };
+
+    mergedEvent = this.normalizeEvent(mergedEvent);
 
     return this.callInner(inner => inner.send(mergedEvent));
   }
@@ -497,5 +499,45 @@ export class SentryElectron implements Adapter {
 
       return originalEmit.call(emitter, event, ...args);
     };
+  }
+
+  private normalizeEvent(event: any) {
+    const appPath = app.getAppPath();
+
+    if (event.culprit) {
+      event.culprit = this.normalizeUrl(event.culprit, appPath);
+    }
+
+    if (event.request && event.request.url) {
+      event.request.url =
+        this.normalizeUrl(event.request.url.replace('file:///', ''), appPath.replace(/\\/g, '/'));
+    }
+
+    const stacktrace =
+      event.stacktrace
+      // node.js exceptions
+      || (event.exception && event.exception[0] && event.exception[0].stacktrace)
+      // Browser exceptions
+      || (event.exception && event.exception.values[0].stacktrace);
+
+    if (stacktrace) {
+      stacktrace.frames.forEach((frame: any) => {
+        frame.filename = this.normalizeUrl(frame.filename, appPath);
+      });
+    }
+
+    return event;
+  }
+
+  private normalizeUrl(url: string, base: string) {
+    return url.includes(base)
+      ? 'app://' + url
+        // Remove base
+        .replace(base, '')
+        // Convert Windows slashes
+        .replace(/\\/g, '/')
+        // Remove leading slash
+        .slice(1)
+      : url;
   }
 }
