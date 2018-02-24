@@ -358,7 +358,7 @@ export class SentryElectron implements Adapter {
   }
 
   /** Loads new native crashes from disk and sends them to Sentry. */
-  private async sendNativeCrashes(processId: string = 'browser'): Promise<void> {
+  private async sendNativeCrashes(processType: string = 'browser'): Promise<void> {
     // Whenever we are called, assume that the crashes we are going to load down
     // below have occurred recently. This means, we can use the same event data
     // for all minidumps that we load now. There are two conditions:
@@ -375,7 +375,7 @@ export class SentryElectron implements Adapter {
     const event = {
       user: context.user,
       tags: context.tags,
-      extra: { crashed_process: processId, ...context.extra },
+      extra: { crashed_process: processType, ...context.extra },
       release: this.options.release,
       environment: this.options.environment,
       sdk: { name: SDK_NAME, version: SDK_VERSION },
