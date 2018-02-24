@@ -236,16 +236,14 @@ export class SentryElectron implements Adapter {
     }
 
     const context = this.getEnrichedContext();
-    let mergedEvent = {
-      ...event,
+    const mergedEvent = {
+      ...this.normalizeEvent(event),
       user: { ...context.user, ...event.user },
       tags: { ...context.tags, ...event.tags },
       extra: { ...context.extra, ...event.extra },
       sdk: { name: SDK_NAME, version: SDK_VERSION },
       breadcrumbs: this.breadcrumbs.get(),
     };
-
-    mergedEvent = this.normalizeEvent(mergedEvent);
 
     return this.callInner(inner => inner.send(mergedEvent));
   }
