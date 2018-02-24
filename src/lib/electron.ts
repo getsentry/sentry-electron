@@ -136,6 +136,8 @@ export class SentryElectron implements Adapter {
       success = (await this.installNativeHandler()) && success;
     }
 
+    this.breadcrumbs.clear();
+
     if (this.isMainEnabled()) {
       success = (await this.installMainHandler()) && success;
     }
@@ -370,7 +372,8 @@ export class SentryElectron implements Adapter {
       release: this.options.release,
       environment: this.options.environment,
       sdk: { name: SDK_NAME, version: SDK_VERSION },
-      breadcrumbs: this.breadcrumbs.get(),
+      // breadcrumbs are copied as they get cleared on startup
+      breadcrumbs: Array.from(this.breadcrumbs.get()),
     };
 
     const paths = await this.uploader.getNewMinidumps();

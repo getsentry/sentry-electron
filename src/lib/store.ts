@@ -82,6 +82,13 @@ export default class Store<T> {
     return this.data;
   }
 
+  /**
+   * Returns store to its initial state
+   */
+  public clear() {
+    this.set(this.initial as T);
+  }
+
   /** Serializes the current data into the JSON file. */
   private flush() {
     writeFileSync(this.path, JSON.stringify(this.data));
