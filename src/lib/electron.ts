@@ -167,6 +167,7 @@ export class SentryElectron implements Adapter {
 
       app.on('web-contents-created', (e, contents) => {
         // setImmediate is required for contents.id to be correct
+        // https://github.com/electron/electron/issues/12036
         setImmediate(() => {
           this.breadcrumbsFromEvents(`WebContents[${contents.id}]`, contents, [
             'dom-ready',
