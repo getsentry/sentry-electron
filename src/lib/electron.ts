@@ -235,7 +235,7 @@ export class SentryElectron implements Adapter {
   public async send(event: SentryEvent): Promise<void> {
     if (this.isRenderProcess()) {
       const id = remote.getCurrentWebContents().id;
-      event.tags = { ...event.tags, process: `renderer[${id}]` };
+      event.extra = { ...event.extra, crashed_process: `renderer[${id}]` };
       ipcRenderer.send(IPC_EVENT, event);
       return;
     }
@@ -244,8 +244,8 @@ export class SentryElectron implements Adapter {
     const mergedEvent = {
       ...event,
       user: { ...context.user, ...event.user },
-      tags: { process: 'browser', ...context.tags, ...event.tags },
-      extra: { ...context.extra, ...event.extra },
+      tags: { ...context.tags, ...event.tags },
+      extra: { crashed_process: 'browser', ...context.extra, ...event.extra },
       sdk: { name: SDK_NAME, version: SDK_VERSION },
       breadcrumbs: this.breadcrumbs.get(),
     };
@@ -373,8 +373,8 @@ export class SentryElectron implements Adapter {
     const context = this.getEnrichedContext();
     const event = {
       user: context.user,
-      tags: { process: processId, ...context.tags },
-      extra: context.extra,
+      tags: context.tags,
+      extra: { crashed_process: processId, ...context.extra },
       release: this.options.release,
       environment: this.options.environment,
       sdk: { name: SDK_NAME, version: SDK_VERSION },
