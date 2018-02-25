@@ -42,6 +42,9 @@ const SDK_NAME = 'sentry-electron';
 /** SDK version used in every event. */
 const SDK_VERSION = require('../../package.json').version;
 
+/** Application base path */
+const APP_BASE_PATH = (app || remote.app).getAppPath().replace(/\\/g, '/');
+
 /**
  * Configuration options for {@link SentryElectron}.
  *
@@ -500,15 +503,13 @@ export class SentryElectron implements Adapter {
   }
 
   private normalizeEvent(event: any) {
-    const appPath = app.getAppPath();
-
     if (event.culprit) {
-      event.culprit = this.normalizeUrl(event.culprit, appPath);
+      event.culprit = this.normalizeUrl(event.culprit);
     }
 
     if (event.request && event.request.url) {
       event.request.url =
-        this.normalizeUrl(event.request.url.replace('file:///', ''), appPath.replace(/\\/g, '/'));
+        this.normalizeUrl(event.request.url);
     }
 
     const stacktrace =
@@ -520,22 +521,24 @@ export class SentryElectron implements Adapter {
 
     if (stacktrace) {
       stacktrace.frames.forEach((frame: any) => {
-        frame.filename = this.normalizeUrl(frame.filename, appPath);
+        frame.filename = this.normalizeUrl(frame.filename);
       });
     }
 
     return event;
   }
 
-  private normalizeUrl(url: string, base: string) {
-    return url.includes(base)
+  private normalizeUrl(url: string) {
+    url = url
+      .replace('file:///', '')
+      .replace(/\\/g, '/');
+
+    return url.includes(APP_BASE_PATH)
       ? 'app://' + url
         // Remove base
-        .replace(base, '')
-        // Convert Windows slashes
-        .replace(/\\/g, '/')
+        .replace(APP_BASE_PATH, '')
         // Remove leading slash
-        .slice(1)
+        .replace(/^\//, '')
       : url;
   }
 }
