@@ -513,8 +513,7 @@ export class SentryElectron implements Adapter {
     }
 
     if (event.request && event.request.url) {
-      event.request.url =
-        this.normalizeUrl(event.request.url);
+      event.request.url = this.normalizeUrl(event.request.url);
     }
 
     const stacktrace =
