@@ -534,14 +534,14 @@ export class SentryElectron implements Adapter {
   }
 
   private normalizeUrl(url: string) {
-    url = url
-      .replace('file:///', '')
-      .replace(/\\/g, '/');
+    url = url.replace(/\\/g, '/');
 
     return url.includes(APP_BASE_PATH)
       ? 'app://' + url
         // Remove base
         .replace(APP_BASE_PATH, '')
+        // Remove file:// protocol
+        .replace('file:///', '')
         // Remove leading slashes
         .replace(/^\/+/, '')
       : url;
