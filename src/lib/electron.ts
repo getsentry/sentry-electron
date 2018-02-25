@@ -211,6 +211,11 @@ export class SentryElectron implements Adapter {
    */
   public async captureBreadcrumb(breadcrumb: Breadcrumb): Promise<Breadcrumb> {
     if (this.isRenderProcess()) {
+      if (breadcrumb.category && breadcrumb.category === 'navigation') {
+        breadcrumb.data.from = this.normalizeUrl(breadcrumb.data.from);
+        breadcrumb.data.to = this.normalizeUrl(breadcrumb.data.to);
+      }
+
       ipcRenderer.send(IPC_CRUMB, breadcrumb);
       return breadcrumb;
     }
@@ -537,8 +542,8 @@ export class SentryElectron implements Adapter {
       ? 'app://' + url
         // Remove base
         .replace(APP_BASE_PATH, '')
-        // Remove leading slash
-        .replace(/^\//, '')
+        // Remove leading slashes
+        .replace(/^\/+/, '')
       : url;
   }
 }
