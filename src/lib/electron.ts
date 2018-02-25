@@ -375,7 +375,7 @@ export class SentryElectron implements Adapter {
       release: this.options.release,
       environment: this.options.environment,
       sdk: { name: SDK_NAME, version: SDK_VERSION },
-      // breadcrumbs are copied as they get cleared on startup
+      // Breadcrumbs are copied as they may get cleared at startup
       breadcrumbs: Array.from(this.breadcrumbs.get()),
     };
 
