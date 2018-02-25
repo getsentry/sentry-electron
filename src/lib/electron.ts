@@ -136,8 +136,6 @@ export class SentryElectron implements Adapter {
       success = (await this.installNativeHandler()) && success;
     }
 
-    this.breadcrumbs.clear();
-
     if (this.isMainEnabled()) {
       success = (await this.installMainHandler()) && success;
     }
@@ -305,6 +303,11 @@ export class SentryElectron implements Adapter {
     }
 
     this.context.set(context);
+  }
+
+  /** Clears the breadcrumb store */
+  public clearBreadcrumbs() {
+    this.breadcrumbs.clear();
   }
 
   /** Returns whether the SDK is running in the main process. */
