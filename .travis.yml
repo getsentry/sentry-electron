@@ -1,0 +1,22 @@
+branches:
+  only:
+    - master
+
+sudo: false
+language: node_js
+node_js:
+- '8'
+dist: trusty
+cache:
+  yarn: true
+  directories:
+  - node_modules
+before_install:
+  - curl -o- -L https://yarnpkg.com/install.sh | bash
+  - export PATH="$HOME/.yarn/bin:$PATH"
+
+matrix:
+  include:
+    - env: NAME="lint"
+      script:
+        - yarn lint
