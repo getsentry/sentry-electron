@@ -11,7 +11,6 @@ cache:
   directories:
   - node_modules
 
-
 addons:
   apt:
     packages:
@@ -27,10 +26,5 @@ matrix:
       script:
         - yarn lint
     - env: NAME="test"
-      install:
-        - export DISPLAY=':99.0'
-        - sh -e /etc/init.d/xvfb start
-        - sleep 3
-        - yarn install
       script:
         - yarn test
