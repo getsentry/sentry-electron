@@ -528,10 +528,10 @@ export class SentryElectron implements Adapter {
   }
 
   private normalizeUrl(url: string) {
-    url = url.replace(/\\/g, '/');
+    const normUrl = url.replace(/\\/g, '/');
 
-    return url.includes(APP_BASE_PATH)
-      ? 'app://' + url
+    return normUrl.includes(APP_BASE_PATH)
+      ? 'app://' + normUrl
         // Remove base
         .replace(APP_BASE_PATH, '')
         // Remove file:// protocol
