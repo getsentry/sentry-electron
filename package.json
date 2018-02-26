@@ -10,6 +10,7 @@
   "scripts": {
     "build": "tsc",
     "clean": "rimraf dist",
+    "preexample": "if [ ! -d \"dist\" ]; then npm run build; fi;",
     "example": "electron example",
     "lint": "tslint --config ./tslint.json src/**/*",
     "format": "prettier --config /.prettierrc.json src/**/* --write"
