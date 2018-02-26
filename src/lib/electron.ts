@@ -42,6 +42,9 @@ const SDK_NAME = 'sentry-electron';
 /** SDK version used in every event. */
 const SDK_VERSION = require('../../package.json').version;
 
+/** Application base path */
+const APP_BASE_PATH = (app || remote.app).getAppPath().replace(/\\/g, '/');
+
 /**
  * Configuration options for {@link SentryElectron}.
  *
@@ -247,7 +250,7 @@ export class SentryElectron implements Adapter {
 
     const context = this.getEnrichedContext();
     const mergedEvent = {
-      ...event,
+      ...this.normalizeEvent(event),
       user: { ...context.user, ...event.user },
       tags: { ...context.tags, ...event.tags },
       extra: { crashed_process: 'browser', ...context.extra, ...event.extra },
@@ -519,5 +522,44 @@ export class SentryElectron implements Adapter {
 
       return originalEmit.call(emitter, event, ...args);
     };
+  }
+
+  private normalizeEvent(event: any) {
+    if (event.culprit) {
+      event.culprit = this.normalizeUrl(event.culprit);
+    }
+
+    if (event.request && event.request.url) {
+      event.request.url = this.normalizeUrl(event.request.url);
+    }
+
+    const stacktrace =
+      event.stacktrace
+      // node.js exceptions
+      || (event.exception && event.exception[0] && event.exception[0].stacktrace)
+      // Browser exceptions
+      || (event.exception && event.exception.values[0].stacktrace);
+
+    if (stacktrace) {
+      stacktrace.frames.forEach((frame: any) => {
+        frame.filename = this.normalizeUrl(frame.filename);
+      });
+    }
+
+    return event;
+  }
+
+  private normalizeUrl(url: string) {
+    const normUrl = url.replace(/\\/g, '/');
+
+    return normUrl.includes(APP_BASE_PATH)
+      ? 'app://' + normUrl
+        // Remove base
+        .replace(APP_BASE_PATH, '')
+        // Remove file:// protocol
+        .replace('file:///', '')
+        // Remove leading slashes
+        .replace(/^\/+/, '')
+      : url;
   }
 }
