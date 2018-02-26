@@ -16,7 +16,7 @@
     "lint": "tslint --config ./tslint.json src/**/*",
     "format": "prettier --config /.prettierrc.json src/**/* --write",
     "pretest": "run-s clean build build:test",
-    "test": "xvfb-maybe mocha ./dist/test"
+    "test": "xvfb-maybe mocha --timeout 30000 ./dist/test"
   },
   "dependencies": {
     "@sentry/browser": "0.4.0-beta.2",
