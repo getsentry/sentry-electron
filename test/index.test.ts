@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/core';
 import { expect, should, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { APPDATA_DIRECTORY, initialiseSpectron } from './spectron-helper';
@@ -9,7 +10,6 @@ use(chaiAsPromised);
 
 describe('Test', () => {
   before(() => {
-    // chaiAsPromised.transferPromiseness = app.transferPromiseness;
     return app.start().then(() => app.client.waitUntilWindowLoaded());
   });
 
@@ -26,17 +26,20 @@ describe('Test', () => {
         APPDATA_DIRECTORY
       ] as string);
     }
-    // await Sentry.create(
-    //   'https://53039209a22b4ec1bcc296a3c9fdecd6@sentry.io/4291',
-    // )
-    //   .use(SentryBrowser)
-    //   .install()
-    //   .then(client => client.setContext({ extra: { abc: 'def' } }));
   });
 
-  it('open window', () => {
-    return app.client.waitUntilWindowLoaded().then(() => {
-      return app.client.getWindowCount().should.eventually.equal(1);
-    });
+  it('Open app', () => {
+    return app.client.getWindowCount().should.eventually.equal(1);
+  });
+
+  it('Throw renderer error', done => {
+    app.client
+      .element('#error-render')
+      .click()
+      .then(() => {
+        setTimeout(() => {
+          done();
+        }, 3000);
+      });
   });
 });

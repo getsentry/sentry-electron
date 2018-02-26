@@ -1,4 +1,4 @@
-import { app } from 'electron';
+import { app, protocol } from 'electron';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { Application } from 'spectron';
