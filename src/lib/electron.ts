@@ -64,8 +64,8 @@ const APP_BASE_PATH = (app || remote.app).getAppPath().replace(/\\/g, '/');
  */
 export interface SentryElectronOptions
   extends Options,
-    SentryBrowserOptions,
-    SentryNodeOptions {
+  SentryBrowserOptions,
+  SentryNodeOptions {
   /**
    * Enables crash reporting for native crashes of this process (via Minidumps).
    * Defaults to `true`.
@@ -109,6 +109,15 @@ export interface SentryElectronOptions
  * @see Sentry.Client
  */
 export class SentryElectron implements Adapter {
+
+  /**
+   * Normalizes URLs in exceptions and stacktraces so Sentry can fingerprint
+   * across platforms
+   *
+   * @param {string} url The URL to be normalized
+   * @param {string} [base=APP_BASE_PATH] (optional) The application base path
+   * @returns
+   */
   private static normalizeUrl(url: string, base: string = APP_BASE_PATH) {
     return decodeURI(url)
       .replace(/\\/g, '/')
@@ -132,7 +141,7 @@ export class SentryElectron implements Adapter {
   constructor(
     private client: Client,
     public options: SentryElectronOptions = {},
-  ) {}
+  ) { }
 
   /**
    * Initializes the SDK.

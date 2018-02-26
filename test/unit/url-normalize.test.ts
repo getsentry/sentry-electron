@@ -1,6 +1,6 @@
 import { expect, should, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { SentryElectron } from '../src/lib/electron';
+import { SentryElectron } from '../../src/lib/electron';
 
 should();
 use(chaiAsPromised);
@@ -10,7 +10,7 @@ const normalizeUrl = (SentryElectron as any).normalizeUrl as (url: string, base:
 
 describe('Normalize URLs', () => {
   it('Example app on Windows', () => {
-    const base = 'C:/Users/Username/sentry-electron/example';
+    const base = 'c:/Users/Username/sentry-electron/example';
 
     expect(normalizeUrl('C:\\Users\\Username\\sentry-electron\\example\\renderer.js', base))
       .to.equal('app://renderer.js');
