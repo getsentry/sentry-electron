@@ -315,6 +315,11 @@ export class SentryElectron implements Adapter {
     this.context.set(context);
   }
 
+  /** Clears the breadcrumb store */
+  public clearBreadcrumbs() {
+    this.breadcrumbs.clear();
+  }
+
   /** Returns whether the SDK is running in the main process. */
   private isMainProcess(): boolean {
     return process.type === 'browser';
@@ -383,7 +388,8 @@ export class SentryElectron implements Adapter {
       release: this.options.release,
       environment: this.options.environment,
       sdk: { name: SDK_NAME, version: SDK_VERSION },
-      breadcrumbs: this.breadcrumbs.get(),
+      // Breadcrumbs are copied as they may get cleared at startup
+      breadcrumbs: Array.from(this.breadcrumbs.get()),
     };
 
     const paths = await this.uploader.getNewMinidumps();
