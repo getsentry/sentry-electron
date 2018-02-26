@@ -19,6 +19,8 @@ import {
   remote,
   screen,
   webContents,
+  // Electron cannot be included as a dependency otherwise the binaries get packaged into apps
+  // tslint:disable-next-line:no-implicit-dependencies
 } from 'electron';
 
 import Store from './store';
