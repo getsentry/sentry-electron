@@ -1,6 +1,6 @@
 import { expect, should, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { initialiseSpectron } from './spectron-helper';
+import { APPDATA_DIRECTORY, initialiseSpectron } from './spectron-helper';
 
 should();
 const app = initialiseSpectron();
@@ -21,6 +21,11 @@ describe('Test', () => {
   });
 
   beforeEach(async () => {
+    if (process.env[APPDATA_DIRECTORY]) {
+      app.electron.app.setPath('userData', process.env[
+        APPDATA_DIRECTORY
+      ] as string);
+    }
     // await Sentry.create(
     //   'https://53039209a22b4ec1bcc296a3c9fdecd6@sentry.io/4291',
     // )
