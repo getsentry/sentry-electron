@@ -20,3 +20,6 @@ matrix:
     - env: NAME="lint"
       script:
         - yarn lint
+    - env: NAME="test"
+      script:
+        - yarn test

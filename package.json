@@ -13,7 +13,9 @@
     "preexample": "if [ ! -d \"dist\" ]; then npm run build; fi;",
     "example": "electron example",
     "lint": "tslint --config ./tslint.json src/**/*",
-    "format": "prettier --config /.prettierrc.json src/**/* --write"
+    "format": "prettier --config /.prettierrc.json src/**/* --write",
+    "pretest": "tsc -p tsconfig.test.json",
+    "test": "mocha ./dist/test"
   },
   "dependencies": {
     "@sentry/browser": "0.4.0-beta.2",
@@ -27,11 +29,20 @@
     "electron": "*"
   },
   "devDependencies": {
+    "@types/chai": "^4.1.2",
+    "@types/chai-as-promised": "^7.1.0",
     "@types/form-data": "^2.2.1",
+    "@types/mocha": "^2.2.48",
     "@types/node-fetch": "^1.6.7",
+    "@types/webdriverio": "^4.8.8",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
     "electron": "^1.7.9",
+    "electron-chromedriver": "^1.8.0",
+    "mocha": "^5.0.1",
     "prettier": "^1.10.2",
     "rimraf": "^2.6.2",
+    "spectron": "^3.8.0",
     "tslint": "^5.9.1",
     "tslint-config-prettier": "^1.8.0",
     "tslint-eslint-rules": "^5.0.0",
