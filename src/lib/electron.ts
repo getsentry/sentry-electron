@@ -109,6 +109,12 @@ export interface SentryElectronOptions
  * @see Sentry.Client
  */
 export class SentryElectron implements Adapter {
+  private static normalizeUrl(url: string, base: string = APP_BASE_PATH) {
+    return decodeURI(url)
+      .replace(/\\/g, '/')
+      .replace(new RegExp(`(file:\/\/)?\/*${base}\/*`, "ig"), 'app://');
+  }
+
   /** The inner SDK used to record JavaScript events. */
   private inner: SentryBrowser | SentryNode;
   /** Store to persist context information beyond application crashes. */
@@ -528,11 +534,11 @@ export class SentryElectron implements Adapter {
 
   private normalizeEvent(event: any) {
     if (event.culprit) {
-      event.culprit = this.normalizeUrl(event.culprit);
+      event.culprit = SentryElectron.normalizeUrl(event.culprit);
     }
 
     if (event.request && event.request.url) {
-      event.request.url = this.normalizeUrl(event.request.url);
+      event.request.url = SentryElectron.normalizeUrl(event.request.url);
     }
 
     const stacktrace =
@@ -544,24 +550,10 @@ export class SentryElectron implements Adapter {
 
     if (stacktrace) {
       stacktrace.frames.forEach((frame: any) => {
-        frame.filename = this.normalizeUrl(frame.filename);
+        frame.filename = SentryElectron.normalizeUrl(frame.filename);
       });
     }
 
     return event;
-  }
-
-  private normalizeUrl(url: string) {
-    const normUrl = decodeURI(url).replace(/\\/g, '/');
-
-    return normUrl.includes(APP_BASE_PATH)
-      ? 'app://' + normUrl
-        // Remove base
-        .replace(APP_BASE_PATH, '')
-        // Remove file:// protocol
-        .replace('file:///', '')
-        // Remove leading slashes
-        .replace(/^\/+/, '')
-      : url;
   }
 }
