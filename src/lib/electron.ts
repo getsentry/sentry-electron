@@ -552,7 +552,7 @@ export class SentryElectron implements Adapter {
   }
 
   private normalizeUrl(url: string) {
-    const normUrl = url.replace(/\\/g, '/');
+    const normUrl = decodeURI(url).replace(/\\/g, '/');
 
     return normUrl.includes(APP_BASE_PATH)
       ? 'app://' + normUrl
