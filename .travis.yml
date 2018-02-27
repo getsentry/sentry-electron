@@ -22,11 +22,15 @@ before_install:
 
 matrix:
   include:
-    - os: osx
     - env: NAME="lint"
       script:
         - yarn lint
-    - env: NAME="test"
+    - env: NAME="test-linux"
+      script:
+        - yarn test
+        - yarn e2e
+    - env: NAME="test-mac"
+      os: osx
       script:
         - yarn test
         - yarn e2e
