@@ -25,11 +25,11 @@ matrix:
     - env: NAME="lint"
       script:
         - yarn lint
-    - env: NAME="test-linux"
+    - env: NAME="test"
       script:
         - yarn test
         - yarn e2e
-    - env: NAME="test-mac"
+    - env: NAME="test"
       os: osx
       script:
         - yarn test
