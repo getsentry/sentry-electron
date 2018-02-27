@@ -21,8 +21,8 @@ init:
 install:
   - ps: Install-Product node $env:nodejs_version
   - node --version
-  - yarn install
   - yarn versions
+  - yarn install
 
 test_script:
   - yarn test
