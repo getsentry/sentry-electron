@@ -28,3 +28,4 @@ matrix:
     - env: NAME="test"
       script:
         - yarn test
+        - yarn e2e

@@ -64,8 +64,8 @@ const APP_BASE_PATH = (app || remote.app).getAppPath().replace(/\\/g, '/');
  */
 export interface SentryElectronOptions
   extends Options,
-    SentryBrowserOptions,
-    SentryNodeOptions {
+  SentryBrowserOptions,
+  SentryNodeOptions {
   /**
    * Enables crash reporting for native crashes of this process (via Minidumps).
    * Defaults to `true`.
@@ -109,6 +109,21 @@ export interface SentryElectronOptions
  * @see Sentry.Client
  */
 export class SentryElectron implements Adapter {
+
+  /**
+   * Normalizes URLs in exceptions and stacktraces so Sentry can fingerprint
+   * across platforms
+   *
+   * @param {string} url The URL to be normalized
+   * @param {string} [base=APP_BASE_PATH] (optional) The application base path
+   * @returns
+   */
+  private static normalizeUrl(url: string, base: string = APP_BASE_PATH) {
+    return decodeURI(url)
+      .replace(/\\/g, '/')
+      .replace(new RegExp(`(file:\/\/)?\/*${base}\/*`, "ig"), 'app://');
+  }
+
   /** The inner SDK used to record JavaScript events. */
   private inner: SentryBrowser | SentryNode;
   /** Store to persist context information beyond application crashes. */
@@ -126,7 +141,7 @@ export class SentryElectron implements Adapter {
   constructor(
     private client: Client,
     public options: SentryElectronOptions = {},
-  ) {}
+  ) { }
 
   /**
    * Initializes the SDK.
@@ -528,11 +543,11 @@ export class SentryElectron implements Adapter {
 
   private normalizeEvent(event: any) {
     if (event.culprit) {
-      event.culprit = this.normalizeUrl(event.culprit);
+      event.culprit = SentryElectron.normalizeUrl(event.culprit);
     }
 
     if (event.request && event.request.url) {
-      event.request.url = this.normalizeUrl(event.request.url);
+      event.request.url = SentryElectron.normalizeUrl(event.request.url);
     }
 
     const stacktrace =
@@ -544,24 +559,10 @@ export class SentryElectron implements Adapter {
 
     if (stacktrace) {
       stacktrace.frames.forEach((frame: any) => {
-        frame.filename = this.normalizeUrl(frame.filename);
+        frame.filename = SentryElectron.normalizeUrl(frame.filename);
       });
     }
 
     return event;
-  }
-
-  private normalizeUrl(url: string) {
-    const normUrl = url.replace(/\\/g, '/');
-
-    return normUrl.includes(APP_BASE_PATH)
-      ? 'app://' + normUrl
-        // Remove base
-        .replace(APP_BASE_PATH, '')
-        // Remove file:// protocol
-        .replace('file:///', '')
-        // Remove leading slashes
-        .replace(/^\/+/, '')
-      : url;
   }
 }

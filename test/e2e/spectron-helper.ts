@@ -3,8 +3,6 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { Application } from 'spectron';
 
-export const APPDATA_DIRECTORY = 'E2E_APPDATA_DIRECTORY';
-
 export function initialiseSpectron() {
   let electronPath = join(
     __dirname,
