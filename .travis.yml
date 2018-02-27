@@ -22,6 +22,7 @@ before_install:
 
 matrix:
   include:
+    - os: osx
     - env: NAME="lint"
       script:
         - yarn lint
