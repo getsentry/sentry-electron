@@ -12,7 +12,6 @@ branches:
 
 cache:
   - node_modules -> package.json
-  - '%LOCALAPPDATA%\Yarn'
   - '%USERPROFILE%\.electron'
 
 init:
