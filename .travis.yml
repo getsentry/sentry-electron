@@ -27,4 +27,4 @@ matrix:
         - yarn lint
     - env: NAME="test"
       script:
-        - yarn test
+        - yarn test && yarn e2e
