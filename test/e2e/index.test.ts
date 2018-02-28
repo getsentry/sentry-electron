@@ -1,39 +1,54 @@
 import * as Sentry from '@sentry/core';
 import { expect, should, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { initialiseSpectron } from './spectron-helper';
+import { Application } from 'spectron';
+import { getTestContext, TestContext } from './spectron-helper';
+import { TestServer } from './test-server';
 
 should();
-const app = initialiseSpectron();
+let context: TestContext;
+let testServer: TestServer;
 
 use(chaiAsPromised);
 
 describe('Test', () => {
   beforeEach(async () => {
-    await app.start();
-    await app.client.waitUntilWindowLoaded();
+    testServer = new TestServer();
+    testServer.start();
+
+    context = await getTestContext();
+    await context.start();
   });
 
   afterEach(async () => {
-    if (app && app.isRunning()) {
-      return app.stop();
-    }
+    context.stop();
+    await testServer.stop();
     return false;
   });
 
-  it('Open app', () => {
-    return app.client.getWindowCount().should.eventually.equal(1);
+  it('Throw renderer error', async () => {
+    await context.app.client
+      .waitForExist('#error-render')
+      .click('#error-render')
+      .pause(2000);
+
+    expect(testServer.events.length).to.equal(1);
+    expect(testServer.events[0].native).to.equal(false);
+    expect(testServer.events[0].sentry_key).to.equal('37f8a2ee37c0409d8970bc7559c7c7e4');
   });
 
-  it('Throw renderer error', done => {
-    app.client
-      .waitForExist('#error-render')
-      .element('#error-render')
-      .click()
-      .then(() => {
-        setTimeout(() => {
-          done();
-        }, 3000);
-      });
+  it('Crash renderer', async () => {
+    try {
+      await context.app.client
+        .waitForExist('#crash-render')
+        .click('#crash-render');
+    } catch (e) {
+      // The renderer crashes and causes an exception
+    }
+
+    context.app.client.pause(2000);
+
+    expect(testServer.events.length).to.equal(1);
+    expect(testServer.events[0].native).to.equal(true);
   });
 });
