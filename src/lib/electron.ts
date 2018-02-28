@@ -64,8 +64,8 @@ const APP_BASE_PATH = (app || remote.app).getAppPath().replace(/\\/g, '/');
  */
 export interface SentryElectronOptions
   extends Options,
-  SentryBrowserOptions,
-  SentryNodeOptions {
+    SentryBrowserOptions,
+    SentryNodeOptions {
   /**
    * Enables crash reporting for native crashes of this process (via Minidumps).
    * Defaults to `true`.
@@ -109,7 +109,6 @@ export interface SentryElectronOptions
  * @see Sentry.Client
  */
 export class SentryElectron implements Adapter {
-
   /**
    * Normalizes URLs in exceptions and stacktraces so Sentry can fingerprint
    * across platforms
@@ -121,7 +120,7 @@ export class SentryElectron implements Adapter {
   private static normalizeUrl(url: string, base: string = APP_BASE_PATH) {
     return decodeURI(url)
       .replace(/\\/g, '/')
-      .replace(new RegExp(`(file:\/\/)?\/*${base}\/*`, "ig"), 'app://');
+      .replace(new RegExp(`(file:\/\/)?\/*${base}\/*`, 'ig'), 'app://');
   }
 
   /** The inner SDK used to record JavaScript events. */
@@ -141,7 +140,7 @@ export class SentryElectron implements Adapter {
   constructor(
     private client: Client,
     public options: SentryElectronOptions = {},
-  ) { }
+  ) {}
 
   /**
    * Initializes the SDK.
@@ -258,7 +257,7 @@ export class SentryElectron implements Adapter {
       const contents = remote.getCurrentWebContents();
       event.extra = {
         ...event.extra,
-        crashed_process: `renderer[${contents.id}]`
+        crashed_process: `renderer[${contents.id}]`,
       };
 
       ipcRenderer.send(IPC_EVENT, event);
@@ -387,7 +386,9 @@ export class SentryElectron implements Adapter {
   }
 
   /** Loads new native crashes from disk and sends them to Sentry. */
-  private async sendNativeCrashes(extra: object = { crashed_process: 'browser' }): Promise<void> {
+  private async sendNativeCrashes(
+    extra: object = { crashed_process: 'browser' },
+  ): Promise<void> {
     // Whenever we are called, assume that the crashes we are going to load down
     // below have occurred recently. This means, we can use the same event data
     // for all minidumps that we load now. There are two conditions:
@@ -414,7 +415,7 @@ export class SentryElectron implements Adapter {
 
     const paths = await this.uploader.getNewMinidumps();
     await Promise.all(
-      paths.map(path => this.uploader.uploadMinidump(path, event)),
+      paths.map(path => this.uploader.uploadMinidump({ path, event })),
     );
   }
 
@@ -445,10 +446,12 @@ export class SentryElectron implements Adapter {
       // Every time a subprocess or renderer crashes, start sending minidumps
       // right away.
       app.on('web-contents-created', (event, contents) => {
-        contents.on('crashed', () => this.sendNativeCrashes({
-          crashed_process: `renderer[${contents.id}]`,
-          crashed_url: contents.getURL()
-        }));
+        contents.on('crashed', () =>
+          this.sendNativeCrashes({
+            crashed_process: `renderer[${contents.id}]`,
+            crashed_url: contents.getURL(),
+          }),
+        );
       });
     }
 
@@ -551,11 +554,13 @@ export class SentryElectron implements Adapter {
     }
 
     const stacktrace =
-      event.stacktrace
+      event.stacktrace ||
       // node.js exceptions
-      || (event.exception && event.exception[0] && event.exception[0].stacktrace)
+      (event.exception &&
+        event.exception[0] &&
+        event.exception[0].stacktrace) ||
       // Browser exceptions
-      || (event.exception && event.exception.values[0].stacktrace);
+      (event.exception && event.exception.values[0].stacktrace);
 
     if (stacktrace) {
       stacktrace.frames.forEach((frame: any) => {

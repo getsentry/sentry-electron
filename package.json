@@ -13,7 +13,7 @@
     "preexample": "if [ ! -d \"dist\" ]; then npm run build; fi;",
     "example": "electron example",
     "lint": "tslint --config ./tslint.json src/**/*",
-    "format": "prettier --config /.prettierrc.json src/**/* --write",
+    "format": "prettier --config .prettierrc src/**/* --write",
     "pretest": "run-s clean build",
     "test": "cross-env TS_NODE_PROJECT=./tsconfig.test.json xvfb-maybe electron-mocha --require ts-node/register --timeout 3000 ./test/unit/**/*.ts",
     "pree2e": "run-s clean build",

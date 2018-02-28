@@ -14,6 +14,10 @@ const BASE_PATH = join(USER_DATA_PATH, 'sentry');
  * crashes. When created, it loads data from that file if it already exists.
  */
 export default class Store<T> {
+  public static getBasePath(): string {
+    return this._basePath;
+  }
+
   /** Current state of the data. */
   private data: T;
   /** Internal path for JSON file. */
@@ -30,19 +34,26 @@ export default class Store<T> {
   constructor(public filename: string, private initial?: T) {}
 
   /**
-   * Return the path to the JSON file storing the information.
+   * Return the base path to the directory storing the information.
    */
-  private get path(): string {
-    if (this._path) {
-      return this._path;
-    }
+  private get _basePath(): string {
     if (!existsSync(USER_DATA_PATH)) {
       mkdirSync(USER_DATA_PATH);
     }
     if (!existsSync(BASE_PATH)) {
       mkdirSync(BASE_PATH);
     }
-    this._path = join(BASE_PATH, this.filename);
+    return BASE_PATH;
+  }
+
+  /**
+   * Return the path to the JSON file storing the information.
+   */
+  private get path(): string {
+    if (this._path) {
+      return this._path;
+    }
+    this._path = join(this._basePath, this.filename);
     return this._path;
   }
 
