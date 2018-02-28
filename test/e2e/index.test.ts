@@ -50,5 +50,6 @@ describe('Test', () => {
 
     expect(testServer.events.length).to.equal(1);
     expect(testServer.events[0].native).to.equal(true);
+    expect(testServer.events[0].sentry_key).to.equal('37f8a2ee37c0409d8970bc7559c7c7e4');
   });
 });

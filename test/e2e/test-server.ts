@@ -70,9 +70,7 @@ export class TestServer {
 
   private getData(raw: Buffer) {
     const base64Str = raw.toString();
-    // console.log('body.length', base64Str.length);
     const compressed = Buffer.from(base64Str, 'base64');
-    // console.log('raw.length', raw.length);
     return JSON.parse(zlib.inflateSync(compressed).toString());
   }
 }
