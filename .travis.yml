@@ -29,3 +29,8 @@ matrix:
       script:
         - yarn test
         - yarn e2e
+    - env: NAME="test"
+      os: osx
+      script:
+        - yarn test
+        - yarn e2e

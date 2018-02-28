@@ -1,0 +1,27 @@
+build: off
+image: Visual Studio 2017
+environment:
+  nodejs_version: "8"
+
+platform:
+  - x64
+
+branches:
+  only:
+    - master
+
+cache:
+  - node_modules -> package.json
+  - '%USERPROFILE%\.electron'
+
+init:
+  - git config --global core.autocrlf input
+
+install:
+  - ps: Install-Product node $env:nodejs_version
+  - yarn versions
+  - yarn install
+
+test_script:
+  - yarn test
+  - yarn e2e
