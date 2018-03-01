@@ -56,8 +56,9 @@ export class TestServer {
 
     this.server = http.createServer((req, res) => {
       router(req, res, finalhandler(req, res));
-    })
-      .listen(8000);
+    });
+
+    this.server.listen(8000);
   }
 
   public stop(): Promise<void> {

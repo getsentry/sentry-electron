@@ -125,7 +125,7 @@ export class SentryElectron implements Adapter {
   private static normalizeUrl(url: string, base: string = APP_BASE_PATH) {
     return decodeURI(url)
       .replace(/\\/g, '/')
-      .replace(new RegExp(`(file:\/\/)?\/*${base}\/*`, "ig"), 'app:///');
+      .replace(new RegExp(`(file:\/\/)?\/*${base}\/*`, 'ig'), 'app:///');
   }
 
   /** The inner SDK used to record JavaScript events. */
