@@ -1,5 +1,6 @@
 import * as bodyParser from 'body-parser';
 import * as finalhandler from 'finalhandler';
+import { readFileSync } from 'fs';
 import * as http from 'http';
 import * as multiparty from 'multiparty';
 import * as Router from 'router';
@@ -7,9 +8,9 @@ import * as zlib from 'zlib';
 
 interface TestServerEvent {
   id: string;
-  native: boolean;
   sentry_key: string;
   data: any;
+  dump_file?: Buffer;
 }
 
 export class TestServer {
@@ -18,34 +19,31 @@ export class TestServer {
 
   public start() {
     const router = Router({}) as any;
-    router.use(bodyParser.json());
     router.use(bodyParser.raw());
-    router.use(bodyParser.urlencoded({ extended: true }));
 
+    // Handles the Sentry store endpoint
     router.post('/api/:id/store', (req, res) => {
-      const match = req.headers['x-sentry-auth'].match(/sentry_key=([a-f0-9]*)/);
+      const keyMatch = req.headers['x-sentry-auth'].match(/sentry_key=([a-f0-9]*)/);
 
       this.events.push({
         id: req.params.id,
-        native: false,
-        sentry_key: match[1],
-        data: this.getData(req.body)
+        sentry_key: keyMatch[1],
+        data: this.getBase64AndDecompress(req.body)
       });
 
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
       res.end('Success');
     });
 
+    // Handles the Sentry minidump endpoint
     router.post('/api/:id/minidump', (req, res) => {
       const form = new multiparty.Form();
       form.parse(req, (err, fields, files) => {
-        // console.log('file', files.upload_file_minidump[0]);
-
         this.events.push({
           id: req.params.id,
-          native: true,
           sentry_key: req.originalUrl.replace(/.*sentry_key=/, ''),
           data: JSON.parse(fields.sentry[0]),
+          dump_file: readFileSync(files.upload_file_minidump[0].path),
         });
 
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
@@ -69,7 +67,7 @@ export class TestServer {
     });
   }
 
-  private getData(raw: Buffer) {
+  private getBase64AndDecompress(raw: Buffer) {
     const base64Str = raw.toString();
     const compressed = Buffer.from(base64Str, 'base64');
     return JSON.parse(zlib.inflateSync(compressed).toString());

@@ -23,11 +23,12 @@ describe('Test', () => {
       .waitForExist('#error-render')
       .click('#error-render');
 
-    await context.waitForTrue(() => context.testServer.events.length === 1);
+    await context.waitForTrue(() => context.testServer.events.length >= 1);
 
     expect(context.testServer.events.length).to.equal(1);
-    expect(context.testServer.events[0].native).to.equal(false);
+    expect(context.testServer.events[0].dump_file).to.equal(undefined);
     expect(context.testServer.events[0].sentry_key).to.equal('37f8a2ee37c0409d8970bc7559c7c7e4');
+    expect(context.testServer.events[0].data.culprit).to.equal('app:///renderer.js');
   });
 
   it('Crash renderer', async () => {
@@ -36,13 +37,13 @@ describe('Test', () => {
         .waitForExist('#crash-render')
         .click('#crash-render');
     } catch (e) {
-      // The renderer crashes and causes an exception
+      // The renderer crashes and causes an exception in 'click'
     }
 
-    await context.waitForTrue(() => context.testServer.events.length === 1);
+    await context.waitForTrue(() => context.testServer.events.length >= 1);
 
     expect(context.testServer.events.length).to.equal(1);
-    expect(context.testServer.events[0].native).to.equal(true);
+    expect(context.testServer.events[0].dump_file).to.be.instanceOf(Buffer);
     expect(context.testServer.events[0].sentry_key).to.equal('37f8a2ee37c0409d8970bc7559c7c7e4');
   });
 });
