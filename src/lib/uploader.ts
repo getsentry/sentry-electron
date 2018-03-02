@@ -101,8 +101,8 @@ export default class MinidumpUploader {
         await unlink(request.path);
 
         // Also remove it from queued minidumps
-        this.queue.set(
-          this.queue.get().filter(storedRequest => storedRequest !== request),
+        this.queue.update(queued =>
+          queued.filter(storedRequest => storedRequest !== request),
         );
 
         // Remove chached minidumps
