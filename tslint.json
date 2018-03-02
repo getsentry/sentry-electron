@@ -8,7 +8,10 @@
     "no-duplicate-imports": true,
     "no-duplicate-variable": true,
     "no-jasmine-focus": true,
+    "no-unused-variable": true,
     "no-var-keyword": true,
+    "require-internal-with-underscore": true,
+    "rollup-config": true,
     "semicolon": [true],
     "variable-name": [true, "ban-keywords"],
     "no-inner-declarations": [true, "function"],
@@ -16,7 +19,8 @@
     "no-var-requires": false,
     "object-literal-sort-keys": false,
     "no-switch-case-fall-through": true,
-    "interface-name": false
+    "interface-name": false,
+    "typedef": [true, "call-signature", "property-declaration"]
   },
   "jsRules": {
     "no-console": [true, "log"],
