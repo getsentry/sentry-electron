@@ -77,6 +77,11 @@ export interface SentryElectronOptions
    * Defaults to `true`.
    */
   enableJavaScript?: boolean;
+
+  /**
+   * This will be called in case of a non recoverable fatal error.
+   */
+  onFatalError?: (error: Error) => void;
 }
 
 /**
@@ -120,7 +125,7 @@ export class SentryElectron implements Adapter {
   private static normalizeUrl(url: string, base: string = APP_BASE_PATH) {
     return decodeURI(url)
       .replace(/\\/g, '/')
-      .replace(new RegExp(`(file:\/\/)?\/*${base}\/*`, 'ig'), 'app://');
+      .replace(new RegExp(`(file:\/\/)?\/*${base}\/*`, 'ig'), 'app:///');
   }
 
   /** The inner SDK used to record JavaScript events. */
@@ -449,7 +454,7 @@ export class SentryElectron implements Adapter {
         contents.on('crashed', () =>
           this.sendNativeCrashes({
             crashed_process: `renderer[${contents.id}]`,
-            crashed_url: contents.getURL(),
+            crashed_url: SentryElectron.normalizeUrl(contents.getURL()),
           }),
         );
       });
@@ -469,6 +474,11 @@ export class SentryElectron implements Adapter {
     const node = new SentryNode(this.client, options);
     if (!await node.install()) {
       return false;
+    }
+
+    const Raven = node.getRaven();
+    if (this.options.onFatalError) {
+      Raven.onFatalError = this.options.onFatalError;
     }
 
     this.inner = node;
