@@ -27,8 +27,8 @@ export class TestContext {
    */
   constructor(
     private appPath = join(__dirname, '../../example'),
-    public testServer = new TestServer()
-  ) { }
+    public testServer = new TestServer(),
+  ) {}
 
   /** Starts the app */
   public async start(): Promise<void> {
@@ -44,6 +44,8 @@ export class TestContext {
       path: this.electronPath,
       args: [this.appPath],
       env: {
+        DSN:
+          'http://37f8a2ee37c0409d8970bc7559c7c7e4:4cfde0ca506c4ea39b4e25b61a1ff1c3@localhost:8000/277345',
         E2E_APPDATA_DIRECTORY: this.tempDir.path,
       },
     });
@@ -53,7 +55,9 @@ export class TestContext {
 
     // Save the main process pid so we can terminate the crashed app later
     // We have to do this as we lose connection via Chromedriver
-    this.mainProcess = new ProcessStatus(await (this.app.mainProcess as any).pid());
+    this.mainProcess = new ProcessStatus(
+      await (this.app.mainProcess as any).pid(),
+    );
   }
 
   /** Stops the app and cleans up  */
@@ -85,7 +89,10 @@ export class TestContext {
    * @param {number} [timeout=5000] Time in ms to throw timeout
    * @returns {Promise<void>}
    */
-  public async waitForTrue(method: () => boolean, timeout: number = 5000): Promise<void> {
+  public async waitForTrue(
+    method: () => boolean,
+    timeout: number = 5000,
+  ): Promise<void> {
     while (method() === false) {
       await this.app.client.pause(100);
       timeout -= 100;
@@ -101,7 +108,8 @@ export class TestContext {
    *
    * @param {number} [pid=process.pid]
    */
-  private async tryKillChromeDriver(pid: number = process.pid) {
+  private async tryKillChromeDriver(pid: number = process.pid): Promise<void> {
+    // @ts-ignore
     for (const each of await processTree(pid)) {
       if ((each.name as string).toLowerCase().includes('chromedriver')) {
         process.kill(each.pid);
@@ -120,7 +128,7 @@ export class TestContext {
 
         resolve({
           path: dir,
-          cleanup
+          cleanup,
         });
       });
     });
@@ -131,5 +139,3 @@ interface TempDirectory {
   path: string;
   cleanup: () => void;
 }
-
-

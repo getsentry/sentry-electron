@@ -1,8 +1,7 @@
-
 export class ProcessStatus {
-  constructor(private pid: number) { }
+  constructor(private pid: number) {}
 
-  public async kill() {
+  public async kill(): Promise<void> {
     if (await this.isRunning()) {
       process.kill(this.pid);
     }

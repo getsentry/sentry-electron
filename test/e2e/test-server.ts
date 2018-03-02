@@ -17,18 +17,20 @@ export class TestServer {
   public events: TestServerEvent[] = [];
   private server: http.Server;
 
-  public start() {
+  public start(): void {
     const router = Router({}) as any;
     router.use(bodyParser.raw());
 
     // Handles the Sentry store endpoint
     router.post('/api/:id/store', (req, res) => {
-      const keyMatch = req.headers['x-sentry-auth'].match(/sentry_key=([a-f0-9]*)/);
+      const keyMatch = req.headers['x-sentry-auth'].match(
+        /sentry_key=([a-f0-9]*)/,
+      );
 
       this.events.push({
         id: req.params.id,
         sentry_key: keyMatch[1],
-        data: this.getBase64AndDecompress(req.body)
+        data: this.getBase64AndDecompress(req.body),
       });
 
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
@@ -49,10 +51,9 @@ export class TestServer {
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
         res.end('Success');
       });
-
     });
 
-    this.server = http.createServer((req, res) => {
+    this.server = http.createServer((req: any, res: any) => {
       router(req, res, finalhandler(req, res));
     });
 
@@ -67,7 +68,7 @@ export class TestServer {
     });
   }
 
-  private getBase64AndDecompress(raw: Buffer) {
+  private getBase64AndDecompress(raw: Buffer): string {
     const base64Str = raw.toString();
     const compressed = Buffer.from(base64Str, 'base64');
     return JSON.parse(zlib.inflateSync(compressed).toString());

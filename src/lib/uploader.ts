@@ -15,7 +15,6 @@ import Store from './store';
 const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
 const unlink = promisify(fs.unlink);
-const copyFile = promisify(fs.copyFile);
 
 /** Maximum number of days to keep a minidump before deleting it. */
 const MAX_AGE = 30;
@@ -192,7 +191,7 @@ export default class MinidumpUploader {
     const filename = basename(request.path);
     const cachePath = join(basePath, filename);
 
-    await copyFile(request.path, cachePath);
+    fs.copyFileSync(request.path, cachePath);
 
     // Create new array of requests and take last N items
     // Save it with the new path that points to copied dump
