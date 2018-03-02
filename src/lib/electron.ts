@@ -125,7 +125,7 @@ export class SentryElectron implements Adapter {
   private static normalizeUrl(url: string, base: string = APP_BASE_PATH) {
     return decodeURI(url)
       .replace(/\\/g, '/')
-      .replace(new RegExp(`(file:\/\/)?\/*${base}\/*`, 'ig'), 'app://');
+      .replace(new RegExp(`(file:\/\/)?\/*${base}\/*`, 'ig'), 'app:///');
   }
 
   /** The inner SDK used to record JavaScript events. */
@@ -454,7 +454,7 @@ export class SentryElectron implements Adapter {
         contents.on('crashed', () =>
           this.sendNativeCrashes({
             crashed_process: `renderer[${contents.id}]`,
-            crashed_url: contents.getURL(),
+            crashed_url: SentryElectron.normalizeUrl(contents.getURL()),
           }),
         );
       });
