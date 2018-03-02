@@ -482,6 +482,14 @@ export class SentryElectron implements Adapter {
     const Raven = node.getRaven();
     if (this.options.onFatalError) {
       Raven.onFatalError = this.options.onFatalError;
+    } else {
+      Raven.onFatalError = (error: any) => {
+        console.error('*********************************');
+        console.error('* SentryElectron unhandledError *');
+        console.error('*********************************');
+        console.error(error);
+        console.error('---------------------------------');
+      };
     }
 
     this.inner = node;

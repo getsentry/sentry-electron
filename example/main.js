@@ -33,9 +33,11 @@ app.on('window-all-closed', () => app.quit());
 // The IPC handlers below trigger errors in the here (main process) when
 // the user clicks on corresponding buttons in the UI (renderer).
 ipcMain.on('demo.error', () => {
+  console.log('Error triggered in main processes');
   throw new Error('Error triggered in main processes');
 });
 
 ipcMain.on('demo.crash', () => {
+  console.log('process.crash()');
   process.crash();
 });
