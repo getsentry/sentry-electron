@@ -37,8 +37,12 @@ export class TestContext {
       this.testServer.start();
     }
 
-    // Get a temp directory for this app to use as userData
-    this.tempDir = await this.getTempDir();
+    // Only setup the tempDir if this the first start of the context
+    // Subseqent starts will se the same path
+    if (!this.tempDir) {
+      // Get a temp directory for this app to use as userData
+      this.tempDir = await this.getTempDir();
+    }
 
     this.app = new Application({
       path: this.electronPath,
@@ -46,7 +50,7 @@ export class TestContext {
       env: {
         DSN:
           'http://37f8a2ee37c0409d8970bc7559c7c7e4:4cfde0ca506c4ea39b4e25b61a1ff1c3@localhost:8000/277345',
-        E2E_APPDATA_DIRECTORY: this.tempDir.path,
+        E2E_USERDATA_DIRECTORY: this.tempDir.path,
       },
     });
 
@@ -82,6 +86,14 @@ export class TestContext {
     await this.tryKillChromeDriver();
   }
 
+  public async clickCrashButton(selector: string): Promise<void> {
+    try {
+      await this.app.client.waitForExist(selector).click(selector);
+    } catch (e) {
+      // If the renderer crashes it can cause an exception in 'click'
+    }
+  }
+
   /**
    * Promise only returns when the supplied method returns 'true'
    *
@@ -106,7 +118,7 @@ export class TestContext {
    * When the renderer crashes, Chromedriver does not close and does not respond.
    * We have to find the process and kill it.
    *
-   * @param {number} [pid=process.pid]
+   * @param {number} [pid=process.pid] The root pid to check sub-processes
    */
   private async tryKillChromeDriver(pid: number = process.pid): Promise<void> {
     // @ts-ignore
@@ -114,7 +126,7 @@ export class TestContext {
       if ((each.name as string).toLowerCase().includes('chromedriver')) {
         process.kill(each.pid);
       } else {
-        this.tryKillChromeDriver(each.pid);
+        await this.tryKillChromeDriver(each.pid);
       }
     }
   }
