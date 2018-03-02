@@ -101,9 +101,9 @@ export default class MinidumpUploader {
         await unlink(request.path);
 
         // Also remove it from queued minidumps
-        const storedRequests = this.queue.get();
-        storedRequests.splice(storedRequests.indexOf(request), 1);
-        this.queue.set(storedRequests);
+        this.queue.set(
+          this.queue.get().filter(storedRequest => storedRequest !== request),
+        );
 
         // Remove chached minidumps
         this.knownPaths.splice(this.knownPaths.indexOf(request.path), 1);
@@ -151,12 +151,11 @@ export default class MinidumpUploader {
    * Flushes locally cached minidumps from the queue.
    */
   public async flushQueuedMinidumps(): Promise<void> {
-    const storedRequests = this.queue.get();
-    if (storedRequests.length) {
-      storedRequests.forEach(async (request: MinidumpRequest) =>
+    this.queue
+      .get()
+      .forEach(async (request: MinidumpRequest) =>
         this.uploadMinidump(request),
       );
-    }
   }
 
   /** Scans the Crashpad directory structure for minidump files. */
