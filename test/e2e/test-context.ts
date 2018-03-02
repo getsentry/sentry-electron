@@ -65,7 +65,7 @@ export class TestContext {
   }
 
   /** Stops the app and cleans up  */
-  public async stop(): Promise<void> {
+  public async stop(clearData: boolean = true): Promise<void> {
     try {
       if (this.app && this.app.isRunning()) {
         await this.app.stop();
@@ -74,7 +74,7 @@ export class TestContext {
       // When the app crashes we can lose the session
     }
 
-    if (this.tempDir) {
+    if (this.tempDir && clearData) {
       this.tempDir.cleanup();
     }
 

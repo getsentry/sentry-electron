@@ -73,7 +73,7 @@ describe('Basic Tests', () => {
     await context.clickCrashButton('#crash-main');
 
     // We have to restart the app to send native crashes from the main process
-    await context.stop();
+    await context.stop(false);
     await context.start();
 
     await context.waitForTrue(() => context.testServer.events.length >= 1);
