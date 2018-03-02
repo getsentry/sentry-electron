@@ -99,6 +99,13 @@ export default class MinidumpUploader {
         // We either succeeded or something went horribly wrong
         // Either way, we can remove the minidump file
         await unlink(request.path);
+
+        // Also remove it from queued minidumps
+        const storedRequests = this.queue.get();
+        storedRequests.splice(storedRequests.indexOf(request), 1);
+        this.queue.set(storedRequests);
+
+        // Remove chached minidumps
         this.knownPaths.splice(this.knownPaths.indexOf(request.path), 1);
       }
     } catch (err) {
@@ -138,6 +145,18 @@ export default class MinidumpUploader {
       this.knownPaths.push(path);
       return true;
     });
+  }
+
+  /**
+   * Flushes locally cached minidumps from the queue.
+   */
+  public async flushQueuedMinidumps(): Promise<void> {
+    const storedRequests = this.queue.get();
+    if (storedRequests.length) {
+      storedRequests.forEach(async (request: MinidumpRequest) =>
+        this.uploadMinidump(request),
+      );
+    }
   }
 
   /** Scans the Crashpad directory structure for minidump files. */
@@ -182,7 +201,24 @@ export default class MinidumpUploader {
   }
 
   private async queueMinidumpRequest(request: MinidumpRequest): Promise<void> {
+    // Copy current minidump in our store directory
+    const basePath = this.getMinidumpsCachePath();
+    const filename = basename(request.path);
+    const cachePath = join(basePath, filename);
+
+    // But only if the paths are different which indicates it's not in our cache
+    if (cachePath === request.path) {
+      return;
+    }
+
     const storedRequests = this.queue.get();
+
+    // Workaround for copyFile which will be introduced in node 8.5.0
+    // Electron is using 8.2.1
+    await writeFile(cachePath, await readFile(request.path));
+
+    // We have to delete the original minidump otherwise we will send it twice
+    await unlink(request.path);
 
     // Remove stale minidumps in case we go over limit
     await Promise.all(
@@ -190,15 +226,6 @@ export default class MinidumpUploader {
         .slice(MAX_REQUESTS_COUNT)
         .map(storedRequest => unlink(storedRequest.path)),
     );
-
-    // Copy current minidump in our store directory
-    const basePath = this.getMinidumpsCachePath();
-    const filename = basename(request.path);
-    const cachePath = join(basePath, filename);
-
-    // Workaround for copyFile which will be introduced in node 8.5.0
-    // Electron is using 8.2.1
-    await writeFile(cachePath, await readFile(request.path));
 
     // Create new array of requests and take last N items
     // Save it with the new path that points to copied dump

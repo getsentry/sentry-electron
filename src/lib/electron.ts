@@ -461,6 +461,9 @@ export class SentryElectron implements Adapter {
           }),
         );
       });
+
+      // Flush already cached minidumps from the queue.
+      await this.uploader.flushQueuedMinidumps();
     }
 
     return true;
