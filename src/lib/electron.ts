@@ -122,7 +122,10 @@ export class SentryElectron implements Adapter {
    * @param {string} [base=APP_BASE_PATH] (optional) The application base path
    * @returns
    */
-  private static normalizeUrl(url: string, base: string = APP_BASE_PATH) {
+  private static normalizeUrl(
+    url: string,
+    base: string = APP_BASE_PATH,
+  ): string {
     return decodeURI(url)
       .replace(/\\/g, '/')
       .replace(new RegExp(`(file:\/\/)?\/*${base}\/*`, 'ig'), 'app:///');
@@ -340,7 +343,7 @@ export class SentryElectron implements Adapter {
   }
 
   /** Clears the breadcrumb store */
-  public clearBreadcrumbs() {
+  public clearBreadcrumbs(): void {
     this.breadcrumbs.clear();
   }
 
@@ -538,7 +541,7 @@ export class SentryElectron implements Adapter {
     category: string,
     emitter: Electron.EventEmitter,
     events: string[] = [],
-  ) {
+  ): void {
     const originalEmit = emitter.emit;
     emitter.emit = (event, ...args) => {
       if (events.length === 0 || events.indexOf(event) > -1) {
@@ -554,7 +557,7 @@ export class SentryElectron implements Adapter {
     };
   }
 
-  private normalizeEvent(event: any) {
+  private normalizeEvent(event: any): any {
     if (event.culprit) {
       event.culprit = SentryElectron.normalizeUrl(event.culprit);
     }
