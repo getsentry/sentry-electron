@@ -15,6 +15,8 @@ import Store from './store';
 const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
 const unlink = promisify(fs.unlink);
+const readFile = promisify(fs.readFile);
+const writeFile = promisify(fs.writeFile);
 
 /** Maximum number of days to keep a minidump before deleting it. */
 const MAX_AGE = 30;
@@ -56,7 +58,10 @@ export default class MinidumpUploader {
   /** List of minidumps that have been found already. */
   private knownPaths: string[];
   /** Store to persist queued Minidumps beyond application crashes or lost internet connection. */
-  private queue: Store<MinidumpRequest[]> = new Store('minidump-requests.json');
+  private queue: Store<MinidumpRequest[]> = new Store(
+    'minidump-requests.json',
+    [],
+  );
 
   /**
    * Creates a new uploader instance.
@@ -191,7 +196,9 @@ export default class MinidumpUploader {
     const filename = basename(request.path);
     const cachePath = join(basePath, filename);
 
-    fs.copyFileSync(request.path, cachePath);
+    // Workaround for copyFile which will be introduced in node 8.5.0
+    // Electron is using 8.2.1
+    await writeFile(cachePath, await readFile(request.path));
 
     // Create new array of requests and take last N items
     // Save it with the new path that points to copied dump
