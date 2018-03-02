@@ -3,19 +3,29 @@ require('util.promisify/shim')();
 
 import * as fs from 'fs';
 import { platform } from 'os';
-import { join } from 'path';
+import { basename, join } from 'path';
 import { promisify } from 'util';
 
 import { DSN, SentryEvent } from '@sentry/core';
 import * as FormData from 'form-data';
 import fetch from 'node-fetch';
 
+import Store from './store';
+
 const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
 const unlink = promisify(fs.unlink);
+const readFile = promisify(fs.readFile);
+const writeFile = promisify(fs.writeFile);
 
 /** Maximum number of days to keep a minidump before deleting it. */
 const MAX_AGE = 30;
+
+/** Maximum number of requests that we store/queue if something goes wrong. */
+const MAX_REQUESTS_COUNT = 10;
+
+/** Path to the place where we keep stored/queued minidumps for requests */
+const MINIDUMPS_CACHE_PATH = join(Store.getBasePath(), 'minidumps');
 
 /** Helper to filter an array with asynchronous callbacks. */
 export async function filterAsync<T>(
@@ -30,6 +40,13 @@ export async function filterAsync<T>(
 /** Supported types of Electron CrashReporters. */
 type CrashReporterType = 'crashpad' | 'breakpad';
 
+export interface MinidumpRequest {
+  /** Path to the minidump file */
+  path: string;
+  /** Associated event */
+  event: SentryEvent;
+}
+
 /**
  * A service that discovers Minidump crash reports and uploads them to Sentry.
  */
@@ -40,6 +57,11 @@ export default class MinidumpUploader {
   private type: CrashReporterType;
   /** List of minidumps that have been found already. */
   private knownPaths: string[];
+  /** Store to persist queued Minidumps beyond application crashes or lost internet connection. */
+  private queue: Store<MinidumpRequest[]> = new Store(
+    'minidump-requests.json',
+    [],
+  );
 
   /**
    * Creates a new uploader instance.
@@ -64,18 +86,34 @@ export default class MinidumpUploader {
    * @param event Event data to attach to the minidump.
    * @returns A promise that resolves when the upload is complete.
    */
-  public async uploadMinidump(path: string, event: SentryEvent): Promise<void> {
-    // TODO: Queue and hold if there is no internet connection.
-    // TODO: Only queue up to 10 events
+  public async uploadMinidump(request: MinidumpRequest): Promise<void> {
+    try {
+      const response = await fetch(this.url, {
+        method: 'POST',
+        body: this.createMinidumpRequestBody(request),
+      });
+      // Too many requests, so we queue the event and send it later
+      if (response.status === 429) {
+        await this.queueMinidumpRequest(request);
+      } else {
+        // We either succeeded or something went horribly wrong
+        // Either way, we can remove the minidump file
+        await unlink(request.path);
 
-    const body = new FormData();
-    body.append('upload_file_minidump', fs.createReadStream(path));
-    body.append('sentry', JSON.stringify(event));
-    const response = await fetch(this.url, { method: 'POST', body });
+        // Also remove it from queued minidumps
+        this.queue.update(queued =>
+          queued.filter(storedRequest => storedRequest !== request),
+        );
 
-    // TODO: Retry if the server responds with status code 429
-    await unlink(path);
-    this.knownPaths.splice(this.knownPaths.indexOf(path), 1);
+        // Remove chached minidumps
+        this.knownPaths.splice(this.knownPaths.indexOf(request.path), 1);
+      }
+    } catch (err) {
+      // User's internet connection was down so we queue it as well
+      if (err.code === 'ENOTFOUND') {
+        await this.queueMinidumpRequest(request);
+      }
+    }
   }
 
   /**
@@ -109,6 +147,17 @@ export default class MinidumpUploader {
     });
   }
 
+  /**
+   * Flushes locally cached minidumps from the queue.
+   */
+  public async flushQueuedMinidumps(): Promise<void> {
+    this.queue
+      .get()
+      .forEach(async (request: MinidumpRequest) =>
+        this.uploadMinidump(request),
+      );
+  }
+
   /** Scans the Crashpad directory structure for minidump files. */
   private async scanCrashpadFolder(): Promise<string[]> {
     // Crashpad moves minidump files directly into the completed/ folder. We
@@ -134,5 +183,59 @@ export default class MinidumpUploader {
     return files
       .filter(file => file.endsWith('.dmp'))
       .map(file => join(this.crashesDirectory, file));
+  }
+
+  private createMinidumpRequestBody(request: MinidumpRequest): FormData {
+    const body = new FormData();
+    body.append('upload_file_minidump', fs.createReadStream(request.path));
+    body.append('sentry', JSON.stringify(request.event));
+    return body;
+  }
+
+  private getMinidumpsCachePath(): string {
+    if (!fs.existsSync(MINIDUMPS_CACHE_PATH)) {
+      fs.mkdirSync(MINIDUMPS_CACHE_PATH);
+    }
+    return MINIDUMPS_CACHE_PATH;
+  }
+
+  private async queueMinidumpRequest(request: MinidumpRequest): Promise<void> {
+    // Copy current minidump in our store directory
+    const basePath = this.getMinidumpsCachePath();
+    const filename = basename(request.path);
+    const cachePath = join(basePath, filename);
+
+    // But only if the paths are different which indicates it's not in our cache
+    if (cachePath === request.path) {
+      return;
+    }
+
+    const storedRequests = this.queue.get();
+
+    // Workaround for copyFile which will be introduced in node 8.5.0
+    // Electron is using 8.2.1
+    await writeFile(cachePath, await readFile(request.path));
+
+    // We have to delete the original minidump otherwise we will send it twice
+    await unlink(request.path);
+
+    // Remove stale minidumps in case we go over limit
+    await Promise.all(
+      storedRequests
+        .slice(MAX_REQUESTS_COUNT)
+        .map(storedRequest => unlink(storedRequest.path)),
+    );
+
+    // Create new array of requests and take last N items
+    // Save it with the new path that points to copied dump
+    const newRequests = [
+      ...storedRequests,
+      {
+        ...request,
+        path: cachePath,
+      },
+    ].slice(-MAX_REQUESTS_COUNT);
+
+    this.queue.set(newRequests);
   }
 }

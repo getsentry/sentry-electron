@@ -14,6 +14,19 @@ const BASE_PATH = join(USER_DATA_PATH, 'sentry');
  * crashes. When created, it loads data from that file if it already exists.
  */
 export default class Store<T> {
+  /**
+   * Return the base path to the directory storing the information.
+   */
+  public static getBasePath(): string {
+    if (!existsSync(USER_DATA_PATH)) {
+      mkdirSync(USER_DATA_PATH);
+    }
+    if (!existsSync(BASE_PATH)) {
+      mkdirSync(BASE_PATH);
+    }
+    return BASE_PATH;
+  }
+
   /** Current state of the data. */
   private data: T;
   /** Internal path for JSON file. */
@@ -36,13 +49,7 @@ export default class Store<T> {
     if (this._path) {
       return this._path;
     }
-    if (!existsSync(USER_DATA_PATH)) {
-      mkdirSync(USER_DATA_PATH);
-    }
-    if (!existsSync(BASE_PATH)) {
-      mkdirSync(BASE_PATH);
-    }
-    this._path = join(BASE_PATH, this.filename);
+    this._path = join(Store.getBasePath(), this.filename);
     return this._path;
   }
 
@@ -50,7 +57,7 @@ export default class Store<T> {
    * Updates data by replacing it with the given value.
    * @param next New data to replace the previous one.
    */
-  public set(next: T) {
+  public set(next: T): void {
     this.data = next;
 
     if (!this.flushing) {
@@ -63,7 +70,7 @@ export default class Store<T> {
    * Updates data by passing it through the given function.
    * @param fn A function receiving the current data and returning new one.
    */
-  public update(fn: (current: T) => T) {
+  public update(fn: (current: T) => T): void {
     this.set(fn(this.get()));
   }
 
@@ -87,12 +94,12 @@ export default class Store<T> {
   /**
    * Returns store to its initial state
    */
-  public clear() {
+  public clear(): void {
     this.set(this.initial as T);
   }
 
   /** Serializes the current data into the JSON file. */
-  private flush() {
+  private flush(): void {
     writeFileSync(this.path, JSON.stringify(this.data));
     this.flushing = false;
   }

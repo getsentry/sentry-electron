@@ -122,7 +122,10 @@ export class SentryElectron implements Adapter {
    * @param {string} [base=APP_BASE_PATH] (optional) The application base path
    * @returns
    */
-  private static normalizeUrl(url: string, base: string = APP_BASE_PATH) {
+  private static normalizeUrl(
+    url: string,
+    base: string = APP_BASE_PATH,
+  ): string {
     return decodeURI(url)
       .replace(/\\/g, '/')
       .replace(new RegExp(`(file:\/\/)?\/*${base}\/*`, 'ig'), 'app:///');
@@ -340,7 +343,7 @@ export class SentryElectron implements Adapter {
   }
 
   /** Clears the breadcrumb store */
-  public clearBreadcrumbs() {
+  public clearBreadcrumbs(): void {
     this.breadcrumbs.clear();
   }
 
@@ -420,7 +423,7 @@ export class SentryElectron implements Adapter {
 
     const paths = await this.uploader.getNewMinidumps();
     await Promise.all(
-      paths.map(path => this.uploader.uploadMinidump(path, event)),
+      paths.map(path => this.uploader.uploadMinidump({ path, event })),
     );
   }
 
@@ -458,6 +461,9 @@ export class SentryElectron implements Adapter {
           }),
         );
       });
+
+      // Flush already cached minidumps from the queue.
+      await this.uploader.flushQueuedMinidumps();
     }
 
     return true;
@@ -479,6 +485,14 @@ export class SentryElectron implements Adapter {
     const Raven = node.getRaven();
     if (this.options.onFatalError) {
       Raven.onFatalError = this.options.onFatalError;
+    } else {
+      Raven.onFatalError = (error: any) => {
+        console.error('*********************************');
+        console.error('* SentryElectron unhandledError *');
+        console.error('*********************************');
+        console.error(error);
+        console.error('---------------------------------');
+      };
     }
 
     this.inner = node;
@@ -538,7 +552,7 @@ export class SentryElectron implements Adapter {
     category: string,
     emitter: Electron.EventEmitter,
     events: string[] = [],
-  ) {
+  ): void {
     const originalEmit = emitter.emit;
     emitter.emit = (event, ...args) => {
       if (events.length === 0 || events.indexOf(event) > -1) {
@@ -554,7 +568,7 @@ export class SentryElectron implements Adapter {
     };
   }
 
-  private normalizeEvent(event: any) {
+  private normalizeEvent(event: any): any {
     if (event.culprit) {
       event.culprit = SentryElectron.normalizeUrl(event.culprit);
     }
