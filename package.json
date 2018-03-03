@@ -12,7 +12,7 @@
     "clean": "rimraf dist",
     "preexample": "run-s clean build",
     "example": "electron example",
-    "lint": "tslint {src,test}/**/*",
+    "lint": "tslint {src,test}/**/*.ts",
     "format": "prettier --config .prettierrc {src,test}/**/* --write",
     "pretest": "run-s clean build",
     "test": "cross-env TS_NODE_PROJECT=./tsconfig.test.json xvfb-maybe electron-mocha --require ts-node/register --timeout 3000 ./test/unit/**/*.ts",
