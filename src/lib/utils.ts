@@ -10,7 +10,7 @@ const APP_BASE_PATH = (app || remote.app).getAppPath().replace(/\\/g, '/');
  *
  * @param {string} url The URL to be normalized.
  * @param {string} [base=APP_BASE_PATH] (optional) The application base path.
- * @returns
+ * @returns The normalized URL.
  */
 export function normalizeUrl(
   url: string,
@@ -26,29 +26,28 @@ export function normalizeUrl(
  * information.
  *
  * @param event The event to normalize.
+ * @returns The normalized event.
  */
 export function normalizeEvent(event: SentryEvent): SentryEvent {
   // NOTE: Events from Raven currently contain data that does not conform with
   // the `SentryEvent` interface. Until this has been resolved, we need to cast
   // to avoid typescript warnings.
-  const internal = event as any;
+  const copy = JSON.parse(JSON.stringify(event));
 
   // The culprit has been deprecated about two years ago and can safely be
   // removed. Remove this line, once this has been resolved in Raven.
-  delete internal.culprit;
+  delete copy.culprit;
 
-  if (internal.request && internal.request.url) {
-    internal.request.url = normalizeUrl(internal.request.url);
+  if (copy.request && copy.request.url) {
+    copy.request.url = normalizeUrl(copy.request.url);
   }
 
   const stacktrace: Stacktrace =
-    internal.stacktrace ||
+    copy.stacktrace ||
     // Node exceptions
-    (internal.exception &&
-      internal.exception[0] &&
-      internal.exception[0].stacktrace) ||
+    (copy.exception && copy.exception[0] && copy.exception[0].stacktrace) ||
     // Browser exceptions
-    (internal.exception && internal.exception.values[0].stacktrace);
+    (copy.exception && copy.exception.values[0].stacktrace);
 
   if (stacktrace && stacktrace.frames) {
     stacktrace.frames.forEach(frame => {
@@ -58,5 +57,5 @@ export function normalizeEvent(event: SentryEvent): SentryEvent {
     });
   }
 
-  return internal;
+  return copy;
 }
