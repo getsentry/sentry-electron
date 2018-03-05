@@ -8,6 +8,7 @@ import {
   Client,
   Context,
   Options,
+  SentryError,
   SentryEvent,
 } from '@sentry/core';
 import { SentryNode, SentryNodeOptions, Store } from '@sentry/node';
@@ -117,7 +118,7 @@ export interface SentryElectronOptions
  */
 export class SentryElectron implements Adapter {
   /** The inner SDK used to record JavaScript events. */
-  private inner: SentryBrowser | SentryNode;
+  private inner?: SentryBrowser | SentryNode;
   /** Store to persist context information beyond application crashes. */
   private context: Store<Context> = new Store(CACHE_PATH, 'context', {});
   /** Store to persist breadcrumbs beyond application crashes. */
@@ -127,7 +128,7 @@ export class SentryElectron implements Adapter {
     [],
   );
   /** Uploader for minidump files. */
-  private uploader: MinidumpUploader;
+  private uploader?: MinidumpUploader;
 
   /**
    * Creates a new instance of the
@@ -396,6 +397,10 @@ export class SentryElectron implements Adapter {
     //     about it. Just use the breadcrumbs and context information we have
     //     right now and hope that the delay was not too long.
 
+    if (this.uploader === undefined) {
+      throw new SentryError('Invariant violation: No uploader installed');
+    }
+
     const context = this.getEnrichedContext();
     const event = {
       user: context.user,
@@ -410,7 +415,7 @@ export class SentryElectron implements Adapter {
 
     const paths = await this.uploader.getNewMinidumps();
     await Promise.all(
-      paths.map(path => this.uploader.uploadMinidump({ path, event })),
+      paths.map(path => this.uploader!.uploadMinidump({ path, event })),
     );
   }
 
@@ -517,7 +522,9 @@ export class SentryElectron implements Adapter {
     callback: (inner: Adapter) => Promise<R>,
   ): Promise<R> {
     if (this.inner === undefined) {
-      throw new Error('Please call install first');
+      throw new SentryError(
+        'Invariant violation: Call Sentry.install() before using other methods',
+      );
     }
 
     return callback(this.inner);
