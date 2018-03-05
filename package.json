@@ -12,14 +12,12 @@
     "clean": "rimraf dist",
     "preexample": "run-s clean build",
     "example": "electron example",
-    "lint": "tslint --config ./tslint.json src/**/*",
-    "format": "prettier --config .prettierrc src/**/* --write",
+    "lint": "tslint {src,test}/**/*.ts",
+    "format": "prettier --config .prettierrc {src,test}/**/* --write",
     "pretest": "run-s clean build",
-    "test":
-      "cross-env TS_NODE_PROJECT=./tsconfig.test.json xvfb-maybe electron-mocha --require ts-node/register --timeout 3000 ./test/unit/**/*.ts",
+    "test": "cross-env TS_NODE_PROJECT=./tsconfig.test.json xvfb-maybe electron-mocha --require ts-node/register --timeout 3000 ./test/unit/**/*.ts",
     "pree2e": "run-s clean build",
-    "e2e":
-      "cross-env TS_NODE_PROJECT=./tsconfig.test.json xvfb-maybe mocha --require ts-node/register --timeout 30000 ./test/e2e/**/*.ts"
+    "e2e": "cross-env TS_NODE_PROJECT=./tsconfig.test.json xvfb-maybe mocha --require ts-node/register --timeout 30000 ./test/e2e/**/*.ts"
   },
   "dependencies": {
     "@sentry/browser": "0.4.0-beta.2",
