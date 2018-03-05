@@ -1,15 +1,9 @@
 import { expect, should, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { SentryElectron } from '../../src/lib/electron';
+import { normalizeUrl } from '../../src/lib/utils';
 
 should();
 use(chaiAsPromised);
-
-// It's not public
-const normalizeUrl = (SentryElectron as any).normalizeUrl as (
-  url: string,
-  base: string,
-) => string;
 
 describe('Normalize URLs', () => {
   it('Example app on Windows', () => {

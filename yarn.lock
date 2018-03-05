@@ -2,22 +2,22 @@
 # yarn lockfile v1
 
 
-"@sentry/browser@0.4.0-beta.2":
-  version "0.4.0-beta.2"
-  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-0.4.0-beta.2.tgz#647d45f2bbf45e27ad113f54c06cea8e041c2b0a"
+"@sentry/browser@0.4.0-beta.3":
+  version "0.4.0-beta.3"
+  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-0.4.0-beta.3.tgz#2cb6c54b168e613ea864ecda6646246f0f4ca867"
   dependencies:
-    "@sentry/core" "^0.4.0-beta.2"
+    "@sentry/core" "^0.4.0-beta.3"
     raven-js "^3.22.1"
 
-"@sentry/core@0.4.0-beta.2", "@sentry/core@^0.4.0-beta.2":
-  version "0.4.0-beta.2"
-  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-0.4.0-beta.2.tgz#a17dc5e4718f5d580a1a4683cf7f6944105058ed"
+"@sentry/core@0.4.0-beta.3", "@sentry/core@^0.4.0-beta.3":
+  version "0.4.0-beta.3"
+  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-0.4.0-beta.3.tgz#5faeab0dacfcdc69f4f617887ad835386280a772"
 
-"@sentry/node@0.4.0-beta.2":
-  version "0.4.0-beta.2"
-  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-0.4.0-beta.2.tgz#592db31494ffd6e8432eeacd6b0c662fd10f9c21"
+"@sentry/node@0.4.0-beta.3":
+  version "0.4.0-beta.3"
+  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-0.4.0-beta.3.tgz#46badbac9acbaf9f0ae8601ff90c93ab2ab969a5"
   dependencies:
-    "@sentry/core" "^0.4.0-beta.2"
+    "@sentry/core" "^0.4.0-beta.3"
     raven "^2.4.0"
 
 "@types/chai-as-promised@^7.1.0":
@@ -643,7 +643,7 @@ electron-window@^0.8.0:
   dependencies:
     is-electron-renderer "^2.0.0"
 
-electron@^1.8.0:
+electron@^1.8.2:
   version "1.8.2"
   resolved "https://registry.yarnpkg.com/electron/-/electron-1.8.2.tgz#a817cd733c2972b3c7cc4f777caf6e424b88014d"
   dependencies:

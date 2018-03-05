@@ -1,8 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
-// Electron cannot be included as a dependency otherwise the binaries get packaged into apps
-// tslint:disable-next-line:no-implicit-dependencies
 import { app, remote } from 'electron';
 
 /** App-specific directory to store information in. */

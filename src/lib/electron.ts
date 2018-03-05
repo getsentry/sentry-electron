@@ -19,12 +19,11 @@ import {
   remote,
   screen,
   webContents,
-  // Electron cannot be included as a dependency otherwise the binaries get packaged into apps
-  // tslint:disable-next-line:no-implicit-dependencies
 } from 'electron';
 
 import Store from './store';
 import MinidumpUploader from './uploader';
+import { normalizeEvent, normalizeUrl } from './utils';
 
 /**
  * Maximum number of breadcrumbs that get added to an event. Can be overwritten
@@ -43,9 +42,6 @@ const IPC_CONTEXT = 'sentry-electron.context';
 const SDK_NAME = 'sentry-electron';
 /** SDK version used in every event. */
 const SDK_VERSION = require('../../package.json').version;
-
-/** Application base path */
-const APP_BASE_PATH = (app || remote.app).getAppPath().replace(/\\/g, '/');
 
 /**
  * Configuration options for {@link SentryElectron}.
@@ -114,23 +110,6 @@ export interface SentryElectronOptions
  * @see Sentry.Client
  */
 export class SentryElectron implements Adapter {
-  /**
-   * Normalizes URLs in exceptions and stacktraces so Sentry can fingerprint
-   * across platforms
-   *
-   * @param {string} url The URL to be normalized
-   * @param {string} [base=APP_BASE_PATH] (optional) The application base path
-   * @returns
-   */
-  private static normalizeUrl(
-    url: string,
-    base: string = APP_BASE_PATH,
-  ): string {
-    return decodeURI(url)
-      .replace(/\\/g, '/')
-      .replace(new RegExp(`(file:\/\/)?\/*${base}\/*`, 'ig'), 'app:///');
-  }
-
   /** The inner SDK used to record JavaScript events. */
   private inner: SentryBrowser | SentryNode;
   /** Store to persist context information beyond application crashes. */
@@ -274,7 +253,7 @@ export class SentryElectron implements Adapter {
 
     const context = this.getEnrichedContext();
     const mergedEvent = {
-      ...this.normalizeEvent(event),
+      ...normalizeEvent(event),
       user: { ...context.user, ...event.user },
       tags: { ...context.tags, ...event.tags },
       extra: { crashed_process: 'browser', ...context.extra, ...event.extra },
@@ -457,7 +436,7 @@ export class SentryElectron implements Adapter {
         contents.on('crashed', () =>
           this.sendNativeCrashes({
             crashed_process: `renderer[${contents.id}]`,
-            crashed_url: SentryElectron.normalizeUrl(contents.getURL()),
+            crashed_url: normalizeUrl(contents.getURL()),
           }),
         );
       });
@@ -566,32 +545,5 @@ export class SentryElectron implements Adapter {
 
       return originalEmit.call(emitter, event, ...args);
     };
-  }
-
-  private normalizeEvent(event: any): any {
-    if (event.culprit) {
-      event.culprit = SentryElectron.normalizeUrl(event.culprit);
-    }
-
-    if (event.request && event.request.url) {
-      event.request.url = SentryElectron.normalizeUrl(event.request.url);
-    }
-
-    const stacktrace =
-      event.stacktrace ||
-      // node.js exceptions
-      (event.exception &&
-        event.exception[0] &&
-        event.exception[0].stacktrace) ||
-      // Browser exceptions
-      (event.exception && event.exception.values[0].stacktrace);
-
-    if (stacktrace) {
-      stacktrace.frames.forEach((frame: any) => {
-        frame.filename = SentryElectron.normalizeUrl(frame.filename);
-      });
-    }
-
-    return event;
   }
 }
