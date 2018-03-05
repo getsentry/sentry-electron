@@ -7,12 +7,14 @@ import { basename, join } from 'path';
 import { promisify } from 'util';
 
 import { DSN, SentryEvent } from '@sentry/core';
+import { mkdirp, Store } from '@sentry/node';
 import * as FormData from 'form-data';
 import fetch from 'node-fetch';
 
-import Store from './store';
+import { filterAsync } from './utils';
 
 const readdir = promisify(fs.readdir);
+const rename = promisify(fs.rename);
 const stat = promisify(fs.stat);
 const unlink = promisify(fs.unlink);
 const readFile = promisify(fs.readFile);
@@ -23,19 +25,6 @@ const MAX_AGE = 30;
 
 /** Maximum number of requests that we store/queue if something goes wrong. */
 const MAX_REQUESTS_COUNT = 10;
-
-/** Path to the place where we keep stored/queued minidumps for requests */
-const MINIDUMPS_CACHE_PATH = join(Store.getBasePath(), 'minidumps');
-
-/** Helper to filter an array with asynchronous callbacks. */
-export async function filterAsync<T>(
-  array: T[],
-  predicate: (item: T) => Promise<boolean>,
-  thisArg?: any,
-): Promise<T[]> {
-  const verdicts = await Promise.all(array.map(predicate, thisArg));
-  return array.filter((element, index) => verdicts[index]);
-}
 
 /** Supported types of Electron CrashReporters. */
 type CrashReporterType = 'crashpad' | 'breakpad';
@@ -59,17 +48,23 @@ export default class MinidumpUploader {
   private knownPaths: string[];
   /** Store to persist queued Minidumps beyond application crashes or lost internet connection. */
   private queue: Store<MinidumpRequest[]> = new Store(
-    'minidump-requests.json',
+    this.cacheDirectory,
+    'queue',
     [],
   );
 
   /**
    * Creates a new uploader instance.
    *
-   * @param dsn The Sentry DSN
+   * @param dsn The Sentry DSN.
    * @param crashesDirectory The directory Electron stores crashes in.
+   * @param cacheDirectory A persistent directory to cache minidumps.
    */
-  constructor(dsn: DSN, private crashesDirectory: string) {
+  constructor(
+    dsn: DSN,
+    private crashesDirectory: string,
+    private cacheDirectory: string,
+  ) {
     this.type = platform() === 'darwin' ? 'crashpad' : 'breakpad';
     this.knownPaths = [];
 
@@ -88,30 +83,33 @@ export default class MinidumpUploader {
    */
   public async uploadMinidump(request: MinidumpRequest): Promise<void> {
     try {
-      const response = await fetch(this.url, {
-        method: 'POST',
-        body: this.createMinidumpRequestBody(request),
-      });
+      const body = new FormData();
+      body.append('upload_file_minidump', fs.createReadStream(request.path));
+      body.append('sentry', JSON.stringify(request.event));
+      const response = await fetch(this.url, { method: 'POST', body });
+
       // Too many requests, so we queue the event and send it later
       if (response.status === 429) {
-        await this.queueMinidumpRequest(request);
-      } else {
-        // We either succeeded or something went horribly wrong
-        // Either way, we can remove the minidump file
-        await unlink(request.path);
+        await this.queueMinidump(request);
+        return;
+      }
 
-        // Also remove it from queued minidumps
-        this.queue.update(queued =>
-          queued.filter(storedRequest => storedRequest !== request),
-        );
+      // We either succeeded or something went horribly wrong
+      // Either way, we can remove the minidump file
+      await unlink(request.path);
 
-        // Remove chached minidumps
-        this.knownPaths.splice(this.knownPaths.indexOf(request.path), 1);
+      // Forget this minidump in all caches
+      this.queue.update(queued => queued.filter(stored => stored !== request));
+      this.knownPaths.splice(this.knownPaths.indexOf(request.path), 1);
+
+      // If we were successful, we can try to flush the remaining queue
+      if (response.ok) {
+        await this.flushQueue();
       }
     } catch (err) {
       // User's internet connection was down so we queue it as well
       if (err.code === 'ENOTFOUND') {
-        await this.queueMinidumpRequest(request);
+        await this.queueMinidump(request);
       }
     }
   }
@@ -127,35 +125,34 @@ export default class MinidumpUploader {
         : await this.scanBreakpadFolder();
 
     const oldestMs = new Date().getTime() - MAX_AGE * 24 * 3600 * 1000;
-    return filterAsync(minidumps, async (path: string) => {
+    return filterAsync(minidumps, async path => {
       // Skip files that we have seen before
       if (this.knownPaths.indexOf(path) >= 0) {
         return false;
       }
+
+      // Lock this minidump until we have uploaded it or an error occurs and we
+      // remove it from the file system.
+      this.knownPaths.push(path);
 
       // We do not want to upload minidumps that have been generated before a
       // certain threshold. Those old files can be deleted immediately.
       const stats = await stat(path);
       if (stats.birthtimeMs < oldestMs) {
         await unlink(path);
+        this.knownPaths.splice(this.knownPaths.indexOf(path), 1);
         return false;
       }
 
-      // Remember this file until we remove it from the file system
-      this.knownPaths.push(path);
       return true;
     });
   }
 
-  /**
-   * Flushes locally cached minidumps from the queue.
-   */
-  public async flushQueuedMinidumps(): Promise<void> {
-    this.queue
-      .get()
-      .forEach(async (request: MinidumpRequest) =>
-        this.uploadMinidump(request),
-      );
+  /** Flushes locally cached minidumps from the queue. */
+  public async flushQueue(): Promise<void> {
+    await Promise.all(
+      this.queue.get().map(async request => this.uploadMinidump(request)),
+    );
   }
 
   /** Scans the Crashpad directory structure for minidump files. */
@@ -185,57 +182,35 @@ export default class MinidumpUploader {
       .map(file => join(this.crashesDirectory, file));
   }
 
-  private createMinidumpRequestBody(request: MinidumpRequest): FormData {
-    const body = new FormData();
-    body.append('upload_file_minidump', fs.createReadStream(request.path));
-    body.append('sentry', JSON.stringify(request.event));
-    return body;
-  }
-
-  private getMinidumpsCachePath(): string {
-    if (!fs.existsSync(MINIDUMPS_CACHE_PATH)) {
-      fs.mkdirSync(MINIDUMPS_CACHE_PATH);
-    }
-    return MINIDUMPS_CACHE_PATH;
-  }
-
-  private async queueMinidumpRequest(request: MinidumpRequest): Promise<void> {
-    // Copy current minidump in our store directory
-    const basePath = this.getMinidumpsCachePath();
+  /**
+   * Enqueues a minidump with event information for later upload.
+   * @param request The request containing a minidump and event info.
+   */
+  private async queueMinidump(request: MinidumpRequest): Promise<void> {
     const filename = basename(request.path);
-    const cachePath = join(basePath, filename);
 
-    // But only if the paths are different which indicates it's not in our cache
-    if (cachePath === request.path) {
+    // Only enqueue if this minidump hasn't been enqueued before. Compare the
+    // filename instead of the full path, because we will move the file to a
+    // temporary location later on.
+    if (this.queue.get().some(req => basename(req.path) === filename)) {
       return;
     }
 
-    const storedRequests = this.queue.get();
+    // Move the minidump file to a separate cache directory and enqueue it. Even
+    // if the Electron CrashReporter's cache directory gets wiped or changes,
+    // this will allow us to retry uploading the file later.
+    const queuePath = join(this.cacheDirectory, filename);
+    await mkdirp(this.cacheDirectory);
+    await rename(request.path, queuePath);
 
-    // Workaround for copyFile which will be introduced in node 8.5.0
-    // Electron is using 8.2.1
-    await writeFile(cachePath, await readFile(request.path));
+    // Remove stale minidumps in case we go over limit. Note that we have to
+    // re-fetch the queue as it might have changed in the meanwhile. It is
+    // important to store the queue value again immediately to avoid phantom
+    // reads.
+    const requests = [...this.queue.get(), { ...request, path: queuePath }];
+    const stale = requests.splice(-MAX_REQUESTS_COUNT);
+    this.queue.set(requests);
 
-    // We have to delete the original minidump otherwise we will send it twice
-    await unlink(request.path);
-
-    // Remove stale minidumps in case we go over limit
-    await Promise.all(
-      storedRequests
-        .slice(MAX_REQUESTS_COUNT)
-        .map(storedRequest => unlink(storedRequest.path)),
-    );
-
-    // Create new array of requests and take last N items
-    // Save it with the new path that points to copied dump
-    const newRequests = [
-      ...storedRequests,
-      {
-        ...request,
-        path: cachePath,
-      },
-    ].slice(-MAX_REQUESTS_COUNT);
-
-    this.queue.set(newRequests);
+    await Promise.all(stale.map(req => unlink(req.path)));
   }
 }
