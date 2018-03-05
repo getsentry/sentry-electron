@@ -2,20 +2,27 @@ import { SentryEvent, Stacktrace } from '@sentry/core';
 import { app, remote } from 'electron';
 
 /** Application base path used for URL normalization. */
-const APP_BASE_PATH = (app || remote.app).getAppPath().replace(/\\/g, '/');
+const APP_PATH = (app || remote.app).getAppPath().replace(/\\/g, '/');
+
+/** Helper to filter an array with asynchronous callbacks. */
+export async function filterAsync<T>(
+  array: T[],
+  predicate: (item: T) => Promise<boolean>,
+  thisArg?: any,
+): Promise<T[]> {
+  const verdicts = await Promise.all(array.map(predicate, thisArg));
+  return array.filter((element, index) => verdicts[index]);
+}
 
 /**
  * Normalizes URLs in exceptions and stacktraces so Sentry can fingerprint
  * across platforms.
  *
- * @param {string} url The URL to be normalized.
- * @param {string} [base=APP_BASE_PATH] (optional) The application base path.
+ * @param url The URL to be normalized.
+ * @param base (optional) The application base path.
  * @returns The normalized URL.
  */
-export function normalizeUrl(
-  url: string,
-  base: string = APP_BASE_PATH,
-): string {
+export function normalizeUrl(url: string, base: string = APP_PATH): string {
   return decodeURI(url)
     .replace(/\\/g, '/')
     .replace(new RegExp(`(file:\/\/)?\/*${base}\/*`, 'ig'), 'app:///');

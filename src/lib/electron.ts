@@ -1,4 +1,5 @@
 import { platform, release, type } from 'os';
+import { join } from 'path';
 
 import { SentryBrowser, SentryBrowserOptions } from '@sentry/browser';
 import {
@@ -9,7 +10,7 @@ import {
   Options,
   SentryEvent,
 } from '@sentry/core';
-import { SentryNode, SentryNodeOptions } from '@sentry/node';
+import { SentryNode, SentryNodeOptions, Store } from '@sentry/node';
 import {
   app,
   crashReporter,
@@ -21,7 +22,6 @@ import {
   webContents,
 } from 'electron';
 
-import Store from './store';
 import MinidumpUploader from './uploader';
 import { normalizeEvent, normalizeUrl } from './utils';
 
@@ -42,6 +42,12 @@ const IPC_CONTEXT = 'sentry-electron.context';
 const SDK_NAME = 'sentry-electron';
 /** SDK version used in every event. */
 const SDK_VERSION = require('../../package.json').version;
+
+/** App-specific directory to store information in. */
+export const CACHE_PATH = join(
+  (app || remote.app).getPath('userData'),
+  'sentry',
+);
 
 /**
  * Configuration options for {@link SentryElectron}.
@@ -113,9 +119,13 @@ export class SentryElectron implements Adapter {
   /** The inner SDK used to record JavaScript events. */
   private inner: SentryBrowser | SentryNode;
   /** Store to persist context information beyond application crashes. */
-  private context: Store<Context> = new Store('context.json', {});
+  private context: Store<Context> = new Store(CACHE_PATH, 'context', {});
   /** Store to persist breadcrumbs beyond application crashes. */
-  private breadcrumbs: Store<Breadcrumb[]> = new Store('crumbs.json', []);
+  private breadcrumbs: Store<Breadcrumb[]> = new Store(
+    CACHE_PATH,
+    'breadcrumbs',
+    [],
+  );
   /** Uploader for minidump files. */
   private uploader: MinidumpUploader;
 
@@ -373,9 +383,7 @@ export class SentryElectron implements Adapter {
   }
 
   /** Loads new native crashes from disk and sends them to Sentry. */
-  private async sendNativeCrashes(
-    extra: object = { crashed_process: 'browser' },
-  ): Promise<void> {
+  private async sendNativeCrashes(extra: object): Promise<void> {
     // Whenever we are called, assume that the crashes we are going to load down
     // below have occurred recently. This means, we can use the same event data
     // for all minidumps that we load now. There are two conditions:
@@ -424,11 +432,20 @@ export class SentryElectron implements Adapter {
       // it uses to store minidumps in. The structure in this directory depends
       // on the crash library being used (Crashpad or Breakpad).
       const crashesDirectory = (crashReporter as any).getCrashesDirectory();
-      this.uploader = new MinidumpUploader(this.client.dsn, crashesDirectory);
+      this.uploader = new MinidumpUploader(
+        this.client.dsn,
+        crashesDirectory,
+        CACHE_PATH,
+      );
+
+      // Flush already cached minidumps from the queue.
+      await this.uploader.flushQueue();
 
       // Start to submit recent minidump crashes. This will load breadcrumbs
       // and context information that was cached on disk prior to the crash.
-      this.sendNativeCrashes();
+      this.sendNativeCrashes({
+        crashed_process: 'browser',
+      });
 
       // Every time a subprocess or renderer crashes, start sending minidumps
       // right away.
@@ -440,9 +457,6 @@ export class SentryElectron implements Adapter {
           }),
         );
       });
-
-      // Flush already cached minidumps from the queue.
-      await this.uploader.flushQueuedMinidumps();
     }
 
     return true;
@@ -537,8 +551,8 @@ export class SentryElectron implements Adapter {
       if (events.length === 0 || events.indexOf(event) > -1) {
         this.captureBreadcrumb({
           message: `${category}.${event}`,
-          type: `ui`,
-          category: `electron`,
+          type: 'ui',
+          category: 'electron',
           timestamp: new Date().getTime() / 1000,
         });
       }
