@@ -8,6 +8,7 @@ import {
   Client,
   Context,
   Options,
+  SentryError,
   SentryEvent,
 } from '@sentry/core';
 import { SentryNode, SentryNodeOptions, Store } from '@sentry/node';
@@ -19,10 +20,9 @@ import {
   powerMonitor,
   remote,
   screen,
-  webContents,
 } from 'electron';
 
-import MinidumpUploader from './uploader';
+import { MinidumpUploader } from './uploader';
 import { normalizeEvent, normalizeUrl } from './utils';
 
 /**
@@ -41,6 +41,7 @@ const IPC_CONTEXT = 'sentry-electron.context';
 /** SDK name used in every event. */
 const SDK_NAME = 'sentry-electron';
 /** SDK version used in every event. */
+// tslint:disable-next-line
 const SDK_VERSION = require('../../package.json').version;
 
 /** App-specific directory to store information in. */
@@ -48,6 +49,16 @@ export const CACHE_PATH = join(
   (app || remote.app).getPath('userData'),
   'sentry',
 );
+
+/** Returns whether the SDK is running in the main process. */
+function isMainProcess(): boolean {
+  return process.type === 'browser';
+}
+
+/** Returns whether the SDK is running in a renderer process. */
+function isRenderProcess(): boolean {
+  return process.type === 'renderer';
+}
 
 /**
  * Configuration options for {@link SentryElectron}.
@@ -83,7 +94,7 @@ export interface SentryElectronOptions
   /**
    * This will be called in case of a non recoverable fatal error.
    */
-  onFatalError?: (error: Error) => void;
+  onFatalError?(error: Error): void;
 }
 
 /**
@@ -117,25 +128,29 @@ export interface SentryElectronOptions
  */
 export class SentryElectron implements Adapter {
   /** The inner SDK used to record JavaScript events. */
-  private inner: SentryBrowser | SentryNode;
+  private inner?: SentryBrowser | SentryNode;
   /** Store to persist context information beyond application crashes. */
-  private context: Store<Context> = new Store(CACHE_PATH, 'context', {});
+  private readonly context: Store<Context> = new Store<Context>(
+    CACHE_PATH,
+    'context',
+    {},
+  );
   /** Store to persist breadcrumbs beyond application crashes. */
-  private breadcrumbs: Store<Breadcrumb[]> = new Store(
+  private readonly breadcrumbs: Store<Breadcrumb[]> = new Store<Breadcrumb[]>(
     CACHE_PATH,
     'breadcrumbs',
     [],
   );
   /** Uploader for minidump files. */
-  private uploader: MinidumpUploader;
+  private uploader?: MinidumpUploader;
 
   /**
    * Creates a new instance of the
    * @param client The Sentry SDK Client.
    * @param options Options to configure the Electron SDK.
    */
-  constructor(
-    private client: Client,
+  public constructor(
+    private readonly client: Client,
     public options: SentryElectronOptions = {},
   ) {}
 
@@ -160,32 +175,38 @@ export class SentryElectron implements Adapter {
       success = (await this.installRenderHandler()) && success;
     }
 
-    if (this.isMainProcess()) {
+    if (isMainProcess()) {
       ipcMain.on(IPC_CRUMB, (_: Event, crumb: Breadcrumb) => {
-        this.captureBreadcrumb(crumb).catch(e => this.client.log(e));
+        this.captureBreadcrumb(crumb).catch(e => {
+          this.client.log(e);
+        });
       });
 
       ipcMain.on(IPC_EVENT, (_: Event, event: SentryEvent) => {
-        this.send(event).catch(e => this.client.log(e));
+        this.send(event).catch(e => {
+          this.client.log(e);
+        });
       });
 
       ipcMain.on(IPC_CONTEXT, (_: Event, context: Context) => {
-        this.setContext(context).catch(e => this.client.log(e));
+        this.setContext(context).catch(e => {
+          this.client.log(e);
+        });
       });
 
-      this.breadcrumbsFromEvents('app', app);
+      this.instrumentBreadcrumbs('app', app);
 
-      app.on('ready', info => {
-        // we can't access these until 'ready'
-        this.breadcrumbsFromEvents('Screen', screen);
-        this.breadcrumbsFromEvents('PowerMonitor', powerMonitor);
+      app.on('ready', () => {
+        // We can't access these until 'ready'
+        this.instrumentBreadcrumbs('Screen', screen);
+        this.instrumentBreadcrumbs('PowerMonitor', powerMonitor);
       });
 
-      app.on('web-contents-created', (e, contents) => {
-        // setImmediate is required for contents.id to be correct
-        // https://github.com/electron/electron/issues/12036
+      app.on('web-contents-created', (_, contents) => {
+        // SetImmediate is required for contents.id to be correct
+        // Https://github.com/electron/electron/issues/12036
         setImmediate(() => {
-          this.breadcrumbsFromEvents(`WebContents[${contents.id}]`, contents, [
+          this.instrumentBreadcrumbs(`WebContents[${contents.id}]`, contents, [
             'dom-ready',
             'load-url',
             'destroyed',
@@ -227,7 +248,7 @@ export class SentryElectron implements Adapter {
    * @returns The recorded breadcrumb.
    */
   public async captureBreadcrumb(breadcrumb: Breadcrumb): Promise<Breadcrumb> {
-    if (this.isRenderProcess()) {
+    if (isRenderProcess()) {
       ipcRenderer.send(IPC_CRUMB, breadcrumb);
       return breadcrumb;
     }
@@ -250,7 +271,7 @@ export class SentryElectron implements Adapter {
    * @returns A promise that resolves when the event has been sent.
    */
   public async send(event: SentryEvent): Promise<void> {
-    if (this.isRenderProcess()) {
+    if (isRenderProcess()) {
       const contents = remote.getCurrentWebContents();
       event.extra = {
         ...event.extra,
@@ -264,11 +285,11 @@ export class SentryElectron implements Adapter {
     const context = this.getEnrichedContext();
     const mergedEvent = {
       ...normalizeEvent(event),
-      user: { ...context.user, ...event.user },
-      tags: { ...context.tags, ...event.tags },
+      breadcrumbs: this.breadcrumbs.get(),
       extra: { crashed_process: 'browser', ...context.extra, ...event.extra },
       sdk: { name: SDK_NAME, version: SDK_VERSION },
-      breadcrumbs: this.breadcrumbs.get(),
+      tags: { ...context.tags, ...event.tags },
+      user: { ...context.user, ...event.user },
     };
 
     return this.callInner(inner => inner.send(mergedEvent));
@@ -287,8 +308,8 @@ export class SentryElectron implements Adapter {
 
     if (this.isNativeEnabled()) {
       // We can safely re-install the native CrashReporter. If it had been
-      // started before, this will effectively be a no-op. Otherwise, it will
-      // start a new instance.
+      // Started before, this will effectively be a no-op. Otherwise, it will
+      // Start a new instance.
       await this.installNativeHandler();
     } else {
       this.client.log('Native CrashReporter cannot be stopped once started.');
@@ -309,7 +330,7 @@ export class SentryElectron implements Adapter {
    */
   public async getContext(): Promise<Context> {
     // The context is managed by the main process only
-    return this.isMainProcess() ? this.context.get() : {};
+    return isMainProcess() ? this.context.get() : {};
   }
 
   /**
@@ -323,7 +344,7 @@ export class SentryElectron implements Adapter {
    * @param context A new context to replace the previous one.
    */
   public async setContext(context: Context): Promise<void> {
-    if (this.isRenderProcess()) {
+    if (isRenderProcess()) {
       ipcRenderer.send(IPC_CONTEXT, context);
       return;
     }
@@ -336,33 +357,23 @@ export class SentryElectron implements Adapter {
     this.breadcrumbs.clear();
   }
 
-  /** Returns whether the SDK is running in the main process. */
-  private isMainProcess(): boolean {
-    return process.type === 'browser';
-  }
-
-  /** Returns whether the SDK is running in a renderer process. */
-  private isRenderProcess(): boolean {
-    return process.type === 'renderer';
-  }
-
   /** Returns whether JS is enabled and we are in the main process. */
   private isMainEnabled(): boolean {
-    return this.isMainProcess() && this.options.enableJavaScript !== false;
+    return isMainProcess() && this.options.enableJavaScript !== false;
   }
 
   /** Returns whether JS is enabled and we are in a renderer process. */
   private isRenderEnabled(): boolean {
-    return this.isRenderProcess() && this.options.enableJavaScript !== false;
+    return isRenderProcess() && this.options.enableJavaScript !== false;
   }
 
   /** Returns whether native reports are enabled. */
   private isNativeEnabled(): boolean {
     // On macOS, we should only start the Electron CrashReporter in the main
-    // process. It uses Crashpad internally, which will catch errors from all
-    // sub processes thanks to out-of-processes crash handling. On other
-    // platforms we need to start the CrashReporter in every sub process. For
-    // more information see: https://goo.gl/nhqqwD
+    // Process. It uses Crashpad internally, which will catch errors from all
+    // Sub processes thanks to out-of-processes crash handling. On other
+    // Platforms we need to start the CrashReporter in every sub process. For
+    // More information see: https://goo.gl/nhqqwD
     if (platform() === 'darwin' && process.type !== 'browser') {
       return false;
     }
@@ -374,7 +385,9 @@ export class SentryElectron implements Adapter {
   private interceptBreadcrumb(crumb: Breadcrumb): boolean {
     const { shouldAddBreadcrumb } = this.options;
     if (!shouldAddBreadcrumb || shouldAddBreadcrumb(crumb)) {
-      this.captureBreadcrumb(crumb);
+      this.captureBreadcrumb(crumb).catch(e => {
+        this.client.log(e);
+      });
     }
 
     // We do not want the Node and Browser SDK to record breadcrumbs directly.
@@ -385,52 +398,56 @@ export class SentryElectron implements Adapter {
   /** Loads new native crashes from disk and sends them to Sentry. */
   private async sendNativeCrashes(extra: object): Promise<void> {
     // Whenever we are called, assume that the crashes we are going to load down
-    // below have occurred recently. This means, we can use the same event data
-    // for all minidumps that we load now. There are two conditions:
+    // Below have occurred recently. This means, we can use the same event data
+    // For all minidumps that we load now. There are two conditions:
     //
     //  1. The application crashed and we are just starting up. The stored
-    //     breadcrumbs and context reflect the state during the application
-    //     crash.
+    //     Breadcrumbs and context reflect the state during the application
+    //     Crash.
     //
     //  2. A renderer process crashed recently and we have just been notified
-    //     about it. Just use the breadcrumbs and context information we have
-    //     right now and hope that the delay was not too long.
+    //     About it. Just use the breadcrumbs and context information we have
+    //     Right now and hope that the delay was not too long.
+
+    if (this.uploader === undefined) {
+      throw new SentryError('Invariant violation: Native crashes not enabled');
+    }
 
     const context = this.getEnrichedContext();
     const event = {
-      user: context.user,
-      tags: context.tags,
-      extra: { ...context.extra, ...extra },
-      release: this.options.release,
-      environment: this.options.environment,
-      sdk: { name: SDK_NAME, version: SDK_VERSION },
       // Breadcrumbs are copied as they may get cleared at startup
       breadcrumbs: Array.from(this.breadcrumbs.get()),
+      environment: this.options.environment,
+      extra: { ...context.extra, ...extra },
+      release: this.options.release,
+      sdk: { name: SDK_NAME, version: SDK_VERSION },
+      tags: context.tags,
+      user: context.user,
     };
 
     const paths = await this.uploader.getNewMinidumps();
     await Promise.all(
-      paths.map(path => this.uploader.uploadMinidump({ path, event })),
+      paths.map(path => this.uploader!.uploadMinidump({ path, event })),
     );
   }
 
   /** Activates the Electron CrashReporter. */
   private async installNativeHandler(): Promise<boolean> {
     // We will manually submit errors, but CrashReporter requires a submitURL in
-    // some versions. Also, provide a productName and companyName, which we will
-    // add manually to the event's context during submission.
+    // Some versions. Also, provide a productName and companyName, which we will
+    // Add manually to the event's context during submission.
     crashReporter.start({
-      productName: (app || remote.app).getName(),
       companyName: '',
+      ignoreSystemCrashHandler: true,
+      productName: (app || remote.app).getName(),
       submitURL: '',
       uploadToServer: false,
-      ignoreSystemCrashHandler: true,
     });
 
-    if (this.isMainProcess()) {
+    if (isMainProcess()) {
       // The crashReporter has an undocumented method to retrieve the directory
-      // it uses to store minidumps in. The structure in this directory depends
-      // on the crash library being used (Crashpad or Breakpad).
+      // It uses to store minidumps in. The structure in this directory depends
+      // On the crash library being used (Crashpad or Breakpad).
       const crashesDirectory = (crashReporter as any).getCrashesDirectory();
       this.uploader = new MinidumpUploader(
         this.client.dsn,
@@ -439,21 +456,27 @@ export class SentryElectron implements Adapter {
       );
 
       // Flush already cached minidumps from the queue.
-      await this.uploader.flushQueue();
+      this.uploader.flushQueue().catch(e => {
+        this.client.log(e);
+      });
 
       // Start to submit recent minidump crashes. This will load breadcrumbs
-      // and context information that was cached on disk prior to the crash.
+      // And context information that was cached on disk prior to the crash.
       this.sendNativeCrashes({
         crashed_process: 'browser',
+      }).catch(e => {
+        this.client.log(e);
       });
 
       // Every time a subprocess or renderer crashes, start sending minidumps
-      // right away.
-      app.on('web-contents-created', (event, contents) => {
+      // Right away.
+      app.on('web-contents-created', (_, contents) => {
         contents.on('crashed', () =>
           this.sendNativeCrashes({
             crashed_process: `renderer[${contents.id}]`,
             crashed_url: normalizeUrl(contents.getURL()),
+          }).catch(e => {
+            this.client.log(e);
           }),
         );
       });
@@ -475,11 +498,11 @@ export class SentryElectron implements Adapter {
       return false;
     }
 
-    const Raven = node.getRaven();
+    const raven = node.getRaven();
     if (this.options.onFatalError) {
-      Raven.onFatalError = this.options.onFatalError;
+      raven.onFatalError = this.options.onFatalError;
     } else {
-      Raven.onFatalError = (error: any) => {
+      raven.onFatalError = (error: any) => {
         console.error('*********************************');
         console.error('* SentryElectron unhandledError *');
         console.error('*********************************');
@@ -517,7 +540,9 @@ export class SentryElectron implements Adapter {
     callback: (inner: Adapter) => Promise<R>,
   ): Promise<R> {
     if (this.inner === undefined) {
-      throw new Error('Please call install first');
+      throw new SentryError(
+        'Invariant violation: Call .install() before using other methods',
+      );
     }
 
     return callback(this.inner);
@@ -529,8 +554,8 @@ export class SentryElectron implements Adapter {
 
     context.tags = {
       arch: process.arch,
-      'os.name': type(),
       os: `${type()} ${release()}`,
+      'os.name': type(),
       ...context.tags,
     };
 
@@ -541,19 +566,22 @@ export class SentryElectron implements Adapter {
    * Hooks into the Electron EventEmitter to capture breadcrumbs for the
    * specified events.
    */
-  private breadcrumbsFromEvents(
+  private instrumentBreadcrumbs(
     category: string,
     emitter: Electron.EventEmitter,
     events: string[] = [],
   ): void {
+    //tslint:disable-next-line:no-unbound-method
     const originalEmit = emitter.emit;
     emitter.emit = (event, ...args) => {
       if (events.length === 0 || events.indexOf(event) > -1) {
         this.captureBreadcrumb({
-          message: `${category}.${event}`,
-          type: 'ui',
           category: 'electron',
+          message: `${category}.${event}`,
           timestamp: new Date().getTime() / 1000,
+          type: 'ui',
+        }).catch(e => {
+          this.client.log(e);
         });
       }
 

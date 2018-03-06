@@ -1,36 +1,77 @@
 import { join } from 'path';
-import * as pTree from 'process-tree';
+
+import pTree = require('process-tree');
 import { Application } from 'spectron';
-import * as tmpdir from 'temporary-directory';
+import tmpdir = require('temporary-directory');
 import { promisify } from 'util';
 import { ProcessStatus } from './process-status';
 import { TestServer } from './test-server';
 
 const processTree = promisify(pTree);
 
+/** A temporary directory handle. */
+interface TempDirectory {
+  /** Absolute path to the directory. */
+  path: string;
+  /** A function that will remove the directory when invoked. */
+  cleanup(): void;
+}
+
+/**
+ * Kills all chrome driver processes (i.e. sub-processes) of an Electron app.
+ * @param pid The PID of the root process
+ */
+async function tryKillChromeDriver(pid: number = process.pid): Promise<void> {
+  // @ts-ignore
+  for (const each of await processTree(pid)) {
+    if (each.name.toLowerCase().includes('chromedriver')) {
+      process.kill(each.pid);
+    } else {
+      await tryKillChromeDriver(each.pid);
+    }
+  }
+}
+
+/** Creates a temporary directory with a cleanup function. */
+function getTempDir(): Promise<TempDirectory> {
+  return new Promise((resolve, reject) => {
+    tmpdir((err, dir, cleanup) => {
+      if (err) {
+        reject(err);
+      }
+
+      resolve({
+        cleanup,
+        path: dir,
+      });
+    });
+  });
+}
+
+/** A class to start and stop Electron apps for E2E tests. */
 export class TestContext {
   /** The Spectron Application class */
-  public app: Application;
+  public app?: Application;
   /** Can check if the main process is running and kill it */
-  public mainProcess: ProcessStatus;
-
-  // This gets the path to the Electron executable on any platform
-  private electronPath: string = require('electron') as any;
-  private tempDir: TempDirectory;
+  public mainProcess?: ProcessStatus;
+  /** Temporary directory that hosts the app's User Data. */
+  private tempDir?: TempDirectory;
+  /** Platform-independent path to the electron executable. */
+  private readonly electronPath: string = require('electron') as any;
 
   /**
    * Creates an instance of TestContext.
+   * Pass `undefined` to `testServer` to disable the test server.
    *
-   * @param {string} [appPath=join(__dirname, '../../example')] Path to the application to run
-   * @param {any} [testServer=new TestServer()] A test server instance. Setting to 'undefined' will disable test server.
-   * @memberof TestContext
+   * @param appPath Path to the application to run
+   * @param testServer A test server instance.
    */
-  constructor(
-    private appPath = join(__dirname, '../../example'),
-    public testServer = new TestServer(),
+  public constructor(
+    private readonly appPath: string = join(__dirname, '../../example'),
+    public testServer: TestServer = new TestServer(),
   ) {}
 
-  /** Starts the app */
+  /** Starts the app. */
   public async start(): Promise<void> {
     // Start the test server if required
     if (this.testServer) {
@@ -41,17 +82,17 @@ export class TestContext {
     // Subseqent starts will se the same path
     if (!this.tempDir) {
       // Get a temp directory for this app to use as userData
-      this.tempDir = await this.getTempDir();
+      this.tempDir = await getTempDir();
     }
 
     this.app = new Application({
-      path: this.electronPath,
       args: [this.appPath],
       env: {
         DSN:
           'http://37f8a2ee37c0409d8970bc7559c7c7e4:4cfde0ca506c4ea39b4e25b61a1ff1c3@localhost:8000/277345',
         E2E_USERDATA_DIRECTORY: this.tempDir.path,
       },
+      path: this.electronPath,
     });
 
     await this.app.start();
@@ -64,8 +105,12 @@ export class TestContext {
     );
   }
 
-  /** Stops the app and cleans up  */
+  /** Stops the app and cleans up. */
   public async stop(clearData: boolean = true): Promise<void> {
+    if (!this.mainProcess) {
+      throw new Error('Invariant violation: Call .start() first');
+    }
+
     try {
       if (this.app && this.app.isRunning()) {
         await this.app.stop();
@@ -83,10 +128,21 @@ export class TestContext {
     }
 
     await this.mainProcess.kill();
-    await this.tryKillChromeDriver();
+
+    // When the renderer crashes, Chromedriver does not close and does not respond.
+    // We have to find the process and kill it.
+    await tryKillChromeDriver();
   }
 
-  public async clickCrashButton(selector: string): Promise<void> {
+  /**
+   * Waits until a button appears and then clicks it.
+   * @param selector CSS selector of the target button.
+   */
+  public async clickButton(selector: string): Promise<void> {
+    if (!this.app) {
+      throw new Error('Invariant violation: Call .start() first');
+    }
+
     try {
       await this.app.client.waitForExist(selector).click(selector);
     } catch (e) {
@@ -95,59 +151,27 @@ export class TestContext {
   }
 
   /**
-   * Promise only returns when the supplied method returns 'true'
+   * Promise only returns when the supplied method returns 'true'.
    *
-   * @param {() => boolean} method Method to poll
-   * @param {number} [timeout=5000] Time in ms to throw timeout
-   * @returns {Promise<void>}
+   * @param method Method to poll.
+   * @param timeout Time in ms to throw timeout.
+   * @returns
    */
   public async waitForTrue(
     method: () => boolean,
     timeout: number = 5000,
   ): Promise<void> {
-    while (method() === false) {
+    if (!this.app) {
+      throw new Error('Invariant violation: Call .start() first');
+    }
+
+    let remaining = timeout;
+    while (!method()) {
       await this.app.client.pause(100);
-      timeout -= 100;
-      if (timeout < 0) {
+      remaining -= 100;
+      if (remaining < 0) {
         throw new Error('Timed out');
       }
     }
   }
-
-  /**
-   * When the renderer crashes, Chromedriver does not close and does not respond.
-   * We have to find the process and kill it.
-   *
-   * @param {number} [pid=process.pid] The root pid to check sub-processes
-   */
-  private async tryKillChromeDriver(pid: number = process.pid): Promise<void> {
-    // @ts-ignore
-    for (const each of await processTree(pid)) {
-      if ((each.name as string).toLowerCase().includes('chromedriver')) {
-        process.kill(each.pid);
-      } else {
-        await this.tryKillChromeDriver(each.pid);
-      }
-    }
-  }
-
-  private getTempDir(): Promise<TempDirectory> {
-    return new Promise((resolve, reject) => {
-      const userDataDir = tmpdir((err, dir, cleanup) => {
-        if (err) {
-          reject(err);
-        }
-
-        resolve({
-          path: dir,
-          cleanup,
-        });
-      });
-    });
-  }
-}
-
-interface TempDirectory {
-  path: string;
-  cleanup: () => void;
 }

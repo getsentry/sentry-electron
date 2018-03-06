@@ -11,7 +11,7 @@ export async function filterAsync<T>(
   thisArg?: any,
 ): Promise<T[]> {
   const verdicts = await Promise.all(array.map(predicate, thisArg));
-  return array.filter((element, index) => verdicts[index]);
+  return array.filter((_, index) => verdicts[index]);
 }
 
 /**
