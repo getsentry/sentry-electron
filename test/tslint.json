@@ -1,5 +1,6 @@
 {
   "rules": {
+    "await-promise": [true, "Client"],
     "no-implicit-dependencies": [true, "dev"]
   },
   "extends": ["../tslint.json"]
