@@ -29,10 +29,13 @@
     "util.promisify": "^1.0.0"
   },
   "devDependencies": {
+    "@types/body-parser": "^1.16.8",
     "@types/chai": "^4.1.2",
     "@types/chai-as-promised": "^7.1.0",
+    "@types/finalhandler": "^0.0.32",
     "@types/form-data": "^2.2.1",
     "@types/mocha": "^2.2.48",
+    "@types/multiparty": "^0.0.31",
     "@types/node-fetch": "^1.6.7",
     "@types/webdriverio": "^4.10.0",
     "chai": "^4.1.2",
