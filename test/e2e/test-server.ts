@@ -1,8 +1,12 @@
+// tslint:disable:no-unsafe-any
+
+import { readFileSync } from 'fs';
+import * as http from 'http';
+
+import { SentryEvent } from '@sentry/core';
 import * as bodyParser from 'body-parser';
 import * as express from 'express';
 import * as finalhandler from 'finalhandler';
-import { readFileSync } from 'fs';
-import * as http from 'http';
 import * as multiparty from 'multiparty';
 import * as zlib from 'zlib';
 
@@ -25,7 +29,7 @@ export interface TestServerEvent {
   /** Public auth key from the DSN. */
   sentry_key: string;
   /** Sentry Event data (should conform to the SentryEvent interface). */
-  data: any;
+  data: SentryEvent;
   /** An optional minidump file, if included in the event. */
   dump_file?: Buffer;
 }
@@ -59,7 +63,7 @@ export class TestServer {
       }
 
       this.events.push({
-        data: deflateBase64ZIP(req.body),
+        data: deflateBase64ZIP(req.body as Buffer) as SentryEvent,
         id: req.params.id,
         sentry_key: keyMatch[1],
       });
@@ -73,7 +77,7 @@ export class TestServer {
       const form = new multiparty.Form();
       form.parse(req, (_, fields, files) => {
         this.events.push({
-          data: JSON.parse(fields.sentry[0]),
+          data: JSON.parse(fields.sentry[0]) as SentryEvent,
           dump_file: readFileSync(files.upload_file_minidump[0].path),
           id: req.params.id,
           sentry_key: req.originalUrl.replace(/.*sentry_key=/, ''),
@@ -84,16 +88,16 @@ export class TestServer {
       });
     });
 
-    this.server = http.createServer((req: any, res: any) => {
-      app(req, res, finalhandler(req, res));
+    this.server = http.createServer((req, res) => {
+      app(req as any, res as any, finalhandler(req, res));
     });
 
     this.server.listen(8000);
   }
 
   /** Stops accepting requests and closes the server. */
-  public stop(): Promise<void> {
-    return new Promise((resolve, reject) => {
+  public async stop(): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
       if (this.server) {
         this.server.close(resolve);
       } else {

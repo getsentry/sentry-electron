@@ -1,8 +1,25 @@
-import { SentryEvent, Stacktrace } from '@sentry/core';
+import { SentryEvent, SentryException, Stacktrace } from '@sentry/core';
 import { app, remote } from 'electron';
 
 /** Application base path used for URL normalization. */
-const APP_PATH = (app || remote.app).getAppPath().replace(/\\/g, '/');
+const APP_PATH = getApp()
+  .getAppPath()
+  .replace(/\\/g, '/');
+
+/** Returns whether the SDK is running in the main process. */
+export function isMainProcess(): boolean {
+  return process.type === 'browser';
+}
+
+/** Returns whether the SDK is running in a renderer process. */
+export function isRenderProcess(): boolean {
+  return process.type === 'renderer';
+}
+
+/** Returns the Electron App instance. */
+export function getApp(): Electron.App {
+  return isMainProcess() ? app : remote.app;
+}
 
 /** Helper to filter an array with asynchronous callbacks. */
 export async function filterAsync<T>(
@@ -29,6 +46,34 @@ export function normalizeUrl(url: string, base: string = APP_PATH): string {
 }
 
 /**
+ * Returns a reference to the exception stack trace in the given event.
+ * @param event An event potentially containing stack traces.
+ */
+function getStacktrace(event: SentryEvent): Stacktrace | undefined {
+  const { stacktrace, exception } = event;
+
+  // Try the main event stack trace first
+  if (stacktrace) {
+    return stacktrace;
+  }
+
+  if (exception) {
+    // Raven Node adhers to the Event interface
+    if (exception[0]) {
+      return exception[0].stacktrace;
+    }
+
+    // Raven JS uses the full values interface, which has been removed
+    const raven = (exception as any) as { values: SentryException[] };
+    if (raven.values && raven.values[0]) {
+      return raven.values[0].stacktrace;
+    }
+  }
+
+  return undefined;
+}
+
+/**
  * Normalizes all URLs in an event. See {@link normalizeUrl} for more
  * information.
  *
@@ -39,23 +84,15 @@ export function normalizeEvent(event: SentryEvent): SentryEvent {
   // NOTE: Events from Raven currently contain data that does not conform with
   // the `SentryEvent` interface. Until this has been resolved, we need to cast
   // to avoid typescript warnings.
-  const copy = JSON.parse(JSON.stringify(event));
+  const copy = JSON.parse(JSON.stringify(event)) as SentryEvent;
 
   // The culprit has been deprecated about two years ago and can safely be
   // removed. Remove this line, once this has been resolved in Raven.
-  delete copy.culprit;
+  delete (copy as { culprit: string }).culprit;
 
-  if (copy.request && copy.request.url) {
-    copy.request.url = normalizeUrl(copy.request.url);
-  }
-
-  const stacktrace: Stacktrace =
-    copy.stacktrace ||
-    // Node exceptions
-    (copy.exception && copy.exception[0] && copy.exception[0].stacktrace) ||
-    // Browser exceptions
-    (copy.exception && copy.exception.values[0].stacktrace);
-
+  // Retrieve stack traces and normalize their URLs. Without this, grouping
+  // would not work due to user folders in file names.
+  const stacktrace = getStacktrace(copy);
   if (stacktrace && stacktrace.frames) {
     stacktrace.frames.forEach(frame => {
       if (frame.filename) {

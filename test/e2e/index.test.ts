@@ -23,33 +23,36 @@ describe('Basic Tests', () => {
     await context.clickButton('#error-render');
     await context.waitForTrue(() => context.testServer.events.length >= 1);
     const event = context.testServer.events[0];
+    const breadcrumbs = event.data.breadcrumbs || [];
 
     expect(context.testServer.events.length).to.equal(1);
     expect(event.dump_file).to.equal(undefined);
     expect(event.sentry_key).to.equal(SENTRY_KEY);
-    expect(event.data.breadcrumbs.length).to.greaterThan(5);
+    expect(breadcrumbs.length).to.greaterThan(5);
   });
 
   it('JavaScript exception in main process', async () => {
     await context.clickButton('#error-main');
     await context.waitForTrue(() => context.testServer.events.length >= 1);
     const event = context.testServer.events[0];
+    const breadcrumbs = event.data.breadcrumbs || [];
 
     expect(context.testServer.events.length).to.equal(1);
     expect(event.dump_file).to.equal(undefined);
     expect(event.sentry_key).to.equal(SENTRY_KEY);
-    expect(event.data.breadcrumbs.length).to.greaterThan(5);
+    expect(breadcrumbs.length).to.greaterThan(5);
   });
 
   it('Native crash in renderer process', async () => {
     await context.clickButton('#crash-render');
     await context.waitForTrue(() => context.testServer.events.length >= 1);
     const event = context.testServer.events[0];
+    const breadcrumbs = event.data.breadcrumbs || [];
 
     expect(context.testServer.events.length).to.equal(1);
     expect(event.dump_file).to.be.instanceOf(Buffer);
     expect(event.sentry_key).to.equal(SENTRY_KEY);
-    expect(event.data.breadcrumbs.length).to.greaterThan(5);
+    expect(breadcrumbs.length).to.greaterThan(5);
   });
 
   it('Native crash in main process', async () => {
@@ -61,10 +64,11 @@ describe('Basic Tests', () => {
 
     await context.waitForTrue(() => context.testServer.events.length >= 1);
     const event = context.testServer.events[0];
+    const breadcrumbs = event.data.breadcrumbs || [];
 
     expect(context.testServer.events.length).to.equal(1);
     expect(event.dump_file).to.be.instanceOf(Buffer);
     expect(event.sentry_key).to.equal(SENTRY_KEY);
-    expect(event.data.breadcrumbs.length).to.greaterThan(5);
+    expect(breadcrumbs.length).to.greaterThan(5);
   });
 });

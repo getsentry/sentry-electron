@@ -23,7 +23,13 @@ import {
 } from 'electron';
 
 import { MinidumpUploader } from './uploader';
-import { normalizeEvent, normalizeUrl } from './utils';
+import {
+  getApp,
+  isMainProcess,
+  isRenderProcess,
+  normalizeEvent,
+  normalizeUrl,
+} from './utils';
 
 /**
  * Maximum number of breadcrumbs that get added to an event. Can be overwritten
@@ -45,19 +51,16 @@ const SDK_NAME = 'sentry-electron';
 const SDK_VERSION = require('../../package.json').version;
 
 /** App-specific directory to store information in. */
-export const CACHE_PATH = join(
-  (app || remote.app).getPath('userData'),
-  'sentry',
-);
+export const CACHE_PATH = join(getApp().getPath('userData'), 'sentry');
 
-/** Returns whether the SDK is running in the main process. */
-function isMainProcess(): boolean {
-  return process.type === 'browser';
+/** Patch to access internal CrashReporter functionality. */
+interface CrashReporterExt {
+  getCrashesDirectory(): string;
 }
 
-/** Returns whether the SDK is running in a renderer process. */
-function isRenderProcess(): boolean {
-  return process.type === 'renderer';
+/** Patch to access internal Raven functionality. */
+interface RavenExt {
+  onFatalError(error: Error): void;
 }
 
 /**
@@ -80,16 +83,16 @@ export interface SentryElectronOptions
     SentryBrowserOptions,
     SentryNodeOptions {
   /**
-   * Enables crash reporting for native crashes of this process (via Minidumps).
-   * Defaults to `true`.
-   */
-  enableNative?: boolean;
-
-  /**
    * Enables crash reporting for JavaScript errors in this process.
    * Defaults to `true`.
    */
   enableJavaScript?: boolean;
+
+  /**
+   * Enables crash reporting for native crashes of this process (via Minidumps).
+   * Defaults to `true`.
+   */
+  enableNative?: boolean;
 
   /**
    * This will be called in case of a non recoverable fatal error.
@@ -127,20 +130,23 @@ export interface SentryElectronOptions
  * @see Sentry.Client
  */
 export class SentryElectron implements Adapter {
-  /** The inner SDK used to record JavaScript events. */
-  private inner?: SentryBrowser | SentryNode;
-  /** Store to persist context information beyond application crashes. */
-  private readonly context: Store<Context> = new Store<Context>(
-    CACHE_PATH,
-    'context',
-    {},
-  );
   /** Store to persist breadcrumbs beyond application crashes. */
   private readonly breadcrumbs: Store<Breadcrumb[]> = new Store<Breadcrumb[]>(
     CACHE_PATH,
     'breadcrumbs',
     [],
   );
+
+  /** Store to persist context information beyond application crashes. */
+  private readonly context: Store<Context> = new Store<Context>(
+    CACHE_PATH,
+    'context',
+    {},
+  );
+
+  /** The inner SDK used to record JavaScript events. */
+  private inner?: SentryBrowser | SentryNode;
+
   /** Uploader for minidump files. */
   private uploader?: MinidumpUploader;
 
@@ -224,8 +230,8 @@ export class SentryElectron implements Adapter {
    * @param exception An error-like object or error message to capture.
    * @returns An event to be sent to Sentry.
    */
-  public captureException(exception: any): Promise<SentryEvent> {
-    return this.callInner(inner => inner.captureException(exception));
+  public async captureException(exception: any): Promise<SentryEvent> {
+    return this.callInner(async inner => inner.captureException(exception));
   }
 
   /**
@@ -234,8 +240,8 @@ export class SentryElectron implements Adapter {
    * @param exception A message to capture as Sentry event.
    * @returns An event to be sent to Sentry.
    */
-  public captureMessage(message: string): Promise<SentryEvent> {
-    return this.callInner(inner => inner.captureMessage(message));
+  public async captureMessage(message: string): Promise<SentryEvent> {
+    return this.callInner(async inner => inner.captureMessage(message));
   }
 
   /**
@@ -253,8 +259,8 @@ export class SentryElectron implements Adapter {
       return breadcrumb;
     }
 
-    const crumb = JSON.parse(JSON.stringify(breadcrumb));
-    const max = this.options.maxBreadcrumbs || MAX_BREADCRUMBS;
+    const crumb = JSON.parse(JSON.stringify(breadcrumb)) as Breadcrumb;
+    const { maxBreadcrumbs: max = MAX_BREADCRUMBS } = this.options;
     this.breadcrumbs.update(crumbs => [...crumbs.slice(-max), crumb]);
 
     return crumb;
@@ -292,7 +298,7 @@ export class SentryElectron implements Adapter {
       user: { ...context.user, ...event.user },
     };
 
-    return this.callInner(inner => inner.send(mergedEvent));
+    return this.callInner(async inner => inner.send(mergedEvent));
   }
 
   /**
@@ -315,7 +321,7 @@ export class SentryElectron implements Adapter {
       this.client.log('Native CrashReporter cannot be stopped once started.');
     }
 
-    return this.callInner(inner => inner.setOptions(options));
+    return this.callInner(async inner => inner.setOptions(options));
   }
 
   /**
@@ -409,7 +415,8 @@ export class SentryElectron implements Adapter {
     //     about it. Just use the breadcrumbs and context information we have
     //     right now and hope that the delay was not too long.
 
-    if (this.uploader === undefined) {
+    const uploader = this.uploader;
+    if (uploader === undefined) {
       throw new SentryError('Invariant violation: Native crashes not enabled');
     }
 
@@ -425,9 +432,9 @@ export class SentryElectron implements Adapter {
       user: context.user,
     };
 
-    const paths = await this.uploader.getNewMinidumps();
+    const paths = await uploader.getNewMinidumps();
     await Promise.all(
-      paths.map(path => this.uploader!.uploadMinidump({ path, event })),
+      paths.map(async path => uploader.uploadMinidump({ path, event })),
     );
   }
 
@@ -439,7 +446,7 @@ export class SentryElectron implements Adapter {
     crashReporter.start({
       companyName: '',
       ignoreSystemCrashHandler: true,
-      productName: (app || remote.app).getName(),
+      productName: getApp().getName(),
       submitURL: '',
       uploadToServer: false,
     });
@@ -448,7 +455,9 @@ export class SentryElectron implements Adapter {
       // The crashReporter has an undocumented method to retrieve the directory
       // it uses to store minidumps in. The structure in this directory depends
       // on the crash library being used (Crashpad or Breakpad).
-      const crashesDirectory = (crashReporter as any).getCrashesDirectory();
+      const reporter: CrashReporterExt = crashReporter as any;
+      const crashesDirectory = reporter.getCrashesDirectory();
+
       this.uploader = new MinidumpUploader(
         this.client.dsn,
         crashesDirectory,
@@ -471,7 +480,7 @@ export class SentryElectron implements Adapter {
       // Every time a subprocess or renderer crashes, start sending minidumps
       // right away.
       app.on('web-contents-created', (_, contents) => {
-        contents.on('crashed', () =>
+        contents.on('crashed', async () =>
           this.sendNativeCrashes({
             crashed_process: `renderer[${contents.id}]`,
             crashed_url: normalizeUrl(contents.getURL()),
@@ -498,11 +507,11 @@ export class SentryElectron implements Adapter {
       return false;
     }
 
-    const raven = node.getRaven();
+    const raven = node.getRaven() as RavenExt;
     if (this.options.onFatalError) {
       raven.onFatalError = this.options.onFatalError;
     } else {
-      raven.onFatalError = (error: any) => {
+      raven.onFatalError = (error: Error) => {
         console.error('*********************************');
         console.error('* SentryElectron unhandledError *');
         console.error('*********************************');
@@ -571,21 +580,24 @@ export class SentryElectron implements Adapter {
     emitter: Electron.EventEmitter,
     events: string[] = [],
   ): void {
-    // tslint:disable-next-line:no-unbound-method
-    const originalEmit = emitter.emit;
+    type Emit = (event: string, ...args: any[]) => boolean;
+    const emit = emitter.emit.bind(emitter) as Emit;
+
     emitter.emit = (event, ...args) => {
       if (events.length === 0 || events.indexOf(event) > -1) {
-        this.captureBreadcrumb({
+        const breadcrumb = {
           category: 'electron',
           message: `${category}.${event}`,
           timestamp: new Date().getTime() / 1000,
           type: 'ui',
-        }).catch(e => {
+        };
+
+        this.captureBreadcrumb(breadcrumb).catch(e => {
           this.client.log(e);
         });
       }
 
-      return originalEmit.call(emitter, event, ...args);
+      return emit(event, ...args);
     };
   }
 }

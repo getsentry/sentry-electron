@@ -43,10 +43,13 @@ export interface MinidumpRequest {
 export class MinidumpUploader {
   /** The minidump ingestion endpoint URL. */
   private readonly url: string;
+
   /** The type of the Electron CrashReporter used to search for Minidumps. */
   private readonly type: CrashReporterType;
+
   /** List of minidumps that have been found already. */
   private readonly knownPaths: string[];
+
   /** Store to persist queued Minidumps beyond application crashes or lost internet connection. */
   private readonly queue: Store<MinidumpRequest[]> = new Store(
     this.cacheDirectory,
@@ -71,7 +74,7 @@ export class MinidumpUploader {
 
     const { host, path, port, protocol, user } = dsn;
     this.url =
-      `${protocol}://${host}${port ? `:${port}` : ''}` +
+      `${protocol}://${host}${port !== '' ? `:${port}` : ''}` +
       `/api/${path}/minidump?sentry_key=${user}`;
   }
 
@@ -109,7 +112,8 @@ export class MinidumpUploader {
       }
     } catch (err) {
       // User's internet connection was down so we queue it as well
-      if (err.code === 'ENOTFOUND') {
+      const error = err ? (err as { code: string }) : { code: '' };
+      if (error.code === 'ENOTFOUND') {
         await this.queueMinidump(request);
       }
     }
@@ -176,7 +180,7 @@ export class MinidumpUploader {
     // Remove all metadata files (asynchronously) and forget about them.
     files
       .filter(file => file.endsWith('.txt') && !file.endsWith('log.txt'))
-      .forEach(file => unlink(join(this.crashesDirectory, file)));
+      .forEach(async file => unlink(join(this.crashesDirectory, file)));
 
     return files
       .filter(file => file.endsWith('.dmp'))
@@ -212,6 +216,6 @@ export class MinidumpUploader {
     const stale = requests.splice(-MAX_REQUESTS_COUNT);
     this.queue.set(requests);
 
-    await Promise.all(stale.map(req => unlink(req.path)));
+    await Promise.all(stale.map(async req => unlink(req.path)));
   }
 }

@@ -32,17 +32,14 @@ async function tryKillChromeDriver(pid: number = process.pid): Promise<void> {
 }
 
 /** Creates a temporary directory with a cleanup function. */
-function getTempDir(): Promise<TempDirectory> {
-  return new Promise((resolve, reject) => {
+async function getTempDir(): Promise<TempDirectory> {
+  return new Promise<TempDirectory>((resolve, reject) => {
     tmpdir((err, dir, cleanup) => {
       if (err) {
         reject(err);
+      } else {
+        resolve({ cleanup, path: dir });
       }
-
-      resolve({
-        cleanup,
-        path: dir,
-      });
     });
   });
 }
@@ -99,9 +96,8 @@ export class TestContext {
 
     // Save the main process pid so we can terminate the crashed app later
     // We have to do this as we lose connection via Chromedriver
-    this.mainProcess = new ProcessStatus(
-      await (this.app.mainProcess as any).pid(),
-    );
+    const getPid = (this.app.mainProcess as any).pid as () => Promise<number>;
+    this.mainProcess = new ProcessStatus(await getPid());
   }
 
   /** Stops the app and cleans up. */
