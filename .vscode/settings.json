@@ -12,7 +12,6 @@
   "editor.insertSpaces": true,
   "editor.detectIndentation": false,
   "editor.mouseWheelZoom": false,
-  "tslint.enable": true,
-  "tslint.autoFixOnSave": true,
+  "tslint.enable": false,
   "typescript.autoImportSuggestions.enabled": false
 }

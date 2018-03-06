@@ -1,4 +1,4 @@
-// tslint:disable-next-line:no-submodule-imports
+// tslint:disable-next-line
 require('util.promisify/shim')();
 
 import * as fs from 'fs';
@@ -17,8 +17,9 @@ const readdir = promisify(fs.readdir);
 const rename = promisify(fs.rename);
 const stat = promisify(fs.stat);
 const unlink = promisify(fs.unlink);
-const readFile = promisify(fs.readFile);
-const writeFile = promisify(fs.writeFile);
+
+/** Status code returned by Sentry to retry event submission later. */
+const CODE_RETRY = 429;
 
 /** Maximum number of days to keep a minidump before deleting it. */
 const MAX_AGE = 30;
@@ -39,15 +40,18 @@ export interface MinidumpRequest {
 /**
  * A service that discovers Minidump crash reports and uploads them to Sentry.
  */
-export default class MinidumpUploader {
+export class MinidumpUploader {
   /** The minidump ingestion endpoint URL. */
-  private url: string;
+  private readonly url: string;
+
   /** The type of the Electron CrashReporter used to search for Minidumps. */
-  private type: CrashReporterType;
+  private readonly type: CrashReporterType;
+
   /** List of minidumps that have been found already. */
-  private knownPaths: string[];
+  private readonly knownPaths: string[];
+
   /** Store to persist queued Minidumps beyond application crashes or lost internet connection. */
-  private queue: Store<MinidumpRequest[]> = new Store(
+  private readonly queue: Store<MinidumpRequest[]> = new Store(
     this.cacheDirectory,
     'queue',
     [],
@@ -60,17 +64,17 @@ export default class MinidumpUploader {
    * @param crashesDirectory The directory Electron stores crashes in.
    * @param cacheDirectory A persistent directory to cache minidumps.
    */
-  constructor(
+  public constructor(
     dsn: DSN,
-    private crashesDirectory: string,
-    private cacheDirectory: string,
+    private readonly crashesDirectory: string,
+    private readonly cacheDirectory: string,
   ) {
     this.type = platform() === 'darwin' ? 'crashpad' : 'breakpad';
     this.knownPaths = [];
 
     const { host, path, port, protocol, user } = dsn;
     this.url =
-      `${protocol}://${host}${port ? ':' + port : ''}` +
+      `${protocol}://${host}${port !== '' ? `:${port}` : ''}` +
       `/api/${path}/minidump?sentry_key=${user}`;
   }
 
@@ -89,13 +93,13 @@ export default class MinidumpUploader {
       const response = await fetch(this.url, { method: 'POST', body });
 
       // Too many requests, so we queue the event and send it later
-      if (response.status === 429) {
+      if (response.status === CODE_RETRY) {
         await this.queueMinidump(request);
         return;
       }
 
-      // We either succeeded or something went horribly wrong
-      // Either way, we can remove the minidump file
+      // We either succeeded or something went horribly wrong. Either way, we
+      // can remove the minidump file.
       await unlink(request.path);
 
       // Forget this minidump in all caches
@@ -108,7 +112,8 @@ export default class MinidumpUploader {
       }
     } catch (err) {
       // User's internet connection was down so we queue it as well
-      if (err.code === 'ENOTFOUND') {
+      const error = err ? (err as { code: string }) : { code: '' };
+      if (error.code === 'ENOTFOUND') {
         await this.queueMinidump(request);
       }
     }
@@ -175,7 +180,7 @@ export default class MinidumpUploader {
     // Remove all metadata files (asynchronously) and forget about them.
     files
       .filter(file => file.endsWith('.txt') && !file.endsWith('log.txt'))
-      .forEach(file => unlink(join(this.crashesDirectory, file)));
+      .forEach(async file => unlink(join(this.crashesDirectory, file)));
 
     return files
       .filter(file => file.endsWith('.dmp'))
@@ -211,6 +216,6 @@ export default class MinidumpUploader {
     const stale = requests.splice(-MAX_REQUESTS_COUNT);
     this.queue.set(requests);
 
-    await Promise.all(stale.map(req => unlink(req.path)));
+    await Promise.all(stale.map(async req => unlink(req.path)));
   }
 }
