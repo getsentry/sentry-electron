@@ -1,22 +1,8 @@
 {
+  "extends": "./tsconfig.build.json",
   "compilerOptions": {
-    "baseUrl": ".",
-    "rootDir": "src",
-    "outDir": "dist",
-    "sourceMap": true,
-    "inlineSources": true,
-    "target": "es6",
-    "module": "commonjs",
-    "declaration": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "noImplicitReturns": true,
-    "strictNullChecks": true,
-    "stripInternal": true,
-    "downlevelIteration": true,
-    "moduleResolution": "node",
-    "allowJs": false
+    "rootDir": "."
   },
-  "include": ["./src/**/*.ts"]
+  "exclude": ["./dist"],
+  "include": ["./src/**/*.ts", "./test/**/*.ts"]
 }
