@@ -20,6 +20,7 @@ import {
   powerMonitor,
   remote,
   screen,
+  // tslint:disable-next-line:no-implicit-dependencies
 } from 'electron';
 
 import { normalizeEvent, normalizeUrl } from './normalize';

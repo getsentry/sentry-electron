@@ -1,3 +1,4 @@
+// tslint:disable-next-line:no-implicit-dependencies
 import { app, remote } from 'electron';
 
 /** Returns whether the SDK is running in the main process. */
