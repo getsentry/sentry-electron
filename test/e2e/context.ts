@@ -4,8 +4,8 @@ import pTree = require('process-tree');
 import { Application } from 'spectron';
 import tmpdir = require('temporary-directory');
 import { promisify } from 'util';
-import { ProcessStatus } from './process-status';
-import { TestServer } from './test-server';
+import { ProcessStatus } from './process';
+import { TestServer } from './server';
 
 const processTree = promisify(pTree);
 
