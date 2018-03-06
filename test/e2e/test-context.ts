@@ -129,8 +129,8 @@ export class TestContext {
 
     await this.mainProcess.kill();
 
-    // When the renderer crashes, Chromedriver does not close and does not respond.
-    // We have to find the process and kill it.
+    // When the renderer crashes, Chromedriver does not close and does not
+    // respond. We have to find the process and kill it.
     await tryKillChromeDriver();
   }
 

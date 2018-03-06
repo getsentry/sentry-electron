@@ -95,8 +95,8 @@ export class MinidumpUploader {
         return;
       }
 
-      // We either succeeded or something went horribly wrong
-      // Either way, we can remove the minidump file
+      // We either succeeded or something went horribly wrong. Either way, we
+      // can remove the minidump file.
       await unlink(request.path);
 
       // Forget this minidump in all caches
@@ -133,11 +133,11 @@ export class MinidumpUploader {
       }
 
       // Lock this minidump until we have uploaded it or an error occurs and we
-      // Remove it from the file system.
+      // remove it from the file system.
       this.knownPaths.push(path);
 
       // We do not want to upload minidumps that have been generated before a
-      // Certain threshold. Those old files can be deleted immediately.
+      // certain threshold. Those old files can be deleted immediately.
       const stats = await stat(path);
       if (stats.birthtimeMs < oldestMs) {
         await unlink(path);
@@ -159,7 +159,7 @@ export class MinidumpUploader {
   /** Scans the Crashpad directory structure for minidump files. */
   private async scanCrashpadFolder(): Promise<string[]> {
     // Crashpad moves minidump files directly into the completed/ folder. We
-    // Can load them from there, upload to the server, and then delete it.
+    // can load them from there, upload to the server, and then delete it.
     const dumpDirectory = join(this.crashesDirectory, 'completed');
     const files = await readdir(dumpDirectory);
     return files
@@ -170,7 +170,7 @@ export class MinidumpUploader {
   /** Scans the Breakpad directory structure for minidump files. */
   private async scanBreakpadFolder(): Promise<string[]> {
     // Breakpad stores all minidump files along with a metadata file directly
-    // In the crashes directory.
+    // in the crashes directory.
     const files = await readdir(this.crashesDirectory);
 
     // Remove all metadata files (asynchronously) and forget about them.
@@ -191,23 +191,23 @@ export class MinidumpUploader {
     const filename = basename(request.path);
 
     // Only enqueue if this minidump hasn't been enqueued before. Compare the
-    // Filename instead of the full path, because we will move the file to a
-    // Temporary location later on.
+    // filename instead of the full path, because we will move the file to a
+    // temporary location later on.
     if (this.queue.get().some(req => basename(req.path) === filename)) {
       return;
     }
 
     // Move the minidump file to a separate cache directory and enqueue it. Even
-    // If the Electron CrashReporter's cache directory gets wiped or changes,
-    // This will allow us to retry uploading the file later.
+    // if the Electron CrashReporter's cache directory gets wiped or changes,
+    // this will allow us to retry uploading the file later.
     const queuePath = join(this.cacheDirectory, filename);
     await mkdirp(this.cacheDirectory);
     await rename(request.path, queuePath);
 
     // Remove stale minidumps in case we go over limit. Note that we have to
-    // Re-fetch the queue as it might have changed in the meanwhile. It is
-    // Important to store the queue value again immediately to avoid phantom
-    // Reads.
+    // re-fetch the queue as it might have changed in the meanwhile. It is
+    // important to store the queue value again immediately to avoid phantom
+    // reads.
     const requests = [...this.queue.get(), { ...request, path: queuePath }];
     const stale = requests.splice(-MAX_REQUESTS_COUNT);
     this.queue.set(requests);

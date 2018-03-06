@@ -204,7 +204,7 @@ export class SentryElectron implements Adapter {
 
       app.on('web-contents-created', (_, contents) => {
         // SetImmediate is required for contents.id to be correct
-        // Https://github.com/electron/electron/issues/12036
+        // https://github.com/electron/electron/issues/12036
         setImmediate(() => {
           this.instrumentBreadcrumbs(`WebContents[${contents.id}]`, contents, [
             'dom-ready',
@@ -308,8 +308,8 @@ export class SentryElectron implements Adapter {
 
     if (this.isNativeEnabled()) {
       // We can safely re-install the native CrashReporter. If it had been
-      // Started before, this will effectively be a no-op. Otherwise, it will
-      // Start a new instance.
+      // started before, this will effectively be a no-op. Otherwise, it will
+      // start a new instance.
       await this.installNativeHandler();
     } else {
       this.client.log('Native CrashReporter cannot be stopped once started.');
@@ -370,10 +370,10 @@ export class SentryElectron implements Adapter {
   /** Returns whether native reports are enabled. */
   private isNativeEnabled(): boolean {
     // On macOS, we should only start the Electron CrashReporter in the main
-    // Process. It uses Crashpad internally, which will catch errors from all
-    // Sub processes thanks to out-of-processes crash handling. On other
-    // Platforms we need to start the CrashReporter in every sub process. For
-    // More information see: https://goo.gl/nhqqwD
+    // process. It uses Crashpad internally, which will catch errors from all
+    // sub processes thanks to out-of-processes crash handling. On other
+    // platforms we need to start the CrashReporter in every sub process. For
+    // more information see: https://goo.gl/nhqqwD
     if (platform() === 'darwin' && process.type !== 'browser') {
       return false;
     }
@@ -398,16 +398,16 @@ export class SentryElectron implements Adapter {
   /** Loads new native crashes from disk and sends them to Sentry. */
   private async sendNativeCrashes(extra: object): Promise<void> {
     // Whenever we are called, assume that the crashes we are going to load down
-    // Below have occurred recently. This means, we can use the same event data
-    // For all minidumps that we load now. There are two conditions:
+    // below have occurred recently. This means, we can use the same event data
+    // for all minidumps that we load now. There are two conditions:
     //
     //  1. The application crashed and we are just starting up. The stored
-    //     Breadcrumbs and context reflect the state during the application
-    //     Crash.
+    //     breadcrumbs and context reflect the state during the application
+    //     crash.
     //
     //  2. A renderer process crashed recently and we have just been notified
-    //     About it. Just use the breadcrumbs and context information we have
-    //     Right now and hope that the delay was not too long.
+    //     about it. Just use the breadcrumbs and context information we have
+    //     right now and hope that the delay was not too long.
 
     if (this.uploader === undefined) {
       throw new SentryError('Invariant violation: Native crashes not enabled');
@@ -434,8 +434,8 @@ export class SentryElectron implements Adapter {
   /** Activates the Electron CrashReporter. */
   private async installNativeHandler(): Promise<boolean> {
     // We will manually submit errors, but CrashReporter requires a submitURL in
-    // Some versions. Also, provide a productName and companyName, which we will
-    // Add manually to the event's context during submission.
+    // some versions. Also, provide a productName and companyName, which we will
+    // add manually to the event's context during submission.
     crashReporter.start({
       companyName: '',
       ignoreSystemCrashHandler: true,
@@ -446,8 +446,8 @@ export class SentryElectron implements Adapter {
 
     if (isMainProcess()) {
       // The crashReporter has an undocumented method to retrieve the directory
-      // It uses to store minidumps in. The structure in this directory depends
-      // On the crash library being used (Crashpad or Breakpad).
+      // it uses to store minidumps in. The structure in this directory depends
+      // on the crash library being used (Crashpad or Breakpad).
       const crashesDirectory = (crashReporter as any).getCrashesDirectory();
       this.uploader = new MinidumpUploader(
         this.client.dsn,
@@ -461,7 +461,7 @@ export class SentryElectron implements Adapter {
       });
 
       // Start to submit recent minidump crashes. This will load breadcrumbs
-      // And context information that was cached on disk prior to the crash.
+      // and context information that was cached on disk prior to the crash.
       this.sendNativeCrashes({
         crashed_process: 'browser',
       }).catch(e => {
@@ -469,7 +469,7 @@ export class SentryElectron implements Adapter {
       });
 
       // Every time a subprocess or renderer crashes, start sending minidumps
-      // Right away.
+      // right away.
       app.on('web-contents-created', (_, contents) => {
         contents.on('crashed', () =>
           this.sendNativeCrashes({
@@ -571,7 +571,7 @@ export class SentryElectron implements Adapter {
     emitter: Electron.EventEmitter,
     events: string[] = [],
   ): void {
-    //tslint:disable-next-line:no-unbound-method
+    // tslint:disable-next-line:no-unbound-method
     const originalEmit = emitter.emit;
     emitter.emit = (event, ...args) => {
       if (events.length === 0 || events.indexOf(event) > -1) {
