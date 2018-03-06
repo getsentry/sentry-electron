@@ -22,14 +22,9 @@ import {
   screen,
 } from 'electron';
 
+import { normalizeEvent, normalizeUrl } from './normalize';
 import { MinidumpUploader } from './uploader';
-import {
-  getApp,
-  isMainProcess,
-  isRenderProcess,
-  normalizeEvent,
-  normalizeUrl,
-} from './utils';
+import { getApp, isMainProcess, isRenderProcess } from './utils';
 
 /**
  * Maximum number of breadcrumbs that get added to an event. Can be overwritten
