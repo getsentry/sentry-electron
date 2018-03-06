@@ -22,7 +22,6 @@ interface TempDirectory {
  * @param pid The PID of the root process
  */
 async function tryKillChromeDriver(pid: number = process.pid): Promise<void> {
-  // @ts-ignore
   for (const each of await processTree(pid)) {
     if (each.name.toLowerCase().includes('chromedriver')) {
       process.kill(each.pid);
