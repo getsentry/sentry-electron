@@ -24,7 +24,7 @@ import {
 
 import { normalizeEvent, normalizeUrl } from './normalize';
 import { MinidumpUploader } from './uploader';
-import { getApp, isMainProcess, isRenderProcess } from './utils';
+import { clone, getApp, isMainProcess, isRenderProcess } from './utils';
 
 /**
  * Maximum number of breadcrumbs that get added to an event. Can be overwritten
@@ -254,7 +254,7 @@ export class SentryElectron implements Adapter {
       return breadcrumb;
     }
 
-    const crumb = JSON.parse(JSON.stringify(breadcrumb)) as Breadcrumb;
+    const crumb = clone(breadcrumb);
     const { maxBreadcrumbs: max = MAX_BREADCRUMBS } = this.options;
     this.breadcrumbs.update(crumbs => [...crumbs.slice(-max), crumb]);
 

@@ -1,5 +1,5 @@
 import { SentryEvent, SentryException, Stacktrace } from '@sentry/core';
-import { getApp } from './utils';
+import { clone, getApp } from './utils';
 
 /** Application base path used for URL normalization. */
 const APP_PATH = getApp()
@@ -59,7 +59,7 @@ export function normalizeEvent(event: SentryEvent): SentryEvent {
   // NOTE: Events from Raven currently contain data that does not conform with
   // the `SentryEvent` interface. Until this has been resolved, we need to cast
   // to avoid typescript warnings.
-  const copy = JSON.parse(JSON.stringify(event)) as SentryEvent;
+  const copy = clone(event);
 
   // The culprit has been deprecated about two years ago and can safely be
   // removed. Remove this line, once this has been resolved in Raven.
