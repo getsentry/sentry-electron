@@ -1,2 +1,6 @@
-src/
-example/
+/*
+/.*
+
+!/LICENSE
+!/README.md
+!/dist/**/*
