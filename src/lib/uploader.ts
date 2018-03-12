@@ -7,11 +7,9 @@ import { basename, join } from 'path';
 import { promisify } from 'util';
 
 import { DSN, SentryEvent } from '@sentry/core';
-import { mkdirp, Store } from '@sentry/node';
+import { filterAsync, mkdirp, Store } from '@sentry/utils';
 import * as FormData from 'form-data';
 import fetch from 'node-fetch';
-
-import { filterAsync } from './utils';
 
 const readdir = promisify(fs.readdir);
 const rename = promisify(fs.rename);
@@ -30,10 +28,13 @@ const MAX_REQUESTS_COUNT = 10;
 /** Supported types of Electron CrashReporters. */
 type CrashReporterType = 'crashpad' | 'breakpad';
 
+/**
+ * TODO
+ */
 export interface MinidumpRequest {
-  /** Path to the minidump file */
+  /** Path to the minidump file. */
   path: string;
-  /** Associated event */
+  /** Associated event data. */
   event: SentryEvent;
 }
 

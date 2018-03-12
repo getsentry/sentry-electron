@@ -1,30 +1,3 @@
 {
-  "extends": ["tslint:all", "tslint-config-prettier"],
-  "rules": {
-    "comment-format": false,
-    "interface-name": [true, "never-prefix"],
-    "member-ordering": [true, "statics-first"],
-    "newline-before-return": false,
-    "no-any": false,
-    "no-console": [true, "log"],
-    "no-magic-numbers": false,
-    "no-parameter-properties": false,
-    "no-require-imports": false,
-    "no-unused-variable": false,
-    "only-arrow-functions": [true, "allow-named-functions"],
-    "strict-boolean-expressions": false,
-    "typedef": [
-      true,
-      "call-signature",
-      "parameter",
-      "property-declaration",
-      "member-variable-declaration"
-    ],
-    "variable-name": [
-      true,
-      "check-format",
-      "allow-leading-underscore",
-      "ban-keywords"
-    ]
-  }
+  "extends": "@sentry/typescript/tslint"
 }

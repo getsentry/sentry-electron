@@ -1,5 +1,6 @@
 import { SentryEvent, SentryException, Stacktrace } from '@sentry/core';
-import { clone, getApp } from './utils';
+import { clone } from '@sentry/utils';
+import { getApp } from './utils';
 
 /** Application base path used for URL normalization. */
 const APP_PATH = getApp()
