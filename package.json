@@ -5,9 +5,7 @@
   "main": "./dist/index.js",
   "repository": "https://github.com/getsentry/sentry-electron.git",
   "author": "Sentry",
-  "contributors": [
-    "Tim Fish"
-  ],
+  "contributors": ["Tim Fish"],
   "license": "MIT",
   "types": "./dist/index.d.ts",
   "scripts": {
@@ -22,21 +20,23 @@
     "fix:prettier": "prettier --write '{src,test}/**/*.ts'",
     "fix:tslint": "tslint --fix -t stylish -p .",
     "pretest": "run-s clean build",
-    "test": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe electron-mocha --require ts-node/register --timeout 3000 ./test/unit/**/*.ts",
+    "test":
+      "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe electron-mocha --require ts-node/register --timeout 3000 ./test/unit/**/*.ts",
     "pree2e": "run-s clean build",
-    "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register --timeout 30000 ./test/e2e/**/*.ts"
+    "e2e":
+      "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register --timeout 30000 ./test/e2e/**/*.ts"
   },
   "dependencies": {
-    "@sentry/browser": "0.4.0-beta.3",
-    "@sentry/core": "0.4.0-beta.3",
-    "@sentry/node": "0.4.0-beta.3",
-    "@sentry/utils": "0.4.0-beta.3",
+    "@sentry/browser": "0.4.0-beta.6",
+    "@sentry/core": "0.4.0-beta.6",
+    "@sentry/node": "0.4.0-beta.6",
+    "@sentry/utils": "0.4.0-beta.6",
     "form-data": "^2.3.2",
     "node-fetch": "^2.1.1",
     "util.promisify": "^1.0.0"
   },
   "devDependencies": {
-    "@sentry/typescript": "0.4.0-beta.3",
+    "@sentry/typescript": "0.4.0-beta.6",
     "@types/body-parser": "^1.16.8",
     "@types/chai": "^4.1.2",
     "@types/chai-as-promised": "^7.1.0",

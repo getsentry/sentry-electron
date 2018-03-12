@@ -143,14 +143,40 @@ export class ElectronBackend implements Backend {
    * @inheritDoc
    */
   public async eventFromException(exception: any): Promise<SentryEvent> {
-    return this.callInner(async inner => inner.eventFromException(exception));
+    return this.callInner(async inner => {
+      return {
+        ...(await this.getEventSkeleton()),
+        ...inner.eventFromException(exception),
+      };
+    });
   }
 
   /**
    * @inheritDoc
    */
   public async eventFromMessage(message: string): Promise<SentryEvent> {
-    return this.callInner(async inner => inner.eventFromMessage(message));
+    return this.callInner(async inner => {
+      return {
+        ...(await this.getEventSkeleton()),
+        ...inner.eventFromMessage(message),
+      };
+    });
+  }
+
+  /**
+   * TODO
+   */
+  public async getEventSkeleton(): Promise<SentryEvent> {
+    const context = this.context.get();
+
+    context.tags = {
+      arch: process.arch,
+      os: `${type()} ${release()}`,
+      'os.name': type(),
+      ...context.tags,
+    };
+
+    return { ...context };
   }
 
   /**
@@ -336,6 +362,7 @@ export class ElectronBackend implements Backend {
       return false;
     }
 
+    // TODO
     // const raven = node.getRaven() as RavenExt;
     // if (this.options.onFatalError) {
     //   raven.onFatalError = this.options.onFatalError;
@@ -367,15 +394,15 @@ export class ElectronBackend implements Backend {
 
   /** TODO */
   private installIPC(): void {
-    ipcMain.on(IPC_CRUMB, (_: Event, crumb: Breadcrumb) => {
+    ipcMain.on(IPC_CRUMB, (_: any, crumb: Breadcrumb) => {
       forget(this.frontend.addBreadcrumb(crumb));
     });
 
-    ipcMain.on(IPC_EVENT, (_: Event, event: SentryEvent) => {
+    ipcMain.on(IPC_EVENT, (_: any, event: SentryEvent) => {
       forget(this.frontend.captureEvent(event));
     });
 
-    ipcMain.on(IPC_CONTEXT, (_: Event, context: Context) => {
+    ipcMain.on(IPC_CONTEXT, (_: any, context: Context) => {
       forget(this.frontend.setContext(context));
     });
   }

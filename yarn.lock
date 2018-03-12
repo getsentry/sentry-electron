@@ -2,23 +2,35 @@
 # yarn lockfile v1
 
 
-"@sentry/browser@0.4.0-beta.4":
-  version "0.4.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-0.4.0-beta.4.tgz#58f30248f4aac3b9dc8667dfbb005de2172b980b"
+"@sentry/browser@0.4.0-beta.6":
+  version "0.4.0-beta.6"
+  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-0.4.0-beta.6.tgz#0b1726bb21a0341c38c8991f323ff32dd5570b0a"
   dependencies:
-    "@sentry/core" "^0.4.0-beta.4"
-    raven-js "^3.22.1"
+    "@sentry/core" "^0.4.0-beta.6"
+    "@sentry/utils" "^0.4.0-beta.6"
+    raven-js "^3.23.1"
 
-"@sentry/core@0.4.0-beta.4", "@sentry/core@^0.4.0-beta.4":
-  version "0.4.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-0.4.0-beta.4.tgz#62b76fbec9cd3b181509076f57fe69cbc68a0046"
+"@sentry/core@0.4.0-beta.6", "@sentry/core@^0.4.0-beta.6":
+  version "0.4.0-beta.6"
+  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-0.4.0-beta.6.tgz#47d8879ee66ef6af27ecb0076c8e1092acfe3efb"
 
-"@sentry/node@0.4.0-beta.4":
-  version "0.4.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-0.4.0-beta.4.tgz#5a67c66f2880ed2064450f60fade77f844473327"
+"@sentry/node@0.4.0-beta.6":
+  version "0.4.0-beta.6"
+  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-0.4.0-beta.6.tgz#d4cbbb8ddccf7d2b5ec84a07bd323bc69ba180ec"
   dependencies:
-    "@sentry/core" "^0.4.0-beta.4"
-    raven "^2.4.0"
+    "@sentry/core" "^0.4.0-beta.6"
+    "@sentry/utils" "^0.4.0-beta.6"
+    raven "^2.4.2"
+
+"@sentry/typescript@0.4.0-beta.6":
+  version "0.4.0-beta.6"
+  resolved "https://registry.yarnpkg.com/@sentry/typescript/-/typescript-0.4.0-beta.6.tgz#01b0f3b99e86b84dfe39a4399d1f78952a722705"
+  dependencies:
+    tslint-config-prettier "^1.9.0"
+
+"@sentry/utils@0.4.0-beta.6", "@sentry/utils@^0.4.0-beta.6":
+  version "0.4.0-beta.6"
+  resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-0.4.0-beta.6.tgz#a42761c488bb902edbc22c221ad6626249a5031b"
 
 "@types/body-parser@*", "@types/body-parser@^1.16.8":
   version "1.16.8"
@@ -1816,13 +1828,13 @@ range-parser@~1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/range-parser/-/range-parser-1.2.0.tgz#f49be6b487894ddc40dcc94a322f611092e00d5e"
 
-raven-js@^3.22.1:
-  version "3.22.3"
-  resolved "https://registry.yarnpkg.com/raven-js/-/raven-js-3.22.3.tgz#8330dcc102b699ffbc2f48790978b997bf4d8f75"
+raven-js@^3.23.1:
+  version "3.23.1"
+  resolved "https://registry.yarnpkg.com/raven-js/-/raven-js-3.23.1.tgz#34a5d7b5b3dd626a3d59e7a264e1d19a4c799cdb"
 
-raven@^2.4.0:
-  version "2.4.1"
-  resolved "https://registry.yarnpkg.com/raven/-/raven-2.4.1.tgz#7a6a6ff1c42d0a3892308f44c94273e7f88677fd"
+raven@^2.4.2:
+  version "2.4.2"
+  resolved "https://registry.yarnpkg.com/raven/-/raven-2.4.2.tgz#0129e2adc30788646fd530b67d08a8ce25d4f6dc"
   dependencies:
     cookie "0.3.1"
     md5 "^2.2.1"

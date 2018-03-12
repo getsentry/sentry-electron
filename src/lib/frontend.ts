@@ -33,6 +33,15 @@ export class ElectronFrontend extends FrontendBase<
   protected getSdkInfo(): SdkInfo {
     return { name: SDK_NAME, version: SDK_VERSION };
   }
+
+  /**
+   * TODO
+   * @param path
+   */
+  public async captureMinidump(path: string): Promise<void> {
+    let event = await this.getBackend().getEventSkeleton();
+    await this.getBackend().uploadMinidump(path, event);
+  }
 }
 
 /**
