@@ -7,7 +7,7 @@ import { basename, join } from 'path';
 import { promisify } from 'util';
 
 import { DSN, SentryEvent } from '@sentry/core';
-import { mkdirp, Store } from '@sentry/node';
+import { mkdirp, Store } from '@sentry/utils';
 import * as FormData from 'form-data';
 import fetch from 'node-fetch';
 
@@ -31,9 +31,9 @@ const MAX_REQUESTS_COUNT = 10;
 type CrashReporterType = 'crashpad' | 'breakpad';
 
 export interface MinidumpRequest {
-  /** Path to the minidump file */
+  /** Path to the minidump file. */
   path: string;
-  /** Associated event */
+  /** Associated event data. */
   event: SentryEvent;
 }
 
