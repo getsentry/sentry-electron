@@ -40,16 +40,19 @@ const IPC_CONTEXT = 'sentry-electron.context';
 /** App-specific directory to store information in. */
 const CACHE_PATH = join(getApp().getPath('userData'), 'sentry');
 
+/** Base context used in all events. */
+const DEFAULT_CONTEXT: Context = {
+  tags: {
+    arch: process.arch,
+    os: `${type()} ${release()}`,
+    'os.name': type(),
+  },
+};
+
 /** Patch to access internal CrashReporter functionality. */
 interface CrashReporterExt {
   getCrashesDirectory(): string;
 }
-
-/** Patch to access internal Raven functionality. */
-// TODO
-// interface RavenExt {
-//   onFatalError(error: Error): void;
-// }
 
 /**
  * Configuration options for {@link SentryElectron}.
@@ -107,18 +110,14 @@ export class ElectronBackend implements Backend {
   private readonly context: Store<Context> = new Store<Context>(
     CACHE_PATH,
     'context',
-    {},
+    DEFAULT_CONTEXT,
   );
 
   /** Creates a new Electron backend instance. */
   public constructor(frontend: Frontend<ElectronOptions>) {
-    // TODO too dirty? Otherwise we get
-    /*
-    Argument of type 'typeof ElectronBackend' is not assignable to parameter of type 'BackendClass<ElectronBackend, ElectronOptions>'.
-      Types of parameters 'frontend' and 'frontend' are incompatible.
-        Type 'Frontend<ElectronOptions>' is not assignable to type 'ElectronFrontend'.
-          Property 'getSdkInfo' is missing in type 'Frontend<ElectronOptions>'.
-    */
+    // TODO: For now, we need ElectronFrontend.captureMinidump to upload
+    // minidump files with event data. We should figure out a better way to
+    // avoid this unsafe cast.
     this.frontend = frontend as ElectronFrontend;
   }
 
@@ -152,36 +151,14 @@ export class ElectronBackend implements Backend {
    * @inheritDoc
    */
   public async eventFromException(exception: any): Promise<SentryEvent> {
-    return this.callInner(async inner => ({
-      ...(await this.getEventSkeleton()),
-      ...inner.eventFromException(exception),
-    }));
+    return this.callInner(async inner => inner.eventFromException(exception));
   }
 
   /**
    * @inheritDoc
    */
   public async eventFromMessage(message: string): Promise<SentryEvent> {
-    return this.callInner(async inner => ({
-      ...(await this.getEventSkeleton()),
-      ...inner.eventFromMessage(message),
-    }));
-  }
-
-  /**
-   * TODO
-   */
-  public async getEventSkeleton(): Promise<SentryEvent> {
-    const context = this.context.get();
-
-    context.tags = {
-      arch: process.arch,
-      os: `${type()} ${release()}`,
-      'os.name': type(),
-      ...context.tags,
-    };
-
-    return { ...context };
+    return this.callInner(async inner => inner.eventFromMessage(message));
   }
 
   /**
@@ -204,21 +181,25 @@ export class ElectronBackend implements Backend {
   public async sendEvent(event: SentryEvent): Promise<number> {
     if (isRenderProcess()) {
       const contents = remote.getCurrentWebContents();
-      event.extra = {
-        crashed_process: `renderer[${contents.id}]`,
-        ...event.extra,
+      const mergedEvent = {
+        ...event,
+        extra: {
+          crashed_process: `renderer[${contents.id}]`,
+          crashed_url: normalizeUrl(contents.getURL()),
+          ...event.extra,
+        },
       };
 
-      ipcRenderer.send(IPC_EVENT, event);
+      ipcRenderer.send(IPC_EVENT, mergedEvent);
       return 200;
+    } else {
+      const mergedEvent = {
+        ...normalizeEvent(event),
+        extra: { crashed_process: 'browser', ...event.extra },
+      };
+
+      return this.callInner(async inner => inner.sendEvent(mergedEvent));
     }
-
-    const mergedEvent = {
-      ...normalizeEvent(event),
-      extra: { ...event.extra, crashed_process: 'browser' },
-    };
-
-    return this.callInner(async inner => inner.sendEvent(mergedEvent));
   }
 
   /**
@@ -249,7 +230,7 @@ export class ElectronBackend implements Backend {
   }
 
   /** Loads new native crashes from disk and sends them to Sentry. */
-  public async sendNativeCrashes(extra: object): Promise<void> {
+  private async sendNativeCrashes(extra: object): Promise<void> {
     // Whenever we are called, assume that the crashes we are going to load down
     // below have occurred recently. This means, we can use the same event data
     // for all minidumps that we load now. There are two conditions:
@@ -267,29 +248,11 @@ export class ElectronBackend implements Backend {
       throw new SentryError('Invariant violation: Native crashes not enabled');
     }
 
-    const event: SentryEvent = {
-      ...(await this.getEventSkeleton()),
-      extra,
-    };
-
+    const event: SentryEvent = { extra };
     const paths = await uploader.getNewMinidumps();
     await Promise.all(
       paths.map(async path => this.frontend.captureMinidump(path, event)),
     );
-  }
-
-  /**
-   * @inheritDoc
-   * @param event
-   */
-  public async getContext(): Promise<Context> {
-    return {
-      tags: {
-        arch: process.arch,
-        os: `${type()} ${release()}`,
-        'os.name': type(),
-      },
-    };
   }
 
   /** Returns whether JS is enabled and we are in the main process. */
@@ -376,25 +339,20 @@ export class ElectronBackend implements Backend {
 
   /** Activates the Node SDK for the main process. */
   private async installMainHandler(): Promise<boolean> {
+    // TODO: Pass this option to NodeBackend somehow:
+    // onFatalError: (error: Error) => {
+    //   console.error('*********************************');
+    //   console.error('* SentryElectron unhandledError *');
+    //   console.error('*********************************');
+    //   console.error(error);
+    //   console.error('---------------------------------');
+    // },
+
     // Browser is the Electron main process (Node)
     const node = new NodeBackend(this.frontend);
     if (!await node.install()) {
       return false;
     }
-
-    // TODO
-    // const raven = node.getRaven() as RavenExt;
-    // if (this.options.onFatalError) {
-    //   raven.onFatalError = this.options.onFatalError;
-    // } else {
-    //   raven.onFatalError = (error: Error) => {
-    //     console.error('*********************************');
-    //     console.error('* SentryElectron unhandledError *');
-    //     console.error('*********************************');
-    //     console.error(error);
-    //     console.error('---------------------------------');
-    //   };
-    // }
 
     this.inner = node;
     return true;

@@ -38,13 +38,10 @@ export class ElectronFrontend extends FrontendBase<
    */
   public async captureMinidump(
     path: string,
-    event?: SentryEvent,
+    event: SentryEvent = {},
   ): Promise<void> {
-    const skeleton = await this.getBackend().getEventSkeleton();
-    await this.getBackend().uploadMinidump(path, {
-      ...skeleton,
-      ...event,
-    });
+    const prepared = await this.prepareEvent(event);
+    await this.getBackend().uploadMinidump(path, prepared);
   }
 }
 
