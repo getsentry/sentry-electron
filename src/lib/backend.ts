@@ -339,8 +339,6 @@ export class ElectronBackend implements Backend {
 
   /** Activates the Node SDK for the main process. */
   private async installMainHandler(): Promise<boolean> {
-    // TODO: Pass this option to NodeBackend somehow:
-
     await this.frontend.setOptions({
       onFatalError: (error: Error) => {
         console.error('*********************************');
