@@ -25,6 +25,7 @@ import {
 import { NodeBackend, NodeOptions } from '@sentry/node';
 import { forget, Store } from '@sentry/utils';
 
+import { ElectronFrontend } from './frontend';
 import { normalizeEvent, normalizeUrl } from './normalize';
 import { MinidumpUploader } from './uploader';
 import { getApp, isMainProcess, isRenderProcess } from './utils';
@@ -45,9 +46,10 @@ interface CrashReporterExt {
 }
 
 /** Patch to access internal Raven functionality. */
-interface RavenExt {
-  onFatalError(error: Error): void;
-}
+// TODO
+// interface RavenExt {
+//   onFatalError(error: Error): void;
+// }
 
 /**
  * Configuration options for {@link SentryElectron}.
@@ -86,7 +88,7 @@ export interface ElectronOptions extends Options, BrowserOptions, NodeOptions {
 /** The Sentry Electron SDK Backend. */
 export class ElectronBackend implements Backend {
   /** Handle to the SDK frontend for callbacks. */
-  private readonly frontend: Frontend<ElectronOptions>;
+  private readonly frontend: ElectronFrontend;
 
   /** The inner SDK used to record JavaScript events. */
   private inner?: BrowserBackend | NodeBackend;
@@ -110,7 +112,14 @@ export class ElectronBackend implements Backend {
 
   /** Creates a new Electron backend instance. */
   public constructor(frontend: Frontend<ElectronOptions>) {
-    this.frontend = frontend;
+    // TODO too dirty? Otherwise we get
+    /*
+    Argument of type 'typeof ElectronBackend' is not assignable to parameter of type 'BackendClass<ElectronBackend, ElectronOptions>'.
+      Types of parameters 'frontend' and 'frontend' are incompatible.
+        Type 'Frontend<ElectronOptions>' is not assignable to type 'ElectronFrontend'.
+          Property 'getSdkInfo' is missing in type 'Frontend<ElectronOptions>'.
+    */
+    this.frontend = frontend as ElectronFrontend;
   }
 
   /**
@@ -143,24 +152,20 @@ export class ElectronBackend implements Backend {
    * @inheritDoc
    */
   public async eventFromException(exception: any): Promise<SentryEvent> {
-    return this.callInner(async inner => {
-      return {
-        ...(await this.getEventSkeleton()),
-        ...inner.eventFromException(exception),
-      };
-    });
+    return this.callInner(async inner => ({
+      ...(await this.getEventSkeleton()),
+      ...inner.eventFromException(exception),
+    }));
   }
 
   /**
    * @inheritDoc
    */
   public async eventFromMessage(message: string): Promise<SentryEvent> {
-    return this.callInner(async inner => {
-      return {
-        ...(await this.getEventSkeleton()),
-        ...inner.eventFromMessage(message),
-      };
-    });
+    return this.callInner(async inner => ({
+      ...(await this.getEventSkeleton()),
+      ...inner.eventFromMessage(message),
+    }));
   }
 
   /**
@@ -217,6 +222,19 @@ export class ElectronBackend implements Backend {
   }
 
   /**
+   * TODO
+   */
+  public async uploadMinidump(
+    path: string,
+    event: SentryEvent,
+  ): Promise<number> {
+    if (this.uploader) {
+      await this.uploader.uploadMinidump({ path, event });
+    }
+    return 200;
+  }
+
+  /**
    * @inheritDoc
    */
   public async storeBreadcrumbs(breadcrumbs: Breadcrumb[]): Promise<void> {
@@ -249,12 +267,14 @@ export class ElectronBackend implements Backend {
       throw new SentryError('Invariant violation: Native crashes not enabled');
     }
 
-    // TODO: Go via frontend
-    const event = {};
+    const event: SentryEvent = {
+      ...(await this.getEventSkeleton()),
+      extra,
+    };
 
     const paths = await uploader.getNewMinidumps();
     await Promise.all(
-      paths.map(async path => uploader.uploadMinidump({ path, event })),
+      paths.map(async path => this.frontend.captureMinidump(path, event)),
     );
   }
 

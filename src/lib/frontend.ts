@@ -1,6 +1,4 @@
-import { release, type } from 'os';
-
-import { FrontendBase, Sdk, SdkInfo } from '@sentry/core';
+import { FrontendBase, Sdk, SdkInfo, SentryEvent } from '@sentry/core';
 import { ElectronBackend, ElectronOptions } from './backend';
 
 /** SDK name used in every event. */
@@ -38,9 +36,15 @@ export class ElectronFrontend extends FrontendBase<
    * TODO
    * @param path
    */
-  public async captureMinidump(path: string): Promise<void> {
-    let event = await this.getBackend().getEventSkeleton();
-    await this.getBackend().uploadMinidump(path, event);
+  public async captureMinidump(
+    path: string,
+    event?: SentryEvent,
+  ): Promise<void> {
+    const skeleton = await this.getBackend().getEventSkeleton();
+    await this.getBackend().uploadMinidump(path, {
+      ...skeleton,
+      ...event,
+    });
   }
 }
 

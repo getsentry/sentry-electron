@@ -30,6 +30,9 @@ const MAX_REQUESTS_COUNT = 10;
 /** Supported types of Electron CrashReporters. */
 type CrashReporterType = 'crashpad' | 'breakpad';
 
+/**
+ * TODO
+ */
 export interface MinidumpRequest {
   /** Path to the minidump file. */
   path: string;
