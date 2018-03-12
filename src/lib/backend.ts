@@ -348,7 +348,6 @@ export class ElectronBackend implements Backend {
         console.error('---------------------------------');
         await this.frontend.captureException(error);
       },
-      ...this.frontend.getOptions(),
     });
 
     // Browser is the Electron main process (Node)
