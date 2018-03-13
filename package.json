@@ -14,10 +14,10 @@
     "preexample": "run-s clean build",
     "example": "electron example",
     "lint": "run-s lint:prettier lint:tslint",
-    "lint:prettier": "prettier-check '{src,test}/**/*.ts'",
+    "lint:prettier": "prettier-check {src,test}/**/*.ts",
     "lint:tslint": "tslint -t stylish -p .",
     "fix": "run-s fix:tslint fix:prettier",
-    "fix:prettier": "prettier --write '{src,test}/**/*.ts'",
+    "fix:prettier": "prettier --write {src,test}/**/*.ts",
     "fix:tslint": "tslint --fix -t stylish -p .",
     "pretest": "run-s clean build",
     "test":

@@ -48,7 +48,7 @@ export class TestContext {
   public constructor(
     private readonly appPath: string = join(__dirname, 'test-app'),
     public testServer: TestServer = new TestServer(),
-  ) {}
+  ) { }
 
   /** Starts the app. */
   public async start(fixture?: string): Promise<void> {
@@ -75,8 +75,11 @@ export class TestContext {
     }
 
     const childProcess = spawn(this.electronPath, [this.appPath], { env });
-
     this.mainProcess = new ProcessStatus(childProcess.pid);
+
+    await this.waitForTrue(
+      async () => (this.mainProcess ? this.mainProcess.isRunning() : false),
+    );
   }
 
   /** Stops the app and cleans up. */
@@ -105,7 +108,7 @@ export class TestContext {
    */
   public async waitForTrue(
     method: () => boolean | Promise<boolean>,
-    timeout: number = 5000,
+    timeout: number = 10000,
   ): Promise<void> {
     if (!this.mainProcess) {
       throw new Error('Invariant violation: Call .start() first');
