@@ -1,7 +1,7 @@
-import { ChildProcess, spawn } from 'child_process';
+import { spawn } from 'child_process';
 import { join } from 'path';
+
 import tmpdir = require('temporary-directory');
-import { promisify } from 'util';
 import { ProcessStatus } from './process';
 import { TestServer } from './server';
 
