@@ -2,35 +2,35 @@
 # yarn lockfile v1
 
 
-"@sentry/browser@0.4.0-beta.6":
-  version "0.4.0-beta.6"
-  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-0.4.0-beta.6.tgz#0b1726bb21a0341c38c8991f323ff32dd5570b0a"
+"@sentry/browser@0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-0.4.1.tgz#34d206522e2b391564c943696857af657d7f54b8"
   dependencies:
-    "@sentry/core" "^0.4.0-beta.6"
-    "@sentry/utils" "^0.4.0-beta.6"
+    "@sentry/core" "0.4.1"
+    "@sentry/utils" "0.4.1"
     raven-js "^3.23.1"
 
-"@sentry/core@0.4.0-beta.6", "@sentry/core@^0.4.0-beta.6":
-  version "0.4.0-beta.6"
-  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-0.4.0-beta.6.tgz#47d8879ee66ef6af27ecb0076c8e1092acfe3efb"
+"@sentry/core@0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-0.4.1.tgz#45587c673ac848a0dddfc9a9ea99f19c6798ef9b"
 
-"@sentry/node@0.4.0-beta.6":
-  version "0.4.0-beta.6"
-  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-0.4.0-beta.6.tgz#d4cbbb8ddccf7d2b5ec84a07bd323bc69ba180ec"
+"@sentry/node@0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-0.4.1.tgz#111a368f9615bc8690ce9708970e3de22c3d6902"
   dependencies:
-    "@sentry/core" "^0.4.0-beta.6"
-    "@sentry/utils" "^0.4.0-beta.6"
+    "@sentry/core" "0.4.1"
+    "@sentry/utils" "0.4.1"
     raven "^2.4.2"
 
-"@sentry/typescript@0.4.0-beta.6":
-  version "0.4.0-beta.6"
-  resolved "https://registry.yarnpkg.com/@sentry/typescript/-/typescript-0.4.0-beta.6.tgz#01b0f3b99e86b84dfe39a4399d1f78952a722705"
+"@sentry/typescript@0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@sentry/typescript/-/typescript-0.4.1.tgz#3dd1d6d211b9b868d9c37eb474df3749dfe004ff"
   dependencies:
     tslint-config-prettier "^1.9.0"
 
-"@sentry/utils@0.4.0-beta.6", "@sentry/utils@^0.4.0-beta.6":
-  version "0.4.0-beta.6"
-  resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-0.4.0-beta.6.tgz#a42761c488bb902edbc22c221ad6626249a5031b"
+"@sentry/utils@0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-0.4.1.tgz#96dffecce91ca2071436fce409c8edea8118a215"
 
 "@types/body-parser@*", "@types/body-parser@^1.16.8":
   version "1.16.8"

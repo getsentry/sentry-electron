@@ -8,6 +8,9 @@
   "contributors": ["Tim Fish"],
   "license": "MIT",
   "types": "./dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "clean": "rimraf dist coverage",
@@ -27,16 +30,16 @@
       "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register --timeout 30000 ./test/e2e/**/*.ts"
   },
   "dependencies": {
-    "@sentry/browser": "0.4.0-beta.7",
-    "@sentry/core": "0.4.0-beta.7",
-    "@sentry/node": "0.4.0-beta.7",
-    "@sentry/utils": "0.4.0-beta.7",
+    "@sentry/browser": "0.4.1",
+    "@sentry/core": "0.4.1",
+    "@sentry/node": "0.4.1",
+    "@sentry/utils": "0.4.1",
     "form-data": "^2.3.2",
     "node-fetch": "^2.1.1",
     "util.promisify": "^1.0.0"
   },
   "devDependencies": {
-    "@sentry/typescript": "0.4.0-beta.7",
+    "@sentry/typescript": "0.4.1",
     "@types/body-parser": "^1.16.8",
     "@types/chai": "^4.1.2",
     "@types/chai-as-promised": "^7.1.0",
