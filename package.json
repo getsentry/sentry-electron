@@ -1,11 +1,13 @@
 {
   "name": "@sentry/electron",
   "description": "Offical Sentry SDK for Electron",
-  "version": "0.4.0-beta.4",
+  "version": "0.4.1",
   "main": "./dist/index.js",
   "repository": "https://github.com/getsentry/sentry-electron.git",
   "author": "Sentry",
-  "contributors": ["Tim Fish"],
+  "contributors": [
+    "Tim Fish"
+  ],
   "license": "MIT",
   "types": "./dist/index.d.ts",
   "publishConfig": {
@@ -23,11 +25,9 @@
     "fix:prettier": "prettier --write \"{src,test}/**/*.ts\"",
     "fix:tslint": "tslint --fix -t stylish -p .",
     "pretest": "run-s clean build",
-    "test":
-      "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe electron-mocha --require ts-node/register --timeout 3000 ./test/unit/**/*.ts",
+    "test": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe electron-mocha --require ts-node/register --timeout 3000 ./test/unit/**/*.ts",
     "pree2e": "run-s clean build",
-    "e2e":
-      "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register --timeout 30000 ./test/e2e/**/*.ts"
+    "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register --timeout 30000 ./test/e2e/**/*.ts"
   },
   "dependencies": {
     "@sentry/browser": "0.4.1",
