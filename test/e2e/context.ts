@@ -1,12 +1,9 @@
 import { ChildProcess, spawn } from 'child_process';
 import { join } from 'path';
-import pTree = require('process-tree');
 import tmpdir = require('temporary-directory');
 import { promisify } from 'util';
 import { ProcessStatus } from './process';
 import { TestServer } from './server';
-
-const processTree = promisify(pTree);
 
 /** A temporary directory handle. */
 interface TempDirectory {
@@ -75,7 +72,12 @@ export class TestContext {
       env.E2E_TEST_FIXTURE = fixture;
     }
 
-    const childProcess = spawn(this.electronPath, [this.appPath], { env });
+    const childProcess = spawn(
+      this.electronPath,
+      [this.appPath, '--enable-logging'],
+      { env, stdio: 'inherit' },
+    );
+
     this.mainProcess = new ProcessStatus(childProcess.pid);
 
     await this.waitForTrue(
@@ -137,7 +139,7 @@ export class TestContext {
    */
   public async waitForEvents(
     count: number,
-    timeout: number = 10000,
+    timeout: number = 15000,
   ): Promise<void> {
     await this.waitForTrue(
       () => this.testServer.events.length >= count,

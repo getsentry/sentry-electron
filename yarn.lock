@@ -1492,10 +1492,6 @@ process-nextick-args@~1.0.6:
   version "1.0.7"
   resolved "https://registry.yarnpkg.com/process-nextick-args/-/process-nextick-args-1.0.7.tgz#150e20b756590ad3f91093f25a4f2ad8bff30ba3"
 
-process-tree@^1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/process-tree/-/process-tree-1.0.3.tgz#3ad68518ef46cff984a0a9ec522718ad8685a5cc"
-
 progress-stream@^1.1.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/progress-stream/-/progress-stream-1.2.0.tgz#2cd3cfea33ba3a89c9c121ec3347abe9ab125f77"
