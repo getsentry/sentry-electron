@@ -48,7 +48,7 @@ export class TestContext {
   public constructor(
     private readonly appPath: string = join(__dirname, 'test-app'),
     public testServer: TestServer = new TestServer(),
-  ) { }
+  ) {}
 
   /** Starts the app. */
   public async start(fixture?: string): Promise<void> {
