@@ -12,7 +12,6 @@ describe('Basic Tests', () => {
 
   beforeEach(async () => {
     context = new TestContext();
-    await context.start();
   });
 
   afterEach(async () => {
@@ -20,7 +19,7 @@ describe('Basic Tests', () => {
   });
 
   it('JavaScript exception in renderer process', async () => {
-    await context.clickButton('#error-render');
+    await context.start('javascript-renderer');
     await context.waitForTrue(() => context.testServer.events.length >= 1);
     const event = context.testServer.events[0];
     const breadcrumbs = event.data.breadcrumbs || [];
@@ -32,7 +31,7 @@ describe('Basic Tests', () => {
   });
 
   it('JavaScript exception in main process', async () => {
-    await context.clickButton('#error-main');
+    await context.start('javascript-main');
     await context.waitForTrue(() => context.testServer.events.length >= 1);
     const event = context.testServer.events[0];
     const breadcrumbs = event.data.breadcrumbs || [];
@@ -44,7 +43,7 @@ describe('Basic Tests', () => {
   });
 
   it('Native crash in renderer process', async () => {
-    await context.clickButton('#crash-render');
+    await context.start('native-renderer');
     await context.waitForTrue(() => context.testServer.events.length >= 1);
     const event = context.testServer.events[0];
     const breadcrumbs = event.data.breadcrumbs || [];
@@ -56,7 +55,13 @@ describe('Basic Tests', () => {
   });
 
   it('Native crash in main process', async () => {
-    await context.clickButton('#crash-main');
+    await context.start('native-main');
+
+    // wait for the main process to die
+    await context.waitForTrue(
+      async () =>
+        context.mainProcess ? !await context.mainProcess.isRunning() : false,
+    );
 
     // We have to restart the app to send native crashes from the main process
     await context.stop(false);
