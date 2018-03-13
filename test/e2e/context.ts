@@ -1,13 +1,9 @@
+import { spawn } from 'child_process';
 import { join } from 'path';
 
-import pTree = require('process-tree');
-import { Application } from 'spectron';
 import tmpdir = require('temporary-directory');
-import { promisify } from 'util';
 import { ProcessStatus } from './process';
 import { TestServer } from './server';
-
-const processTree = promisify(pTree);
 
 /** A temporary directory handle. */
 interface TempDirectory {
@@ -15,20 +11,6 @@ interface TempDirectory {
   path: string;
   /** A function that will remove the directory when invoked. */
   cleanup(): void;
-}
-
-/**
- * Kills all chrome driver processes (i.e. sub-processes) of an Electron app.
- * @param pid The PID of the root process
- */
-async function tryKillChromeDriver(pid: number = process.pid): Promise<void> {
-  for (const each of await processTree(pid)) {
-    if (each.name.toLowerCase().includes('chromedriver')) {
-      process.kill(each.pid);
-    } else {
-      await tryKillChromeDriver(each.pid);
-    }
-  }
 }
 
 /** Creates a temporary directory with a cleanup function. */
@@ -46,8 +28,6 @@ async function getTempDir(): Promise<TempDirectory> {
 
 /** A class to start and stop Electron apps for E2E tests. */
 export class TestContext {
-  /** The Spectron Application class */
-  public app?: Application;
   /** Can check if the main process is running and kill it */
   public mainProcess?: ProcessStatus;
   /** Temporary directory that hosts the app's User Data. */
@@ -63,41 +43,47 @@ export class TestContext {
    * @param testServer A test server instance.
    */
   public constructor(
-    private readonly appPath: string = join(__dirname, '../../example'),
+    private readonly appPath: string = join(__dirname, 'test-app'),
     public testServer: TestServer = new TestServer(),
   ) {}
 
   /** Starts the app. */
-  public async start(): Promise<void> {
+  public async start(fixture?: string): Promise<void> {
     // Start the test server if required
     if (this.testServer) {
       this.testServer.start();
     }
 
     // Only setup the tempDir if this the first start of the context
-    // Subseqent starts will se the same path
+    // Subsequent starts will use the same path
     if (!this.tempDir) {
       // Get a temp directory for this app to use as userData
       this.tempDir = await getTempDir();
     }
 
-    this.app = new Application({
-      args: [this.appPath],
-      env: {
-        DSN:
-          'http://37f8a2ee37c0409d8970bc7559c7c7e4:4cfde0ca506c4ea39b4e25b61a1ff1c3@localhost:8000/277345',
-        E2E_USERDATA_DIRECTORY: this.tempDir.path,
-      },
-      path: this.electronPath,
-    });
+    const env: { [key: string]: string } = {
+      ...process.env,
+      DSN:
+        'http://37f8a2ee37c0409d8970bc7559c7c7e4:4cfde0ca506c4ea39b4e25b61a1ff1c3@localhost:8000/277345',
+      E2E_USERDATA_DIRECTORY: this.tempDir.path,
+    };
 
-    await this.app.start();
-    await this.app.client.waitUntilWindowLoaded();
+    if (fixture) {
+      env.E2E_TEST_FIXTURE = fixture;
+    }
 
-    // Save the main process pid so we can terminate the crashed app later
-    // We have to do this as we lose connection via Chromedriver
-    const getPid = (this.app.mainProcess as any).pid as () => Promise<number>;
-    this.mainProcess = new ProcessStatus(await getPid());
+    const childProcess = spawn(
+      this.electronPath,
+      [this.appPath, '--enable-logging'],
+      { env, stdio: 'inherit' },
+    );
+
+    this.mainProcess = new ProcessStatus(childProcess.pid);
+
+    await this.waitForTrue(
+      async () => (this.mainProcess ? this.mainProcess.isRunning() : false),
+      'Timeout: Waiting for app to start',
+    );
   }
 
   /** Stops the app and cleans up. */
@@ -106,13 +92,7 @@ export class TestContext {
       throw new Error('Invariant violation: Call .start() first');
     }
 
-    try {
-      if (this.app && this.app.isRunning()) {
-        await this.app.stop();
-      }
-    } catch (e) {
-      // When the app crashes we can lose the session
-    }
+    await this.mainProcess.kill();
 
     if (this.tempDir && clearData) {
       this.tempDir.cleanup();
@@ -120,28 +100,6 @@ export class TestContext {
 
     if (this.testServer) {
       await this.testServer.stop();
-    }
-
-    await this.mainProcess.kill();
-
-    // When the renderer crashes, Chromedriver does not close and does not
-    // respond. We have to find the process and kill it.
-    await tryKillChromeDriver();
-  }
-
-  /**
-   * Waits until a button appears and then clicks it.
-   * @param selector CSS selector of the target button.
-   */
-  public async clickButton(selector: string): Promise<void> {
-    if (!this.app) {
-      throw new Error('Invariant violation: Call .start() first');
-    }
-
-    try {
-      await this.app.client.waitForExist(selector).click(selector);
-    } catch (e) {
-      // If the renderer crashes it can cause an exception in 'click'
     }
   }
 
@@ -153,20 +111,40 @@ export class TestContext {
    * @returns
    */
   public async waitForTrue(
-    method: () => boolean,
-    timeout: number = 5000,
+    method: () => boolean | Promise<boolean>,
+    message: string = 'Timeout',
+    timeout: number = 8000,
   ): Promise<void> {
-    if (!this.app) {
+    if (!this.mainProcess) {
       throw new Error('Invariant violation: Call .start() first');
     }
 
+    const isPromise = method() instanceof Promise;
+
     let remaining = timeout;
-    while (!method()) {
-      await this.app.client.pause(100);
+    while (isPromise ? !await method() : !method()) {
+      await new Promise<void>(resolve => setTimeout(resolve, 100));
       remaining -= 100;
       if (remaining < 0) {
-        throw new Error('Timed out');
+        throw new Error(message);
       }
     }
+  }
+
+  /**
+   * Promise only returns when the test server has at least the
+   * requested number of events
+   *
+   * @param count Number of events to wait for
+   */
+  public async waitForEvents(
+    count: number,
+    timeout: number = 15000,
+  ): Promise<void> {
+    await this.waitForTrue(
+      () => this.testServer.events.length >= count,
+      'Timeout: Waiting for events',
+      timeout,
+    );
   }
 }

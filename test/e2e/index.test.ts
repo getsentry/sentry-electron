@@ -12,7 +12,6 @@ describe('Basic Tests', () => {
 
   beforeEach(async () => {
     context = new TestContext();
-    await context.start();
   });
 
   afterEach(async () => {
@@ -20,8 +19,8 @@ describe('Basic Tests', () => {
   });
 
   it('JavaScript exception in renderer process', async () => {
-    await context.clickButton('#error-render');
-    await context.waitForTrue(() => context.testServer.events.length >= 1);
+    await context.start('javascript-renderer');
+    await context.waitForEvents(1);
     const event = context.testServer.events[0];
     const breadcrumbs = event.data.breadcrumbs || [];
 
@@ -32,8 +31,8 @@ describe('Basic Tests', () => {
   });
 
   it('JavaScript exception in main process', async () => {
-    await context.clickButton('#error-main');
-    await context.waitForTrue(() => context.testServer.events.length >= 1);
+    await context.start('javascript-main');
+    await context.waitForEvents(1);
     const event = context.testServer.events[0];
     const breadcrumbs = event.data.breadcrumbs || [];
 
@@ -44,8 +43,9 @@ describe('Basic Tests', () => {
   });
 
   it('Native crash in renderer process', async () => {
-    await context.clickButton('#crash-render');
-    await context.waitForTrue(() => context.testServer.events.length >= 1);
+    await context.start('native-renderer');
+    // It can take rather a long time to get the event on Mac
+    await context.waitForEvents(1, 20000);
     const event = context.testServer.events[0];
     const breadcrumbs = event.data.breadcrumbs || [];
 
@@ -56,13 +56,20 @@ describe('Basic Tests', () => {
   });
 
   it('Native crash in main process', async () => {
-    await context.clickButton('#crash-main');
+    await context.start('native-main');
+
+    // wait for the main process to die
+    await context.waitForTrue(
+      async () =>
+        context.mainProcess ? !await context.mainProcess.isRunning() : false,
+      'Timeout: Waiting for app to die',
+    );
 
     // We have to restart the app to send native crashes from the main process
     await context.stop(false);
     await context.start();
 
-    await context.waitForTrue(() => context.testServer.events.length >= 1);
+    await context.waitForEvents(1);
     const event = context.testServer.events[0];
     const breadcrumbs = event.data.breadcrumbs || [];
 
