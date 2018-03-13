@@ -65,6 +65,7 @@ export class TestContext {
     }
 
     const env: { [key: string]: string } = {
+      ...process.env,
       DSN:
         'http://37f8a2ee37c0409d8970bc7559c7c7e4:4cfde0ca506c4ea39b4e25b61a1ff1c3@localhost:8000/277345',
       E2E_USERDATA_DIRECTORY: this.tempDir.path,
@@ -134,10 +135,14 @@ export class TestContext {
    *
    * @param count Number of events to wait for
    */
-  public async waitForEvents(count: number): Promise<void> {
+  public async waitForEvents(
+    count: number,
+    timeout: number = 10000,
+  ): Promise<void> {
     await this.waitForTrue(
       () => this.testServer.events.length >= count,
       'Timeout: Waiting for events',
+      timeout,
     );
   }
 }

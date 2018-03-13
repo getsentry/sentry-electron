@@ -44,7 +44,8 @@ describe('Basic Tests', () => {
 
   it('Native crash in renderer process', async () => {
     await context.start('native-renderer');
-    await context.waitForEvents(1);
+    // It can take rather a long time to get the event on Mac
+    await context.waitForEvents(1, 20000);
     const event = context.testServer.events[0];
     const breadcrumbs = event.data.breadcrumbs || [];
 
