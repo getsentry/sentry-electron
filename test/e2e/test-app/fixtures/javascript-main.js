@@ -1,4 +1,4 @@
 
-if(process.type === 'browser'){
-  throw new Error('Error triggered in renderer process');
+if (process.type === 'browser') {
+  throw new Error('Error triggered in main process');
 }
