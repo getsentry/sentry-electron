@@ -49,7 +49,7 @@ describe('Basic Tests', () => {
     expect(breadcrumbs.length).to.greaterThan(5);
   });
 
-  it('JavaScript exception in main process with space in path', async () => {
+  it.skip('JavaScript exception in main process with space in path', async () => {
     await context.start('javascript main with spaces');
     await context.waitForEvents(1);
     const event = context.testServer.events[0];
