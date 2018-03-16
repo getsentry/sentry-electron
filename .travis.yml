@@ -1,24 +1,16 @@
-branches:
-  only:
-    - master
-sudo: false
 language: node_js
-node_js:
-- '8'
-dist: trusty
-cache:
-  yarn: true
-  directories:
-  - node_modules
+node_js: "8"
+cache: yarn
+
+git:
+  depth: 1
 
 addons:
   apt:
     packages:
       - xvfb
 
-before_install:
-  - curl -o- -L https://yarnpkg.com/install.sh | bash
-  - export PATH="$HOME/.yarn/bin:$PATH"
+if: tag IS blank
 
 matrix:
   include:
@@ -34,3 +26,20 @@ matrix:
       script:
         - yarn test
         - yarn e2e
+    - env: NAME="package"
+      script:
+        - yarn build
+        - yarn pack
+      after_success:
+        - npm install -g @zeus-ci/cli
+        - zeus upload -t "application/tar+npm" *.tgz
+
+notifications:
+  webhooks:
+    urls:
+      - https://zeus.ci/hooks/e53cc910-2919-11e8-8bbd-0a580a28060b/public/provider/travis/webhook
+    on_success: always
+    on_failure: always
+    on_start: always
+    on_cancel: always
+    on_error: always
