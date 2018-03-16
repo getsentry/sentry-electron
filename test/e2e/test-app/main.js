@@ -7,7 +7,7 @@ if (process.env['E2E_USERDATA_DIRECTORY']) {
   app.setPath('userData', process.env['E2E_USERDATA_DIRECTORY']);
 }
 
-require('./sentry');
+require('./load-sentry');
 
 app.on('ready', () => {
   const window = new BrowserWindow({

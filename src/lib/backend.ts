@@ -339,14 +339,23 @@ export class ElectronBackend implements Backend {
 
   /** Activates the Node SDK for the main process. */
   private async installMainHandler(): Promise<boolean> {
+    const options = this.frontend.getOptions();
+    // tslint:disable-next-line:no-unbound-method
+    const customHandler = options.onFatalError;
+
     await this.frontend.setOptions({
       onFatalError: async (error: Error) => {
-        console.error('*********************************');
-        console.error('* SentryElectron unhandledError *');
-        console.error('*********************************');
-        console.error(error);
-        console.error('---------------------------------');
         await this.frontend.captureException(error);
+
+        if (customHandler) {
+          customHandler(error);
+        } else {
+          console.error('*********************************');
+          console.error('* SentryElectron unhandledError *');
+          console.error('*********************************');
+          console.error(error);
+          console.error('---------------------------------');
+        }
       },
     });
 
