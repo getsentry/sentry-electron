@@ -72,11 +72,7 @@ export class TestContext {
       env.E2E_TEST_FIXTURE = fixture;
     }
 
-    const childProcess = spawn(
-      this.electronPath,
-      [this.appPath, '--enable-logging'],
-      { env, stdio: 'inherit' },
-    );
+    const childProcess = spawn(this.electronPath, [this.appPath], { env });
 
     this.mainProcess = new ProcessStatus(childProcess.pid);
 
