@@ -42,6 +42,13 @@ describe('Basic Tests', () => {
     const breadcrumbs = event.data.breadcrumbs || [];
     const lastFrame = getLastFrame(event.data);
 
+    const mainRunning = context.mainProcess
+      ? await context.mainProcess.isRunning()
+      : false;
+
+    // The default is not to terminate the main process on js error
+    expect(mainRunning).to.equal(true);
+
     expect(context.testServer.events.length).to.equal(1);
     expect(lastFrame.filename).to.equal('app:///fixtures/javascript-main.js');
     expect(event.dump_file).to.equal(undefined);
@@ -56,11 +63,6 @@ describe('Basic Tests', () => {
     const breadcrumbs = event.data.breadcrumbs || [];
     const lastFrame = getLastFrame(event.data);
 
-    const mainRunning = context.mainProcess
-      ? await context.mainProcess.isRunning()
-      : false;
-
-    expect(mainRunning).to.equal(true);
     expect(context.testServer.events.length).to.equal(1);
     expect(lastFrame.filename).to.equal(
       'app:///fixtures/javascript main with spaces.js',
