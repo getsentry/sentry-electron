@@ -34,7 +34,7 @@ function getStacktrace(event: SentryEvent): Stacktrace | undefined {
   }
 
   if (exception) {
-    // Raven Node adhers to the Event interface
+    // Raven Node adheres to the Event interface
     if (exception[0]) {
       return exception[0].stacktrace;
     }
