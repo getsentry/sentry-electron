@@ -1,2 +1,2 @@
-export * from './lib/backend';
-export * from './lib/frontend';
+export * from './backend';
+export * from './frontend';
