@@ -145,4 +145,19 @@ describe('Basic Tests', () => {
     expect(event.sentry_key).to.equal(SENTRY_KEY);
     expect(breadcrumbs.length).to.greaterThan(5);
   });
+
+  it('Captures breadcrumbs in renderer process', async () => {
+    await context.start('sentry-basic', 'breadcrumbs-in-renderer');
+    await context.waitForEvents(1);
+    const event = context.testServer.events[0];
+    let breadcrumbs = event.data.breadcrumbs || [];
+
+    breadcrumbs = breadcrumbs.filter(
+      crumb => crumb.message === 'Something insightful!',
+    );
+
+    expect(context.testServer.events.length).to.equal(1);
+    expect(event.dump_file).to.equal(undefined);
+    expect(breadcrumbs.length, 'filtered breadcrumbs').to.equal(1);
+  });
 });
