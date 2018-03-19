@@ -339,23 +339,18 @@ export class ElectronBackend implements Backend {
 
   /** Activates the Node SDK for the main process. */
   private async installMainHandler(): Promise<boolean> {
-    const { onFatalError } = this.frontend.getOptions();
-
-    await this.frontend.setOptions({
-      onFatalError: async (error: Error) => {
-        await this.frontend.captureException(error);
-
-        if (onFatalError) {
-          onFatalError(error);
-        } else {
+    if (!this.frontend.getOptions().onFatalError) {
+      await this.frontend.setOptions({
+        onFatalError: async (error: Error) => {
           console.error('*********************************');
           console.error('* SentryElectron unhandledError *');
           console.error('*********************************');
           console.error(error);
           console.error('---------------------------------');
-        }
-      },
-    });
+          await this.frontend.captureException(error);
+        },
+      });
+    }
 
     // Browser is the Electron main process (Node)
     const node = new NodeBackend(this.frontend);
