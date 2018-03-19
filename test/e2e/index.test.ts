@@ -20,7 +20,7 @@ describe('Basic Tests', () => {
   });
 
   it('JavaScript exception in renderer process', async () => {
-    await context.start('javascript-renderer');
+    await context.start('sentry-basic', 'javascript-renderer');
     await context.waitForEvents(1);
     const event = context.testServer.events[0];
     const breadcrumbs = event.data.breadcrumbs || [];
@@ -35,8 +35,24 @@ describe('Basic Tests', () => {
     expect(breadcrumbs.length).to.greaterThan(5);
   });
 
+  it('JavaScript unhandledrejection in renderer process', async () => {
+    await context.start('sentry-basic', 'javascript-unhandledrejection');
+    await context.waitForEvents(1);
+    const event = context.testServer.events[0];
+    const breadcrumbs = event.data.breadcrumbs || [];
+    const lastFrame = getLastFrame(event.data);
+
+    expect(context.testServer.events.length).to.equal(1);
+    expect(lastFrame.filename).to.equal(
+      'app:///fixtures/javascript-unhandledrejection.js',
+    );
+    expect(event.dump_file).to.equal(undefined);
+    expect(event.sentry_key).to.equal(SENTRY_KEY);
+    expect(breadcrumbs.length).to.greaterThan(5);
+  });
+
   it('JavaScript exception in main process', async () => {
-    await context.start('javascript-main');
+    await context.start('sentry-basic', 'javascript-main');
     await context.waitForEvents(1);
     const event = context.testServer.events[0];
     const breadcrumbs = event.data.breadcrumbs || [];
@@ -57,7 +73,7 @@ describe('Basic Tests', () => {
   });
 
   it.skip('JavaScript exception in main process with space in path', async () => {
-    await context.start('javascript main with spaces');
+    await context.start('sentry-basic', 'javascript main with spaces');
     await context.waitForEvents(1);
     const event = context.testServer.events[0];
     const breadcrumbs = event.data.breadcrumbs || [];
@@ -72,8 +88,29 @@ describe('Basic Tests', () => {
     expect(breadcrumbs.length).to.greaterThan(5);
   });
 
+  it('onFatalError can be overridden to exit app', async () => {
+    await context.start('sentry-onfatal-exit', 'javascript-main');
+    await context.waitForEvents(1);
+    const event = context.testServer.events[0];
+    const breadcrumbs = event.data.breadcrumbs || [];
+    const lastFrame = getLastFrame(event.data);
+
+    // wait for the main process to die
+    await context.waitForTrue(
+      async () =>
+        context.mainProcess ? !await context.mainProcess.isRunning() : false,
+      'Timeout: Waiting for app to die',
+    );
+
+    expect(context.testServer.events.length).to.equal(1);
+    expect(lastFrame.filename).to.equal('app:///fixtures/javascript-main.js');
+    expect(event.dump_file).to.equal(undefined);
+    expect(event.sentry_key).to.equal(SENTRY_KEY);
+    expect(breadcrumbs.length).to.greaterThan(5);
+  });
+
   it('Native crash in renderer process', async () => {
-    await context.start('native-renderer');
+    await context.start('sentry-basic', 'native-renderer');
     // It can take rather a long time to get the event on Mac
     await context.waitForEvents(1, 20000);
     const event = context.testServer.events[0];
@@ -86,7 +123,7 @@ describe('Basic Tests', () => {
   });
 
   it('Native crash in main process', async () => {
-    await context.start('native-main');
+    await context.start('sentry-basic', 'native-main');
 
     // wait for the main process to die
     await context.waitForTrue(
@@ -97,7 +134,7 @@ describe('Basic Tests', () => {
 
     // We have to restart the app to send native crashes from the main process
     await context.stop(false);
-    await context.start();
+    await context.start('sentry-basic');
 
     await context.waitForEvents(1);
     const event = context.testServer.events[0];
