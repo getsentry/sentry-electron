@@ -81,11 +81,6 @@ export interface ElectronOptions extends Options, BrowserOptions, NodeOptions {
    * Defaults to `true`.
    */
   enableNative?: boolean;
-
-  /**
-   * This will be called in case of a non recoverable fatal error.
-   */
-  onFatalError?(error: Error): void;
 }
 
 /** The Sentry Electron SDK Backend. */
