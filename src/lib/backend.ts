@@ -81,11 +81,6 @@ export interface ElectronOptions extends Options, BrowserOptions, NodeOptions {
    * Defaults to `true`.
    */
   enableNative?: boolean;
-
-  /**
-   * This will be called in case of a non recoverable fatal error.
-   */
-  onFatalError?(error: Error): void;
 }
 
 /** The Sentry Electron SDK Backend. */
@@ -339,16 +334,18 @@ export class ElectronBackend implements Backend {
 
   /** Activates the Node SDK for the main process. */
   private async installMainHandler(): Promise<boolean> {
-    await this.frontend.setOptions({
-      onFatalError: async (error: Error) => {
-        console.error('*********************************');
-        console.error('* SentryElectron unhandledError *');
-        console.error('*********************************');
-        console.error(error);
-        console.error('---------------------------------');
-        await this.frontend.captureException(error);
-      },
-    });
+    if (!this.frontend.getOptions().onFatalError) {
+      await this.frontend.setOptions({
+        onFatalError: async (error: Error) => {
+          console.error('*********************************');
+          console.error('* SentryElectron unhandledError *');
+          console.error('*********************************');
+          console.error(error);
+          console.error('---------------------------------');
+          await this.frontend.captureException(error);
+        },
+      });
+    }
 
     // Browser is the Electron main process (Node)
     const node = new NodeBackend(this.frontend);
