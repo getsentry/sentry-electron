@@ -1,0 +1,14 @@
+{
+  "support_level": "production",
+  "platforms": {
+    "electron": {
+      "name": "Electron",
+      "type": "language",
+      "doc_link": "",
+      "wizard": [
+        "index#installation",
+        "index#configuring-the-client"
+      ]
+    }
+  }
+}
