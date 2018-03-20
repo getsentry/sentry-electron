@@ -1,13 +1,10 @@
 import { platform, release, type } from 'os';
-import { join } from 'path';
 
 import {
   app,
   crashReporter,
   ipcMain,
-  ipcRenderer,
   powerMonitor,
-  remote,
   screen,
   // tslint:disable-next-line:no-implicit-dependencies
 } from 'electron';
@@ -29,7 +26,7 @@ import { ElectronFrontend } from './frontend';
 import { IPC_CONTEXT, IPC_CRUMB, IPC_EVENT } from './ipc';
 import { normalizeEvent, normalizeUrl } from './normalize';
 import { MinidumpUploader } from './uploader';
-import { getApp, isMainProcess, isRenderProcess } from './utils';
+import { getApp, getCachePath, isMainProcess, isRenderProcess } from './utils';
 
 /** Base context used in all events. */
 const DEFAULT_CONTEXT: Context = {
@@ -104,10 +101,9 @@ export class ElectronBackend implements Backend {
    */
   public async install(): Promise<boolean> {
     let success = true;
-    const cachePath = join(getApp().getPath('userData'), 'sentry');
 
     if (this.isNativeEnabled()) {
-      success = (await this.installNativeHandler(cachePath)) && success;
+      success = (await this.installNativeHandler()) && success;
     }
 
     if (this.isMainEnabled()) {
@@ -119,8 +115,16 @@ export class ElectronBackend implements Backend {
     }
 
     if (isMainProcess()) {
-      this.breadcrumbs = new Store<Breadcrumb[]>(cachePath, 'breadcrumbs', []);
-      this.context = new Store<Context>(cachePath, 'context', DEFAULT_CONTEXT);
+      this.breadcrumbs = new Store<Breadcrumb[]>(
+        getCachePath(),
+        'breadcrumbs',
+        [],
+      );
+      this.context = new Store<Context>(
+        getCachePath(),
+        'context',
+        DEFAULT_CONTEXT,
+      );
 
       this.installIPC();
       this.installAutoBreadcrumbs();
@@ -149,6 +153,10 @@ export class ElectronBackend implements Backend {
   public async storeContext(context: Context): Promise<void> {
     if (this.context) {
       this.context.set(context);
+    } else {
+      throw new SentryError(
+        'Invariant violation: Should be called in the main process',
+      );
     }
   }
 
@@ -156,7 +164,13 @@ export class ElectronBackend implements Backend {
    * @inheritDoc
    */
   public async loadContext(): Promise<Context> {
-    return this.context ? this.context.get() : {};
+    if (this.context) {
+      return this.context.get();
+    } else {
+      throw new SentryError(
+        'Invariant violation: Should be called in the main process',
+      );
+    }
   }
 
   /**
@@ -164,18 +178,7 @@ export class ElectronBackend implements Backend {
    */
   public async sendEvent(event: SentryEvent): Promise<number> {
     if (isRenderProcess()) {
-      const contents = remote.getCurrentWebContents();
-      const mergedEvent = {
-        ...event,
-        extra: {
-          crashed_process: `renderer[${contents.id}]`,
-          crashed_url: normalizeUrl(contents.getURL()),
-          ...event.extra,
-        },
-      };
-
-      ipcRenderer.send(IPC_EVENT, mergedEvent);
-      return 200;
+      throw new SentryError('Invariant violation: Should not happen');
     } else {
       const mergedEvent = {
         ...normalizeEvent(event),
@@ -205,6 +208,10 @@ export class ElectronBackend implements Backend {
   public async storeBreadcrumbs(breadcrumbs: Breadcrumb[]): Promise<void> {
     if (this.breadcrumbs) {
       this.breadcrumbs.set(breadcrumbs);
+    } else {
+      throw new SentryError(
+        'Invariant violation: Should be called in the main process',
+      );
     }
   }
 
@@ -212,7 +219,13 @@ export class ElectronBackend implements Backend {
    * @inheritDoc
    */
   public async loadBreadcrumbs(): Promise<Breadcrumb[]> {
-    return this.breadcrumbs ? this.breadcrumbs.get() : [];
+    if (this.breadcrumbs) {
+      return this.breadcrumbs.get();
+    } else {
+      throw new SentryError(
+        'Invariant violation: Should be called in the main process',
+      );
+    }
   }
 
   /** Loads new native crashes from disk and sends them to Sentry. */
@@ -268,7 +281,7 @@ export class ElectronBackend implements Backend {
   }
 
   /** Activates the Electron CrashReporter. */
-  private async installNativeHandler(cachePath: string): Promise<boolean> {
+  private async installNativeHandler(): Promise<boolean> {
     // We are only called by the frontend if the SDK is enabled and a valid DSN
     // has been configured. If no DSN is present, this indicates a programming
     // error.
@@ -297,7 +310,11 @@ export class ElectronBackend implements Backend {
       const reporter: CrashReporterExt = crashReporter as any;
       const crashesDirectory = reporter.getCrashesDirectory();
 
-      this.uploader = new MinidumpUploader(dsn, crashesDirectory, cachePath);
+      this.uploader = new MinidumpUploader(
+        dsn,
+        crashesDirectory,
+        getCachePath(),
+      );
 
       // Flush already cached minidumps from the queue.
       forget(this.uploader.flushQueue());

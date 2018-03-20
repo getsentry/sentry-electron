@@ -7,9 +7,10 @@ import {
   SentryEvent,
 } from '@sentry/core';
 // tslint:disable-next-line:no-implicit-dependencies
-import { ipcRenderer } from 'electron';
+import { ipcRenderer, remote } from 'electron';
 import { ElectronBackend, ElectronOptions } from './backend';
-import { IPC_CONTEXT, IPC_CRUMB } from './ipc';
+import { IPC_CONTEXT, IPC_CRUMB, IPC_EVENT } from './ipc';
+import { normalizeUrl } from './normalize';
 import { isRenderProcess } from './utils';
 
 /** SDK name used in every event. */
@@ -53,6 +54,27 @@ export class ElectronFrontend extends FrontendBase<
   ): Promise<void> {
     const prepared = await this.prepareEvent(event);
     await this.getBackend().uploadMinidump(path, prepared);
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public async captureEvent(event: SentryEvent): Promise<void> {
+    if (isRenderProcess()) {
+      const contents = remote.getCurrentWebContents();
+      const mergedEvent = {
+        ...event,
+        extra: {
+          crashed_process: `renderer[${contents.id}]`,
+          crashed_url: normalizeUrl(contents.getURL()),
+          ...event.extra,
+        },
+      };
+
+      ipcRenderer.send(IPC_EVENT, mergedEvent);
+    } else {
+      await super.captureEvent(event);
+    }
   }
 
   /**
