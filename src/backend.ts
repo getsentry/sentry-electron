@@ -1,13 +1,10 @@
 import { platform, release, type } from 'os';
-import { join } from 'path';
 
 import {
   app,
   crashReporter,
   ipcMain,
-  ipcRenderer,
   powerMonitor,
-  remote,
   screen,
   // tslint:disable-next-line:no-implicit-dependencies
 } from 'electron';
@@ -26,19 +23,10 @@ import { NodeBackend, NodeOptions } from '@sentry/node';
 import { forget, Store } from '@sentry/utils';
 
 import { ElectronFrontend } from './frontend';
+import { IPC_CONTEXT, IPC_CRUMB, IPC_EVENT } from './ipc';
 import { normalizeEvent, normalizeUrl } from './normalize';
 import { MinidumpUploader } from './uploader';
-import { getApp, isMainProcess, isRenderProcess } from './utils';
-
-/** IPC to send a captured event (exception or message) to Sentry. */
-const IPC_EVENT = 'sentry-electron.event';
-/** IPC to capture a breadcrumb globally. */
-const IPC_CRUMB = 'sentry-electron.breadcrumbs';
-/** IPC to capture new context (user, tags, extra) globally. */
-const IPC_CONTEXT = 'sentry-electron.context';
-
-/** App-specific directory to store information in. */
-const CACHE_PATH = join(getApp().getPath('userData'), 'sentry');
+import { getApp, getCachePath, isMainProcess, isRenderProcess } from './utils';
 
 /** Base context used in all events. */
 const DEFAULT_CONTEXT: Context = {
@@ -95,18 +83,10 @@ export class ElectronBackend implements Backend {
   private uploader?: MinidumpUploader;
 
   /** Store to persist breadcrumbs beyond application crashes. */
-  private readonly breadcrumbs: Store<Breadcrumb[]> = new Store<Breadcrumb[]>(
-    CACHE_PATH,
-    'breadcrumbs',
-    [],
-  );
+  private breadcrumbs?: Store<Breadcrumb[]>;
 
   /** Store to persist context information beyond application crashes. */
-  private readonly context: Store<Context> = new Store<Context>(
-    CACHE_PATH,
-    'context',
-    DEFAULT_CONTEXT,
-  );
+  private context?: Store<Context>;
 
   /** Creates a new Electron backend instance. */
   public constructor(frontend: Frontend<ElectronOptions>) {
@@ -135,6 +115,17 @@ export class ElectronBackend implements Backend {
     }
 
     if (isMainProcess()) {
+      this.breadcrumbs = new Store<Breadcrumb[]>(
+        getCachePath(),
+        'breadcrumbs',
+        [],
+      );
+      this.context = new Store<Context>(
+        getCachePath(),
+        'context',
+        DEFAULT_CONTEXT,
+      );
+
       this.installIPC();
       this.installAutoBreadcrumbs();
     }
@@ -160,14 +151,26 @@ export class ElectronBackend implements Backend {
    * @inheritDoc
    */
   public async storeContext(context: Context): Promise<void> {
-    this.context.set(context);
+    if (this.context) {
+      this.context.set(context);
+    } else {
+      throw new SentryError(
+        'Invariant violation: Should be called in the main process',
+      );
+    }
   }
 
   /**
    * @inheritDoc
    */
   public async loadContext(): Promise<Context> {
-    return this.context.get();
+    if (this.context) {
+      return this.context.get();
+    } else {
+      throw new SentryError(
+        'Invariant violation: Should be called in the main process',
+      );
+    }
   }
 
   /**
@@ -175,18 +178,7 @@ export class ElectronBackend implements Backend {
    */
   public async sendEvent(event: SentryEvent): Promise<number> {
     if (isRenderProcess()) {
-      const contents = remote.getCurrentWebContents();
-      const mergedEvent = {
-        ...event,
-        extra: {
-          crashed_process: `renderer[${contents.id}]`,
-          crashed_url: normalizeUrl(contents.getURL()),
-          ...event.extra,
-        },
-      };
-
-      ipcRenderer.send(IPC_EVENT, mergedEvent);
-      return 200;
+      throw new SentryError('Invariant violation: Should not happen');
     } else {
       const mergedEvent = {
         ...normalizeEvent(event),
@@ -214,14 +206,26 @@ export class ElectronBackend implements Backend {
    * @inheritDoc
    */
   public async storeBreadcrumbs(breadcrumbs: Breadcrumb[]): Promise<void> {
-    this.breadcrumbs.set(breadcrumbs);
+    if (this.breadcrumbs) {
+      this.breadcrumbs.set(breadcrumbs);
+    } else {
+      throw new SentryError(
+        'Invariant violation: Should be called in the main process',
+      );
+    }
   }
 
   /**
    * @inheritDoc
    */
   public async loadBreadcrumbs(): Promise<Breadcrumb[]> {
-    return this.breadcrumbs.get();
+    if (this.breadcrumbs) {
+      return this.breadcrumbs.get();
+    } else {
+      throw new SentryError(
+        'Invariant violation: Should be called in the main process',
+      );
+    }
   }
 
   /** Loads new native crashes from disk and sends them to Sentry. */
@@ -306,7 +310,11 @@ export class ElectronBackend implements Backend {
       const reporter: CrashReporterExt = crashReporter as any;
       const crashesDirectory = reporter.getCrashesDirectory();
 
-      this.uploader = new MinidumpUploader(dsn, crashesDirectory, CACHE_PATH);
+      this.uploader = new MinidumpUploader(
+        dsn,
+        crashesDirectory,
+        getCachePath(),
+      );
 
       // Flush already cached minidumps from the queue.
       forget(this.uploader.flushQueue());
@@ -375,8 +383,18 @@ export class ElectronBackend implements Backend {
       forget(this.frontend.addBreadcrumb(crumb));
     });
 
-    ipcMain.on(IPC_EVENT, (_: any, event: SentryEvent) => {
-      forget(this.frontend.captureEvent(event));
+    ipcMain.on(IPC_EVENT, (ipc: Electron.Event, event: SentryEvent) => {
+      const contents = ipc.sender;
+      const mergedEvent = {
+        ...event,
+        extra: {
+          crashed_process: `renderer[${contents.id}]`,
+          crashed_url: normalizeUrl(contents.getURL()),
+          ...event.extra,
+        },
+      };
+
+      forget(this.frontend.captureEvent(mergedEvent));
     });
 
     ipcMain.on(IPC_CONTEXT, (_: any, context: Context) => {

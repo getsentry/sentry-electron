@@ -1,5 +1,16 @@
-import { FrontendBase, Sdk, SdkInfo, SentryEvent } from '@sentry/core';
+import {
+  Breadcrumb,
+  Context,
+  FrontendBase,
+  Sdk,
+  SdkInfo,
+  SentryEvent,
+} from '@sentry/core';
+// tslint:disable-next-line:no-implicit-dependencies
+import { ipcRenderer } from 'electron';
 import { ElectronBackend, ElectronOptions } from './backend';
+import { IPC_CONTEXT, IPC_CRUMB, IPC_EVENT } from './ipc';
+import { isRenderProcess } from './utils';
 
 /** SDK name used in every event. */
 const SDK_NAME = 'sentry-electron';
@@ -42,6 +53,39 @@ export class ElectronFrontend extends FrontendBase<
   ): Promise<void> {
     const prepared = await this.prepareEvent(event);
     await this.getBackend().uploadMinidump(path, prepared);
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public async captureEvent(event: SentryEvent): Promise<void> {
+    if (isRenderProcess()) {
+      ipcRenderer.send(IPC_EVENT, event);
+    } else {
+      await super.captureEvent(event);
+    }
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public async addBreadcrumb(breadcrumb: Breadcrumb): Promise<void> {
+    if (isRenderProcess()) {
+      ipcRenderer.send(IPC_CRUMB, breadcrumb);
+    } else {
+      await super.addBreadcrumb(breadcrumb);
+    }
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public async setContext(nextContext: Context): Promise<void> {
+    if (isRenderProcess()) {
+      ipcRenderer.send(IPC_CONTEXT, nextContext);
+    } else {
+      await super.setContext(nextContext);
+    }
   }
 }
 
