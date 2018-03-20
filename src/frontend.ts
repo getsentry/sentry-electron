@@ -16,7 +16,7 @@ import { isRenderProcess } from './utils';
 const SDK_NAME = 'sentry-electron';
 /** SDK version used in every event. */
 // tslint:disable-next-line
-const SDK_VERSION: string = require('../../package.json').version;
+const SDK_VERSION: string = require('../package.json').version;
 
 /**
  * The Sentry Electron SDK Frontend.

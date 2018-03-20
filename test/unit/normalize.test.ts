@@ -1,6 +1,6 @@
 import { expect, should, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { normalizeUrl } from '../../src/lib/normalize';
+import { normalizeUrl } from '../../src/normalize';
 
 should();
 use(chaiAsPromised);
