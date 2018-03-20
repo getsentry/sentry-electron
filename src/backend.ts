@@ -383,8 +383,18 @@ export class ElectronBackend implements Backend {
       forget(this.frontend.addBreadcrumb(crumb));
     });
 
-    ipcMain.on(IPC_EVENT, (_: any, event: SentryEvent) => {
-      forget(this.frontend.captureEvent(event));
+    ipcMain.on(IPC_EVENT, (ipc: Electron.Event, event: SentryEvent) => {
+      const contents = ipc.sender;
+      const mergedEvent = {
+        ...event,
+        extra: {
+          crashed_process: `renderer[${contents.id}]`,
+          crashed_url: normalizeUrl(contents.getURL()),
+          ...event.extra,
+        },
+      };
+
+      forget(this.frontend.captureEvent(mergedEvent));
     });
 
     ipcMain.on(IPC_CONTEXT, (_: any, context: Context) => {
