@@ -1,5 +1,6 @@
 import { expect, should, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import { join } from 'path';
 import { TestContext } from './context';
 import { getLastFrame } from './utils';
 
@@ -159,5 +160,15 @@ describe('Basic Tests', () => {
     expect(context.testServer.events.length).to.equal(1);
     expect(event.dump_file).to.equal(undefined);
     expect(breadcrumbs.length, 'filtered breadcrumbs').to.equal(1);
+  });
+
+  it('Loaded via preload script with nodeIntegration disabled', async () => {
+    context = new TestContext(join(__dirname, 'preload-app'));
+    await context.start();
+    await context.waitForEvents(1);
+    const event = context.testServer.events[0];
+
+    expect(context.testServer.events.length).to.equal(1);
+    expect(event.dump_file).to.equal(undefined);
   });
 });
