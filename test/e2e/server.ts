@@ -92,6 +92,7 @@ export class TestServer {
       app(req as any, res as any, finalhandler(req, res));
     });
 
+    // Changed to port to 8123 because sentry uses 8000 if run locally
     this.server.listen(8123);
   }
 
