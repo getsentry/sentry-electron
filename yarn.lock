@@ -22,6 +22,10 @@
     "@sentry/utils" "0.4.2"
     raven "^2.4.2"
 
+"@sentry/shim@^0.5.0-beta.0":
+  version "0.5.0-beta.0"
+  resolved "https://registry.yarnpkg.com/@sentry/shim/-/shim-0.5.0-beta.0.tgz#201dcb3a8a01b86bdd24627dc7bc5a9bfe067f38"
+
 "@sentry/typescript@0.4.2":
   version "0.4.2"
   resolved "https://registry.yarnpkg.com/@sentry/typescript/-/typescript-0.4.2.tgz#bde6a0e29f7382b23f6fc11da67b2a7eded9d03d"

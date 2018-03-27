@@ -1,16 +1,29 @@
 import {
   Breadcrumb,
   Context,
+  createAndBind,
   FrontendBase,
-  Sdk,
+  Scope,
   SdkInfo,
   SentryEvent,
 } from '@sentry/core';
+import { callOnClient } from '@sentry/shim';
 // tslint:disable-next-line:no-implicit-dependencies
 import { ipcRenderer } from 'electron';
 import { ElectronBackend, ElectronOptions } from './backend';
 import { IPC_CONTEXT, IPC_CRUMB, IPC_EVENT } from './ipc';
 import { isRenderProcess } from './utils';
+
+export { addBreadcrumb, captureEvent, setUserContext } from '@sentry/core';
+export {
+  captureException,
+  captureMessage,
+  clearScope,
+  popScope,
+  pushScope,
+  setExtraContext,
+  setTagsContext,
+} from '@sentry/shim';
 
 /** SDK name used in every event. */
 const SDK_NAME = 'sentry-electron';
@@ -50,43 +63,56 @@ export class ElectronFrontend extends FrontendBase<
   public async captureMinidump(
     path: string,
     event: SentryEvent = {},
+    scope: Scope = this.getInitialScope(),
   ): Promise<void> {
-    const prepared = await this.prepareEvent(event);
+    const prepared = await this.prepareEvent(event, scope);
     await this.getBackend().uploadMinidump(path, prepared);
   }
 
   /**
    * @inheritDoc
    */
-  public async captureEvent(event: SentryEvent): Promise<void> {
+  public async captureEvent(event: SentryEvent, scope: Scope): Promise<void> {
     if (isRenderProcess()) {
-      ipcRenderer.send(IPC_EVENT, event);
+      ipcRenderer.send(IPC_EVENT, event, scope);
     } else {
-      await super.captureEvent(event);
+      await super.captureEvent(event, scope);
     }
   }
 
   /**
    * @inheritDoc
    */
-  public async addBreadcrumb(breadcrumb: Breadcrumb): Promise<void> {
+  public async addBreadcrumb(
+    breadcrumb: Breadcrumb,
+    scope: Scope,
+  ): Promise<void> {
     if (isRenderProcess()) {
-      ipcRenderer.send(IPC_CRUMB, breadcrumb);
+      ipcRenderer.send(IPC_CRUMB, breadcrumb, scope);
     } else {
-      await super.addBreadcrumb(breadcrumb);
+      await super.addBreadcrumb(breadcrumb, scope);
     }
   }
 
   /**
    * @inheritDoc
    */
-  public async setContext(nextContext: Context): Promise<void> {
+  public async setContext(nextContext: Context, scope: Scope): Promise<void> {
     if (isRenderProcess()) {
-      ipcRenderer.send(IPC_CONTEXT, nextContext);
+      ipcRenderer.send(IPC_CONTEXT, nextContext, scope);
     } else {
-      await super.setContext(nextContext);
+      await super.setContext(nextContext, scope);
     }
   }
+}
+
+/**
+ * TODO
+ * @param path
+ * @param event
+ */
+export function captureMinidump(path: string, event: SentryEvent = {}): void {
+  callOnClient('captureMinidump', path, event);
 }
 
 /**
@@ -130,5 +156,6 @@ export class ElectronFrontend extends FrontendBase<
  *
  * @see ElectronOptions for documentation on configuration options.
  */
-// tslint:disable-next-line:variable-name
-export const SentryClient = new Sdk(ElectronFrontend);
+export function create(options: ElectronOptions): void {
+  createAndBind(ElectronFrontend, options);
+}

@@ -1,12 +1,11 @@
-const { SentryClient } = require('../../../../');
+const { create, captureException } = require('../../../../');
 const { app } = require('electron');
 
-SentryClient.create({
+create({
   dsn: process.env.DSN,
-  onFatalError: (error) => {
-    SentryClient.captureException(error)
-      .then(() => {
-        app.exit();
-      });
-  }
+  onFatalError: error => {
+    captureException(error).then(() => {
+      app.exit();
+    });
+  },
 });

@@ -11,18 +11,26 @@ import {
 
 import { BrowserBackend, BrowserOptions } from '@sentry/browser';
 import {
+  addBreadcrumb,
   Backend,
   Breadcrumb,
+  captureEvent,
   Context,
   Frontend,
   Options,
   SentryError,
   SentryEvent,
+  setUserContext,
 } from '@sentry/core';
 import { NodeBackend, NodeOptions } from '@sentry/node';
+import {
+  captureException,
+  setExtraContext,
+  setTagsContext,
+} from '@sentry/shim';
 import { forget, Store } from '@sentry/utils';
 
-import { ElectronFrontend } from './frontend';
+import { captureMinidump, ElectronFrontend } from './frontend';
 import { IPC_CONTEXT, IPC_CRUMB, IPC_EVENT } from './ipc';
 import { normalizeEvent, normalizeUrl } from './normalize';
 import { MinidumpUploader } from './uploader';
@@ -99,19 +107,19 @@ export class ElectronBackend implements Backend {
   /**
    * @inheritDoc
    */
-  public async install(): Promise<boolean> {
+  public install(): boolean {
     let success = true;
 
     if (this.isNativeEnabled()) {
-      success = (await this.installNativeHandler()) && success;
+      success = this.installNativeHandler() && success;
     }
 
     if (this.isMainEnabled()) {
-      success = (await this.installMainHandler()) && success;
+      success = this.installMainHandler() && success;
     }
 
     if (this.isRenderEnabled()) {
-      success = (await this.installRenderHandler()) && success;
+      success = this.installRenderHandler() && success;
     }
 
     if (isMainProcess()) {
@@ -249,9 +257,9 @@ export class ElectronBackend implements Backend {
 
     const event: SentryEvent = { extra };
     const paths = await uploader.getNewMinidumps();
-    await Promise.all(
-      paths.map(async path => this.frontend.captureMinidump(path, event)),
-    );
+    paths.map(path => {
+      captureMinidump(path, event);
+    });
   }
 
   /** Returns whether JS is enabled and we are in the main process. */
@@ -281,7 +289,7 @@ export class ElectronBackend implements Backend {
   }
 
   /** Activates the Electron CrashReporter. */
-  private async installNativeHandler(): Promise<boolean> {
+  private installNativeHandler(): boolean {
     // We are only called by the frontend if the SDK is enabled and a valid DSN
     // has been configured. If no DSN is present, this indicates a programming
     // error.
@@ -343,21 +351,19 @@ export class ElectronBackend implements Backend {
   /** Activates the Node SDK for the main process. */
   private async installMainHandler(): Promise<boolean> {
     if (!this.frontend.getOptions().onFatalError) {
-      await this.frontend.setOptions({
-        onFatalError: async (error: Error) => {
-          console.error('*********************************');
-          console.error('* SentryElectron unhandledError *');
-          console.error('*********************************');
-          console.error(error);
-          console.error('---------------------------------');
-          await this.frontend.captureException(error);
-        },
-      });
+      this.frontend.getOptions().onFatalError = (error: Error) => {
+        console.error('*********************************');
+        console.error('* SentryElectron unhandledError *');
+        console.error('*********************************');
+        console.error(error);
+        console.error('---------------------------------');
+        captureException(error);
+      };
     }
 
     // Browser is the Electron main process (Node)
     const node = new NodeBackend(this.frontend);
-    if (!await node.install()) {
+    if (!node.install()) {
       return false;
     }
 
@@ -369,7 +375,7 @@ export class ElectronBackend implements Backend {
   private async installRenderHandler(): Promise<boolean> {
     // Renderer is an Electron BrowserWindow, thus Chromium
     const browser = new BrowserBackend(this.frontend);
-    if (!await browser.install()) {
+    if (!browser.install()) {
       return false;
     }
 
@@ -380,7 +386,7 @@ export class ElectronBackend implements Backend {
   /** TODO */
   private installIPC(): void {
     ipcMain.on(IPC_CRUMB, (_: any, crumb: Breadcrumb) => {
-      forget(this.frontend.addBreadcrumb(crumb));
+      addBreadcrumb(crumb);
     });
 
     ipcMain.on(IPC_EVENT, (ipc: Electron.Event, event: SentryEvent) => {
@@ -394,11 +400,19 @@ export class ElectronBackend implements Backend {
         },
       };
 
-      forget(this.frontend.captureEvent(mergedEvent));
+      captureEvent(mergedEvent);
     });
 
     ipcMain.on(IPC_CONTEXT, (_: any, context: Context) => {
-      forget(this.frontend.setContext(context));
+      if (context.user) {
+        setUserContext(context.user);
+      }
+      if (context.tags) {
+        setTagsContext(context.tags);
+      }
+      if (context.extra) {
+        setExtraContext(context.extra);
+      }
     });
   }
 
@@ -446,7 +460,7 @@ export class ElectronBackend implements Backend {
           type: 'ui',
         };
 
-        forget(this.frontend.addBreadcrumb(breadcrumb));
+        addBreadcrumb(breadcrumb);
       }
 
       return emit(event, ...args);
