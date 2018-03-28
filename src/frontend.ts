@@ -7,7 +7,7 @@ import {
   SdkInfo,
   SentryEvent,
 } from '@sentry/core';
-import { callOnClient } from '@sentry/shim';
+import { _callOnClient } from '@sentry/shim';
 // tslint:disable-next-line:no-implicit-dependencies
 import { ipcRenderer } from 'electron';
 import { ElectronBackend, ElectronOptions } from './backend';
@@ -112,7 +112,7 @@ export class ElectronFrontend extends FrontendBase<
  * @param event
  */
 export function captureMinidump(path: string, event: SentryEvent = {}): void {
-  callOnClient('captureMinidump', path, event);
+  _callOnClient('captureMinidump', path, event);
 }
 
 /**
