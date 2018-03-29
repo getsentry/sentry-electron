@@ -10,29 +10,25 @@ import {
 } from 'electron';
 
 import { BrowserBackend, BrowserOptions } from '@sentry/browser';
-import {
-  addBreadcrumb,
-  Backend,
-  Breadcrumb,
-  captureEvent,
-  Context,
-  Frontend,
-  Options,
-  SentryError,
-  SentryEvent,
-  setUserContext,
-} from '@sentry/core';
+import { Backend, Frontend, Options, SentryError } from '@sentry/core';
 import { NodeBackend, NodeOptions } from '@sentry/node';
 import {
+  addBreadcrumb,
+  Breadcrumb,
+  captureEvent,
   captureException,
+  Context,
+  SentryEvent,
   setExtraContext,
   setTagsContext,
+  setUserContext,
 } from '@sentry/shim';
 import { forget, Store } from '@sentry/utils';
 
-import { captureMinidump, ElectronFrontend } from './frontend';
+import { ElectronFrontend } from './frontend';
 import { IPC_CONTEXT, IPC_CRUMB, IPC_EVENT } from './ipc';
 import { normalizeEvent, normalizeUrl } from './normalize';
+import { captureMinidump } from './sdk';
 import { MinidumpUploader } from './uploader';
 import { getApp, getCachePath, isMainProcess, isRenderProcess } from './utils';
 
@@ -158,32 +154,6 @@ export class ElectronBackend implements Backend {
   /**
    * @inheritDoc
    */
-  public async storeContext(context: Context): Promise<void> {
-    if (this.context) {
-      this.context.set(context);
-    } else {
-      throw new SentryError(
-        'Invariant violation: Should be called in the main process',
-      );
-    }
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public async loadContext(): Promise<Context> {
-    if (this.context) {
-      return this.context.get();
-    } else {
-      throw new SentryError(
-        'Invariant violation: Should be called in the main process',
-      );
-    }
-  }
-
-  /**
-   * @inheritDoc
-   */
   public async sendEvent(event: SentryEvent): Promise<number> {
     if (isRenderProcess()) {
       throw new SentryError('Invariant violation: Should not happen');
@@ -210,30 +180,59 @@ export class ElectronBackend implements Backend {
     return 200;
   }
 
-  /**
-   * @inheritDoc
-   */
-  public async storeBreadcrumbs(breadcrumbs: Breadcrumb[]): Promise<void> {
-    if (this.breadcrumbs) {
-      this.breadcrumbs.set(breadcrumbs);
-    } else {
-      throw new SentryError(
-        'Invariant violation: Should be called in the main process',
-      );
-    }
+  /** TODO */
+  public loadBreadcrumbs(): Breadcrumb[] {
+    return this.breadcrumbs ? this.breadcrumbs.get() : [];
   }
 
   /**
    * @inheritDoc
    */
-  public async loadBreadcrumbs(): Promise<Breadcrumb[]> {
-    if (this.breadcrumbs) {
-      return this.breadcrumbs.get();
-    } else {
+  public storeBreadcrumb(breadcrumb: Breadcrumb): boolean {
+    if (!this.breadcrumbs) {
       throw new SentryError(
         'Invariant violation: Should be called in the main process',
       );
     }
+
+    const { maxBreadcrumbs = 100 } = this.frontend.getOptions();
+    this.breadcrumbs.update(breadcrumbs =>
+      [...breadcrumbs, breadcrumb].slice(-maxBreadcrumbs),
+    );
+
+    return false;
+  }
+
+  /** TODO */
+  public loadContext(): Context {
+    return this.context ? this.context.get() : {};
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public storeContext(nextContext: Context): boolean {
+    if (!this.context) {
+      throw new SentryError(
+        'Invariant violation: Should be called in the main process',
+      );
+    }
+
+    this.context.update(context => {
+      if (nextContext.extra) {
+        context.extra = { ...context.extra, ...nextContext.extra };
+      }
+      if (nextContext.tags) {
+        context.tags = { ...context.tags, ...nextContext.tags };
+      }
+      if (nextContext.user) {
+        context.user = { ...context.user, ...nextContext.user };
+      }
+
+      return context;
+    });
+
+    return false;
   }
 
   /** Loads new native crashes from disk and sends them to Sentry. */
@@ -329,7 +328,11 @@ export class ElectronBackend implements Backend {
 
       // Start to submit recent minidump crashes. This will load breadcrumbs
       // and context information that was cached on disk prior to the crash.
-      forget(this.sendNativeCrashes({ crashed_process: 'browser' }));
+      forget(
+        this.sendNativeCrashes({
+          crashed_process: 'browser',
+        }),
+      );
 
       // Every time a subprocess or renderer crashes, start sending minidumps
       // right away.

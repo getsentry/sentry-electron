@@ -1,32 +1,14 @@
-import {
-  Breadcrumb,
-  Context,
-  createAndBind,
-  FrontendBase,
-  Scope,
-  SdkInfo,
-  SentryEvent,
-} from '@sentry/core';
-import { _callOnClient } from '@sentry/shim';
+import { FrontendBase, Scope } from '@sentry/core';
+import { Breadcrumb, Context, SdkInfo, SentryEvent } from '@sentry/shim';
 // tslint:disable-next-line:no-implicit-dependencies
 import { ipcRenderer } from 'electron';
 import { ElectronBackend, ElectronOptions } from './backend';
 import { IPC_CONTEXT, IPC_CRUMB, IPC_EVENT } from './ipc';
 import { isRenderProcess } from './utils';
 
-export { addBreadcrumb, captureEvent, setUserContext } from '@sentry/core';
-export {
-  captureException,
-  captureMessage,
-  clearScope,
-  popScope,
-  pushScope,
-  setExtraContext,
-  setTagsContext,
-} from '@sentry/shim';
-
 /** SDK name used in every event. */
 const SDK_NAME = 'sentry-electron';
+
 /** SDK version used in every event. */
 // tslint:disable-next-line
 const SDK_VERSION: string = require('../package.json').version;
@@ -54,6 +36,16 @@ export class ElectronFrontend extends FrontendBase<
    */
   protected getSdkInfo(): SdkInfo {
     return { name: SDK_NAME, version: SDK_VERSION };
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public getInitialScope(): Scope {
+    return {
+      breadcrumbs: this.getBackend().loadBreadcrumbs(),
+      context: this.getBackend().loadContext(),
+    };
   }
 
   /**
@@ -104,58 +96,4 @@ export class ElectronFrontend extends FrontendBase<
       await super.setContext(nextContext, scope);
     }
   }
-}
-
-/**
- * TODO
- * @param path
- * @param event
- */
-export function captureMinidump(path: string, event: SentryEvent = {}): void {
-  _callOnClient('captureMinidump', path, event);
-}
-
-/**
- * The Sentry Electron SDK Client.
- *
- * To use this SDK, call the {@link Sdk.create} function as early as possible
- * in the entry modules. This applies to the main process as well as all
- * renderer processes or further sub processes you spawn. To set context
- * information or send manual events, use the provided methods.
- *
- * @example
- * const { SentryClient } = require('@sentry/electron');
- *
- * SentryClient.create({
- *   dsn: '__DSN__',
- *   // ...
- * });
- *
- * @example
- * SentryClient.setContext({
- *   extra: { battery: 0.7 },
- *   tags: { user_mode: 'admin' },
- *   user: { id: '4711' },
- * });
- *
- * @example
- * SentryClient.addBreadcrumb({
- *   message: 'My Breadcrumb',
- *   // ...
- * });
- *
- * @example
- * SentryClient.captureMessage('Hello, world!');
- * SentryClient.captureException(new Error('Good bye'));
- * SentryClient.captureEvent({
- *   message: 'Manual',
- *   stacktrace: [
- *     // ...
- *   ],
- * });
- *
- * @see ElectronOptions for documentation on configuration options.
- */
-export function create(options: ElectronOptions): void {
-  createAndBind(ElectronFrontend, options);
 }

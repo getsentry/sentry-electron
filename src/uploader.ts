@@ -6,7 +6,8 @@ import { platform } from 'os';
 import { basename, join } from 'path';
 import { promisify } from 'util';
 
-import { DSN, SentryEvent } from '@sentry/core';
+import { DSN } from '@sentry/core';
+import { SentryEvent } from '@sentry/shim';
 import { filterAsync, mkdirp, Store } from '@sentry/utils';
 import * as FormData from 'form-data';
 import fetch from 'node-fetch';

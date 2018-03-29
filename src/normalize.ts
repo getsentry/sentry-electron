@@ -1,4 +1,4 @@
-import { SentryEvent, SentryException, Stacktrace } from '@sentry/core';
+import { SentryEvent, SentryException, Stacktrace } from '@sentry/shim';
 import { clone } from '@sentry/utils';
 import { getApp } from './utils';
 
