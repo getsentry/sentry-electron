@@ -195,12 +195,14 @@ export class ElectronBackend implements Backend {
       );
     }
 
+    // We replicate the behavior of the frontend
     const { maxBreadcrumbs = 100 } = this.frontend.getOptions();
     this.breadcrumbs.update(breadcrumbs =>
       [...breadcrumbs, breadcrumb].slice(-maxBreadcrumbs),
     );
 
-    return false;
+    // Still, the frontend should merge breadcrumbs into events, for now
+    return true;
   }
 
   /** TODO */
@@ -218,6 +220,7 @@ export class ElectronBackend implements Backend {
       );
     }
 
+    // We replicate the behavior of the frontend
     this.context.update(context => {
       if (nextContext.extra) {
         context.extra = { ...context.extra, ...nextContext.extra };
@@ -232,7 +235,8 @@ export class ElectronBackend implements Backend {
       return context;
     });
 
-    return false;
+    // Still, the frontend should merge context into events, for now
+    return true;
   }
 
   /** Loads new native crashes from disk and sends them to Sentry. */
