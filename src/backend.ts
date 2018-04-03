@@ -63,8 +63,8 @@ interface CrashReporterExt {
  */
 export interface ElectronOptions extends Options, BrowserOptions, NodeOptions {
   /**
-   * Enables crash reporting for JavaScript errors in this process.
-   * Defaults to `true`.
+   * Enables crash reporting for JavaScript errors in this process. Defaults to
+   * `true`.
    */
   enableJavaScript?: boolean;
 
@@ -168,11 +168,15 @@ export class ElectronBackend implements Backend {
   }
 
   /**
-   * TODO
+   * Uploads the given minidump and attaches event information.
+   *
+   * @param path A relative or absolute path to the minidump file.
+   * @param event Optional event information to add to the minidump request.
+   * @returns A promise that resolves to the status code of the request.
    */
   public async uploadMinidump(
     path: string,
-    event: SentryEvent,
+    event: SentryEvent = {},
   ): Promise<number> {
     if (this.uploader) {
       await this.uploader.uploadMinidump({ path, event });
@@ -180,7 +184,7 @@ export class ElectronBackend implements Backend {
     return 200;
   }
 
-  /** TODO */
+  /** Returns the full list of breadcrumbs (or empty). */
   public loadBreadcrumbs(): Breadcrumb[] {
     return this.breadcrumbs ? this.breadcrumbs.get() : [];
   }
@@ -205,7 +209,7 @@ export class ElectronBackend implements Backend {
     return true;
   }
 
-  /** TODO */
+  /** Returns the latest context (or empty). */
   public loadContext(): Context {
     return this.context ? this.context.get() : {};
   }
@@ -330,8 +334,8 @@ export class ElectronBackend implements Backend {
       // Flush already cached minidumps from the queue.
       forget(this.uploader.flushQueue());
 
-      // Start to submit recent minidump crashes. This will load breadcrumbs
-      // and context information that was cached on disk prior to the crash.
+      // Start to submit recent minidump crashes. This will load breadcrumbs and
+      // context information that was cached on disk prior to the crash.
       forget(
         this.sendNativeCrashes({
           crashed_process: 'browser',
@@ -390,7 +394,7 @@ export class ElectronBackend implements Backend {
     return true;
   }
 
-  /** TODO */
+  /** Installs IPC handlers to receive events and metadata from renderers. */
   private installIPC(): void {
     ipcMain.on(IPC_CRUMB, (_: any, crumb: Breadcrumb) => {
       addBreadcrumb(crumb);
@@ -423,7 +427,7 @@ export class ElectronBackend implements Backend {
     });
   }
 
-  /** TODO */
+  /** Installs auto-breadcrumb handlers for certain Electron events. */
   private installAutoBreadcrumbs(): void {
     this.instrumentBreadcrumbs('app', app);
 

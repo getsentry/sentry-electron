@@ -49,13 +49,16 @@ export class ElectronFrontend extends FrontendBase<
   }
 
   /**
-   * TODO
-   * @param path
+   * Uploads a native crash dump (Minidump) to Sentry.
+   *
+   * @param path The relative or absolute path to the minidump.
+   * @param event Optional event payload to attach to the minidump.
+   * @param scope The SDK scope used to upload.
    */
   public async captureMinidump(
     path: string,
     event: SentryEvent = {},
-    scope: Scope = this.getInitialScope(),
+    scope: Scope = this.getInternalScope(),
   ): Promise<void> {
     const prepared = await this.prepareEvent(event, scope);
     await this.getBackend().uploadMinidump(path, prepared);
