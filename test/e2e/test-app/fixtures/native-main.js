@@ -1,4 +1,5 @@
-
-if(process.type === 'browser'){
-  process.crash();
+if (process.type === 'browser') {
+  setTimeout(() => {
+    process.crash();
+  }, 100);
 }

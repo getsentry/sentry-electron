@@ -1,4 +1,5 @@
-
-if(process.type === 'renderer'){
-  process.crash();
+if (process.type === 'renderer') {
+  setTimeout(() => {
+    process.crash();
+  }, 100);
 }

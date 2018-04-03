@@ -3,7 +3,7 @@
 import { readFileSync } from 'fs';
 import * as http from 'http';
 
-import { SentryEvent } from '@sentry/core';
+import { SentryEvent } from '@sentry/shim';
 import * as bodyParser from 'body-parser';
 import * as express from 'express';
 import * as finalhandler from 'finalhandler';
@@ -92,7 +92,8 @@ export class TestServer {
       app(req as any, res as any, finalhandler(req, res));
     });
 
-    this.server.listen(8000);
+    // Changed to port to 8123 because sentry uses 8000 if run locally
+    this.server.listen(8123);
   }
 
   /** Stops accepting requests and closes the server. */

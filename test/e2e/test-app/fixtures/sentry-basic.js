@@ -1,5 +1,5 @@
-const { SentryClient } = require('../../../../');
+const { create } = require('../../../../');
 
-SentryClient.create({
+create({
   dsn: process.env.DSN,
 });

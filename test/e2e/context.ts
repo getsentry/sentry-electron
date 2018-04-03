@@ -64,7 +64,7 @@ export class TestContext {
     const env: { [key: string]: string | undefined } = {
       ...process.env,
       DSN:
-        'http://37f8a2ee37c0409d8970bc7559c7c7e4:4cfde0ca506c4ea39b4e25b61a1ff1c3@localhost:8000/277345',
+        'http://37f8a2ee37c0409d8970bc7559c7c7e4:4cfde0ca506c4ea39b4e25b61a1ff1c3@localhost:8123/277345',
       E2E_TEST_SENTRY: sentryConfig,
       E2E_USERDATA_DIRECTORY: this.tempDir.path,
     };
@@ -74,7 +74,9 @@ export class TestContext {
     }
 
     const childProcess = spawn(this.electronPath, [this.appPath], { env });
-
+    childProcess.stdout.on('data', data => {
+      process.stdout.write(data.toString());
+    });
     this.mainProcess = new ProcessStatus(childProcess.pid);
 
     await this.waitForTrue(

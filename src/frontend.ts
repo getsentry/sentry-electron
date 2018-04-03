@@ -1,11 +1,5 @@
-import {
-  Breadcrumb,
-  Context,
-  FrontendBase,
-  Sdk,
-  SdkInfo,
-  SentryEvent,
-} from '@sentry/core';
+import { FrontendBase, Scope } from '@sentry/core';
+import { Breadcrumb, Context, SdkInfo, SentryEvent } from '@sentry/shim';
 // tslint:disable-next-line:no-implicit-dependencies
 import { ipcRenderer } from 'electron';
 import { ElectronBackend, ElectronOptions } from './backend';
@@ -14,6 +8,7 @@ import { isRenderProcess } from './utils';
 
 /** SDK name used in every event. */
 const SDK_NAME = 'sentry-electron';
+
 /** SDK version used in every event. */
 // tslint:disable-next-line
 const SDK_VERSION: string = require('../package.json').version;
@@ -44,91 +39,64 @@ export class ElectronFrontend extends FrontendBase<
   }
 
   /**
-   * TODO
-   * @param path
+   * @inheritDoc
+   */
+  public getInitialScope(): Scope {
+    return {
+      breadcrumbs: this.getBackend().loadBreadcrumbs(),
+      context: this.getBackend().loadContext(),
+    };
+  }
+
+  /**
+   * Uploads a native crash dump (Minidump) to Sentry.
+   *
+   * @param path The relative or absolute path to the minidump.
+   * @param event Optional event payload to attach to the minidump.
+   * @param scope The SDK scope used to upload.
    */
   public async captureMinidump(
     path: string,
     event: SentryEvent = {},
+    scope: Scope = this.getInternalScope(),
   ): Promise<void> {
-    const prepared = await this.prepareEvent(event);
+    const prepared = await this.prepareEvent(event, scope);
     await this.getBackend().uploadMinidump(path, prepared);
   }
 
   /**
    * @inheritDoc
    */
-  public async captureEvent(event: SentryEvent): Promise<void> {
+  public async captureEvent(event: SentryEvent, scope: Scope): Promise<void> {
     if (isRenderProcess()) {
-      ipcRenderer.send(IPC_EVENT, event);
+      ipcRenderer.send(IPC_EVENT, event, scope);
     } else {
-      await super.captureEvent(event);
+      await super.captureEvent(event, scope);
     }
   }
 
   /**
    * @inheritDoc
    */
-  public async addBreadcrumb(breadcrumb: Breadcrumb): Promise<void> {
+  public async addBreadcrumb(
+    breadcrumb: Breadcrumb,
+    scope: Scope,
+  ): Promise<void> {
     if (isRenderProcess()) {
-      ipcRenderer.send(IPC_CRUMB, breadcrumb);
+      ipcRenderer.send(IPC_CRUMB, breadcrumb, scope);
     } else {
-      await super.addBreadcrumb(breadcrumb);
+      await super.addBreadcrumb(breadcrumb, scope);
     }
   }
 
   /**
    * @inheritDoc
    */
-  public async setContext(nextContext: Context): Promise<void> {
+  public async setContext(nextContext: Context, scope: Scope): Promise<void> {
     if (isRenderProcess()) {
-      ipcRenderer.send(IPC_CONTEXT, nextContext);
+      ipcRenderer.send(IPC_CONTEXT, nextContext, scope);
     } else {
-      await super.setContext(nextContext);
+      await super.setContext(nextContext, scope);
     }
   }
 }
-
-/**
- * The Sentry Electron SDK Client.
- *
- * To use this SDK, call the {@link Sdk.create} function as early as possible
- * in the entry modules. This applies to the main process as well as all
- * renderer processes or further sub processes you spawn. To set context
- * information or send manual events, use the provided methods.
- *
- * @example
- * const { SentryClient } = require('@sentry/electron');
- *
- * SentryClient.create({
- *   dsn: '__DSN__',
- *   // ...
- * });
- *
- * @example
- * SentryClient.setContext({
- *   extra: { battery: 0.7 },
- *   tags: { user_mode: 'admin' },
- *   user: { id: '4711' },
- * });
- *
- * @example
- * SentryClient.addBreadcrumb({
- *   message: 'My Breadcrumb',
- *   // ...
- * });
- *
- * @example
- * SentryClient.captureMessage('Hello, world!');
- * SentryClient.captureException(new Error('Good bye'));
- * SentryClient.captureEvent({
- *   message: 'Manual',
- *   stacktrace: [
- *     // ...
- *   ],
- * });
- *
- * @see ElectronOptions for documentation on configuration options.
- */
-// tslint:disable-next-line:variable-name
-export const SentryClient = new Sdk(ElectronFrontend);

@@ -6,7 +6,8 @@ import { platform } from 'os';
 import { basename, join } from 'path';
 import { promisify } from 'util';
 
-import { DSN, SentryEvent } from '@sentry/core';
+import { DSN } from '@sentry/core';
+import { SentryEvent } from '@sentry/shim';
 import { filterAsync, mkdirp, Store } from '@sentry/utils';
 import * as FormData from 'form-data';
 import fetch from 'node-fetch';
@@ -29,7 +30,8 @@ const MAX_REQUESTS_COUNT = 10;
 type CrashReporterType = 'crashpad' | 'breakpad';
 
 /**
- * TODO
+ * Payload for a minidump request comprising a persistent file system path and
+ * event metadata.
  */
 export interface MinidumpRequest {
   /** Path to the minidump file. */
@@ -51,7 +53,10 @@ export class MinidumpUploader {
   /** List of minidumps that have been found already. */
   private readonly knownPaths: string[];
 
-  /** Store to persist queued Minidumps beyond application crashes or lost internet connection. */
+  /**
+   * Store to persist queued Minidumps beyond application crashes or lost
+   * internet connection.
+   */
   private readonly queue: Store<MinidumpRequest[]> = new Store(
     this.cacheDirectory,
     'queue',
@@ -163,8 +168,8 @@ export class MinidumpUploader {
 
   /** Scans the Crashpad directory structure for minidump files. */
   private async scanCrashpadFolder(): Promise<string[]> {
-    // Crashpad moves minidump files directly into the completed/ folder. We
-    // can load them from there, upload to the server, and then delete it.
+    // Crashpad moves minidump files directly into the completed/ folder. We can
+    // load them from there, upload to the server, and then delete it.
     const dumpDirectory = join(this.crashesDirectory, 'completed');
     const files = await readdir(dumpDirectory);
     return files
@@ -174,8 +179,8 @@ export class MinidumpUploader {
 
   /** Scans the Breakpad directory structure for minidump files. */
   private async scanBreakpadFolder(): Promise<string[]> {
-    // Breakpad stores all minidump files along with a metadata file directly
-    // in the crashes directory.
+    // Breakpad stores all minidump files along with a metadata file directly in
+    // the crashes directory.
     const files = await readdir(this.crashesDirectory);
 
     // Remove all metadata files (asynchronously) and forget about them.

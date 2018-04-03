@@ -5,7 +5,7 @@
   <br />
 </p>
 
-# Official Sentry SDK for Electron
+# Official Sentry SDK for Electron (Beta)
 
 [![Travis](https://img.shields.io/travis/getsentry/sentry-electron.svg?maxAge=2592000)](https://travis-ci.org/getsentry/sentry-electron)
 [![AppVeyor](https://img.shields.io/appveyor/ci/sentry/sentry-electron.svg)](https://ci.appveyor.com/project/sentry/sentry-electron)
@@ -16,45 +16,52 @@
 [![deps dev](https://david-dm.org/getsentry/sentry-electron/dev-status.svg)](https://david-dm.org/getsentry/sentry-electron?type=dev&view=list)
 [![deps peer](https://david-dm.org/getsentry/sentry-electron/peer-status.svg)](https://david-dm.org/getsentry/sentry-electron?type=peer&view=list)
 
+**NOTE**: This package is still in beta. It is part of an early access preview
+for the
+[next generation](https://github.com/getsentry/raven-js/tree/next#readme) of
+Sentry JavaScript SDKs. While we try to keep breaking changes to a minimum,
+interfaces might change between minor releases before the first stable `1.x`
+release.
+
 ## Usage
 
-To use this SDK, call `SentryClient.create(options)` as early as possible in the
-entry modules in the main process as well as all renderer processes or further
-sub processees you spawn. This will initialize the SDK and hook into the
+To use this SDK, call `create(options)` as early as possible in the entry
+modules in the main process as well as all renderer processes or further sub
+processees you spawn. This will initialize the SDK and hook into the
 environment. Note that you can turn off almost all side effects using the
 respective options.
 
 ```javascript
-import { SentryClient } from '@sentry/electron';
+import { create } from '@sentry/electron';
 
-SentryClient.create({
+create({
   dsn: '__DSN__',
   // ...
 });
 ```
 
-To set context information or send manual events, use the provided methods on
-`SentryClient`. Note that these functions will not perform any action before you
-have called `SentryClient.create()`:
+To set context information or send manual events, use the exported functions of
+`@sentry/electron`. Note that these functions will not perform any action before
+you have called `create()`:
 
 ```javascript
+import * as Sentry from '@sentry/electron';
+
 // Set user information, as well as tags and further extras
-SentryClient.setContext({
-  extra: { battery: 0.7 },
-  tags: { user_mode: 'admin' },
-  user: { id: '4711' },
-});
+Sentry.setExtraContext({ battery: 0.7 });
+Sentry.setTagsContext({ user_mode: 'admin' });
+Sentry.setUserContext({ id: '4711' });
 
 // Add a breadcrumb for future events
-SentryClient.addBreadcrumb({
+Sentry.addBreadcrumb({
   message: 'My Breadcrumb',
   // ...
 });
 
 // Capture exceptions, messages or manual events
-SentryClient.captureMessage('Hello, world!');
-SentryClient.captureException(new Error('Good bye'));
-SentryClient.captureEvent({
+Sentry.captureMessage('Hello, world!');
+Sentry.captureException(new Error('Good bye'));
+Sentry.captureEvent({
   message: 'Manual',
   stacktrace: [
     // ...
@@ -77,26 +84,4 @@ const client = new ElectronFrontend({
 
 client.install();
 // ...
-```
-
-Note that `install()` returns a `Promise` that resolves when the installation
-has finished. It is not necessary to wait for the installation before adding
-breadcrumbs, defining context or sending events. However, the return value
-indicates whether the installation was successful and the environment could be
-instrumented:
-
-```javascript
-import { ElectronFrontend } from '@sentry/electron';
-
-const client = new ElectronFrontend({
-  dsn: '__DSN__',
-  // ...
-});
-
-const success = await client.install();
-if (success) {
-  // Will catch global exceptions, record breadcrumbs for DOM events, etc...
-} else {
-  // Limited instrumentation, but sending events will still work
-}
 ```

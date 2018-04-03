@@ -10,21 +10,24 @@ import {
 } from 'electron';
 
 import { BrowserBackend, BrowserOptions } from '@sentry/browser';
-import {
-  Backend,
-  Breadcrumb,
-  Context,
-  Frontend,
-  Options,
-  SentryError,
-  SentryEvent,
-} from '@sentry/core';
+import { Backend, Frontend, Options, SentryError } from '@sentry/core';
 import { NodeBackend, NodeOptions } from '@sentry/node';
+import {
+  addBreadcrumb,
+  Breadcrumb,
+  captureEvent,
+  Context,
+  SentryEvent,
+  setExtraContext,
+  setTagsContext,
+  setUserContext,
+} from '@sentry/shim';
 import { forget, Store } from '@sentry/utils';
 
 import { ElectronFrontend } from './frontend';
 import { IPC_CONTEXT, IPC_CRUMB, IPC_EVENT } from './ipc';
 import { normalizeEvent, normalizeUrl } from './normalize';
+import { captureMinidump } from './sdk';
 import { MinidumpUploader } from './uploader';
 import { getApp, getCachePath, isMainProcess, isRenderProcess } from './utils';
 
@@ -59,8 +62,8 @@ interface CrashReporterExt {
  */
 export interface ElectronOptions extends Options, BrowserOptions, NodeOptions {
   /**
-   * Enables crash reporting for JavaScript errors in this process.
-   * Defaults to `true`.
+   * Enables crash reporting for JavaScript errors in this process. Defaults to
+   * `true`.
    */
   enableJavaScript?: boolean;
 
@@ -99,19 +102,19 @@ export class ElectronBackend implements Backend {
   /**
    * @inheritDoc
    */
-  public async install(): Promise<boolean> {
+  public install(): boolean {
     let success = true;
 
     if (this.isNativeEnabled()) {
-      success = (await this.installNativeHandler()) && success;
+      success = this.installNativeHandler() && success;
     }
 
     if (this.isMainEnabled()) {
-      success = (await this.installMainHandler()) && success;
+      success = this.installMainHandler() && success;
     }
 
     if (this.isRenderEnabled()) {
-      success = (await this.installRenderHandler()) && success;
+      success = this.installRenderHandler() && success;
     }
 
     if (isMainProcess()) {
@@ -150,32 +153,6 @@ export class ElectronBackend implements Backend {
   /**
    * @inheritDoc
    */
-  public async storeContext(context: Context): Promise<void> {
-    if (this.context) {
-      this.context.set(context);
-    } else {
-      throw new SentryError(
-        'Invariant violation: Should be called in the main process',
-      );
-    }
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public async loadContext(): Promise<Context> {
-    if (this.context) {
-      return this.context.get();
-    } else {
-      throw new SentryError(
-        'Invariant violation: Should be called in the main process',
-      );
-    }
-  }
-
-  /**
-   * @inheritDoc
-   */
   public async sendEvent(event: SentryEvent): Promise<number> {
     if (isRenderProcess()) {
       throw new SentryError('Invariant violation: Should not happen');
@@ -190,11 +167,15 @@ export class ElectronBackend implements Backend {
   }
 
   /**
-   * TODO
+   * Uploads the given minidump and attaches event information.
+   *
+   * @param path A relative or absolute path to the minidump file.
+   * @param event Optional event information to add to the minidump request.
+   * @returns A promise that resolves to the status code of the request.
    */
   public async uploadMinidump(
     path: string,
-    event: SentryEvent,
+    event: SentryEvent = {},
   ): Promise<number> {
     if (this.uploader) {
       await this.uploader.uploadMinidump({ path, event });
@@ -202,30 +183,63 @@ export class ElectronBackend implements Backend {
     return 200;
   }
 
-  /**
-   * @inheritDoc
-   */
-  public async storeBreadcrumbs(breadcrumbs: Breadcrumb[]): Promise<void> {
-    if (this.breadcrumbs) {
-      this.breadcrumbs.set(breadcrumbs);
-    } else {
-      throw new SentryError(
-        'Invariant violation: Should be called in the main process',
-      );
-    }
+  /** Returns the full list of breadcrumbs (or empty). */
+  public loadBreadcrumbs(): Breadcrumb[] {
+    return this.breadcrumbs ? this.breadcrumbs.get() : [];
   }
 
   /**
    * @inheritDoc
    */
-  public async loadBreadcrumbs(): Promise<Breadcrumb[]> {
-    if (this.breadcrumbs) {
-      return this.breadcrumbs.get();
-    } else {
+  public storeBreadcrumb(breadcrumb: Breadcrumb): boolean {
+    if (!this.breadcrumbs) {
       throw new SentryError(
         'Invariant violation: Should be called in the main process',
       );
     }
+
+    // We replicate the behavior of the frontend
+    const { maxBreadcrumbs = 100 } = this.frontend.getOptions();
+    this.breadcrumbs.update(breadcrumbs =>
+      [...breadcrumbs, breadcrumb].slice(-maxBreadcrumbs),
+    );
+
+    // Still, the frontend should merge breadcrumbs into events, for now
+    return true;
+  }
+
+  /** Returns the latest context (or empty). */
+  public loadContext(): Context {
+    return this.context ? this.context.get() : {};
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public storeContext(nextContext: Context): boolean {
+    if (!this.context) {
+      throw new SentryError(
+        'Invariant violation: Should be called in the main process',
+      );
+    }
+
+    // We replicate the behavior of the frontend
+    this.context.update(context => {
+      if (nextContext.extra) {
+        context.extra = { ...context.extra, ...nextContext.extra };
+      }
+      if (nextContext.tags) {
+        context.tags = { ...context.tags, ...nextContext.tags };
+      }
+      if (nextContext.user) {
+        context.user = { ...context.user, ...nextContext.user };
+      }
+
+      return context;
+    });
+
+    // Still, the frontend should merge context into events, for now
+    return true;
   }
 
   /** Loads new native crashes from disk and sends them to Sentry. */
@@ -249,9 +263,9 @@ export class ElectronBackend implements Backend {
 
     const event: SentryEvent = { extra };
     const paths = await uploader.getNewMinidumps();
-    await Promise.all(
-      paths.map(async path => this.frontend.captureMinidump(path, event)),
-    );
+    paths.map(path => {
+      captureMinidump(path, event);
+    });
   }
 
   /** Returns whether JS is enabled and we are in the main process. */
@@ -281,7 +295,7 @@ export class ElectronBackend implements Backend {
   }
 
   /** Activates the Electron CrashReporter. */
-  private async installNativeHandler(): Promise<boolean> {
+  private installNativeHandler(): boolean {
     // We are only called by the frontend if the SDK is enabled and a valid DSN
     // has been configured. If no DSN is present, this indicates a programming
     // error.
@@ -319,9 +333,13 @@ export class ElectronBackend implements Backend {
       // Flush already cached minidumps from the queue.
       forget(this.uploader.flushQueue());
 
-      // Start to submit recent minidump crashes. This will load breadcrumbs
-      // and context information that was cached on disk prior to the crash.
-      forget(this.sendNativeCrashes({ crashed_process: 'browser' }));
+      // Start to submit recent minidump crashes. This will load breadcrumbs and
+      // context information that was cached on disk prior to the crash.
+      forget(
+        this.sendNativeCrashes({
+          crashed_process: 'browser',
+        }),
+      );
 
       // Every time a subprocess or renderer crashes, start sending minidumps
       // right away.
@@ -342,22 +360,9 @@ export class ElectronBackend implements Backend {
 
   /** Activates the Node SDK for the main process. */
   private async installMainHandler(): Promise<boolean> {
-    if (!this.frontend.getOptions().onFatalError) {
-      await this.frontend.setOptions({
-        onFatalError: async (error: Error) => {
-          console.error('*********************************');
-          console.error('* SentryElectron unhandledError *');
-          console.error('*********************************');
-          console.error(error);
-          console.error('---------------------------------');
-          await this.frontend.captureException(error);
-        },
-      });
-    }
-
     // Browser is the Electron main process (Node)
     const node = new NodeBackend(this.frontend);
-    if (!await node.install()) {
+    if (!node.install()) {
       return false;
     }
 
@@ -369,7 +374,7 @@ export class ElectronBackend implements Backend {
   private async installRenderHandler(): Promise<boolean> {
     // Renderer is an Electron BrowserWindow, thus Chromium
     const browser = new BrowserBackend(this.frontend);
-    if (!await browser.install()) {
+    if (!browser.install()) {
       return false;
     }
 
@@ -377,10 +382,10 @@ export class ElectronBackend implements Backend {
     return true;
   }
 
-  /** TODO */
+  /** Installs IPC handlers to receive events and metadata from renderers. */
   private installIPC(): void {
     ipcMain.on(IPC_CRUMB, (_: any, crumb: Breadcrumb) => {
-      forget(this.frontend.addBreadcrumb(crumb));
+      addBreadcrumb(crumb);
     });
 
     ipcMain.on(IPC_EVENT, (ipc: Electron.Event, event: SentryEvent) => {
@@ -394,15 +399,23 @@ export class ElectronBackend implements Backend {
         },
       };
 
-      forget(this.frontend.captureEvent(mergedEvent));
+      captureEvent(mergedEvent);
     });
 
     ipcMain.on(IPC_CONTEXT, (_: any, context: Context) => {
-      forget(this.frontend.setContext(context));
+      if (context.user) {
+        setUserContext(context.user);
+      }
+      if (context.tags) {
+        setTagsContext(context.tags);
+      }
+      if (context.extra) {
+        setExtraContext(context.extra);
+      }
     });
   }
 
-  /** TODO */
+  /** Installs auto-breadcrumb handlers for certain Electron events. */
   private installAutoBreadcrumbs(): void {
     this.instrumentBreadcrumbs('app', app);
 
@@ -446,7 +459,7 @@ export class ElectronBackend implements Backend {
           type: 'ui',
         };
 
-        forget(this.frontend.addBreadcrumb(breadcrumb));
+        addBreadcrumb(breadcrumb);
       }
 
       return emit(event, ...args);
