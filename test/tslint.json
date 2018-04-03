@@ -1,7 +1,10 @@
 {
   "rules": {
     "await-promise": [true, "Client"],
-    "no-implicit-dependencies": [true, "dev"]
+    "completed-docs": false,
+    "no-non-null-assertion": false,
+    "no-implicit-dependencies": [true, "dev"],
+    "no-unused-expression": false
   },
   "extends": ["../tslint.json"]
 }

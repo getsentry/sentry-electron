@@ -3,7 +3,7 @@
 import { readFileSync } from 'fs';
 import * as http from 'http';
 
-import { SentryEvent } from '@sentry/core';
+import { SentryEvent } from '@sentry/shim';
 import * as bodyParser from 'body-parser';
 import * as express from 'express';
 import * as finalhandler from 'finalhandler';
