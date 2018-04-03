@@ -59,12 +59,12 @@ describe('Basic Tests', () => {
     const breadcrumbs = event.data.breadcrumbs || [];
     const lastFrame = getLastFrame(event.data);
 
-    const mainRunning = context.mainProcess
-      ? await context.mainProcess.isRunning()
-      : false;
-
-    // The default is not to terminate the main process on js error
-    expect(mainRunning).to.equal(true);
+    // wait for the main process to exit (default behavior)
+    await context.waitForTrue(
+      async () =>
+        context.mainProcess ? !await context.mainProcess.isRunning() : false,
+      'Timeout: Waiting for app to die',
+    );
 
     expect(context.testServer.events.length).to.equal(1);
     expect(lastFrame.filename).to.equal('app:///fixtures/javascript-main.js');
@@ -89,7 +89,7 @@ describe('Basic Tests', () => {
     expect(breadcrumbs.length).to.greaterThan(5);
   });
 
-  it('onFatalError can be overridden to exit app', async () => {
+  it('onFatalError can be overridden', async () => {
     await context.start('sentry-onfatal-exit', 'javascript-main');
     await context.waitForEvents(1);
     const event = context.testServer.events[0];

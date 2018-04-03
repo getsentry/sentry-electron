@@ -1,11 +1,9 @@
-const { create, captureException } = require('../../../../');
+const { create, captureMessage } = require('../../../../');
 const { app } = require('electron');
 
 create({
   dsn: process.env.DSN,
   onFatalError: error => {
-    captureException(error).then(() => {
-      app.exit();
-    });
+    app.exit();
   },
 });

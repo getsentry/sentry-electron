@@ -16,7 +16,6 @@ import {
   addBreadcrumb,
   Breadcrumb,
   captureEvent,
-  captureException,
   Context,
   SentryEvent,
   setExtraContext,
@@ -361,17 +360,6 @@ export class ElectronBackend implements Backend {
 
   /** Activates the Node SDK for the main process. */
   private async installMainHandler(): Promise<boolean> {
-    if (!this.frontend.getOptions().onFatalError) {
-      this.frontend.getOptions().onFatalError = (error: Error) => {
-        console.error('*********************************');
-        console.error('* SentryElectron unhandledError *');
-        console.error('*********************************');
-        console.error(error);
-        console.error('---------------------------------');
-        captureException(error);
-      };
-    }
-
     // Browser is the Electron main process (Node)
     const node = new NodeBackend(this.frontend);
     if (!node.install()) {
