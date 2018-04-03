@@ -23,6 +23,17 @@ Sentry JavaScript SDKs. While we try to keep breaking changes to a minimum,
 interfaces might change between minor releases before the first stable `1.x`
 release.
 
+## Features
+
+* Captures **Node errors** in the main process (using
+  [`@sentry/node`](https://github.com/getsentry/raven-js/tree/next/packages/node))
+* Captures **JavaScript errors** in renderer processes (using
+  [`@sentry/browser`](https://github.com/getsentry/raven-js/tree/next/packages/browser))
+* Captures **native crashes** (Minidump crash reports) from renderers and the
+  main process
+* Collects **breadcrumbs and context** information along with events across
+  renderers and the main process
+
 ## Usage
 
 To use this SDK, call `create(options)` as early as possible in the entry
