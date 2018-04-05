@@ -1,7 +1,7 @@
-const { create, captureMessage } = require('../../../../');
+const { init, captureMessage } = require('../../../../');
 const { app } = require('electron');
 
-create({
+init({
   dsn: process.env.DSN,
   onFatalError: error => {
     app.exit();

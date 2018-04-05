@@ -1,4 +1,4 @@
-import { createAndBind } from '@sentry/core';
+import { initAndBind } from '@sentry/core';
 import { _callOnClient, getCurrentClient, SentryEvent } from '@sentry/shim';
 import { ElectronOptions } from './backend';
 import { ElectronFrontend } from './frontend';
@@ -6,15 +6,15 @@ import { ElectronFrontend } from './frontend';
 /**
  * The Sentry Electron SDK Client.
  *
- * To use this SDK, call the {@link create} function as early as possible in the
+ * To use this SDK, call the {@link init} function as early as possible in the
  * entry modules. This applies to the main process as well as all renderer
  * processes or further sub processes you spawn. To set context information or
  * send manual events, use the provided methods.
  *
  * @example
- * const { create } = require('@sentry/electron');
+ * const { init } = require('@sentry/electron');
  *
- * create({
+ * init({
  *   dsn: '__DSN__',
  *   // ...
  * });
@@ -47,8 +47,8 @@ import { ElectronFrontend } from './frontend';
  *
  * @see ElectronOptions for documentation on configuration options.
  */
-export function create(options: ElectronOptions): void {
-  createAndBind(ElectronFrontend, options);
+export function init(options: ElectronOptions): void {
+  initAndBind(ElectronFrontend, options);
 }
 
 /** Returns the current ElectronFrontend, if any. */
