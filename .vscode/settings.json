@@ -1,17 +1,17 @@
 {
-  "typescript.tsdk": "./node_modules/typescript/lib",
+  "editor.formatOnType": true,
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true,
+  "editor.rulers": [80],
+  "editor.tabSize": 2,
+  "files.autoSave": "onWindowChange",
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
-  "editor.renderWhitespace": "all",
-  "editor.wordWrap": "on",
-  "editor.wrappingIndent": "indent",
-  "editor.formatOnType": true,
-  "editor.formatOnSave": true,
-  "editor.minimap.enabled": false,
-  "editor.tabSize": 2,
-  "editor.insertSpaces": true,
-  "editor.detectIndentation": false,
-  "editor.mouseWheelZoom": false,
+  "typescript.tsdk": "./node_modules/typescript/lib",
   "tslint.enable": false,
-  "typescript.autoImportSuggestions.enabled": false
+  "[json]": {
+    "editor.formatOnType": false,
+    "editor.formatOnPaste": false,
+    "editor.formatOnSave": false
+  }
 }
