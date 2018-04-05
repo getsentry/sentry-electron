@@ -2,41 +2,40 @@
 # yarn lockfile v1
 
 
-"@sentry/browser@0.5.0-beta.4":
-  version "0.5.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-0.5.0-beta.4.tgz#dc757df00598eefdc3dd3c7c62656064a22ac86e"
+"@sentry/browser@0.5.0-beta.5":
+  version "0.5.0-beta.5"
+  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-0.5.0-beta.5.tgz#6f3840bb5a117c6b79150102d3859f584baa2d68"
   dependencies:
-    "@sentry/core" "0.5.0-beta.4"
-    "@sentry/shim" "0.5.0-beta.4"
-    raven-js "^3.24.0"
+    "@sentry/core" "0.5.0-beta.5"
+    "@sentry/shim" "0.5.0-beta.5"
 
-"@sentry/core@0.5.0-beta.4":
-  version "0.5.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-0.5.0-beta.4.tgz#b1387d896efa620471f9d918f09cae5a68061b29"
+"@sentry/core@0.5.0-beta.5":
+  version "0.5.0-beta.5"
+  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-0.5.0-beta.5.tgz#8d3211fc64f3e942bea3f2b25199ab8f9206b0e4"
   dependencies:
-    "@sentry/shim" "0.5.0-beta.4"
+    "@sentry/shim" "0.5.0-beta.5"
 
-"@sentry/node@0.5.0-beta.4":
-  version "0.5.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-0.5.0-beta.4.tgz#6e957b7357b9aeea2118650bfd2002f2e99c82ae"
+"@sentry/node@0.5.0-beta.5":
+  version "0.5.0-beta.5"
+  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-0.5.0-beta.5.tgz#8900ea3e4ea354277774b3d8631ae29cfe40d20d"
   dependencies:
-    "@sentry/core" "0.5.0-beta.4"
-    "@sentry/shim" "0.5.0-beta.4"
+    "@sentry/core" "0.5.0-beta.5"
+    "@sentry/shim" "0.5.0-beta.5"
     raven "^2.4.2"
 
-"@sentry/shim@0.5.0-beta.4":
-  version "0.5.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@sentry/shim/-/shim-0.5.0-beta.4.tgz#b6c4742b4cd44ceb3fc414af926da09f30c84b1a"
+"@sentry/shim@0.5.0-beta.5":
+  version "0.5.0-beta.5"
+  resolved "https://registry.yarnpkg.com/@sentry/shim/-/shim-0.5.0-beta.5.tgz#72b82fda6577b2c3ddd7434b17b0e10838774f77"
 
-"@sentry/typescript@0.5.0-beta.4":
-  version "0.5.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@sentry/typescript/-/typescript-0.5.0-beta.4.tgz#675d27e18579351114633d5712c41b63e846f27d"
+"@sentry/typescript@0.5.0-beta.5":
+  version "0.5.0-beta.5"
+  resolved "https://registry.yarnpkg.com/@sentry/typescript/-/typescript-0.5.0-beta.5.tgz#dc6601770f8364bb8298f39e0a12d703019afc0f"
   dependencies:
     tslint-config-prettier "^1.10.0"
 
-"@sentry/utils@0.5.0-beta.4":
-  version "0.5.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-0.5.0-beta.4.tgz#2adeaf8e6d9c896e63419f04c65d8b412837d179"
+"@sentry/utils@0.5.0-beta.5":
+  version "0.5.0-beta.5"
+  resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-0.5.0-beta.5.tgz#4eee3a485d7a189966d1fffd0c18726d4c5d32ba"
 
 "@types/body-parser@*", "@types/body-parser@^1.16.8":
   version "1.16.8"
@@ -1479,10 +1478,6 @@ qs@6.5.1, qs@~6.5.1:
 range-parser@~1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/range-parser/-/range-parser-1.2.0.tgz#f49be6b487894ddc40dcc94a322f611092e00d5e"
-
-raven-js@^3.24.0:
-  version "3.24.0"
-  resolved "https://registry.yarnpkg.com/raven-js/-/raven-js-3.24.0.tgz#59464d8bc4b3812ae87a282e9bb98ecad5b4b047"
 
 raven@^2.4.2:
   version "2.4.2"
