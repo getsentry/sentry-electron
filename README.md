@@ -36,16 +36,15 @@ release.
 
 ## Usage
 
-To use this SDK, call `create(options)` as early as possible in the entry
-modules in the main process as well as all renderer processes or further sub
-processees you spawn. This will initialize the SDK and hook into the
-environment. Note that you can turn off almost all side effects using the
-respective options.
+To use this SDK, call `init(options)` as early as possible in the entry modules
+in the main process as well as all renderer processes or further sub processees
+you spawn. This will initialize the SDK and hook into the environment. Note that
+you can turn off almost all side effects using the respective options.
 
 ```javascript
-import { create } from '@sentry/electron';
+import { init } from '@sentry/electron';
 
-create({
+init({
   dsn: '__DSN__',
   // ...
 });
@@ -53,7 +52,7 @@ create({
 
 To set context information or send manual events, use the exported functions of
 `@sentry/electron`. Note that these functions will not perform any action before
-you have called `create()`:
+you have called `init()`:
 
 ```javascript
 import * as Sentry from '@sentry/electron';

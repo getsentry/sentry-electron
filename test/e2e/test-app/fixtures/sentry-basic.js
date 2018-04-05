@@ -1,5 +1,5 @@
-const { create } = require('../../../../');
+const { init } = require('../../../../');
 
-create({
+init({
   dsn: process.env.DSN,
 });
