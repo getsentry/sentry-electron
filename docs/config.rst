@@ -21,18 +21,69 @@ when creating new ``BrowserWindow`` instances:
 .. code-block:: javascript
 
     mainWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
-        webPreferences: {
-            preload: path.join(__dirname, 'sentry.js')
-        }
-    })
+      width: 800,
+      height: 600,
+      webPreferences: {
+        preload: path.join(__dirname, 'sentry.js')
+      }
+    });
 
 After this, the SDK is ready to capture any uncaught exception and native
 crashes that occur in those processes.
 
-Optional Settings
------------------
+Node Integration
+----------------
+
+The SDK requires some NodeJS APIs to operate properly. When creating windows
+without Node integration, the SDK must be loaded in a preload script, as
+described above. Doing so also ensures that the SDK is loaded as early as
+possible.
+
+.. code-block:: javascript
+
+    mainWindow = new BrowserWindow({
+      width: 800,
+      height: 600,
+      webPreferences: {
+        nodeIntegration: false,
+        preload: path.join(__dirname, 'sentry.js')
+      }
+    });
+
+Sandbox Mode
+------------
+
+Currently, the SDK does not support `sandbox mode`_. Official support for this
+will be added in a future release.
+
+To still receive JavaScript errors, you can work around this limitation by
+configuring the Browser SDK instead. However, breadcrumbs and context
+information are not synchronized between renderers and the main process anymore.
+Also, Electron-specific event metadata will be missing, most notably the
+``release`` field.
+
+.. code-block:: javascript
+
+    // Use @sentry/browser in place of @sentry/electron
+    const { init } = require('@sentry/browser');
+    init({ dsn: '___PUBLIC_DSN___' });
+
+You can also capture native crashes by starting the `Electron CrashReporter`_
+manually. Sentry is able to provide symbolicated stack traces and show system
+information, but no Electron-specific metadata, breadcrumbs or context
+information will be present.
+
+.. code-block:: javascript
+
+    crashReporter.start({
+      companyName: 'YourCompany',
+      productName: 'YourApp',
+      ignoreSystemCrashHandler: true,
+      submitURL: '___MINIDUMP_URL___'
+    });
+
+Options
+-------
 
 To customize SDK behavior, simply pass additional options to the ``init()``
 call. All available options are documented below:
@@ -222,3 +273,6 @@ call. All available options are documented below:
             // ...
           }
         }
+
+.. _sandbox mode: https://github.com/electron/electron/blob/master/docs/api/sandbox-option.md
+.. _Electron CrashReporter: https://github.com/electron/electron/blob/master/docs/api/crash-reporter.md
