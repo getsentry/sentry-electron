@@ -78,7 +78,7 @@ To report errors manually, wrap potentially problematic code with a
 The SDK will automatically add useful information, such as the app name and
 version or collect breadcrumbs for certain events. But there are more ways to
 report errors and add custom metadata. For a complete guide on this see
-:doc:`usage`.
+:doc:`javascript`.
 
 Uploading Debug Information
 ---------------------------
@@ -127,7 +127,7 @@ there is additional documentation available that covers all the rest:
    :titlesonly:
 
    config
-   usage
+   javascript
    native
    sourcemaps
 
