@@ -68,19 +68,9 @@ Also, Electron-specific event metadata will be missing, most notably the
     const { init } = require('@sentry/browser');
     init({ dsn: '___PUBLIC_DSN___' });
 
-You can also capture native crashes by starting the `Electron CrashReporter`_
-manually. Sentry is able to provide symbolicated stack traces and show system
-information, but no Electron-specific metadata, breadcrumbs or context
-information will be present.
-
-.. code-block:: javascript
-
-    crashReporter.start({
-      companyName: 'YourCompany',
-      productName: 'YourApp',
-      ignoreSystemCrashHandler: true,
-      submitURL: '___MINIDUMP_URL___'
-    });
+Even in Sandbox mode, you can still receive native crash reports by activating
+the crash reporter manually. For a detailed description, see
+:ref:`electron-native-manual`.
 
 Options
 -------
