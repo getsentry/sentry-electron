@@ -199,9 +199,11 @@ export class ElectronBackend implements Backend {
     }
 
     // We replicate the behavior of the frontend
-    const { maxBreadcrumbs = 100 } = this.frontend.getOptions();
+    const { maxBreadcrumbs = 30 } = this.frontend.getOptions();
     this.breadcrumbs.update(breadcrumbs =>
-      [...breadcrumbs, breadcrumb].slice(-maxBreadcrumbs),
+      [...breadcrumbs, breadcrumb].slice(
+        -Math.max(0, Math.min(maxBreadcrumbs, 100)),
+      ),
     );
 
     // Still, the frontend should merge breadcrumbs into events, for now
