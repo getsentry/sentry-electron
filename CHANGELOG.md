@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.5.0
+
+**Breaking Changes**:
+
+* All functions like `captureException` are now direct named exports
+* Most functions are now sync, and the async ones take a callback parameter
+* The SDK is now initialized via `init()` (was `create` before)
+
+See the readme for full usage instructions, as well as the
+[@sentry/next tracking issue](https://github.com/getsentry/raven-js/issues/1281)
+for details on this change.
+
+**Other Changes**:
+
+* Set the default number of breadcrumbs to `30`
+* Fix an issue with paths containing spaces
+
 ## v0.4.2
 
 * Fix adding breadcrumbs in the renderer process
