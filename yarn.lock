@@ -2,40 +2,40 @@
 # yarn lockfile v1
 
 
-"@sentry/browser@0.5.0-beta.5":
-  version "0.5.0-beta.5"
-  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-0.5.0-beta.5.tgz#6f3840bb5a117c6b79150102d3859f584baa2d68"
+"@sentry/browser@0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-0.5.0.tgz#4a8f06af6a92536c017342481f75930d62c285a4"
   dependencies:
-    "@sentry/core" "0.5.0-beta.5"
-    "@sentry/shim" "0.5.0-beta.5"
+    "@sentry/core" "0.5.0"
+    "@sentry/shim" "0.5.0"
 
-"@sentry/core@0.5.0-beta.5":
-  version "0.5.0-beta.5"
-  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-0.5.0-beta.5.tgz#8d3211fc64f3e942bea3f2b25199ab8f9206b0e4"
+"@sentry/core@0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-0.5.0.tgz#ceb6fb4a6591d5333c7716496dd98b85c30d177e"
   dependencies:
-    "@sentry/shim" "0.5.0-beta.5"
+    "@sentry/shim" "0.5.0"
 
-"@sentry/node@0.5.0-beta.5":
-  version "0.5.0-beta.5"
-  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-0.5.0-beta.5.tgz#8900ea3e4ea354277774b3d8631ae29cfe40d20d"
+"@sentry/node@0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-0.5.0.tgz#231745b70ce8a7304446b597fb82ae63088d9720"
   dependencies:
-    "@sentry/core" "0.5.0-beta.5"
-    "@sentry/shim" "0.5.0-beta.5"
-    raven "^2.4.2"
+    "@sentry/core" "0.5.0"
+    "@sentry/shim" "0.5.0"
+    raven "^2.5.0"
 
-"@sentry/shim@0.5.0-beta.5":
-  version "0.5.0-beta.5"
-  resolved "https://registry.yarnpkg.com/@sentry/shim/-/shim-0.5.0-beta.5.tgz#72b82fda6577b2c3ddd7434b17b0e10838774f77"
+"@sentry/shim@0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@sentry/shim/-/shim-0.5.0.tgz#c8a2b7c2812d5a53e866c4e471b8eca0aff21267"
 
-"@sentry/typescript@0.5.0-beta.5":
-  version "0.5.0-beta.5"
-  resolved "https://registry.yarnpkg.com/@sentry/typescript/-/typescript-0.5.0-beta.5.tgz#dc6601770f8364bb8298f39e0a12d703019afc0f"
+"@sentry/typescript@0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@sentry/typescript/-/typescript-0.5.0.tgz#52256a46bb245e8030d7530f8ae89d57038b02c4"
   dependencies:
     tslint-config-prettier "^1.10.0"
 
-"@sentry/utils@0.5.0-beta.5":
-  version "0.5.0-beta.5"
-  resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-0.5.0-beta.5.tgz#4eee3a485d7a189966d1fffd0c18726d4c5d32ba"
+"@sentry/utils@0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-0.5.0.tgz#a44a6b5220f55d2b3f7aad8339837a667ce3ce57"
 
 "@types/body-parser@*", "@types/body-parser@^1.16.8":
   version "1.16.8"
@@ -1479,13 +1479,13 @@ range-parser@~1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/range-parser/-/range-parser-1.2.0.tgz#f49be6b487894ddc40dcc94a322f611092e00d5e"
 
-raven@^2.4.2:
-  version "2.4.2"
-  resolved "https://registry.yarnpkg.com/raven/-/raven-2.4.2.tgz#0129e2adc30788646fd530b67d08a8ce25d4f6dc"
+raven@^2.5.0:
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/raven/-/raven-2.5.0.tgz#7a2b4ce8b9ff884448924ad19ca33b574bce59a2"
   dependencies:
     cookie "0.3.1"
     md5 "^2.2.1"
-    stack-trace "0.0.9"
+    stack-trace "0.0.10"
     timed-out "4.0.1"
     uuid "3.0.0"
 
@@ -1741,11 +1741,7 @@ sshpk@^1.7.0:
     jsbn "~0.1.0"
     tweetnacl "~0.14.0"
 
-stack-trace@0.0.9:
-  version "0.0.9"
-  resolved "https://registry.yarnpkg.com/stack-trace/-/stack-trace-0.0.9.tgz#a8f6eaeca90674c333e7c43953f275b451510695"
-
-stack-trace@~0.0.7:
+stack-trace@0.0.10, stack-trace@~0.0.7:
   version "0.0.10"
   resolved "https://registry.yarnpkg.com/stack-trace/-/stack-trace-0.0.10.tgz#547c70b347e8d32b4e108ea1a2a159e5fdde19c0"
 
