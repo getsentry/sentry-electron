@@ -79,19 +79,14 @@ Sentry.captureEvent({
 });
 ```
 
-## Advanced Usage
+## Deep Dive
 
-If you don't want to use a global static instance of Sentry, you can create one
-yourself:
+* [Configuration](https://docs.sentry.io/clients/electron/config/)
+* [JavaScript Usage](https://docs.sentry.io/clients/electron/javascript/)
+* [Native Usage](https://docs.sentry.io/clients/electron/native/)
+* [Source Maps](https://docs.sentry.io/clients/electron/sourcemaps/)
 
-```javascript
-import { ElectronFrontend } from '@sentry/electron';
+## Resources
 
-const client = new ElectronFrontend({
-  dsn: '__DSN__',
-  // ...
-});
-
-client.install();
-// ...
-```
+* [Releases](https://github.com/getsentry/sentry-electron/releases)
+* [Bug Tracker](https://github.com/getsentry/sentry-electron/issues)
