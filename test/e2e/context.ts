@@ -74,9 +74,6 @@ export class TestContext {
     }
 
     const childProcess = spawn(this.electronPath, [this.appPath], { env });
-    childProcess.stdout.on('data', data => {
-      process.stdout.write(data.toString());
-    });
     this.mainProcess = new ProcessStatus(childProcess.pid);
 
     await this.waitForTrue(
