@@ -24,7 +24,7 @@ associate digested event data with the files you've uploaded.
     Sentry.init({
       dsn: '___PUBLIC_DSN___',
       release: 'myapp-1.2.3'
-    }).install();
+    });
 
 Generating Source Maps
 ----------------------
