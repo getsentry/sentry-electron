@@ -14,6 +14,7 @@ app.on('ready', () => {
     width: 800,
     height: 600,
     titleBarStyle: 'hidden',
+    show: false
   });
 
   window.loadURL(

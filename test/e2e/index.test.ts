@@ -90,24 +90,24 @@ describe('Basic Tests', () => {
   });
 
   it('onFatalError can be overridden', async () => {
-    await context.start('sentry-onfatal-exit', 'javascript-main');
+    await context.start('sentry-onfatal-dont-exit', 'javascript-main');
     await context.waitForEvents(1);
     const event = context.testServer.events[0];
     const breadcrumbs = event.data.breadcrumbs || [];
     const lastFrame = getLastFrame(event.data);
-
-    // wait for the main process to die
-    await context.waitForTrue(
-      async () =>
-        context.mainProcess ? !await context.mainProcess.isRunning() : false,
-      'Timeout: Waiting for app to die',
-    );
 
     expect(context.testServer.events.length).to.equal(1);
     expect(lastFrame.filename).to.equal('app:///fixtures/javascript-main.js');
     expect(event.dump_file).to.equal(undefined);
     expect(event.sentry_key).to.equal(SENTRY_KEY);
     expect(breadcrumbs.length).to.greaterThan(5);
+
+    // Ensure the main process is still alive
+    await context.waitForTrue(
+      async () =>
+        context.mainProcess ? context.mainProcess.isRunning() : false,
+      'Timeout: Ensure app is still alive',
+    );
   });
 
   it('Native crash in renderer process', async () => {
