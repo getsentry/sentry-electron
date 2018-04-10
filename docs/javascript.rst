@@ -195,7 +195,7 @@ when configuring the SDK:
 .. code-block:: javascript
 
     Sentry.init({
-      dsn: '___PUBLIC_DSN___',
+      dsn: '___DSN___',
       onFatalError: function (err, sendError) {
         if (!sendErr) {
           console.log('Successfully sent fatal error to Sentry:');
@@ -216,6 +216,6 @@ report a global ``unhandledrejection`` DOM event. To disable this behavior, pass
 .. code-block:: javascript
 
     Sentry.init({
-      dsn: '___PUBLIC_DSN___',
+      dsn: '___DSN___',
       captureUnhandledRejections: false
     });
