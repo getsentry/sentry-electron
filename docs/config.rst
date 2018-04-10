@@ -7,7 +7,7 @@ DSN:
 .. code-block:: javascript
 
     const { init } = require('@sentry/electron');
-    init({ dsn: '___PUBLIC_DSN___' });
+    init({ dsn: '___DSN___' });
 
 This code snippet has to be executed in every process you start in Electron.
 Besides the main process, this includes renderers and other sub processes. Be
@@ -66,7 +66,7 @@ Also, Electron-specific event metadata will be missing, most notably the
 
     // Use @sentry/browser in place of @sentry/electron
     const { init } = require('@sentry/browser');
-    init({ dsn: '___PUBLIC_DSN___' });
+    init({ dsn: '___DSN___' });
 
 Even in Sandbox mode, you can still receive native crash reports by activating
 the crash reporter manually. For a detailed description, see

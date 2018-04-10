@@ -45,7 +45,7 @@ Initialize the client and configure it to use your `Sentry DSN`_:
 
     const { init } = require('@sentry/electron');
     init({
-      dsn: '___PUBLIC_DSN___',
+      dsn: '___DSN___',
       // more options...
     });
 
