@@ -14,6 +14,25 @@ collect native crash reports (Minidumps).
     an early access preview for the `next generation JavaScript SDKs`_. Until
     the *1.x* stable release, APIs are still subject to change.
 
+.. admonition:: Sentry On-Premise
+
+    Support for Electron is currently limited to `sentry.io
+    <https://sentry.io>`_. The latest on-premise version of Sentry (*8.22.0*)
+    does not provide server-side support for native crashes and their debug
+    information files. Full support for Electron will made available to all
+    on-premise customers with the next release.
+
+    To use the Electron SDK for reporting JavaScript errors at your own
+    discretion, disable native crash handling and use the private DSN:
+
+    .. code-block:: javascript
+
+        const { init } = require('@sentry/electron');
+        init({
+            dsn: '___DSN___',
+            enableNative: false,
+        });
+
 Installation
 ------------
 
