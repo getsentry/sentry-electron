@@ -1,6 +1,8 @@
 // tslint:disable-next-line:no-implicit-dependencies
-import { app, remote } from 'electron';
+import { app, remote, session } from 'electron';
 import { join } from 'path';
+
+let userAgent = '';
 
 /** Returns whether the SDK is running in the main process. */
 export function isMainProcess(): boolean {
@@ -17,7 +19,16 @@ export function getApp(): Electron.App {
   return isMainProcess() ? app : remote.app;
 }
 
-/** Gets the path to the Sentry cache directory */
+/** Gets the path to the Sentry cache directory. */
 export function getCachePath(): string {
   return join(getApp().getPath('userData'), 'sentry');
+}
+
+/** Returns the user agent this SDK will use in events. */
+export function getUserAgent(): string {
+  if (userAgent === '' && session.defaultSession) {
+    userAgent = session.defaultSession.getUserAgent();
+  }
+
+  return userAgent;
 }

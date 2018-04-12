@@ -4,7 +4,7 @@ import { Breadcrumb, Context, SdkInfo, SentryEvent } from '@sentry/shim';
 import { ipcRenderer } from 'electron';
 import { ElectronBackend, ElectronOptions } from './backend';
 import { IPC_CONTEXT, IPC_CRUMB, IPC_EVENT } from './ipc';
-import { isRenderProcess } from './utils';
+import { getApp, getUserAgent, isRenderProcess } from './utils';
 
 /** SDK name used in every event. */
 const SDK_NAME = 'sentry-electron';
@@ -98,5 +98,51 @@ export class ElectronFrontend extends FrontendBase<
     } else {
       await super.setContext(nextContext, scope);
     }
+  }
+
+  /**
+   * @inheritDoc
+   */
+  protected async prepareEvent(
+    event: SentryEvent,
+    scope: Scope,
+  ): Promise<SentryEvent> {
+    const prepared = await super.prepareEvent(event, scope);
+    const { request = {}, contexts = {} } = prepared;
+
+    prepared.contexts = {
+      ...contexts,
+      app: {
+        app_name: getApp().getName(),
+        app_version: getApp().getVersion(),
+        ...contexts.app,
+      },
+      chrome: {
+        name: 'Chrome',
+        type: 'browser',
+        version: process.versions.chrome,
+        ...contexts.chrome,
+      },
+      device: {
+        arch: process.arch,
+        ...contexts.device,
+      },
+      node: {
+        name: 'Node',
+        type: 'runtime',
+        version: process.versions.node,
+        ...contexts.node,
+      },
+    };
+
+    prepared.request = {
+      ...request,
+      headers: {
+        ...request.headers,
+        'User-Agent': getUserAgent(),
+      },
+    };
+
+    return prepared;
   }
 }
