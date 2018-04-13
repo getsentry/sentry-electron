@@ -337,11 +337,7 @@ export class ElectronBackend implements Backend {
 
       // Start to submit recent minidump crashes. This will load breadcrumbs and
       // context information that was cached on disk prior to the crash.
-      forget(
-        this.sendNativeCrashes({
-          crashed_process: 'browser',
-        }),
-      );
+      forget(this.sendNativeCrashes({ crashed_process: 'browser' }));
 
       // Every time a subprocess or renderer crashes, start sending minidumps
       // right away.
