@@ -1,5 +1,6 @@
 {
   "name": "electron-quick-start",
+  "productName": "Sentry Crash Test",
   "version": "1.0.0",
   "description": "A minimal Electron application",
   "main": "main.js",
