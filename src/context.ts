@@ -263,15 +263,8 @@ export async function addEventDefaults(
     defaultsPromise = getEventDefaults();
   }
 
-  const { contexts = {}, request = {} } = event;
+  const { contexts = {} } = event;
   const { contexts: defaultContexts = {}, ...defaults } = await defaultsPromise;
-
-  // The user agent is parsed by Sentry and would overwrite certain context
-  // information, which we don't want. Generally remove it, since we know that
-  // we are browsing with Chrome.
-  if (request.headers) {
-    delete request.headers['User-Agent'];
-  }
 
   // Perform a manual deep merge of the defaults with the event data.
   // TODO: Use a proper deep merge here, instead.

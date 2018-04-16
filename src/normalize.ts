@@ -77,5 +77,23 @@ export function normalizeEvent(event: SentryEvent): SentryEvent {
     });
   }
 
+  const { request = {} } = copy;
+  if (request.url) {
+    request.url = normalizeUrl(request.url);
+  }
+
+  // The user agent is parsed by Sentry and would overwrite certain context
+  // information, which we don't want. Generally remove it, since we know that
+  // we are browsing with Chrome.
+  if (request.headers) {
+    delete request.headers['User-Agent'];
+  }
+
+  // The Node SDK currently adds a default tag for server_name, which contains
+  // the machine name of the computer running Electron. This is not useful
+  // information in this case.
+  const { tags = {} } = copy;
+  delete tags.server_name;
+
   return copy;
 }
