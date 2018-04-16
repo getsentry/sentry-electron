@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.5.1
+
+* Added default values for `release` and `environment`
+* Added an `event_type` tag to distinguish native from javascript errors
+* Send runtime information along with events: Electron, Chrome and Node versions
+* Send app meta data, such as the application name and version
+
 ## v0.5.0
 
 **Breaking Changes**:
