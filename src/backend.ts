@@ -144,9 +144,11 @@ export class ElectronBackend implements Backend {
     if (isRenderProcess()) {
       throw new SentryError('Invariant violation: Should not happen');
     } else {
+      const normalized = normalizeEvent(event);
       const mergedEvent = {
-        ...normalizeEvent(event),
-        extra: { crashed_process: 'browser', ...event.extra },
+        ...normalized,
+        extra: { crashed_process: 'browser', ...normalized.extra },
+        tags: { event_type: 'javascript', ...normalized.tags },
       };
 
       return this.callInner(async inner => inner.sendEvent(mergedEvent));
@@ -165,7 +167,13 @@ export class ElectronBackend implements Backend {
     event: SentryEvent = {},
   ): Promise<number> {
     if (this.uploader) {
-      await this.uploader.uploadMinidump({ path, event });
+      const normalized = normalizeEvent(event);
+      const mergedEvent = {
+        ...normalized,
+        tags: { event_type: 'native', ...normalized.tags },
+      };
+
+      await this.uploader.uploadMinidump({ path, event: mergedEvent });
     }
     return 200;
   }
