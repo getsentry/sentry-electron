@@ -234,7 +234,6 @@ async function getEventDefaults(): Promise<SentryEvent> {
       },
       device: {
         arch: process.arch,
-        model: 'computer',
       },
       node: {
         name: 'Node',
