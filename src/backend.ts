@@ -1,4 +1,4 @@
-import { platform, release, type } from 'os';
+import { platform } from 'os';
 
 import {
   app,
@@ -30,15 +30,6 @@ import { normalizeEvent, normalizeUrl } from './normalize';
 import { captureMinidump } from './sdk';
 import { MinidumpUploader } from './uploader';
 import { getApp, getCachePath, isMainProcess, isRenderProcess } from './utils';
-
-/** Base context used in all events. */
-const DEFAULT_CONTEXT: Context = {
-  tags: {
-    arch: process.arch,
-    os: `${type()} ${release()}`,
-    'os.name': type(),
-  },
-};
 
 /** Patch to access internal CrashReporter functionality. */
 interface CrashReporterExt {
@@ -123,11 +114,7 @@ export class ElectronBackend implements Backend {
         'breadcrumbs',
         [],
       );
-      this.context = new Store<Context>(
-        getCachePath(),
-        'context',
-        DEFAULT_CONTEXT,
-      );
+      this.context = new Store<Context>(getCachePath(), 'context', {});
 
       this.installIPC();
       this.installAutoBreadcrumbs();
