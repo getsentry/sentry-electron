@@ -249,6 +249,7 @@ async function getEventDefaults(): Promise<SentryEvent> {
     },
     environment: process.defaultApp ? 'development' : 'production',
     release: `${getPackageJson().name}@${app.getVersion()}`,
+    user: { ip_address: '{{auto}}' },
   };
 }
 
@@ -279,5 +280,6 @@ export async function addEventDefaults(
       os: { ...defaultContexts.os, ...contexts.os },
       runtime: { ...defaultContexts.runtime, ...contexts.runtime },
     },
+    user: { ...defaults.user, ...event.user },
   };
 }
