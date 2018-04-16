@@ -1,4 +1,4 @@
-import { platform, release, type } from 'os';
+import { platform } from 'os';
 
 import {
   app,
@@ -30,15 +30,6 @@ import { normalizeEvent, normalizeUrl } from './normalize';
 import { captureMinidump } from './sdk';
 import { MinidumpUploader } from './uploader';
 import { getApp, getCachePath, isMainProcess, isRenderProcess } from './utils';
-
-/** Base context used in all events. */
-const DEFAULT_CONTEXT: Context = {
-  tags: {
-    arch: process.arch,
-    os: `${type()} ${release()}`,
-    'os.name': type(),
-  },
-};
 
 /** Patch to access internal CrashReporter functionality. */
 interface CrashReporterExt {
@@ -123,11 +114,7 @@ export class ElectronBackend implements Backend {
         'breadcrumbs',
         [],
       );
-      this.context = new Store<Context>(
-        getCachePath(),
-        'context',
-        DEFAULT_CONTEXT,
-      );
+      this.context = new Store<Context>(getCachePath(), 'context', {});
 
       this.installIPC();
       this.installAutoBreadcrumbs();
@@ -157,9 +144,11 @@ export class ElectronBackend implements Backend {
     if (isRenderProcess()) {
       throw new SentryError('Invariant violation: Should not happen');
     } else {
+      const normalized = normalizeEvent(event);
       const mergedEvent = {
-        ...normalizeEvent(event),
-        extra: { crashed_process: 'browser', ...event.extra },
+        ...normalized,
+        extra: { crashed_process: 'browser', ...normalized.extra },
+        tags: { event_type: 'javascript', ...normalized.tags },
       };
 
       return this.callInner(async inner => inner.sendEvent(mergedEvent));
@@ -178,7 +167,13 @@ export class ElectronBackend implements Backend {
     event: SentryEvent = {},
   ): Promise<number> {
     if (this.uploader) {
-      await this.uploader.uploadMinidump({ path, event });
+      const normalized = normalizeEvent(event);
+      const mergedEvent = {
+        ...normalized,
+        tags: { event_type: 'native', ...normalized.tags },
+      };
+
+      await this.uploader.uploadMinidump({ path, event: mergedEvent });
     }
     return 200;
   }
@@ -337,11 +332,7 @@ export class ElectronBackend implements Backend {
 
       // Start to submit recent minidump crashes. This will load breadcrumbs and
       // context information that was cached on disk prior to the crash.
-      forget(
-        this.sendNativeCrashes({
-          crashed_process: 'browser',
-        }),
-      );
+      forget(this.sendNativeCrashes({ crashed_process: 'browser' }));
 
       // Every time a subprocess or renderer crashes, start sending minidumps
       // right away.

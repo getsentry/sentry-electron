@@ -17,7 +17,7 @@ export function getApp(): Electron.App {
   return isMainProcess() ? app : remote.app;
 }
 
-/** Gets the path to the Sentry cache directory */
+/** Gets the path to the Sentry cache directory. */
 export function getCachePath(): string {
   return join(getApp().getPath('userData'), 'sentry');
 }

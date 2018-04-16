@@ -2,40 +2,40 @@
 # yarn lockfile v1
 
 
-"@sentry/browser@0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-0.5.0.tgz#4a8f06af6a92536c017342481f75930d62c285a4"
+"@sentry/browser@0.5.2":
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-0.5.2.tgz#a1355b30dc4bf13aa1bc8efad1dbe9698e4106a2"
   dependencies:
-    "@sentry/core" "0.5.0"
-    "@sentry/shim" "0.5.0"
+    "@sentry/core" "0.5.2"
+    "@sentry/shim" "0.5.2"
 
-"@sentry/core@0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-0.5.0.tgz#ceb6fb4a6591d5333c7716496dd98b85c30d177e"
+"@sentry/core@0.5.2":
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-0.5.2.tgz#017ac3b19b8842a4e413461f4b02ba6a645ed011"
   dependencies:
-    "@sentry/shim" "0.5.0"
+    "@sentry/shim" "0.5.2"
 
-"@sentry/node@0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-0.5.0.tgz#231745b70ce8a7304446b597fb82ae63088d9720"
+"@sentry/node@0.5.2":
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-0.5.2.tgz#8768b38211161eff6ec6bd0a9891aef34ce99312"
   dependencies:
-    "@sentry/core" "0.5.0"
-    "@sentry/shim" "0.5.0"
+    "@sentry/core" "0.5.2"
+    "@sentry/shim" "0.5.2"
     raven "^2.5.0"
 
-"@sentry/shim@0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@sentry/shim/-/shim-0.5.0.tgz#c8a2b7c2812d5a53e866c4e471b8eca0aff21267"
+"@sentry/shim@0.5.2":
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/@sentry/shim/-/shim-0.5.2.tgz#80fc5ba61be9ff3719a32d4ad9e03bab49a621f5"
 
-"@sentry/typescript@0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@sentry/typescript/-/typescript-0.5.0.tgz#52256a46bb245e8030d7530f8ae89d57038b02c4"
+"@sentry/typescript@0.5.2":
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/@sentry/typescript/-/typescript-0.5.2.tgz#fa310b987e189b6e46b09d9b4ddf71df6226d530"
   dependencies:
     tslint-config-prettier "^1.10.0"
 
-"@sentry/utils@0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-0.5.0.tgz#a44a6b5220f55d2b3f7aad8339837a667ce3ce57"
+"@sentry/utils@0.5.2":
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-0.5.2.tgz#6f838b9105f357c5aad87f9c286157cfd7b47885"
 
 "@types/body-parser@*", "@types/body-parser@^1.16.8":
   version "1.16.8"

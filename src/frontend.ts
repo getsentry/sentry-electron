@@ -1,8 +1,9 @@
-import { FrontendBase, Scope } from '@sentry/core';
+import { FrontendBase, Scope, SentryError } from '@sentry/core';
 import { Breadcrumb, Context, SdkInfo, SentryEvent } from '@sentry/shim';
 // tslint:disable-next-line:no-implicit-dependencies
 import { ipcRenderer } from 'electron';
 import { ElectronBackend, ElectronOptions } from './backend';
+import { addEventDefaults } from './context';
 import { IPC_CONTEXT, IPC_CRUMB, IPC_EVENT } from './ipc';
 import { isRenderProcess } from './utils';
 
@@ -98,5 +99,20 @@ export class ElectronFrontend extends FrontendBase<
     } else {
       await super.setContext(nextContext, scope);
     }
+  }
+
+  /**
+   * @inheritDoc
+   */
+  protected async prepareEvent(
+    event: SentryEvent,
+    scope: Scope,
+  ): Promise<SentryEvent> {
+    if (isRenderProcess()) {
+      throw new SentryError('Invariant exception: Not allowed in renderer');
+    }
+
+    const prepared = await super.prepareEvent(event, scope);
+    return addEventDefaults(prepared);
   }
 }
