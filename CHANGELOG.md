@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.5.2
+
+* Fix a startup error in Electron 1.7 and earlier (#66)
+* Disable native crash handling in MAS builds (#67)
+
 ## v0.5.1
 
 * Added default values for `release` and `environment`
