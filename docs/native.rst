@@ -6,6 +6,10 @@ renderers crashes. To do so, the SDK needs to upload those files once the
 application restarts (or immediately for renderer crashes). All event meta data
 including user information and breadcrumbs are included in these uploads.
 
+Due to restrictions of macOS app sandboxing, native crashes cannot be collected
+in Mac App Store builds. In this case, native crash handling will be disabled,
+regardless of the ``enableNative`` setting.
+
 .. admonition:: A Word on Data Privacy
 
     Minidumps are memory dumps of the process at the moment it crashes. As such,
