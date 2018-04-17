@@ -1,9 +1,7 @@
-.. sentry:edition:: hosted, on-premise
+.. class:: platform-electron
 
-    .. class:: platform-electron
-
-    Electron
-    ========
+Electron
+========
 
 ``@sentry/electron`` is the official Sentry SDK for Electron applications. It
 can capture JavaScript exceptions in the main process and renderers, as well as
