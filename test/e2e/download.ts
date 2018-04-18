@@ -13,6 +13,17 @@ function getHomDir(): string {
   );
 }
 
+function getExecutableName() {
+  switch (process.platform) {
+    case 'win32':
+      return 'electron.exe';
+    case 'darwin':
+      return 'electron.app/Contents/MacOS/electron'
+    default:
+      return 'electron';
+  }
+}
+
 export async function getElectronPath(version: string): Promise<string> {
   const dir = join(getHomDir(), '.cache', version);
 
@@ -21,5 +32,5 @@ export async function getElectronPath(version: string): Promise<string> {
     await electronExtract(zipPath, { dir });
   }
 
-  return join(dir, `electron${process.platform === 'win32' ? '.exe' : ''}`);
+  return join(dir, getExecutableName());
 }
