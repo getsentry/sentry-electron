@@ -13,12 +13,12 @@ function getHomDir(): string {
   );
 }
 
-function getExecutableName() {
+function getExecutableName(): string {
   switch (process.platform) {
     case 'win32':
       return 'electron.exe';
     case 'darwin':
-      return 'electron.app/Contents/MacOS/electron'
+      return 'electron.app/Contents/MacOS/electron';
     default:
       return 'electron';
   }
