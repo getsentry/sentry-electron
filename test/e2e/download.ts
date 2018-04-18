@@ -1,7 +1,7 @@
 import download = require('electron-download');
 import extract = require('extract-zip');
-import { join } from 'path';
 import { existsSync } from 'fs';
+import { join } from 'path';
 import { promisify } from 'util';
 
 const electronDownload = promisify(download);
@@ -9,7 +9,7 @@ const electronExtract = promisify(extract);
 
 function getHomDir(): string {
   return (
-    process.env[process.platform == 'win32' ? 'USERPROFILE' : 'HOME'] || ''
+    process.env[process.platform === 'win32' ? 'USERPROFILE' : 'HOME'] || ''
   );
 }
 

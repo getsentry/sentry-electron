@@ -2,8 +2,8 @@ import { expect, should, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { join } from 'path';
 import { TestContext } from './context';
-import { getLastFrame } from './utils';
 import { getElectronPath } from './download';
+import { getLastFrame } from './utils';
 
 const SENTRY_KEY = '37f8a2ee37c0409d8970bc7559c7c7e4';
 
