@@ -13,7 +13,7 @@ function getHomDir(): string {
   );
 }
 
-export async function getPathToElectron(version: string): Promise<string> {
+export async function getElectronPath(version: string): Promise<string> {
   const dir = join(getHomDir(), '.cache', version);
 
   if (!existsSync(dir)) {
@@ -21,5 +21,5 @@ export async function getPathToElectron(version: string): Promise<string> {
     await electronExtract(zipPath, { dir });
   }
 
-  return join(dir, 'electron.exe');
+  return join(dir, `electron${process.platform === 'win32' ? '.exe' : ''}`);
 }

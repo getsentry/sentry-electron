@@ -3,21 +3,21 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { join } from 'path';
 import { TestContext } from './context';
 import { getLastFrame } from './utils';
-import { getPathToElectron } from './download';
+import { getElectronPath } from './download';
 
 const SENTRY_KEY = '37f8a2ee37c0409d8970bc7559c7c7e4';
 
 should();
 use(chaiAsPromised);
 
-const electronVersions = ['1.8.4', '2.0.0-beta.7'];
+const electronVersions = ['1.7.13', '1.8.4', '2.0.0-beta.7'];
 
 electronVersions.forEach(electronVersion => {
-  describe(`Test electron@${electronVersion}`, () => {
+  describe(`Test Electron ${electronVersion}`, () => {
     let context: TestContext;
 
     beforeEach(async () => {
-      const electronPath = await getPathToElectron(electronVersion);
+      const electronPath = await getElectronPath(electronVersion);
       context = new TestContext(electronPath);
     });
 
@@ -168,7 +168,7 @@ electronVersions.forEach(electronVersion => {
     });
 
     it('Loaded via preload script with nodeIntegration disabled', async () => {
-      const electronPath = await getPathToElectron(electronVersion);
+      const electronPath = await getElectronPath(electronVersion);
       context = new TestContext(electronPath, join(__dirname, 'preload-app'));
       await context.start();
       await context.waitForEvents(1);
