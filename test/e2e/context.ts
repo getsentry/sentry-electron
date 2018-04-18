@@ -32,8 +32,6 @@ export class TestContext {
   public mainProcess?: ProcessStatus;
   /** Temporary directory that hosts the app's User Data. */
   private tempDir?: TempDirectory;
-  /** Platform-independent path to the electron executable. */
-  private readonly electronPath: string = require('electron') as any;
 
   /**
    * Creates an instance of TestContext.
@@ -43,6 +41,7 @@ export class TestContext {
    * @param testServer A test server instance.
    */
   public constructor(
+    private readonly electronPath: string,
     private readonly appPath: string = join(__dirname, 'test-app'),
     public testServer: TestServer = new TestServer(),
   ) {}
