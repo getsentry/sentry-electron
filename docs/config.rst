@@ -82,7 +82,7 @@ call. All available options are documented below:
 
     Enables JavaScript error reporting. Default: ``true``
 
-    Based on the process type, this configures our JavaScript SDKs with sensible
+    Based on the process type, this configures our JavaScript SDKs with sane
     defaults. In the main process (``process.type: 'browser'``), it uses the
     Node SDK. In renderer processes (``process.type: 'renderer'``), it uses the
     JavaScript SDK.

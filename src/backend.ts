@@ -288,6 +288,13 @@ export class ElectronBackend implements Backend {
       return false;
     }
 
+    // Mac AppStore builds cannot run the crash reporter due to the sandboxing
+    // requirements. In this case, we prevent enabling native crashes entirely.
+    // https://electronjs.org/docs/tutorial/mac-app-store-submission-guide#limitations-of-mas-build
+    if (process.mas) {
+      return false;
+    }
+
     return this.frontend.getOptions().enableNative !== false;
   }
 

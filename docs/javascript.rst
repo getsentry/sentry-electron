@@ -12,7 +12,7 @@ right SDK when you initialize it:
 
     There is no need to include ``@sentry/node`` or ``@sentry/browser`` in
     addition to the Electron SDK. It includes all their features and even
-    configures them with sensible defaults. If you prefer to override some of
+    configures them with sane defaults. If you prefer to override some of
     their settings, you can specify them in addition to the options listed in
     :doc:`config` when calling ``init()``.
 

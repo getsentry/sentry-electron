@@ -1,6 +1,3 @@
-// tslint:disable-next-line
-require('util.promisify/shim')();
-
 import * as fs from 'fs';
 import { platform } from 'os';
 import { basename, join } from 'path';
