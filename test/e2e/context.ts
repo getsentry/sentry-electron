@@ -5,6 +5,10 @@ import tmpdir = require('temporary-directory');
 import { ProcessStatus } from './process';
 import { TestServer } from './server';
 
+/** Counter used to create unique app name so each test uses its own native
+ *  'AppName Crashes' directory. */
+let appInstanceCount = 0;
+
 /** A temporary directory handle. */
 interface TempDirectory {
   /** Absolute path to the directory. */
@@ -28,6 +32,8 @@ async function getTempDir(): Promise<TempDirectory> {
 
 /** A class to start and stop Electron apps for E2E tests. */
 export class TestContext {
+  /** Unique app name. */
+  private readonly appName: string = `test-app-${++appInstanceCount}`;
   /** Can check if the main process is running and kill it */
   public mainProcess?: ProcessStatus;
   /** Temporary directory that hosts the app's User Data. */
@@ -64,6 +70,7 @@ export class TestContext {
       ...process.env,
       DSN:
         'http://37f8a2ee37c0409d8970bc7559c7c7e4:4cfde0ca506c4ea39b4e25b61a1ff1c3@localhost:8123/277345',
+      E2E_APP_NAME: this.appName,
       E2E_TEST_SENTRY: sentryConfig,
       E2E_USERDATA_DIRECTORY: this.tempDir.path,
     };
