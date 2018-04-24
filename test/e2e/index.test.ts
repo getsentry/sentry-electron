@@ -25,7 +25,7 @@ tests.forEach(([version, arch]) => {
       await context.stop();
     });
 
-    it.only('JavaScript exception in renderer process', async () => {
+    it('JavaScript exception in renderer process', async () => {
       await context.start('sentry-basic', 'javascript-renderer');
       await context.waitForEvents(1);
       const event = context.testServer.events[0];
