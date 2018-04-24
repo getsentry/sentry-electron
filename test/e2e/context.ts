@@ -5,8 +5,10 @@ import tmpdir = require('temporary-directory');
 import { ProcessStatus } from './process';
 import { TestServer } from './server';
 
-/** Counter used to create unique app name so each test uses its own native
- *  'AppName Crashes' directory. */
+/**
+ * Counter used to create unique app name so each test uses a unique
+ *  'AppName Crashes' directory for native crashes.
+ */
 let appInstanceCount = 0;
 
 /** A temporary directory handle. */
