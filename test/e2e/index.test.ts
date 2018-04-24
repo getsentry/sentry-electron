@@ -38,7 +38,7 @@ tests.forEach(([version, arch]) => {
       );
       expect(event.dump_file).to.equal(undefined);
       expect(event.sentry_key).to.equal(SENTRY_KEY);
-      expect(breadcrumbs.length).to.greaterThan(5);
+      expect(breadcrumbs.length).to.greaterThan(4);
     });
 
     it('JavaScript unhandledrejection in renderer process', async () => {
@@ -54,7 +54,7 @@ tests.forEach(([version, arch]) => {
       );
       expect(event.dump_file).to.equal(undefined);
       expect(event.sentry_key).to.equal(SENTRY_KEY);
-      expect(breadcrumbs.length).to.greaterThan(5);
+      expect(breadcrumbs.length).to.greaterThan(4);
     });
 
     it('JavaScript exception in main process', async () => {
@@ -75,7 +75,7 @@ tests.forEach(([version, arch]) => {
       expect(lastFrame.filename).to.equal('app:///fixtures/javascript-main.js');
       expect(event.dump_file).to.equal(undefined);
       expect(event.sentry_key).to.equal(SENTRY_KEY);
-      expect(breadcrumbs.length).to.greaterThan(5);
+      expect(breadcrumbs.length).to.greaterThan(4);
     });
 
     it('JavaScript exception in main process with space in path', async () => {
@@ -91,7 +91,7 @@ tests.forEach(([version, arch]) => {
       );
       expect(event.dump_file).to.equal(undefined);
       expect(event.sentry_key).to.equal(SENTRY_KEY);
-      expect(breadcrumbs.length).to.greaterThan(5);
+      expect(breadcrumbs.length).to.greaterThan(4);
     });
 
     it('onFatalError can be overridden', async () => {
@@ -105,7 +105,7 @@ tests.forEach(([version, arch]) => {
       expect(lastFrame.filename).to.equal('app:///fixtures/javascript-main.js');
       expect(event.dump_file).to.equal(undefined);
       expect(event.sentry_key).to.equal(SENTRY_KEY);
-      expect(breadcrumbs.length).to.greaterThan(5);
+      expect(breadcrumbs.length).to.greaterThan(4);
 
       // Ensure the main process is still alive
       await context.waitForTrue(
@@ -125,7 +125,7 @@ tests.forEach(([version, arch]) => {
       expect(context.testServer.events.length).to.equal(1);
       expect(event.dump_file).to.be.instanceOf(Buffer);
       expect(event.sentry_key).to.equal(SENTRY_KEY);
-      expect(breadcrumbs.length).to.greaterThan(5);
+      expect(breadcrumbs.length).to.greaterThan(4);
     });
 
     it('Native crash in main process', async () => {
@@ -149,7 +149,7 @@ tests.forEach(([version, arch]) => {
       expect(context.testServer.events.length).to.equal(1);
       expect(event.dump_file).to.be.instanceOf(Buffer);
       expect(event.sentry_key).to.equal(SENTRY_KEY);
-      expect(breadcrumbs.length).to.greaterThan(5);
+      expect(breadcrumbs.length).to.greaterThan(4);
     });
 
     it('Captures breadcrumbs in renderer process', async () => {
