@@ -2,22 +2,22 @@ import { expect, should, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { join } from 'path';
 import { TestContext } from './context';
-import { getElectronPath } from './download';
-import { getLastFrame } from './utils';
+import { downloadElectron } from './download';
+import { getLastFrame, getTests } from './utils';
 
 const SENTRY_KEY = '37f8a2ee37c0409d8970bc7559c7c7e4';
 
 should();
 use(chaiAsPromised);
 
-const electronVersions = ['1.7.13', '1.8.4', '2.0.0-beta.7'];
+const tests = getTests('1.7.13', '1.8.4', '2.0.0-beta.7');
 
-electronVersions.forEach(electronVersion => {
-  describe(`Test Electron ${electronVersion}`, () => {
+tests.forEach(([version, arch]) => {
+  describe(`Test Electron ${version} ${arch}`, () => {
     let context: TestContext;
 
     beforeEach(async () => {
-      const electronPath = await getElectronPath(electronVersion);
+      const electronPath = await downloadElectron(version, arch);
       context = new TestContext(electronPath);
     });
 
@@ -25,7 +25,7 @@ electronVersions.forEach(electronVersion => {
       await context.stop();
     });
 
-    it('JavaScript exception in renderer process', async () => {
+    it.only('JavaScript exception in renderer process', async () => {
       await context.start('sentry-basic', 'javascript-renderer');
       await context.waitForEvents(1);
       const event = context.testServer.events[0];
@@ -168,7 +168,7 @@ electronVersions.forEach(electronVersion => {
     });
 
     it('Loaded via preload script with nodeIntegration disabled', async () => {
-      const electronPath = await getElectronPath(electronVersion);
+      const electronPath = await downloadElectron(version, arch);
       context = new TestContext(electronPath, join(__dirname, 'preload-app'));
       await context.start();
       await context.waitForEvents(1);
