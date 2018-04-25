@@ -353,12 +353,14 @@ export class ElectronBackend implements Backend {
       // right away.
       app.on('web-contents-created', (_, contents) => {
         contents.on('crashed', async () => {
-          forget(
-            this.sendNativeCrashes({
+          try {
+            await this.sendNativeCrashes({
               crashed_process: `renderer[${contents.id}]`,
               crashed_url: normalizeUrl(contents.getURL()),
-            }),
-          );
+            });
+          } catch (e) {
+            console.error(e);
+          }
 
           addBreadcrumb({
             category: 'exception',
