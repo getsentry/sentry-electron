@@ -16,11 +16,13 @@ import {
   addBreadcrumb,
   Breadcrumb,
   captureEvent,
+  captureMessage,
   Context,
   SentryEvent,
   setExtraContext,
   setTagsContext,
   setUserContext,
+  Severity,
 } from '@sentry/shim';
 import { forget, Store } from '@sentry/utils';
 
@@ -63,6 +65,12 @@ export interface ElectronOptions extends Options, BrowserOptions, NodeOptions {
    * Defaults to `true`.
    */
   enableNative?: boolean;
+
+  /**
+   * Enables event reporting for BrowserWindow 'unresponsive' events
+   * Defaults to `true`.
+   */
+  enableUnresponsive?: boolean;
 }
 
 /** The Sentry Electron SDK Backend. */
@@ -345,14 +353,31 @@ export class ElectronBackend implements Backend {
       // right away.
       app.on('web-contents-created', (_, contents) => {
         contents.on('crashed', async () => {
-          forget(
-            this.sendNativeCrashes({
+          try {
+            await this.sendNativeCrashes({
               crashed_process: `renderer[${contents.id}]`,
               crashed_url: normalizeUrl(contents.getURL()),
-            }),
-          );
+            });
+          } catch (e) {
+            console.error(e);
+          }
+
+          addBreadcrumb({
+            category: 'exception',
+            level: Severity.Critical,
+            message: 'Renderer Crashed',
+            timestamp: new Date().getTime() / 1000,
+          });
         });
       });
+
+      if (this.frontend.getOptions().enableUnresponsive !== false) {
+        app.on('browser-window-created', (_, window) => {
+          window.on('unresponsive', () => {
+            captureMessage('BrowserWindow Unresponsive');
+          });
+        });
+      }
     }
 
     return true;
