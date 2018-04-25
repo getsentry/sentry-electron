@@ -2,11 +2,7 @@ const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const url = require('url');
 
-// If we're running e2e tests, use the supplied temp userData directory
-if (process.env['E2E_USERDATA_DIRECTORY']) {
-  app.setPath('userData', process.env['E2E_USERDATA_DIRECTORY']);
-}
-
+require('./setup-env');
 require('./load-sentry');
 
 app.on('ready', () => {

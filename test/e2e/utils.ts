@@ -12,3 +12,16 @@ export function getLastFrame(event: SentryEvent): StackFrame {
   const frames = getFrames(event);
   return frames.length ? frames[frames.length - 1] : { filename: undefined };
 }
+
+/** Gets the required architecture version pairs for the current platform */
+export function getTests(...versions: string[]): Array<[string, string]> {
+  return versions.reduce(
+    (prev, curr) =>
+      prev.concat(
+        process.platform === 'win32'
+          ? [[curr, 'x64'], [curr, 'ia32']]
+          : [[curr, 'x64']],
+      ),
+    [] as Array<[string, string]>,
+  );
+}
