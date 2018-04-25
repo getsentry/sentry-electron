@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.5.3
+
+* Add breadcrumbs for renderer crashes (#71)
+
 ## v0.5.2
 
 * Fix a startup error in Electron 1.7 and earlier (#66)
