@@ -4,6 +4,7 @@ import {
   app,
   crashReporter,
   ipcMain,
+  net,
   powerMonitor,
   screen,
   // tslint:disable-next-line:no-implicit-dependencies
@@ -32,6 +33,9 @@ import { normalizeEvent, normalizeUrl } from './normalize';
 import { captureMinidump } from './sdk';
 import { MinidumpUploader } from './uploader';
 import { getApp, getCachePath, isMainProcess, isRenderProcess } from './utils';
+
+/** A promise that resolves when the app is ready. */
+let appReady = Promise.resolve();
 
 /** Patch to access internal CrashReporter functionality. */
 interface CrashReporterExt {
@@ -159,6 +163,7 @@ export class ElectronBackend implements Backend {
         tags: { event_type: 'javascript', ...normalized.tags },
       };
 
+      await appReady;
       return this.callInner(async inner => inner.sendEvent(mergedEvent));
     }
   }
@@ -391,6 +396,16 @@ export class ElectronBackend implements Backend {
       return false;
     }
 
+    // Override the transport mechanism with electron's net module
+    node.setTransport(net);
+
+    // This is only needed for the electron net module
+    appReady = app.isReady()
+      ? Promise.resolve()
+      : new Promise(resolve => {
+          app.once('ready', resolve);
+        });
+
     this.inner = node;
     return true;
   }
@@ -444,7 +459,7 @@ export class ElectronBackend implements Backend {
   private installAutoBreadcrumbs(): void {
     this.instrumentBreadcrumbs('app', app);
 
-    app.on('ready', () => {
+    app.once('ready', () => {
       // We can't access these until 'ready'
       this.instrumentBreadcrumbs('Screen', screen);
       this.instrumentBreadcrumbs('PowerMonitor', powerMonitor);
