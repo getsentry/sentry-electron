@@ -35,7 +35,6 @@
     "@sentry/node": "0.5.2",
     "@sentry/shim": "0.5.2",
     "@sentry/utils": "0.5.2",
-    "@types/node-fetch": "^1.6.9",
     "electron-fetch": "^1.1.0",
     "form-data": "^2.3.2",
     "util.promisify": "^1.0.0"
@@ -49,6 +48,7 @@
     "@types/form-data": "^2.2.1",
     "@types/mocha": "^2.2.48",
     "@types/multiparty": "^0.0.31",
+    "@types/node-fetch": "^1.6.9",
     "body-parser": "^1.18.2",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
