@@ -1,8 +1,8 @@
 // tslint:disable-next-line
 require('util.promisify/shim')();
 
-export { ElectronBackend, ElectronOptions } from './backend';
-export { ElectronFrontend } from './frontend';
+export { ElectronOptions } from './common';
+export { ElectronFrontend } from './dispatch';
 export { captureMinidump, init, getCurrentFrontend } from './sdk';
 
 export {

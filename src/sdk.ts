@@ -1,7 +1,7 @@
 import { initAndBind } from '@sentry/core';
 import { _callOnClient, getCurrentClient, SentryEvent } from '@sentry/shim';
-import { ElectronOptions } from './backend';
-import { ElectronFrontend } from './frontend';
+import { ElectronOptions } from './common';
+import { ElectronFrontend } from './dispatch';
 
 /**
  * The Sentry Electron SDK Client.

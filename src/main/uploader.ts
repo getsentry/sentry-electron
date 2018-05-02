@@ -93,8 +93,7 @@ export class MinidumpUploader {
       const body = new FormData();
       body.append('upload_file_minidump', fs.createReadStream(request.path));
       body.append('sentry', JSON.stringify(request.event));
-      const f = require('electron-fetch') as typeof fetch;
-      const response = await f(this.url, { method: 'POST', body });
+      const response = await fetch(this.url, { method: 'POST', body });
 
       // Too many requests, so we queue the event and send it later
       if (response.status === CODE_RETRY) {

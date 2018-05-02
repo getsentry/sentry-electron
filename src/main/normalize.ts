@@ -1,11 +1,10 @@
 import { SentryEvent, SentryException, Stacktrace } from '@sentry/shim';
 import { clone } from '@sentry/utils';
-import { getApp } from './utils';
+// tslint:disable-next-line:no-implicit-dependencies
+import { app } from 'electron';
 
 /** Application base path used for URL normalization. */
-const APP_PATH = getApp()
-  .getAppPath()
-  .replace(/\\/g, '/');
+const APP_PATH = app.getAppPath().replace(/\\/g, '/');
 
 /**
  * Normalizes URLs in exceptions and stacktraces so Sentry can fingerprint
