@@ -126,7 +126,7 @@ export class TestContext {
     const isPromise = method() instanceof Promise;
 
     let remaining = timeout;
-    while (isPromise ? !await method() : !method()) {
+    while (isPromise ? !(await method()) : !method()) {
       await new Promise<void>(resolve => setTimeout(resolve, 100));
       remaining -= 100;
       if (remaining < 0) {
