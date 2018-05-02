@@ -67,7 +67,9 @@ tests.forEach(([version, arch]) => {
       // wait for the main process to exit (default behavior)
       await context.waitForTrue(
         async () =>
-          context.mainProcess ? !await context.mainProcess.isRunning() : false,
+          context.mainProcess
+            ? !(await context.mainProcess.isRunning())
+            : false,
         'Timeout: Waiting for app to die',
       );
 
@@ -134,7 +136,9 @@ tests.forEach(([version, arch]) => {
       // wait for the main process to die
       await context.waitForTrue(
         async () =>
-          context.mainProcess ? !await context.mainProcess.isRunning() : false,
+          context.mainProcess
+            ? !(await context.mainProcess.isRunning())
+            : false,
         'Timeout: Waiting for app to die',
       );
 

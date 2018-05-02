@@ -6,8 +6,8 @@ import { promisify } from 'util';
 import { DSN } from '@sentry/core';
 import { SentryEvent } from '@sentry/shim';
 import { filterAsync, mkdirp, Store } from '@sentry/utils';
+import fetch from 'electron-fetch';
 import * as FormData from 'form-data';
-import fetch from 'node-fetch';
 
 const readdir = promisify(fs.readdir);
 const rename = promisify(fs.rename);
@@ -93,7 +93,8 @@ export class MinidumpUploader {
       const body = new FormData();
       body.append('upload_file_minidump', fs.createReadStream(request.path));
       body.append('sentry', JSON.stringify(request.event));
-      const response = await fetch(this.url, { method: 'POST', body });
+      const f = require('electron-fetch') as typeof fetch;
+      const response = await f(this.url, { method: 'POST', body });
 
       // Too many requests, so we queue the event and send it later
       if (response.status === CODE_RETRY) {

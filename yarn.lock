@@ -2,46 +2,46 @@
 # yarn lockfile v1
 
 
-"@sentry/browser@0.5.2":
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-0.5.2.tgz#a1355b30dc4bf13aa1bc8efad1dbe9698e4106a2"
+"@sentry/browser@0.5.3":
+  version "0.5.3"
+  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-0.5.3.tgz#01838f6d0a201d9efa1367d6a2e5b43fb8e96d5e"
   dependencies:
-    "@sentry/core" "0.5.2"
-    "@sentry/shim" "0.5.2"
+    "@sentry/core" "0.5.3"
+    "@sentry/shim" "0.5.3"
 
-"@sentry/core@0.5.2":
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-0.5.2.tgz#017ac3b19b8842a4e413461f4b02ba6a645ed011"
+"@sentry/core@0.5.3":
+  version "0.5.3"
+  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-0.5.3.tgz#6b5d1bb161c88854c567c564809ea2273e3bfa2b"
   dependencies:
-    "@sentry/shim" "0.5.2"
+    "@sentry/shim" "0.5.3"
 
-"@sentry/node@0.5.2":
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-0.5.2.tgz#8768b38211161eff6ec6bd0a9891aef34ce99312"
+"@sentry/node@0.5.3":
+  version "0.5.3"
+  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-0.5.3.tgz#6c5de623e8b8581b7d41343c003038685e7da877"
   dependencies:
-    "@sentry/core" "0.5.2"
-    "@sentry/shim" "0.5.2"
-    raven "^2.5.0"
+    "@sentry/core" "0.5.3"
+    "@sentry/shim" "0.5.3"
+    raven "^2.6.0"
 
-"@sentry/shim@0.5.2":
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/@sentry/shim/-/shim-0.5.2.tgz#80fc5ba61be9ff3719a32d4ad9e03bab49a621f5"
+"@sentry/shim@0.5.3":
+  version "0.5.3"
+  resolved "https://registry.yarnpkg.com/@sentry/shim/-/shim-0.5.3.tgz#a29dedbbf3ddbef1ef0f0b15b506399dabad4807"
 
-"@sentry/typescript@0.5.2":
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/@sentry/typescript/-/typescript-0.5.2.tgz#fa310b987e189b6e46b09d9b4ddf71df6226d530"
+"@sentry/typescript@0.5.3":
+  version "0.5.3"
+  resolved "https://registry.yarnpkg.com/@sentry/typescript/-/typescript-0.5.3.tgz#c9b5402b304645810525fb32d71c8d5ba763e1b1"
   dependencies:
-    tslint-config-prettier "^1.10.0"
+    tslint-config-prettier "^1.12.0"
 
-"@sentry/utils@0.5.2":
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-0.5.2.tgz#6f838b9105f357c5aad87f9c286157cfd7b47885"
+"@sentry/utils@0.5.3":
+  version "0.5.3"
+  resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-0.5.3.tgz#22ba37d3b30e8b0e8682b2fc49387f59f8fbfa31"
 
-"@types/body-parser@*", "@types/body-parser@^1.16.8":
-  version "1.16.8"
-  resolved "https://registry.yarnpkg.com/@types/body-parser/-/body-parser-1.16.8.tgz#687ec34140624a3bec2b1a8ea9268478ae8f3be3"
+"@types/body-parser@*", "@types/body-parser@^1.17.0":
+  version "1.17.0"
+  resolved "https://registry.yarnpkg.com/@types/body-parser/-/body-parser-1.17.0.tgz#9f5c9d9bd04bb54be32d5eb9fc0d8c974e6cf58c"
   dependencies:
-    "@types/express" "*"
+    "@types/connect" "*"
     "@types/node" "*"
 
 "@types/chai-as-promised@^7.1.0":
@@ -50,9 +50,19 @@
   dependencies:
     "@types/chai" "*"
 
-"@types/chai@*", "@types/chai@^4.1.2":
+"@types/chai@*":
   version "4.1.2"
   resolved "https://registry.yarnpkg.com/@types/chai/-/chai-4.1.2.tgz#f1af664769cfb50af805431c407425ed619daa21"
+
+"@types/chai@^4.1.3":
+  version "4.1.3"
+  resolved "https://registry.yarnpkg.com/@types/chai/-/chai-4.1.3.tgz#b8a74352977a23b604c01aa784f5b793443fb7dc"
+
+"@types/connect@*":
+  version "3.4.32"
+  resolved "https://registry.yarnpkg.com/@types/connect/-/connect-3.4.32.tgz#aa0e9616b9435ccad02bc52b5b454ffc2c70ba28"
+  dependencies:
+    "@types/node" "*"
 
 "@types/events@*":
   version "1.2.0"
@@ -65,7 +75,7 @@
     "@types/events" "*"
     "@types/node" "*"
 
-"@types/express@*":
+"@types/express@^4.11.1":
   version "4.11.1"
   resolved "https://registry.yarnpkg.com/@types/express/-/express-4.11.1.tgz#f99663b3ab32d04cb11db612ef5dd7933f75465b"
   dependencies:
@@ -89,9 +99,9 @@
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-2.0.0.tgz#5a7306e367c539b9f6543499de8dd519fac37a8b"
 
-"@types/mocha@^2.2.48":
-  version "2.2.48"
-  resolved "https://registry.yarnpkg.com/@types/mocha/-/mocha-2.2.48.tgz#3523b126a0b049482e1c3c11877460f76622ffab"
+"@types/mocha@^5.2.0":
+  version "5.2.0"
+  resolved "https://registry.yarnpkg.com/@types/mocha/-/mocha-5.2.0.tgz#b3c8e69f038835db1a7fdc0b3d879fc50506e29e"
 
 "@types/multiparty@^0.0.31":
   version "0.0.31"
@@ -99,9 +109,9 @@
   dependencies:
     "@types/node" "*"
 
-"@types/node-fetch@^1.6.7":
-  version "1.6.7"
-  resolved "https://registry.yarnpkg.com/@types/node-fetch/-/node-fetch-1.6.7.tgz#521078e8f0c69a158e5022005aca92d2620f6d57"
+"@types/node-fetch@^1.6.9":
+  version "1.6.9"
+  resolved "https://registry.yarnpkg.com/@types/node-fetch/-/node-fetch-1.6.9.tgz#a750fb0f4cf2960bf72b462e4c86908022dd69c5"
   dependencies:
     "@types/node" "*"
 
@@ -114,8 +124,8 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.1.tgz#aac98b810c50568054486f2bb8c486d824713be8"
 
 "@types/serve-static@*":
-  version "1.13.1"
-  resolved "https://registry.yarnpkg.com/@types/serve-static/-/serve-static-1.13.1.tgz#1d2801fa635d274cd97d4ec07e26b21b44127492"
+  version "1.13.2"
+  resolved "https://registry.yarnpkg.com/@types/serve-static/-/serve-static-1.13.2.tgz#f5ac4d7a6420a99a6a45af4719f4dcd8cd907a48"
   dependencies:
     "@types/express-serve-static-core" "*"
     "@types/mime" "*"
@@ -551,9 +561,15 @@ electron-download@^4.1.0:
     semver "^5.3.0"
     sumchecker "^2.0.1"
 
-electron-mocha@^6.0.1:
-  version "6.0.1"
-  resolved "https://registry.yarnpkg.com/electron-mocha/-/electron-mocha-6.0.1.tgz#3bab0fa6e48b106791a6b0564359007741de2c32"
+electron-fetch@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/electron-fetch/-/electron-fetch-1.1.0.tgz#74b0ea547fe149620d38596a84fb104d34218e31"
+  dependencies:
+    encoding "^0.1.12"
+
+electron-mocha@^6.0.2:
+  version "6.0.2"
+  resolved "https://registry.yarnpkg.com/electron-mocha/-/electron-mocha-6.0.2.tgz#58933097d8e5fda443495d071c93807aa0fafc4a"
   dependencies:
     commander "^2.14.1"
     electron-window "^0.8.0"
@@ -567,9 +583,9 @@ electron-window@^0.8.0:
   dependencies:
     is-electron-renderer "^2.0.0"
 
-electron@^1.8.6:
-  version "1.8.6"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-1.8.6.tgz#6d45e377b321a35b78a794b64e40b2cf8face6ae"
+electron@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-2.0.0.tgz#e95dc7f3a089a52b8c2a52c7c9e1024db0c8d46e"
   dependencies:
     "@types/node" "^8.0.24"
     electron-download "^3.0.1"
@@ -578,6 +594,12 @@ electron@^1.8.6:
 encodeurl@~1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/encodeurl/-/encodeurl-1.0.2.tgz#ad3ff4c86ec2d029322f5a02c3a9a606c95b3f59"
+
+encoding@^0.1.12:
+  version "0.1.12"
+  resolved "https://registry.yarnpkg.com/encoding/-/encoding-0.1.12.tgz#538b66f3ee62cd1ab51ec323829d1f9480c74beb"
+  dependencies:
+    iconv-lite "~0.4.13"
 
 env-paths@^1.0.0:
   version "1.0.0"
@@ -936,6 +958,12 @@ iconv-lite@0.4.19:
   version "0.4.19"
   resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.4.19.tgz#f7468f60135f5e5dad3399c0a81be9a1603a082b"
 
+iconv-lite@~0.4.13:
+  version "0.4.21"
+  resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.4.21.tgz#c47f8733d02171189ebc4a400f3218d348094798"
+  dependencies:
+    safer-buffer "^2.1.0"
+
 indent-string@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/indent-string/-/indent-string-2.1.0.tgz#8e2d48348742121b4a8218b7a137e9a52049dc80"
@@ -1201,7 +1229,7 @@ mime@1.4.1:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/mime/-/mime-1.4.1.tgz#121f9ebc49e3766f311a76e1fa1c8003c4b03aa6"
 
-minimatch@^3.0.4:
+minimatch@3.0.4, minimatch@^3.0.4:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-3.0.4.tgz#5166e286457f03306064be5497e8dbb0c3d32083"
   dependencies:
@@ -1227,7 +1255,7 @@ mkdirp@0.5.1, mkdirp@^0.5.1:
   dependencies:
     minimist "0.0.8"
 
-mocha@^5.0.1, mocha@^5.0.4:
+mocha@^5.0.1:
   version "5.0.5"
   resolved "https://registry.yarnpkg.com/mocha/-/mocha-5.0.5.tgz#e228e3386b9387a4710007a641f127b00be44b52"
   dependencies:
@@ -1239,6 +1267,22 @@ mocha@^5.0.1, mocha@^5.0.4:
     glob "7.1.2"
     growl "1.10.3"
     he "1.1.1"
+    mkdirp "0.5.1"
+    supports-color "4.4.0"
+
+mocha@^5.1.1:
+  version "5.1.1"
+  resolved "https://registry.yarnpkg.com/mocha/-/mocha-5.1.1.tgz#b774c75609dac05eb48f4d9ba1d827b97fde8a7b"
+  dependencies:
+    browser-stdout "1.3.1"
+    commander "2.11.0"
+    debug "3.1.0"
+    diff "3.5.0"
+    escape-string-regexp "1.0.5"
+    glob "7.1.2"
+    growl "1.10.3"
+    he "1.1.1"
+    minimatch "3.0.4"
     mkdirp "0.5.1"
     supports-color "4.4.0"
 
@@ -1261,10 +1305,6 @@ multiparty@^4.1.3:
 negotiator@0.6.1:
   version "0.6.1"
   resolved "https://registry.yarnpkg.com/negotiator/-/negotiator-0.6.1.tgz#2b327184e8992101177b28563fb5e7102acd0ca9"
-
-node-fetch@^2.1.1:
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.1.2.tgz#ab884e8e7e57e38a944753cec706f788d1768bb5"
 
 node-fingerprint@0.0.2:
   version "0.0.2"
@@ -1457,9 +1497,9 @@ prettier-check@^2.0.0:
   dependencies:
     execa "^0.6.0"
 
-prettier@^1.11.1:
-  version "1.11.1"
-  resolved "https://registry.yarnpkg.com/prettier/-/prettier-1.11.1.tgz#61e43fc4cd44e68f2b0dfc2c38cd4bb0fccdcc75"
+prettier@^1.12.1:
+  version "1.12.1"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-1.12.1.tgz#c1ad20e803e7749faf905a409d2367e06bbe7325"
 
 pretty-bytes@^1.0.2:
   version "1.0.4"
@@ -1508,9 +1548,9 @@ range-parser@~1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/range-parser/-/range-parser-1.2.0.tgz#f49be6b487894ddc40dcc94a322f611092e00d5e"
 
-raven@^2.5.0:
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/raven/-/raven-2.5.0.tgz#7a2b4ce8b9ff884448924ad19ca33b574bce59a2"
+raven@^2.6.0:
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/raven/-/raven-2.6.0.tgz#3806a82c9ee8cd3e75c3b7ea7bb1935aad092d0c"
   dependencies:
     cookie "0.3.1"
     md5 "^2.2.1"
@@ -1635,6 +1675,10 @@ rimraf@^2.2.8, rimraf@^2.3.3, rimraf@^2.6.2:
 safe-buffer@5.1.1, safe-buffer@^5.0.1, safe-buffer@^5.1.1, safe-buffer@~5.1.0, safe-buffer@~5.1.1:
   version "5.1.1"
   resolved "https://registry.yarnpkg.com/safe-buffer/-/safe-buffer-5.1.1.tgz#893312af69b2123def71f57889001671eeb2c853"
+
+safer-buffer@^2.1.0:
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/safer-buffer/-/safer-buffer-2.1.2.tgz#44fa161b0187b9549dd84bb91802f9bd8385cd6a"
 
 "semver@2 || 3 || 4 || 5", semver@^5.3.0:
   version "5.5.0"
@@ -1915,9 +1959,9 @@ trim-newlines@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/trim-newlines/-/trim-newlines-1.0.0.tgz#5887966bb582a4503a41eb524f7d35011815a613"
 
-ts-node@^5.0.1:
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-5.0.1.tgz#78e5d1cb3f704de1b641e43b76be2d4094f06f81"
+ts-node@^6.0.2:
+  version "6.0.2"
+  resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-6.0.2.tgz#e132d530e53173bc6a8c21ea65f64d8b47bc573e"
   dependencies:
     arrify "^1.0.0"
     chalk "^2.3.0"
@@ -1932,9 +1976,9 @@ tslib@1.9.0, tslib@^1.7.1, tslib@^1.8.0, tslib@^1.8.1:
   version "1.9.0"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.9.0.tgz#e37a86fda8cbbaf23a057f473c9f4dc64e5fc2e8"
 
-tslint-config-prettier@^1.10.0, tslint-config-prettier@^1.9.0:
-  version "1.10.0"
-  resolved "https://registry.yarnpkg.com/tslint-config-prettier/-/tslint-config-prettier-1.10.0.tgz#5063c413d43de4f6988c73727f65ecfc239054ec"
+tslint-config-prettier@^1.12.0:
+  version "1.12.0"
+  resolved "https://registry.yarnpkg.com/tslint-config-prettier/-/tslint-config-prettier-1.12.0.tgz#bc8504f286ecf42b906f3d1126a093114f5729cc"
 
 tslint-eslint-rules@^5.1.0:
   version "5.1.0"
@@ -2004,9 +2048,9 @@ typedarray@^0.0.6:
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
 
-typescript@^2.7.2:
-  version "2.8.1"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.8.1.tgz#6160e4f8f195d5ba81d4876f9c0cc1fbc0820624"
+typescript@^2.8.3:
+  version "2.8.3"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.8.3.tgz#5d817f9b6f31bb871835f4edf0089f21abe6c170"
 
 universalify@^0.1.0:
   version "0.1.1"
