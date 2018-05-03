@@ -1,13 +1,12 @@
 import * as fs from 'fs';
-import { platform } from 'os';
 import { basename, join } from 'path';
 import { promisify } from 'util';
 
 import { DSN } from '@sentry/core';
 import { SentryEvent } from '@sentry/shim';
 import { filterAsync, mkdirp, Store } from '@sentry/utils';
-import fetch from 'electron-fetch';
-import * as FormData from 'form-data';
+import fetch = require('electron-fetch');
+import FormData = require('form-data');
 
 const readdir = promisify(fs.readdir);
 const rename = promisify(fs.rename);
@@ -72,7 +71,7 @@ export class MinidumpUploader {
     private readonly crashesDirectory: string,
     private readonly cacheDirectory: string,
   ) {
-    this.type = platform() === 'darwin' ? 'crashpad' : 'breakpad';
+    this.type = process.platform === 'darwin' ? 'crashpad' : 'breakpad';
     this.knownPaths = [];
 
     const { host, path, port, protocol, user } = dsn;
@@ -88,18 +87,17 @@ export class MinidumpUploader {
    * @param event Event data to attach to the minidump.
    * @returns A promise that resolves when the upload is complete.
    */
-  public async uploadMinidump(request: MinidumpRequest): Promise<void> {
+  public async uploadMinidump(request: MinidumpRequest): Promise<number> {
     try {
       const body = new FormData();
       body.append('upload_file_minidump', fs.createReadStream(request.path));
       body.append('sentry', JSON.stringify(request.event));
-      const f = require('electron-fetch') as typeof fetch;
-      const response = await f(this.url, { method: 'POST', body });
+      const response = await fetch(this.url, { method: 'POST', body });
 
       // Too many requests, so we queue the event and send it later
       if (response.status === CODE_RETRY) {
         await this.queueMinidump(request);
-        return;
+        return CODE_RETRY;
       }
 
       // We either succeeded or something went horribly wrong. Either way, we
@@ -114,12 +112,16 @@ export class MinidumpUploader {
       if (response.ok) {
         await this.flushQueue();
       }
+
+      return response.status;
     } catch (err) {
       // User's internet connection was down so we queue it as well
       const error = err ? (err as { code: string }) : { code: '' };
       if (error.code === 'ENOTFOUND') {
         await this.queueMinidump(request);
       }
+
+      return 500;
     }
   }
 

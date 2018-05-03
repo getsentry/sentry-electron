@@ -1,35 +1,26 @@
-import { FrontendBase, Scope, SentryError } from '@sentry/core';
+import { FrontendBase, Scope } from '@sentry/core';
 import { Breadcrumb, Context, SdkInfo, SentryEvent } from '@sentry/shim';
-// tslint:disable-next-line:no-implicit-dependencies
-import { ipcRenderer } from 'electron';
-import { ElectronBackend, ElectronOptions } from './backend';
+import { CommonFrontend, ElectronOptions } from '../common';
+import { MainBackend } from './backend';
 import { addEventDefaults } from './context';
-import { IPC_CONTEXT, IPC_CRUMB, IPC_EVENT } from './ipc';
-import { isRenderProcess } from './utils';
+import { normalizeEvent } from './normalize';
 
 /** SDK name used in every event. */
 const SDK_NAME = 'sentry-electron';
 
 /** SDK version used in every event. */
 // tslint:disable-next-line
-const SDK_VERSION: string = require('../package.json').version;
+const SDK_VERSION: string = require('../../package.json').version;
 
-/**
- * The Sentry Electron SDK Frontend.
- *
- * @see ElectronOptions for documentation on configuration options.
- * @see SentryClient for usage documentation.
- */
-export class ElectronFrontend extends FrontendBase<
-  ElectronBackend,
-  ElectronOptions
-> {
+/** Frontend implementation for Electron renderer backends. */
+export class MainFrontend extends FrontendBase<MainBackend, ElectronOptions>
+  implements CommonFrontend {
   /**
    * Creates a new Electron SDK instance.
    * @param options Configuration options for this SDK.
    */
   public constructor(options: ElectronOptions) {
-    super(ElectronBackend, options);
+    super(MainBackend, options);
   }
 
   /**
@@ -61,19 +52,18 @@ export class ElectronFrontend extends FrontendBase<
     event: SentryEvent = {},
     scope: Scope = this.getInternalScope(),
   ): Promise<void> {
-    const prepared = await this.prepareEvent(event, scope);
-    await this.getBackend().uploadMinidump(path, prepared);
+    event.tags = { event_type: 'native', ...event.tags };
+    await this.processEvent(event, scope, async finalEvent =>
+      this.getBackend().uploadMinidump(path, finalEvent),
+    );
   }
 
   /**
    * @inheritDoc
    */
   public async captureEvent(event: SentryEvent, scope: Scope): Promise<void> {
-    if (isRenderProcess()) {
-      ipcRenderer.send(IPC_EVENT, event, scope);
-    } else {
-      await super.captureEvent(event, scope);
-    }
+    event.tags = { event_type: 'javascript', ...event.tags };
+    await super.captureEvent(event, scope);
   }
 
   /**
@@ -83,22 +73,14 @@ export class ElectronFrontend extends FrontendBase<
     breadcrumb: Breadcrumb,
     scope: Scope,
   ): Promise<void> {
-    if (isRenderProcess()) {
-      ipcRenderer.send(IPC_CRUMB, breadcrumb, scope);
-    } else {
-      await super.addBreadcrumb(breadcrumb, scope);
-    }
+    await super.addBreadcrumb(breadcrumb, scope);
   }
 
   /**
    * @inheritDoc
    */
   public async setContext(nextContext: Context, scope: Scope): Promise<void> {
-    if (isRenderProcess()) {
-      ipcRenderer.send(IPC_CONTEXT, nextContext, scope);
-    } else {
-      await super.setContext(nextContext, scope);
-    }
+    await super.setContext(nextContext, scope);
   }
 
   /**
@@ -108,11 +90,8 @@ export class ElectronFrontend extends FrontendBase<
     event: SentryEvent,
     scope: Scope,
   ): Promise<SentryEvent> {
-    if (isRenderProcess()) {
-      throw new SentryError('Invariant exception: Not allowed in renderer');
-    }
-
     const prepared = await super.prepareEvent(event, scope);
-    return addEventDefaults(prepared);
+    const merged = await addEventDefaults(prepared);
+    return normalizeEvent(merged);
   }
 }
