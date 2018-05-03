@@ -1,5 +1,5 @@
 import { expect, should, use } from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import chaiAsPromised = require('chai-as-promised');
 import { normalizeUrl } from '../../src/main/normalize';
 
 should();

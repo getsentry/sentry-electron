@@ -1,14 +1,14 @@
 // tslint:disable:no-unsafe-any
 
 import { readFileSync } from 'fs';
-import * as http from 'http';
+import { createServer, Server } from 'http';
 
 import { SentryEvent } from '@sentry/shim';
-import * as bodyParser from 'body-parser';
-import * as express from 'express';
-import * as finalhandler from 'finalhandler';
-import * as multiparty from 'multiparty';
-import * as zlib from 'zlib';
+import bodyParser = require('body-parser');
+import express = require('express');
+import finalhandler = require('finalhandler');
+import { Form } from 'multiparty';
+import { inflateSync } from 'zlib';
 
 /**
  * Decodes and deflates a ZIP payload in base64 representation.
@@ -19,7 +19,7 @@ import * as zlib from 'zlib';
 function deflateBase64ZIP(raw: Buffer): any {
   const base64Str = raw.toString();
   const compressed = Buffer.from(base64Str, 'base64');
-  return JSON.parse(zlib.inflateSync(compressed).toString());
+  return JSON.parse(inflateSync(compressed).toString());
 }
 
 /** Event payload that has been submitted to the test server. */
@@ -45,7 +45,7 @@ export class TestServer {
   /** All events received by this server instance. */
   public events: TestServerEvent[] = [];
   /** The internal HTTP server. */
-  private server?: http.Server;
+  private server?: Server;
 
   /** Starts accepting requests. */
   public start(): void {
@@ -74,7 +74,7 @@ export class TestServer {
 
     // Handles the Sentry minidump endpoint
     app.post('/api/:id/minidump', (req, res) => {
-      const form = new multiparty.Form();
+      const form = new Form();
       form.parse(req, (_, fields, files) => {
         this.events.push({
           data: JSON.parse(fields.sentry[0]) as SentryEvent,
@@ -88,7 +88,7 @@ export class TestServer {
       });
     });
 
-    this.server = http.createServer((req, res) => {
+    this.server = createServer((req, res) => {
       app(req as any, res as any, finalhandler(req, res));
     });
 

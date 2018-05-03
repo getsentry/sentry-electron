@@ -1,3 +1,4 @@
 declare module 'electron-fetch' {
-  export { default } from 'node-fetch';
+  import fetch from 'node-fetch';
+  export = fetch;
 }

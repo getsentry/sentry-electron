@@ -6,8 +6,8 @@ import { promisify } from 'util';
 import { DSN } from '@sentry/core';
 import { SentryEvent } from '@sentry/shim';
 import { filterAsync, mkdirp, Store } from '@sentry/utils';
-import fetch from 'electron-fetch';
-import * as FormData from 'form-data';
+import fetch = require('electron-fetch');
+import FormData = require('form-data');
 
 const readdir = promisify(fs.readdir);
 const rename = promisify(fs.rename);
