@@ -140,7 +140,7 @@ export class MainBackend implements CommonBackend {
     event: SentryEvent = {},
   ): Promise<number> {
     if (this.uploader) {
-      await this.uploader.uploadMinidump({ path, event });
+      return this.uploader.uploadMinidump({ path, event });
     }
 
     return 200;

@@ -52,7 +52,7 @@ export class RendererFrontend
     _event: SentryEvent,
     _scope: Scope,
   ): Promise<void> {
-    // TODO: Figure out whether this makes sense
+    // Noop
   }
 
   /**

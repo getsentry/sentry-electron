@@ -52,9 +52,10 @@ export class MainFrontend extends FrontendBase<MainBackend, ElectronOptions>
     event: SentryEvent = {},
     scope: Scope = this.getInternalScope(),
   ): Promise<void> {
-    const prepared = await this.prepareEvent(event, scope);
-    prepared.tags = { event_type: 'native', ...prepared.tags };
-    await this.getBackend().uploadMinidump(path, prepared);
+    event.tags = { event_type: 'native', ...event.tags };
+    await this.processEvent(event, scope, async finalEvent =>
+      this.getBackend().uploadMinidump(path, finalEvent),
+    );
   }
 
   /**
