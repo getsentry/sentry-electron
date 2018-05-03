@@ -33,7 +33,7 @@ import {
   IPC_EVENT,
 } from '../common';
 import { captureMinidump } from '../sdk';
-import { normalizeEvent, normalizeUrl } from './normalize';
+import { normalizeUrl } from './normalize';
 import { MinidumpUploader } from './uploader';
 
 /** A promise that resolves when the app is ready. */
@@ -45,8 +45,18 @@ interface CrashReporterExt {
 }
 
 /** Gets the path to the Sentry cache directory. */
-export function getCachePath(): string {
+function getCachePath(): string {
   return join(app.getPath('userData'), 'sentry');
+}
+
+/** Returns extra information from a renderer's web contents. */
+function getRendererExtra(
+  contents: Electron.WebContents,
+): { [key: string]: string } {
+  return {
+    crashed_process: `renderer[${contents.id}]`,
+    crashed_url: normalizeUrl(contents.getURL()),
+  };
 }
 
 /** Backend implementation for Electron renderer backends. */
@@ -114,15 +124,8 @@ export class MainBackend implements CommonBackend {
    * @inheritDoc
    */
   public async sendEvent(event: SentryEvent): Promise<number> {
-    const normalized = normalizeEvent(event);
-    const mergedEvent = {
-      ...normalized,
-      extra: { crashed_process: 'browser', ...normalized.extra },
-      tags: { event_type: 'javascript', ...normalized.tags },
-    };
-
     await appReady;
-    return this.inner.sendEvent(mergedEvent);
+    return this.inner.sendEvent(event);
   }
 
   /**
@@ -137,13 +140,7 @@ export class MainBackend implements CommonBackend {
     event: SentryEvent = {},
   ): Promise<number> {
     if (this.uploader) {
-      const normalized = normalizeEvent(event);
-      const mergedEvent = {
-        ...normalized,
-        tags: { event_type: 'native', ...normalized.tags },
-      };
-
-      await this.uploader.uploadMinidump({ path, event: mergedEvent });
+      await this.uploader.uploadMinidump({ path, event });
     }
 
     return 200;
@@ -251,21 +248,14 @@ export class MainBackend implements CommonBackend {
 
     // Start to submit recent minidump crashes. This will load breadcrumbs and
     // context information that was cached on disk prior to the crash.
-    forget(
-      this.sendNativeCrashes({
-        crashed_process: 'browser',
-      }),
-    );
+    forget(this.sendNativeCrashes({}));
 
     // Every time a subprocess or renderer crashes, start sending minidumps
     // right away.
     app.on('web-contents-created', (_, contents) => {
       contents.on('crashed', async () => {
         try {
-          await this.sendNativeCrashes({
-            crashed_process: `renderer[${contents.id}]`,
-            crashed_url: normalizeUrl(contents.getURL()),
-          });
+          await this.sendNativeCrashes(getRendererExtra(contents));
         } catch (e) {
           console.error(e);
         }
@@ -316,17 +306,8 @@ export class MainBackend implements CommonBackend {
     });
 
     ipcMain.on(IPC_EVENT, (ipc: Electron.Event, event: SentryEvent) => {
-      const contents = ipc.sender;
-      const mergedEvent = {
-        ...event,
-        extra: {
-          crashed_process: `renderer[${contents.id}]`,
-          crashed_url: normalizeUrl(contents.getURL()),
-          ...event.extra,
-        },
-      };
-
-      captureEvent(mergedEvent);
+      event.extra = { ...getRendererExtra(ipc.sender), ...event.extra };
+      captureEvent(event);
     });
 
     ipcMain.on(IPC_CONTEXT, (_: any, context: Context) => {

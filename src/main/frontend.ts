@@ -3,6 +3,7 @@ import { Breadcrumb, Context, SdkInfo, SentryEvent } from '@sentry/shim';
 import { CommonFrontend, ElectronOptions } from '../common';
 import { MainBackend } from './backend';
 import { addEventDefaults } from './context';
+import { normalizeEvent } from './normalize';
 
 /** SDK name used in every event. */
 const SDK_NAME = 'sentry-electron';
@@ -52,6 +53,7 @@ export class MainFrontend extends FrontendBase<MainBackend, ElectronOptions>
     scope: Scope = this.getInternalScope(),
   ): Promise<void> {
     const prepared = await this.prepareEvent(event, scope);
+    prepared.tags = { event_type: 'native', ...prepared.tags };
     await this.getBackend().uploadMinidump(path, prepared);
   }
 
@@ -59,6 +61,7 @@ export class MainFrontend extends FrontendBase<MainBackend, ElectronOptions>
    * @inheritDoc
    */
   public async captureEvent(event: SentryEvent, scope: Scope): Promise<void> {
+    event.tags = { event_type: 'javascript', ...event.tags };
     await super.captureEvent(event, scope);
   }
 
@@ -87,7 +90,7 @@ export class MainFrontend extends FrontendBase<MainBackend, ElectronOptions>
     scope: Scope,
   ): Promise<SentryEvent> {
     const prepared = await super.prepareEvent(event, scope);
-    // TODO: Normalize here instead of the backend
-    return addEventDefaults(prepared);
+    const merged = await addEventDefaults(prepared);
+    return normalizeEvent(merged);
   }
 }
