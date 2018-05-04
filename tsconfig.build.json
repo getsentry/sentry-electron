@@ -4,6 +4,7 @@
   "exclude": ["node_modules"],
   "compilerOptions": {
     "baseUrl": ".",
+    "lib": ["es7", "dom"],
     "outDir": "dist",
     "rootDir": "src",
     "target": "es6"
