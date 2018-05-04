@@ -29,6 +29,14 @@ interface PackageJson {
   name: string;
 }
 
+/** Linux version file to check for a distribution. */
+interface DistroFile {
+  /** The file name, located in `/etc`. */
+  name: string;
+  /** Potential distributions to check. */
+  distros: string[];
+}
+
 /** Mapping of Node's platform names to actual OS names. */
 const PLATFORM_NAMES: { [platform: string]: string } = {
   aix: 'IBM AIX',
@@ -39,19 +47,19 @@ const PLATFORM_NAMES: { [platform: string]: string } = {
 };
 
 /** Mapping of linux release files located in /etc to distributions. */
-const LINUX_DISTROS: { [fileName: string]: string[] } = {
-  'SuSE-release': ['SUSE Linux'],
-  'alpine-release': ['Alpine Linux'],
-  'arch-release': ['Arch Linux'],
-  debian_release: ['Debian'],
-  debian_version: ['Debian'],
-  'fedora-release': ['Fedora'],
-  'gentoo-release': ['Gentoo Linux'],
-  'lsb-release': ['Ubuntu Linux', 'Arch Linux'],
-  'novell-release': ['SUSE Linux'],
-  'redhat-release': ['Red Hat Linux', 'Centos'],
-  redhat_version: ['Red Hat Linux'],
-};
+const LINUX_DISTROS: DistroFile[] = [
+  { name: 'fedora-release', distros: ['Fedora'] },
+  { name: 'redhat-release', distros: ['Red Hat Linux', 'Centos'] },
+  { name: 'redhat_version', distros: ['Red Hat Linux'] },
+  { name: 'SuSE-release', distros: ['SUSE Linux'] },
+  { name: 'lsb-release', distros: ['Ubuntu Linux', 'Arch Linux'] },
+  { name: 'debian_version', distros: ['Debian'] },
+  { name: 'debian_release', distros: ['Debian'] },
+  { name: 'arch-release', distros: ['Arch Linux'] },
+  { name: 'gentoo-release', distros: ['Gentoo Linux'] },
+  { name: 'novell-release', distros: ['SUSE Linux'] },
+  { name: 'alpine-release', distros: ['Alpine Linux'] },
+];
 
 /** Functions to extract the OS version from Linux release files. */
 const LINUX_VERSIONS: {
@@ -149,7 +157,7 @@ async function getLinuxInfo(): Promise<OsContext> {
     // are found. In case there are more than one file, we just stick with the
     // first one.
     const etcFiles = await readdir('/etc');
-    const distroFile = etcFiles.find(file => file in LINUX_DISTROS);
+    const distroFile = LINUX_DISTROS.find(file => etcFiles.includes(file.name));
     if (!distroFile) {
       return linuxInfo;
     }
@@ -158,7 +166,7 @@ async function getLinuxInfo(): Promise<OsContext> {
     // files easier, we lowercase the file contents. Since these files are
     // usually quite small, this should not allocate too much memory and we only
     // hold on to it for a very short amount of time.
-    const distroPath = join('/etc', distroFile);
+    const distroPath = join('/etc', distroFile.name);
     const contents = (await readFile(distroPath, 'utf-8')).toLowerCase();
 
     // Some Linux distributions store their release information in the same file
@@ -166,9 +174,9 @@ async function getLinuxInfo(): Promise<OsContext> {
     // identifier, that basically consists of the first word of the linux
     // distribution name (e.g. "red" for Red Hat). In case there is no match, we
     // just assume the first distribution in our list.
-    const distros = LINUX_DISTROS[distroFile];
+    const { distros } = distroFile;
     linuxInfo.name =
-      distros.find(c => contents.indexOf(getLinuxDistroId(c)) >= 0) ||
+      distros.find(d => contents.indexOf(getLinuxDistroId(d)) >= 0) ||
       distros[0];
 
     // Based on the found distribution, we can now compute the actual version
