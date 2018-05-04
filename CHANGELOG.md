@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.5.4
+
+* Support Windows proxy configuration (#76)
+* Invoke `shouldSend`, `beforeSend` and `afterSend` for native crashes (#78)
+* Improve the SDK structure and reduce load times in renderers (#78)
+
 ## v0.5.3
 
 * Add breadcrumbs for renderer crashes (#71)
