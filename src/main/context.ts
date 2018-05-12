@@ -94,7 +94,7 @@ function matchFirst(regex: RegExp, text: string): string | undefined {
 /** Synchronously loads this app's package.json or throws if not possible. */
 function getPackageJson(): PackageJson {
   const packagePath = join(app.getAppPath(), 'package.json');
-  return require(packagePath) as PackageJson;
+  return module.require(packagePath) as PackageJson;
 }
 
 /** Returns the build type of this app, if possible. */
