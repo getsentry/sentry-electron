@@ -1,8 +1,6 @@
-const { init } = require('..');
-
-// TODO: Replace with your project's DSN
-const MY_DSN = 'https://37f8a2ee37c0409d8970bc7559c7c7e4@sentry.io/277345';
+const { init } = require('@sentry/electron');
 
 init({
-  dsn: MY_DSN,
+  // TODO: Replace with your project's DSN
+  dsn: '__SENTRY_DSN__',
 });

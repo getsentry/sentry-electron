@@ -1,26 +1,16 @@
 {
+  "private": true,
   "name": "electron-quick-start",
   "productName": "Sentry Crash Test",
-  "version": "1.0.0",
   "description": "A minimal Electron application",
   "main": "main.js",
   "scripts": {
     "start": "electron ."
   },
-  "repository": "https://github.com/electron/electron-quick-start",
-  "keywords": [
-    "Electron",
-    "quick",
-    "start",
-    "tutorial",
-    "demo"
-  ],
-  "author": "GitHub",
-  "license": "CC0-1.0",
   "dependencies": {
     "@sentry/electron": "^0.5.4"
   },
   "devDependencies": {
-    "electron": "^1.8.2"
+    "electron": "^2.0.0"
   }
 }
