@@ -1,16 +1,20 @@
 {
   "private": true,
-  "name": "electron-quick-start",
+  "name": "sentry-electron-test",
   "productName": "Sentry Crash Test",
   "description": "A minimal Electron application",
   "main": "main.js",
   "scripts": {
+    "build": "webpack -p",
     "start": "electron ."
   },
   "dependencies": {
     "@sentry/electron": "^0.5.4"
   },
   "devDependencies": {
-    "electron": "^2.0.0"
+    "copy-webpack-plugin": "^4.5.1",
+    "electron": "^2.0.0",
+    "webpack": "^4.8.3",
+    "webpack-cli": "^2.1.3"
   }
 }
