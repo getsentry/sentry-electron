@@ -101,4 +101,4 @@ full Electron SDK:
 .. _releases page: https://github.com/electron/electron/releases/latest
 .. _Crashpad: https://chromium.googlesource.com/crashpad/crashpad/
 .. _Breakpad: https://chromium.googlesource.com/breakpad/breakpad
-.. _Electron CrashReporter: https://github.com/electron/electron/blob/master/docs/api/crash-reporter.md
+.. _Electron CrashReporter: https://electronjs.org/docs/api/crash-reporter
