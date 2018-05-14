@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Crash Test!</title>
+  <title>Sentry Crash Test</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -14,27 +14,25 @@
     <h1>Sentry Crash Test</h1>
     <div class="group">
       <h3 class="group-head">JavaScript</h3>
-      <a href="#" id="error-main" class="crash">[ Main Process ]</a>
-      <a href="#" id="error-render" class="crash">[ Renderer Process ]</a>
+      <a href="javascript:errorMain()" class="crash">[ Main Process ]</a>
+      <a href="javascript:errorRenderer()" class="crash">[ Renderer Process ]</a>
     </div>
     <div class="group">
       <h3 class="group-head">Native Crash</h3>
-      <a href="#" id="crash-main" class="crash">[ Crash ]</a>
-      <a href="#" id="crash-render" class="crash">[ Crash Renderer ]</a>
+      <a href="javascript:crashMain()" class="crash">[ Crash ]</a>
+      <a href="javascript:crashRenderer()" class="crash">[ Crash Renderer ]</a>
     </div>
   </div>
 
   <footer class="footer">
     Node.js
-    <script>document.write(process.versions.node)</script>
+    <script>document.write(versions.node)</script>
     <br> Chromium
-    <script>document.write(process.versions.chrome)</script>
+    <script>document.write(versions.chrome)</script>
     <br> Electron
-    <script>document.write(process.versions.electron)</script>
+    <script>document.write(versions.electron)</script>
     <br>
   </footer>
-
-  <script src="bundle.js"></script>
 </body>
 
 </html>
