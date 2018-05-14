@@ -53,24 +53,39 @@ possible.
 Sandbox Mode
 ------------
 
-Currently, the SDK does not support `sandbox mode`_. Official support for this
-will be added in a future release.
+`Sandbox mode`_ fully isolates the renderer processes from the operating system
+using OS-specific methods. Since most node APIs require system access, they are
+not available in sandbox mode, most notably ``require()``. See the linked
+documentation for a detailed description of sandbox restrictions.
 
-To still receive JavaScript errors, you can work around this limitation by
-configuring the Browser SDK instead. However, breadcrumbs and context
-information are not synchronized between renderers and the main process anymore.
-Also, Electron-specific event metadata will be missing, most notably the
-``release`` field.
+The Electron SDK can still be used from within a preload script. However, it
+needs to be bundled into a single file using bundlers like Webpack or Rollup due
+to the missing ``require()`` function. Please refer to the respective
+documentation your chosen tool for all possible configuration options.
+
+The SDK is written in a way that prevents bundlers from processing any code that
+is only meant to be executed in the main process. The only remaining external
+dependency is ``electron``, which must be explicitly excluded from inlining. For
+Webpack, this would be:
 
 .. code-block:: javascript
 
-    // Use @sentry/browser in place of @sentry/electron
-    const { init } = require('@sentry/browser');
-    init({ dsn: '___PUBLIC_DSN___' });
+    module.exports = {
+      externals: {
+        electron: 'commonjs electron',
+      },
+      // ...
+    };
 
-Even in Sandbox mode, you can still receive native crash reports by activating
-the crash reporter manually. For a detailed description, see
-:ref:`electron-native-manual`.
+Or for Rollup:
+
+.. code-block:: javascript
+
+    export default {
+      external: ['electron'],
+      plugins: [commonjs()],
+      // ...
+    };
 
 Options
 -------
@@ -264,5 +279,5 @@ call. All available options are documented below:
           }
         }
 
-.. _sandbox mode: https://github.com/electron/electron/blob/master/docs/api/sandbox-option.md
-.. _Electron CrashReporter: https://github.com/electron/electron/blob/master/docs/api/crash-reporter.md
+.. _Sandbox mode: https://electronjs.org/docs/api/sandbox-option
+.. _Electron CrashReporter: https://electronjs.org/docs/api/crash-reporter
