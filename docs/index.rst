@@ -128,11 +128,6 @@ The Electron SDK supports `Source Maps`_. If you upload source maps in addition
 to your minified files that data becomes available in Sentry. For more
 information see :doc:`sourcemaps`.
 
-.. admonition:: Known Issue
-
-    Sentry does not show source code context alongside stack traces in renderer
-    crashes. This is a known issue and will be fixed in a future SDK update.
-
 Deep Dive
 ---------
 
