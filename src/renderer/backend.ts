@@ -1,11 +1,14 @@
 // tslint:disable-next-line:no-implicit-dependencies
-import { crashReporter, remote } from 'electron';
+import { crashReporter, ipcRenderer, remote } from 'electron';
 
 import { BrowserBackend } from '@sentry/browser';
 import { Frontend, SentryError } from '@sentry/core';
 import { Breadcrumb, Context, SentryEvent } from '@sentry/shim';
 
-import { CommonBackend, ElectronOptions } from '../common';
+import { CommonBackend, ElectronOptions, IPC_PING } from '../common';
+
+/** Timeout used for registering with the main process. */
+const PING_TIMEOUT = 500;
 
 /** Backend implementation for Electron renderer backends. */
 export class RendererBackend implements CommonBackend {
@@ -35,6 +38,7 @@ export class RendererBackend implements CommonBackend {
       success = this.inner.install() && success;
     }
 
+    this.pingMainProcess();
     return success;
   }
 
@@ -119,5 +123,20 @@ export class RendererBackend implements CommonBackend {
     });
 
     return true;
+  }
+
+  /** Checks if the main processes is available and logs a warning if not. */
+  private pingMainProcess(): void {
+    ipcRenderer.send(IPC_PING);
+
+    const timeout = setTimeout(() => {
+      console.warn(
+        'Could not connect to Sentry main process. Did you call init?',
+      );
+    }, PING_TIMEOUT);
+
+    ipcRenderer.on(IPC_PING, () => {
+      clearTimeout(timeout);
+    });
   }
 }

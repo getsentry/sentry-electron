@@ -3,6 +3,8 @@ import { Backend, Frontend, Options, Scope } from '@sentry/core';
 import { NodeOptions } from '@sentry/node';
 import { SentryEvent } from '@sentry/shim';
 
+/** IPC to ping the main process when initializing in the renderer. */
+export const IPC_PING = 'sentry-electron.ping';
 /** IPC to send a captured event (exception or message) to Sentry. */
 export const IPC_EVENT = 'sentry-electron.event';
 /** IPC to capture a breadcrumb globally. */

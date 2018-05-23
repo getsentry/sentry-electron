@@ -31,6 +31,7 @@ import {
   IPC_CONTEXT,
   IPC_CRUMB,
   IPC_EVENT,
+  IPC_PING,
 } from '../common';
 import { captureMinidump } from '../sdk';
 import { normalizeUrl } from './normalize';
@@ -301,6 +302,10 @@ export class MainBackend implements CommonBackend {
 
   /** Installs IPC handlers to receive events and metadata from renderers. */
   private installIPC(): void {
+    ipcMain.on(IPC_PING, (event: Electron.Event) => {
+      event.sender.send(IPC_PING);
+    });
+
     ipcMain.on(IPC_CRUMB, (_: any, crumb: Breadcrumb) => {
       addBreadcrumb(crumb);
     });
