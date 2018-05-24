@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.5.5
+
+* Add official support for sandbox mode (#84)
+* Fix Webpack use and add instructions to documentation (#84)
+* Fix detection of Linux distributions (#80)
+
 ## v0.5.4
 
 * Support Windows proxy configuration (#76)

@@ -9,12 +9,12 @@
     "start": "electron ."
   },
   "dependencies": {
-    "@sentry/electron": "^0.5.4"
+    "@sentry/electron": "^0.5.5"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^4.5.1",
-    "electron": "^2.0.0",
+    "electron": "^2.0.2",
     "webpack": "^4.8.3",
-    "webpack-cli": "^2.1.3"
+    "webpack-cli": "^2.1.4"
   }
 }
