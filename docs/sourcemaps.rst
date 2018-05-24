@@ -187,7 +187,7 @@ the release with the following command:
 For convenience, you can alternatively pass the ``--finalize`` flag to the
 ``new`` command which will immediately finalize the release.
 
-.. _sandboxing: https://github.com/electron/electron/blob/master/docs/api/sandbox-option.md
+.. _sandboxing: https://electronjs.org/docs/api/sandbox-option
 .. _releases API: https://docs.sentry.io/api/releases/
 .. _Sentry CLI: https://docs.sentry.io/learn/cli/
 .. _Webpack plugin: https://github.com/getsentry/sentry-webpack-plugin

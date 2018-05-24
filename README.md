@@ -90,3 +90,4 @@ Sentry.captureEvent({
 
 * [Releases](https://github.com/getsentry/sentry-electron/releases)
 * [Bug Tracker](https://github.com/getsentry/sentry-electron/issues)
+* [Example App](https://github.com/getsentry/sentry-electron/tree/master/example)

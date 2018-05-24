@@ -128,11 +128,6 @@ The Electron SDK supports `Source Maps`_. If you upload source maps in addition
 to your minified files that data becomes available in Sentry. For more
 information see :doc:`sourcemaps`.
 
-.. admonition:: Known Issue
-
-    Sentry does not show source code context alongside stack traces in renderer
-    crashes. This is a known issue and will be fixed in a future SDK update.
-
 Deep Dive
 ---------
 
@@ -150,6 +145,6 @@ there is additional documentation available that covers all the rest:
 
 .. _next generation JavaScript SDKs: https://github.com/getsentry/raven-js/tree/next#readme
 .. _Sentry DSN: https://docs.sentry.io/hosted/quickstart/#configure-the-dsn
-.. _Electron CrashReporter: https://github.com/electron/electron/blob/master/docs/api/crash-reporter.md
-.. _Sandbox mode: https://github.com/electron/electron/blob/master/docs/api/sandbox-option.md
+.. _Electron CrashReporter: https://electronjs.org/docs/api/crash-reporter
+.. _Sandbox mode: https://electronjs.org/docs/api/sandbox-option
 .. _Source Maps: http://www.html5rocks.com/en/tutorials/developertools/sourcemaps/

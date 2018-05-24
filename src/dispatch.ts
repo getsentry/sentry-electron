@@ -1,4 +1,4 @@
-import { DSN, Scope } from '@sentry/core';
+import { DSN, FrontendClass, Scope } from '@sentry/core';
 import { Breadcrumb, Context, SentryEvent } from '@sentry/shim';
 import { CommonFrontend, ElectronOptions } from './common';
 
@@ -14,14 +14,30 @@ export class ElectronFrontend implements CommonFrontend {
 
   /**
    * Creates a new Electron SDK instance.
+   *
+   * This constructor automatically chooses the right implementation for the
+   * process type (`browser` or `renderer`).
+   *
    * @param options Configuration options for this SDK.
    */
   public constructor(options: ElectronOptions) {
+    // We dynamically load the frontend implementation for the current process
+    // type. In frontend bundlers such as webpack or rollup, those requires are
+    // resolved statically. For this reason, we use `module.require` for the
+    // main implementation here, which is only defined in the main process. The
+    // renderer implementation must use the default `require`.
+
+    // In case `process.type` is not defined, dispatch defaults to the renderer
+    // implementation, which should be fine for most cases. False positives of
+    // this would be running `@sentry/electron` in a bare node process, which is
+    // acceptable.
+
     // tslint:disable:no-var-requires no-unsafe-any
-    const frontendClass =
+    const frontendClass: FrontendClass<CommonFrontend, ElectronOptions> =
       process.type === 'browser'
-        ? require('./main').MainFrontend
+        ? module.require('./main').MainFrontend
         : require('./renderer').RendererFrontend;
+    // tslint:enable:no-var-requires no-unsafe-any
 
     this.inner = new frontendClass(options);
   }

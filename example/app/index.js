@@ -1,21 +1,27 @@
 // Activate the Sentry Electron SDK as early as possible in every process.
 // The SDK must be installed in the main process for this to work.
-require('./sentry');
+require('../sentry');
 
 const { ipcRenderer } = require('electron');
 
-document.querySelector('#error-main').addEventListener('click', () => {
+window.errorMain = () => {
   ipcRenderer.send('demo.error');
-});
+};
 
-document.querySelector('#error-render').addEventListener('click', () => {
+window.errorRenderer = () => {
   throw new Error('Error triggered in renderer process');
-});
+};
 
-document.querySelector('#crash-main').addEventListener('click', () => {
+window.crashMain = () => {
   ipcRenderer.send('demo.crash');
-});
+};
 
-document.querySelector('#crash-render').addEventListener('click', () => {
+window.crashRenderer = () => {
   process.crash();
-});
+};
+
+window.versions = {
+  chrome: process.versions.chrome,
+  electron: process.versions.electron,
+  node: process.versions.node,
+};
