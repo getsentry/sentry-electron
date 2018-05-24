@@ -112,7 +112,6 @@ export class TestContext {
    *
    * @param method Method to poll.
    * @param timeout Time in ms to throw timeout.
-   * @returns
    */
   public async waitForTrue(
     method: () => boolean | Promise<boolean>,
