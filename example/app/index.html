@@ -20,7 +20,7 @@
     <div class="group">
       <h3 class="group-head">Native Crash</h3>
       <a href="javascript:crashMain()" class="crash">[ Crash ]</a>
-      <a href="javascript:crashRenderer()" class="crash">[ Crash Renderer ]</a>
+      <a href="javascript:crashRenderer()" class="crash" id="cr">[ Crash Renderer ]</a>
     </div>
   </div>
 
@@ -33,6 +33,15 @@
     <script>document.write(versions.electron)</script>
     <br>
   </footer>
+
+  <script>
+    if (!window.crashRenderer) {
+      let cr = document.getElementById('cr');
+      cr.setAttribute('href', '#');
+      cr.setAttribute('title', 'Disabled due to Sandbox mode');
+      cr.classList.add('disabled');
+    }
+  </script>
 </body>
 
 </html>

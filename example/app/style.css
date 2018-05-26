@@ -60,3 +60,9 @@ h1 {
 .crash:hover {
   font-weight: 500;
 }
+
+.crash.disabled {
+  color: #999;
+  cursor: default;
+  font-weight: inherit !important;
+}

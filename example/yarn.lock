@@ -28,9 +28,9 @@
   dependencies:
     "@sentry/shim" "0.5.4"
 
-"@sentry/electron@^0.5.4":
-  version "0.5.4"
-  resolved "https://registry.yarnpkg.com/@sentry/electron/-/electron-0.5.4.tgz#0c5e2cd4e81f19d3cdb68ed3fbd073303ff21b5f"
+"@sentry/electron@^0.5.5":
+  version "0.5.5"
+  resolved "https://registry.yarnpkg.com/@sentry/electron/-/electron-0.5.5.tgz#9089d6342db6c6bd6c092a53747708031d5fb7c3"
   dependencies:
     "@sentry/browser" "0.5.4"
     "@sentry/core" "0.5.4"

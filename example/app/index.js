@@ -3,6 +3,7 @@
 require('../sentry');
 
 const { ipcRenderer } = require('electron');
+const { crash } = global.process;
 
 window.errorMain = () => {
   ipcRenderer.send('demo.error');
@@ -16,9 +17,7 @@ window.crashMain = () => {
   ipcRenderer.send('demo.crash');
 };
 
-window.crashRenderer = () => {
-  process.crash();
-};
+window.crashRenderer = crash;
 
 window.versions = {
   chrome: process.versions.chrome,
