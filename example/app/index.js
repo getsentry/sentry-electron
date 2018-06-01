@@ -3,7 +3,7 @@
 require('../sentry');
 
 const { ipcRenderer } = require('electron');
-const { crash } = global.process;
+const { crash } = global.process || {};
 
 window.errorMain = () => {
   ipcRenderer.send('demo.error');
