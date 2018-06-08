@@ -18,7 +18,7 @@
 
 **NOTE**: This package is still in beta. It is part of an early access preview
 for the
-[next generation](https://github.com/getsentry/raven-js/tree/next#readme) of
+[next generation](https://github.com/getsentry/raven-js/tree/master/packages#readme) of
 Sentry JavaScript SDKs. While we try to keep breaking changes to a minimum,
 interfaces might change between minor releases before the first stable `1.x`
 release.
@@ -26,9 +26,9 @@ release.
 ## Features
 
 * Captures **Node errors** in the main process (using
-  [`@sentry/node`](https://github.com/getsentry/raven-js/tree/next/packages/node))
+  [`@sentry/node`](https://github.com/getsentry/raven-js/tree/master/packages/node))
 * Captures **JavaScript errors** in renderer processes (using
-  [`@sentry/browser`](https://github.com/getsentry/raven-js/tree/next/packages/browser))
+  [`@sentry/browser`](https://github.com/getsentry/raven-js/tree/master/packages/browser))
 * Captures **native crashes** (Minidump crash reports) from renderers and the
   main process
 * Collects **breadcrumbs and context** information along with events across
