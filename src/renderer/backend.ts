@@ -2,8 +2,9 @@
 import { crashReporter, ipcRenderer, remote } from 'electron';
 
 import { BrowserBackend } from '@sentry/browser';
-import { Frontend, SentryError } from '@sentry/core';
-import { Breadcrumb, Context, SentryEvent } from '@sentry/shim';
+import { SentryError } from '@sentry/core';
+import { Scope } from '@sentry/hub';
+import { Breadcrumb, SentryEvent, SentryResponse } from '@sentry/types';
 
 import { CommonBackend, ElectronOptions, IPC_PING } from '../common';
 
@@ -12,16 +13,12 @@ const PING_TIMEOUT = 500;
 
 /** Backend implementation for Electron renderer backends. */
 export class RendererBackend implements CommonBackend {
-  /** Handle to the SDK frontend for callbacks. */
-  private readonly frontend: Frontend<ElectronOptions>;
-
   /** The inner SDK used to record JavaScript events. */
   private readonly inner: BrowserBackend;
 
   /** Creates a new Electron backend instance. */
-  public constructor(frontend: Frontend<ElectronOptions>) {
-    this.frontend = frontend;
-    this.inner = new BrowserBackend(frontend);
+  public constructor(private readonly options: ElectronOptions) {
+    this.inner = new BrowserBackend(options);
   }
 
   /**
@@ -59,7 +56,7 @@ export class RendererBackend implements CommonBackend {
   /**
    * @inheritDoc
    */
-  public async sendEvent(_: SentryEvent): Promise<number> {
+  public async sendEvent(_: SentryEvent): Promise<SentryResponse> {
     throw new SentryError(
       'Invariant violation: Only supported in main process',
     );
@@ -77,7 +74,8 @@ export class RendererBackend implements CommonBackend {
   /**
    * @inheritDoc
    */
-  public storeContext(_: Context): boolean {
+  public storeScope(_: Scope): void {
+    // ipcRenderer.send(IPC_CONTEXT, nextContext, scope);
     throw new SentryError(
       'Invariant violation: Only supported in main process',
     );
@@ -85,7 +83,7 @@ export class RendererBackend implements CommonBackend {
 
   /** Returns whether JS is enabled. */
   private isJavaScriptEnabled(): boolean {
-    return this.frontend.getOptions().enableJavaScript !== false;
+    return this.options.enableJavaScript !== false;
   }
 
   /** Returns whether native reports are enabled. */
@@ -106,7 +104,7 @@ export class RendererBackend implements CommonBackend {
       return false;
     }
 
-    return this.frontend.getOptions().enableNative !== false;
+    return this.options.enableNative !== false;
   }
 
   /** Activates the Electron CrashReporter. */

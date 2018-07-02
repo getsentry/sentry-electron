@@ -1,2 +1,2 @@
 export { RendererBackend } from './backend';
-export { RendererFrontend } from './frontend';
+export { RendererClient } from './client';

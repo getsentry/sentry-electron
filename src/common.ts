@@ -1,7 +1,7 @@
 import { BrowserOptions } from '@sentry/browser';
-import { Backend, Frontend, Options, Scope } from '@sentry/core';
+import { Backend, Client, Options, Scope } from '@sentry/core';
 import { NodeOptions } from '@sentry/node';
-import { SentryEvent } from '@sentry/shim';
+import { SentryEvent } from '@sentry/types';
 
 /** IPC to ping the main process when initializing in the renderer. */
 export const IPC_PING = 'sentry-electron.ping';
@@ -10,7 +10,7 @@ export const IPC_EVENT = 'sentry-electron.event';
 /** IPC to capture a breadcrumb globally. */
 export const IPC_CRUMB = 'sentry-electron.breadcrumbs';
 /** IPC to capture new context (user, tags, extra) globally. */
-export const IPC_CONTEXT = 'sentry-electron.context';
+export const IPC_SCOPE = 'sentry-electron.scope';
 
 /**
  * Configuration options for {@link SentryElectron}.
@@ -47,8 +47,8 @@ export interface ElectronOptions extends Options, BrowserOptions, NodeOptions {
   enableUnresponsive?: boolean;
 }
 
-/** Common interface for Electron frontends. */
-export interface CommonFrontend extends Frontend<ElectronOptions> {
+/** Common interface for Electron clients. */
+export interface CommonClient extends Client<ElectronOptions> {
   /**
    * Uploads a native crash dump (Minidump) to Sentry.
    *

@@ -1,5 +1,5 @@
 // tslint:disable-next-line
 require('util.promisify/shim')();
 
-export { MainFrontend } from './frontend';
+export { MainClient } from './client';
 export { MainBackend } from './backend';

@@ -1,7 +1,9 @@
 import { initAndBind } from '@sentry/core';
-import { _callOnClient, getCurrentClient, SentryEvent } from '@sentry/shim';
+import { getDefaultHub } from '@sentry/hub';
+import { _callOnClient } from '@sentry/minimal';
+import { SentryEvent } from '@sentry/types';
 import { ElectronOptions } from './common';
-import { ElectronFrontend } from './dispatch';
+import { ElectronClient } from './dispatch';
 
 /**
  * The Sentry Electron SDK Client.
@@ -20,11 +22,11 @@ import { ElectronFrontend } from './dispatch';
  * });
  *
  * @example
- * import { setContext } from '@sentry/electron';
- * setContext({
- *   extra: { battery: 0.7 },
- *   tags: { user_mode: 'admin' },
- *   user: { id: '4711' },
+ * import { configureScope } from '@sentry/electron';
+ * configureScope((scope: Scope) => {
+ *   scope.setExtra({ battery: 0.7 });
+ *   scope.setTags({ user_mode: 'admin' });
+ *   scope.setUser({ id: '4711' });
  * });
  *
  * @example
@@ -48,12 +50,12 @@ import { ElectronFrontend } from './dispatch';
  * @see ElectronOptions for documentation on configuration options.
  */
 export function init(options: ElectronOptions): void {
-  initAndBind(ElectronFrontend, options);
+  initAndBind(ElectronClient, options);
 }
 
 /** Returns the current ElectronFrontend, if any. */
-export function getCurrentFrontend(): ElectronFrontend {
-  return getCurrentClient() as ElectronFrontend;
+export function getCurrentFrontend(): ElectronClient {
+  return getDefaultHub().getClient() as ElectronClient;
 }
 
 /**

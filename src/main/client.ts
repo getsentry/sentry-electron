@@ -1,6 +1,11 @@
-import { FrontendBase, Scope } from '@sentry/core';
-import { Breadcrumb, Context, SdkInfo, SentryEvent } from '@sentry/shim';
-import { CommonFrontend, ElectronOptions } from '../common';
+import { BaseClient, Scope } from '@sentry/core';
+import {
+  Breadcrumb,
+  SdkInfo,
+  SentryEvent,
+  SentryResponse,
+} from '@sentry/types';
+import { CommonClient, ElectronOptions } from '../common';
 import { MainBackend } from './backend';
 import { addEventDefaults } from './context';
 import { normalizeEvent } from './normalize';
@@ -13,8 +18,8 @@ const SDK_NAME = 'sentry-electron';
 const SDK_VERSION: string = require('../../package.json').version;
 
 /** Frontend implementation for Electron renderer backends. */
-export class MainFrontend extends FrontendBase<MainBackend, ElectronOptions>
-  implements CommonFrontend {
+export class MainClient extends BaseClient<MainBackend, ElectronOptions>
+  implements CommonClient {
   /**
    * Creates a new Electron SDK instance.
    * @param options Configuration options for this SDK.
@@ -26,19 +31,20 @@ export class MainFrontend extends FrontendBase<MainBackend, ElectronOptions>
   /**
    * @inheritDoc
    */
-  protected getSdkInfo(): SdkInfo {
+  public getSdkInfo(): SdkInfo {
     return { name: SDK_NAME, version: SDK_VERSION };
   }
 
-  /**
-   * @inheritDoc
-   */
-  public getInitialScope(): Scope {
-    return {
-      breadcrumbs: this.getBackend().loadBreadcrumbs(),
-      context: this.getBackend().loadContext(),
-    };
-  }
+  // TODO
+  // /**
+  //  * @inheritDoc
+  //  */
+  // public getInitialScope(): Scope {
+  //   return {
+  //     breadcrumbs: this.getBackend().loadBreadcrumbs(),
+  //     context: this.getBackend().loadContext(),
+  //   };
+  // }
 
   /**
    * Uploads a native crash dump (Minidump) to Sentry.
@@ -50,20 +56,25 @@ export class MainFrontend extends FrontendBase<MainBackend, ElectronOptions>
   public async captureMinidump(
     path: string,
     event: SentryEvent = {},
-    scope: Scope = this.getInternalScope(),
+    scope?: Scope,
   ): Promise<void> {
     event.tags = { event_type: 'native', ...event.tags };
-    await this.processEvent(event, scope, async finalEvent =>
-      this.getBackend().uploadMinidump(path, finalEvent),
+    await this.processEvent(
+      event,
+      async finalEvent => this.getBackend().uploadMinidump(path, finalEvent),
+      scope,
     );
   }
 
   /**
    * @inheritDoc
    */
-  public async captureEvent(event: SentryEvent, scope: Scope): Promise<void> {
+  public async captureEvent(
+    event: SentryEvent,
+    scope?: Scope,
+  ): Promise<SentryResponse> {
     event.tags = { event_type: 'javascript', ...event.tags };
-    await super.captureEvent(event, scope);
+    return super.captureEvent(event, scope);
   }
 
   /**
@@ -71,24 +82,25 @@ export class MainFrontend extends FrontendBase<MainBackend, ElectronOptions>
    */
   public async addBreadcrumb(
     breadcrumb: Breadcrumb,
-    scope: Scope,
+    scope?: Scope,
   ): Promise<void> {
     await super.addBreadcrumb(breadcrumb, scope);
   }
 
-  /**
-   * @inheritDoc
-   */
-  public async setContext(nextContext: Context, scope: Scope): Promise<void> {
-    await super.setContext(nextContext, scope);
-  }
+  // TODO
+  // /**
+  //  * @inheritDoc
+  //  */
+  // public async setContext(nextContext: Context, scope: Scope): Promise<void> {
+  //   await super.setContext(nextContext, scope);
+  // }
 
   /**
    * @inheritDoc
    */
   protected async prepareEvent(
     event: SentryEvent,
-    scope: Scope,
+    scope?: Scope,
   ): Promise<SentryEvent> {
     const prepared = await super.prepareEvent(event, scope);
     const merged = await addEventDefaults(prepared);

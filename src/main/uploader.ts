@@ -3,8 +3,10 @@ import { basename, join } from 'path';
 import { promisify } from 'util';
 
 import { DSN } from '@sentry/core';
-import { SentryEvent } from '@sentry/shim';
-import { filterAsync, mkdirp, Store } from '@sentry/utils';
+import { SentryEvent, SentryResponse } from '@sentry/types';
+import { filterAsync } from '@sentry/utils/async';
+import { mkdirp } from '@sentry/utils/fs';
+import { Store } from '@sentry/utils/store';
 import fetch = require('electron-fetch');
 import FormData = require('form-data');
 
@@ -87,7 +89,9 @@ export class MinidumpUploader {
    * @param event Event data to attach to the minidump.
    * @returns A promise that resolves when the upload is complete.
    */
-  public async uploadMinidump(request: MinidumpRequest): Promise<number> {
+  public async uploadMinidump(
+    request: MinidumpRequest,
+  ): Promise<SentryResponse> {
     try {
       const body = new FormData();
       body.append('upload_file_minidump', fs.createReadStream(request.path));
@@ -97,7 +101,10 @@ export class MinidumpUploader {
       // Too many requests, so we queue the event and send it later
       if (response.status === CODE_RETRY) {
         await this.queueMinidump(request);
-        return CODE_RETRY;
+        // TODO
+        return {
+          code: CODE_RETRY,
+        };
       }
 
       // We either succeeded or something went horribly wrong. Either way, we
@@ -113,7 +120,8 @@ export class MinidumpUploader {
         await this.flushQueue();
       }
 
-      return response.status;
+      // TODO
+      return { code: response.status };
     } catch (err) {
       // User's internet connection was down so we queue it as well
       const error = err ? (err as { code: string }) : { code: '' };
@@ -121,7 +129,8 @@ export class MinidumpUploader {
         await this.queueMinidump(request);
       }
 
-      return 500;
+      // TODO
+      return { code: 500 };
     }
   }
 

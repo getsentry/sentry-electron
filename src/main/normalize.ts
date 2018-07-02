@@ -1,5 +1,5 @@
-import { SentryEvent, SentryException, Stacktrace } from '@sentry/shim';
-import { clone } from '@sentry/utils';
+import { SentryEvent, SentryException, Stacktrace } from '@sentry/types';
+import { clone } from '@sentry/utils/object';
 // tslint:disable-next-line:no-implicit-dependencies
 import { app } from 'electron';
 
@@ -34,7 +34,10 @@ function getStacktrace(event: SentryEvent): Stacktrace | undefined {
 
   if (exception) {
     // Raven Node adheres to the Event interface
+    // @ts-ignore
     if (exception[0]) {
+      // @ts-ignore
+      // tslint:disable-next-line:no-unsafe-any
       return exception[0].stacktrace;
     }
 

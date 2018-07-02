@@ -1,20 +1,24 @@
-import { FrontendBase, Scope } from '@sentry/core';
-import { Breadcrumb, Context, SdkInfo, SentryEvent } from '@sentry/shim';
+import { BaseClient, Scope } from '@sentry/core';
+import {
+  Breadcrumb,
+  SdkInfo,
+  SentryEvent,
+  SentryResponse,
+} from '@sentry/types';
 // tslint:disable-next-line:no-implicit-dependencies
 import { ipcRenderer } from 'electron';
 import {
-  CommonFrontend,
+  CommonClient,
   ElectronOptions,
-  IPC_CONTEXT,
   IPC_CRUMB,
   IPC_EVENT,
+  // IPC_SCOPE,
 } from '../common';
 import { RendererBackend } from './backend';
 
 /** Frontend implementation for Electron renderer backends. */
-export class RendererFrontend
-  extends FrontendBase<RendererBackend, ElectronOptions>
-  implements CommonFrontend {
+export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
+  implements CommonClient {
   /**
    * Creates a new Electron SDK instance.
    * @param options Configuration options for this SDK.
@@ -26,18 +30,8 @@ export class RendererFrontend
   /**
    * @inheritDoc
    */
-  protected getSdkInfo(): SdkInfo {
+  public getSdkInfo(): SdkInfo {
     return {};
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public getInitialScope(): Scope {
-    return {
-      breadcrumbs: [],
-      context: {},
-    };
   }
 
   /**
@@ -58,8 +52,13 @@ export class RendererFrontend
   /**
    * @inheritDoc
    */
-  public async captureEvent(event: SentryEvent, scope: Scope): Promise<void> {
+  public async captureEvent(
+    event: SentryEvent,
+    scope?: Scope,
+  ): Promise<SentryResponse> {
     ipcRenderer.send(IPC_EVENT, event, scope);
+    // TODO
+    return { code: 200 };
   }
 
   /**
@@ -72,10 +71,11 @@ export class RendererFrontend
     ipcRenderer.send(IPC_CRUMB, breadcrumb, scope);
   }
 
+  // TODO
   /**
    * @inheritDoc
    */
-  public async setContext(nextContext: Context, scope: Scope): Promise<void> {
-    ipcRenderer.send(IPC_CONTEXT, nextContext, scope);
-  }
+  // public async setContext(nextContext: Context, scope: Scope): Promise<void> {
+  //   ipcRenderer.send(IPC_CONTEXT, nextContext, scope);
+  // }
 }

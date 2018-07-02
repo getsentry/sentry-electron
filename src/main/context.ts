@@ -4,7 +4,7 @@ import { platform, release } from 'os';
 import { join } from 'path';
 import { promisify } from 'util';
 
-import { SentryEvent } from '@sentry/shim';
+import { SentryEvent } from '@sentry/types';
 // tslint:disable-next-line:no-implicit-dependencies
 import { app } from 'electron';
 
