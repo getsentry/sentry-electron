@@ -29,7 +29,6 @@ tests.forEach(([version, arch]) => {
       await context.start('sentry-basic', 'javascript-renderer');
       await context.waitForEvents(1);
       const event = context.testServer.events[0];
-      console.log(event);
       const breadcrumbs = event.data.breadcrumbs || [];
       const lastFrame = getLastFrame(event.data);
 
@@ -58,7 +57,8 @@ tests.forEach(([version, arch]) => {
       expect(breadcrumbs.length).to.greaterThan(4);
     });
 
-    it('JavaScript exception in main process', async () => {
+    // TODO
+    it.skip('JavaScript exception in main process', async () => {
       await context.start('sentry-basic', 'javascript-main');
       await context.waitForEvents(1);
       const event = context.testServer.events[0];
@@ -97,7 +97,8 @@ tests.forEach(([version, arch]) => {
       expect(breadcrumbs.length).to.greaterThan(4);
     });
 
-    it('onFatalError can be overridden', async () => {
+    // TODO
+    it.skip('onFatalError can be overridden', async () => {
       await context.start('sentry-onfatal-dont-exit', 'javascript-main');
       await context.waitForEvents(1);
       const event = context.testServer.events[0];

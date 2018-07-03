@@ -68,9 +68,6 @@ export class MainBackend implements CommonBackend {
   /** The inner SDK used to record Node events. */
   private readonly inner: NodeBackend;
 
-  /** Store to persist breadcrumbs beyond application crashes. */
-  private readonly breadcrumbs: Store<Breadcrumb[]>;
-
   /** Store to persist context information beyond application crashes. */
   private readonly scope: Store<Scope>;
 
@@ -82,7 +79,6 @@ export class MainBackend implements CommonBackend {
     this.inner = new NodeBackend(options);
 
     const path = getCachePath();
-    this.breadcrumbs = new Store<Breadcrumb[]>(path, 'breadcrumbs', []);
     this.scope = new Store<Scope>(path, 'scope', new Scope());
   }
 
@@ -148,16 +144,7 @@ export class MainBackend implements CommonBackend {
   /**
    * @inheritDoc
    */
-  public storeBreadcrumb(breadcrumb: Breadcrumb): boolean {
-    // We replicate the behavior of the frontend
-    const { maxBreadcrumbs = 30 } = this.options;
-    this.breadcrumbs.update(breadcrumbs =>
-      [...breadcrumbs, breadcrumb].slice(
-        -Math.max(0, Math.min(maxBreadcrumbs, 100)),
-      ),
-    );
-
-    // Still, the frontend should merge breadcrumbs into events, for now
+  public storeBreadcrumb(_: Breadcrumb): boolean {
     return true;
   }
 
@@ -379,8 +366,17 @@ export class MainBackend implements CommonBackend {
     if (uploader === undefined) {
       throw new SentryError('Invariant violation: Native crashes not enabled');
     }
-
-    const event: SentryEvent = { extra };
+    // TODO: Maybe make this cleaner
+    const storedScope = this.scope.get() as any;
+    // tslint:disable:no-unsafe-any
+    const nextExtra = { ...storedScope.extra, ...extra };
+    const event: SentryEvent = {
+      breadcrumbs: storedScope.breadcrumbs,
+      extra: nextExtra,
+      tags: storedScope.tags,
+      user: storedScope.user,
+    };
+    // tslint:enable:no-unsafe-any
     const paths = await uploader.getNewMinidumps();
     paths.map(path => {
       captureMinidump(path, event);

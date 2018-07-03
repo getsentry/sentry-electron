@@ -3,7 +3,7 @@ import { basename, join } from 'path';
 import { promisify } from 'util';
 
 import { DSN } from '@sentry/core';
-import { SentryEvent, SentryResponse } from '@sentry/types';
+import { SentryEvent, SentryResponse, Status } from '@sentry/types';
 import { filterAsync } from '@sentry/utils/async';
 import { mkdirp } from '@sentry/utils/fs';
 import { Store } from '@sentry/utils/store';
@@ -76,10 +76,12 @@ export class MinidumpUploader {
     this.type = process.platform === 'darwin' ? 'crashpad' : 'breakpad';
     this.knownPaths = [];
 
-    const { host, path, port, protocol, user } = dsn;
-    this.url =
-      `${protocol}://${host}${port !== '' ? `:${port}` : ''}` +
-      `/api/${path}/minidump?sentry_key=${user}`;
+    // TODO: We need to put this somewhere in core
+    // we have this in 3 places now (transports browser/node/here)
+    const { host, path, projectId, port, protocol, user } = dsn;
+    this.url = `${protocol}://${host}${port !== '' ? `:${port}` : ''}${
+      path !== '' ? `/${path}` : ''
+    }/api/${projectId}/minidump?sentry_key=${user}`;
   }
 
   /**
@@ -101,9 +103,10 @@ export class MinidumpUploader {
       // Too many requests, so we queue the event and send it later
       if (response.status === CODE_RETRY) {
         await this.queueMinidump(request);
-        // TODO
         return {
           code: CODE_RETRY,
+          event_id: request.event.event_id,
+          status: Status.RateLimit,
         };
       }
 
@@ -120,8 +123,11 @@ export class MinidumpUploader {
         await this.flushQueue();
       }
 
-      // TODO
-      return { code: response.status };
+      return {
+        code: response.status,
+        event_id: request.event.event_id,
+        status: Status.fromHttpCode(response.status),
+      };
     } catch (err) {
       // User's internet connection was down so we queue it as well
       const error = err ? (err as { code: string }) : { code: '' };
@@ -129,8 +135,11 @@ export class MinidumpUploader {
         await this.queueMinidump(request);
       }
 
-      // TODO
-      return { code: 500 };
+      return {
+        code: 500,
+        event_id: request.event.event_id,
+        status: Status.Failed,
+      };
     }
   }
 

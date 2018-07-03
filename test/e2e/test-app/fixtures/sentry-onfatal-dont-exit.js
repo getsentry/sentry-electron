@@ -3,7 +3,8 @@ const { app } = require('electron');
 
 init({
   dsn: process.env.DSN,
-  onFatalError: error => {
-
-  },
+  integrations: integrations =>
+    integrations.filter(
+      integration => integration.name !== 'OnUncaughtException',
+    ),
 });

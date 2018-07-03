@@ -1,4 +1,4 @@
-import { SentryEvent, StackFrame } from '@sentry/shim';
+import { SentryEvent, StackFrame } from '@sentry/types';
 
 /** Get stack frames from SentryEvent */
 function getFrames(event: SentryEvent): StackFrame[] {

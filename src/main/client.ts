@@ -35,23 +35,12 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions>
     return { name: SDK_NAME, version: SDK_VERSION };
   }
 
-  // TODO
-  // /**
-  //  * @inheritDoc
-  //  */
-  // public getInitialScope(): Scope {
-  //   return {
-  //     breadcrumbs: this.getBackend().loadBreadcrumbs(),
-  //     context: this.getBackend().loadContext(),
-  //   };
-  // }
-
   /**
    * Uploads a native crash dump (Minidump) to Sentry.
    *
    * @param path The relative or absolute path to the minidump.
    * @param event Optional event payload to attach to the minidump.
-   * @param scope The SDK scope used to upload.
+   * @param scope Optional SDK scope used to upload.
    */
   public async captureMinidump(
     path: string,

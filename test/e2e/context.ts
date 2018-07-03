@@ -32,6 +32,10 @@ async function getTempDir(): Promise<TempDirectory> {
   });
 }
 
+if (!process.env.DEBUG) {
+  console.log('You can enable DEBUG=true to get verbose output.');
+}
+
 /** A class to start and stop Electron apps for E2E tests. */
 export class TestContext {
   /** Unique app name. */
@@ -68,13 +72,13 @@ export class TestContext {
       this.tempDir = await getTempDir();
     }
 
-    const env: { [key: string]: string | undefined } = {
+    const env: { [key: string]: string | boolean | undefined } = {
       ...process.env,
-      DSN:
-        'http://37f8a2ee37c0409d8970bc7559c7c7e4:4cfde0ca506c4ea39b4e25b61a1ff1c3@localhost:8123/277345',
+      DSN: 'http://37f8a2ee37c0409d8970bc7559c7c7e4@localhost:8123/277345',
       E2E_APP_NAME: this.appName,
       E2E_TEST_SENTRY: sentryConfig,
       E2E_USERDATA_DIRECTORY: this.tempDir.path,
+      ELECTRON_ENABLE_LOGGING: process.env.DEBUG,
     };
 
     if (fixture) {
@@ -82,15 +86,17 @@ export class TestContext {
     }
 
     const childProcess = spawn(this.electronPath, [this.appPath], { env });
-    childProcess.stdout.pipe(process.stdout);
 
-    childProcess.stderr.on('data', data => {
-      const str = data.toString();
-      if (str.match(/^\[\d+\:\d+/)) {
-        return;
-      }
-      process.stderr.write(data);
-    });
+    if (process.env.DEBUG) {
+      childProcess.stdout.pipe(process.stdout);
+      childProcess.stderr.on('data', data => {
+        const str = data.toString();
+        if (str.match(/^\[\d+\:\d+/)) {
+          return;
+        }
+        process.stderr.write(data);
+      });
+    }
 
     this.mainProcess = new ProcessStatus(childProcess.pid);
 
