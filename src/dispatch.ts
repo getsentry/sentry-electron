@@ -1,5 +1,5 @@
 import { ClientClass, DSN } from '@sentry/core';
-import { Scope } from '@sentry/hub';
+import { getDefaultHub as getHub, Scope } from '@sentry/hub';
 import {
   Breadcrumb,
   SdkInfo,
@@ -7,6 +7,12 @@ import {
   SentryResponse,
 } from '@sentry/types';
 import { CommonClient, ElectronOptions } from './common';
+
+// tslint:disable:no-var-requires no-unsafe-any
+export const getDefaultHub: typeof getHub =
+  process.type === 'browser'
+    ? module.require('@sentry/node').getDefaultHub
+    : require('@sentry/hub').getDefaultHub;
 
 /**
  * The Sentry Electron SDK Frontend.
@@ -37,13 +43,10 @@ export class ElectronClient implements CommonClient {
     // implementation, which should be fine for most cases. False positives of
     // this would be running `@sentry/electron` in a bare node process, which is
     // acceptable.
-
-    // tslint:disable:no-var-requires no-unsafe-any
     const clientClass: ClientClass<CommonClient, ElectronOptions> =
       process.type === 'browser'
         ? module.require('./main').MainClient
         : require('./renderer').RendererClient;
-    // tslint:enable:no-var-requires no-unsafe-any
 
     this.inner = new clientClass(options);
   }
@@ -134,4 +137,14 @@ export class ElectronClient implements CommonClient {
   // public setContext(context: Context, scope: Scope): void {
   //   this.inner.setContext(context, scope);
   // }
+}
+
+/**
+ * TODO
+ * @param options Options
+ */
+export function specificInit(options: ElectronOptions): void {
+  process.type === 'browser'
+    ? module.require('./main').init(options)
+    : require('./renderer').init(options);
 }

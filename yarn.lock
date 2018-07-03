@@ -2,64 +2,65 @@
 # yarn lockfile v1
 
 
-"@sentry/browser@4.0.0-beta.0":
-  version "4.0.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-4.0.0-beta.0.tgz#b2a235f5141f4bb2b5b6b42ddf015aff5e2fd6e8"
+"@sentry/browser@4.0.0-beta.3":
+  version "4.0.0-beta.3"
+  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-4.0.0-beta.3.tgz#dfc9fb008d416ba6c51d247b41518b50ed6968ae"
   dependencies:
-    "@sentry/core" "4.0.0-beta.0"
-    "@sentry/hub" "4.0.0-beta.0"
-    "@sentry/minimal" "4.0.0-beta.0"
-    "@sentry/types" "4.0.0-beta.0"
-    "@sentry/utils" "4.0.0-beta.0"
+    "@sentry/core" "4.0.0-beta.3"
+    "@sentry/hub" "4.0.0-beta.3"
+    "@sentry/minimal" "4.0.0-beta.3"
+    "@sentry/types" "4.0.0-beta.3"
+    "@sentry/utils" "4.0.0-beta.3"
 
-"@sentry/core@4.0.0-beta.0":
-  version "4.0.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-4.0.0-beta.0.tgz#219eac5c75a058614405208f6a511309bfc9719e"
+"@sentry/core@4.0.0-beta.3":
+  version "4.0.0-beta.3"
+  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-4.0.0-beta.3.tgz#79c6acb8e31a9be10d3fea43e3cfbee087dd13c6"
   dependencies:
-    "@sentry/hub" "4.0.0-beta.0"
-    "@sentry/minimal" "4.0.0-beta.0"
-    "@sentry/types" "4.0.0-beta.0"
-    "@sentry/utils" "4.0.0-beta.0"
+    "@sentry/hub" "4.0.0-beta.3"
+    "@sentry/minimal" "4.0.0-beta.3"
+    "@sentry/types" "4.0.0-beta.3"
+    "@sentry/utils" "4.0.0-beta.3"
 
-"@sentry/hub@4.0.0-beta.0":
-  version "4.0.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@sentry/hub/-/hub-4.0.0-beta.0.tgz#27a184493f2a8a2f88132835d139aa46848677b5"
+"@sentry/hub@4.0.0-beta.3":
+  version "4.0.0-beta.3"
+  resolved "https://registry.yarnpkg.com/@sentry/hub/-/hub-4.0.0-beta.3.tgz#bbb44e65722a40bad238a31289c91c78931882f8"
   dependencies:
-    "@sentry/types" "4.0.0-beta.0"
+    "@sentry/types" "4.0.0-beta.3"
+    "@sentry/utils" "4.0.0-beta.3"
 
-"@sentry/minimal@4.0.0-beta.0":
-  version "4.0.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@sentry/minimal/-/minimal-4.0.0-beta.0.tgz#2893477aa7906efc0449285ceac94e6c9dea7c7b"
+"@sentry/minimal@4.0.0-beta.3":
+  version "4.0.0-beta.3"
+  resolved "https://registry.yarnpkg.com/@sentry/minimal/-/minimal-4.0.0-beta.3.tgz#3efaf419ceb8e05b518375dca56bbb6daa912fb0"
   dependencies:
-    "@sentry/hub" "4.0.0-beta.0"
-    "@sentry/types" "4.0.0-beta.0"
+    "@sentry/hub" "4.0.0-beta.3"
+    "@sentry/types" "4.0.0-beta.3"
 
-"@sentry/node@4.0.0-beta.0":
-  version "4.0.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-4.0.0-beta.0.tgz#b8b0838c6d6c03025a9b47b880e6931ed5b6dd7b"
+"@sentry/node@4.0.0-beta.3":
+  version "4.0.0-beta.3"
+  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-4.0.0-beta.3.tgz#f012dc50b91ddc68d0c5b339d2024c5b50ebd000"
   dependencies:
-    "@sentry/core" "4.0.0-beta.0"
-    "@sentry/hub" "4.0.0-beta.0"
-    "@sentry/minimal" "4.0.0-beta.0"
-    "@sentry/types" "4.0.0-beta.0"
-    "@sentry/utils" "4.0.0-beta.0"
+    "@sentry/core" "4.0.0-beta.3"
+    "@sentry/hub" "4.0.0-beta.3"
+    "@sentry/minimal" "4.0.0-beta.3"
+    "@sentry/types" "4.0.0-beta.3"
+    "@sentry/utils" "4.0.0-beta.3"
     raven "^2.6.0"
 
-"@sentry/types@4.0.0-beta.0":
-  version "4.0.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@sentry/types/-/types-4.0.0-beta.0.tgz#cb7363f84b3376b725c2b0eadc5b743a6f250eb6"
+"@sentry/types@4.0.0-beta.3":
+  version "4.0.0-beta.3"
+  resolved "https://registry.yarnpkg.com/@sentry/types/-/types-4.0.0-beta.3.tgz#a42d030c53705416d553d1fdc33f1c7c1362996e"
 
-"@sentry/typescript@4.0.0-beta.0":
-  version "4.0.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@sentry/typescript/-/typescript-4.0.0-beta.0.tgz#5bf61191a8ad5ff27ab32f5d977fbe6c7f612731"
+"@sentry/typescript@4.0.0-beta.3":
+  version "4.0.0-beta.3"
+  resolved "https://registry.yarnpkg.com/@sentry/typescript/-/typescript-4.0.0-beta.3.tgz#7f171340c5bc4b0c888f1a8c9184427b1fa73fd1"
   dependencies:
     tslint-config-prettier "^1.12.0"
 
-"@sentry/utils@4.0.0-beta.0":
-  version "4.0.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-4.0.0-beta.0.tgz#9626c4298e2b86a8e73fa358a5f03633bb4bc9dd"
+"@sentry/utils@4.0.0-beta.3":
+  version "4.0.0-beta.3"
+  resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-4.0.0-beta.3.tgz#50b0e3f6e58d2baa6e7e86bb7a542960692ae16e"
   dependencies:
-    "@sentry/types" "4.0.0-beta.0"
+    "@sentry/types" "4.0.0-beta.3"
 
 "@types/body-parser@*", "@types/body-parser@^1.17.0":
   version "1.17.0"

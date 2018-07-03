@@ -3,7 +3,10 @@ import { SentryEvent, StackFrame } from '@sentry/shim';
 /** Get stack frames from SentryEvent */
 function getFrames(event: SentryEvent): StackFrame[] {
   const stacktrace =
-    event.exception && event.exception[0] && event.exception[0].stacktrace;
+    event.exception &&
+    event.exception.values &&
+    event.exception.values[0] &&
+    event.exception.values[0].stacktrace;
   return stacktrace && stacktrace.frames ? stacktrace.frames : [];
 }
 

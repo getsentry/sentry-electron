@@ -29,6 +29,7 @@ tests.forEach(([version, arch]) => {
       await context.start('sentry-basic', 'javascript-renderer');
       await context.waitForEvents(1);
       const event = context.testServer.events[0];
+      console.log(event);
       const breadcrumbs = event.data.breadcrumbs || [];
       const lastFrame = getLastFrame(event.data);
 

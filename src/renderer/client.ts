@@ -4,16 +4,11 @@ import {
   SdkInfo,
   SentryEvent,
   SentryResponse,
+  Status,
 } from '@sentry/types';
 // tslint:disable-next-line:no-implicit-dependencies
 import { ipcRenderer } from 'electron';
-import {
-  CommonClient,
-  ElectronOptions,
-  IPC_CRUMB,
-  IPC_EVENT,
-  // IPC_SCOPE,
-} from '../common';
+import { CommonClient, ElectronOptions, IPC_CRUMB, IPC_EVENT } from '../common';
 import { RendererBackend } from './backend';
 
 /** Frontend implementation for Electron renderer backends. */
@@ -44,7 +39,7 @@ export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
   public async captureMinidump(
     _path: string,
     _event: SentryEvent,
-    _scope: Scope,
+    _scope?: Scope,
   ): Promise<void> {
     // Noop
   }
@@ -57,8 +52,8 @@ export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
     scope?: Scope,
   ): Promise<SentryResponse> {
     ipcRenderer.send(IPC_EVENT, event, scope);
-    // TODO
-    return { code: 200 };
+    // This is a fire and forget thing
+    return { code: 200, event_id: event.event_id, status: Status.Success };
   }
 
   /**
@@ -66,16 +61,8 @@ export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
    */
   public async addBreadcrumb(
     breadcrumb: Breadcrumb,
-    scope: Scope,
+    scope?: Scope,
   ): Promise<void> {
     ipcRenderer.send(IPC_CRUMB, breadcrumb, scope);
   }
-
-  // TODO
-  /**
-   * @inheritDoc
-   */
-  // public async setContext(nextContext: Context, scope: Scope): Promise<void> {
-  //   ipcRenderer.send(IPC_CONTEXT, nextContext, scope);
-  // }
 }

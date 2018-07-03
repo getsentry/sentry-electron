@@ -23,8 +23,6 @@ export {
 
 export { getHubFromCarrier, Hub, Scope } from '@sentry/hub';
 
-export { getDefaultHub } from '@sentry/node';
-
 export { ElectronOptions } from './common';
-export { ElectronClient } from './dispatch';
+export { ElectronClient, getDefaultHub } from './dispatch';
 export { captureMinidump, init, getCurrentFrontend } from './sdk';

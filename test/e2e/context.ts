@@ -82,6 +82,16 @@ export class TestContext {
     }
 
     const childProcess = spawn(this.electronPath, [this.appPath], { env });
+    childProcess.stdout.pipe(process.stdout);
+
+    childProcess.stderr.on('data', data => {
+      const str = data.toString();
+      if (str.match(/^\[\d+\:\d+/)) {
+        return;
+      }
+      process.stderr.write(data);
+    });
+
     this.mainProcess = new ProcessStatus(childProcess.pid);
 
     await this.waitForTrue(

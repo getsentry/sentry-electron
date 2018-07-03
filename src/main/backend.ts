@@ -2,19 +2,24 @@ import {
   app,
   crashReporter,
   ipcMain,
-  // net,
   powerMonitor,
   screen,
   // tslint:disable-next-line:no-implicit-dependencies
 } from 'electron';
 import { join } from 'path';
 
-import { addBreadcrumb, captureEvent, captureMessage } from '@sentry/minimal';
+import {
+  addBreadcrumb,
+  captureEvent,
+  captureMessage,
+  configureScope,
+} from '@sentry/minimal';
 import {
   Breadcrumb,
   SentryEvent,
   SentryResponse,
   Severity,
+  Status,
 } from '@sentry/types';
 
 import { DSN, SentryError } from '@sentry/core';
@@ -29,6 +34,7 @@ import {
   IPC_CRUMB,
   IPC_EVENT,
   IPC_PING,
+  IPC_SCOPE,
 } from '../common';
 import { captureMinidump } from '../sdk';
 import { normalizeUrl } from './normalize';
@@ -62,11 +68,9 @@ export class MainBackend implements CommonBackend {
   /** The inner SDK used to record Node events. */
   private readonly inner: NodeBackend;
 
-  // TODO
   /** Store to persist breadcrumbs beyond application crashes. */
   private readonly breadcrumbs: Store<Breadcrumb[]>;
 
-  // TODO
   /** Store to persist context information beyond application crashes. */
   private readonly scope: Store<Scope>;
 
@@ -79,7 +83,6 @@ export class MainBackend implements CommonBackend {
 
     const path = getCachePath();
     this.breadcrumbs = new Store<Breadcrumb[]>(path, 'breadcrumbs', []);
-    // TODO
     this.scope = new Store<Scope>(path, 'scope', new Scope());
   }
 
@@ -94,7 +97,7 @@ export class MainBackend implements CommonBackend {
     }
 
     if (this.isJavaScriptEnabled()) {
-      success = this.installJavaScriptHandler() && success;
+      success = this.installNodeHandler() && success;
     }
 
     this.installIPC();
@@ -139,14 +142,7 @@ export class MainBackend implements CommonBackend {
     if (this.uploader) {
       return this.uploader.uploadMinidump({ path, event });
     }
-
-    // TODO
-    return { code: 200 };
-  }
-
-  /** Returns the full list of breadcrumbs (or empty). */
-  public loadBreadcrumbs(): Breadcrumb[] {
-    return this.breadcrumbs.get();
+    return { code: 200, event_id: event.event_id, status: Status.Success };
   }
 
   /**
@@ -169,22 +165,6 @@ export class MainBackend implements CommonBackend {
    * @inheritDoc
    */
   public storeScope(scope: Scope): void {
-    // TODO
-    // We replicate the behavior of the frontend
-    // this.scope.update(context => {
-    //   if (nextContext.extra) {
-    //     context.extra = { ...context.extra, ...nextContext.extra };
-    //   }
-    //   if (nextContext.tags) {
-    //     context.tags = { ...context.tags, ...nextContext.tags };
-    //   }
-    //   if (nextContext.user) {
-    //     context.user = { ...context.user, ...nextContext.user };
-    //   }
-    //   return context;
-    // });
-    // Still, the frontend should merge context into events, for now
-    // return true;
     this.scope.set(scope);
   }
 
@@ -278,14 +258,10 @@ export class MainBackend implements CommonBackend {
   }
 
   /** Activates the Node SDK for the main process. */
-  private async installJavaScriptHandler(): Promise<boolean> {
+  private async installNodeHandler(): Promise<boolean> {
     if (!this.inner.install()) {
       return false;
     }
-
-    // Override the transport mechanism with electron's net module
-    // TODO
-    // this.inner.setTransport(net);
 
     // This is only needed for the electron net module
     appReady = app.isReady()
@@ -315,18 +291,23 @@ export class MainBackend implements CommonBackend {
       captureEvent(event);
     });
 
-    // TODO
-    // ipcMain.on(IPC_SCOPE, (_: any, context: Context) => {
-    //   if (context.user) {
-    //     setUserContext(context.user);
-    //   }
-    //   if (context.tags) {
-    //     setTagsContext(context.tags);
-    //   }
-    //   if (context.extra) {
-    //     setExtraContext(context.extra);
-    //   }
-    // });
+    ipcMain.on(IPC_SCOPE, (_: any, rendererScope: Scope) => {
+      configureScope(scope => {
+        if (rendererScope.getUser()) {
+          scope.setUser(rendererScope.getUser());
+        }
+        if (rendererScope.getTags()) {
+          Object.keys(rendererScope.getTags()).forEach(key => {
+            scope.setTag(key, rendererScope.getTags()[key]);
+          });
+        }
+        if (rendererScope.getExtra()) {
+          Object.keys(rendererScope.getExtra()).forEach(key => {
+            scope.setExtra(key, rendererScope.getExtra()[key]);
+          });
+        }
+      });
+    });
   }
 
   /** Installs auto-breadcrumb handlers for certain Electron events. */

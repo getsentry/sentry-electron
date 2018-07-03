@@ -20,9 +20,4 @@ module.exports = {
       },
     ]),
   ],
-  node: {
-    fs: 'empty',
-    console: true,
-    module: 'empty',
-  },
 };

@@ -54,6 +54,7 @@ export class TestServer {
 
     // Handles the Sentry store endpoint
     app.post('/api/:id/store', (req, res) => {
+      console.log('aaaa');
       const auth = (req.headers['x-sentry-auth'] as string) || '';
       const keyMatch = auth.match(/sentry_key=([a-f0-9]*)/);
       if (!keyMatch) {
@@ -74,6 +75,7 @@ export class TestServer {
 
     // Handles the Sentry minidump endpoint
     app.post('/api/:id/minidump', (req, res) => {
+      console.log('bbbb');
       const form = new Form();
       form.parse(req, (_, fields, files) => {
         this.events.push({

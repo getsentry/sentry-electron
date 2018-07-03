@@ -6,7 +6,7 @@ import { SentryError } from '@sentry/core';
 import { Scope } from '@sentry/hub';
 import { Breadcrumb, SentryEvent, SentryResponse } from '@sentry/types';
 
-import { CommonBackend, ElectronOptions, IPC_PING } from '../common';
+import { CommonBackend, ElectronOptions, IPC_PING, IPC_SCOPE } from '../common';
 
 /** Timeout used for registering with the main process. */
 const PING_TIMEOUT = 500;
@@ -74,11 +74,8 @@ export class RendererBackend implements CommonBackend {
   /**
    * @inheritDoc
    */
-  public storeScope(_: Scope): void {
-    // ipcRenderer.send(IPC_CONTEXT, nextContext, scope);
-    throw new SentryError(
-      'Invariant violation: Only supported in main process',
-    );
+  public storeScope(scope: Scope): void {
+    ipcRenderer.send(IPC_SCOPE, scope);
   }
 
   /** Returns whether JS is enabled. */

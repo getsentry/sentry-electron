@@ -1,9 +1,8 @@
-import { initAndBind } from '@sentry/core';
 import { getDefaultHub } from '@sentry/hub';
 import { _callOnClient } from '@sentry/minimal';
 import { SentryEvent } from '@sentry/types';
 import { ElectronOptions } from './common';
-import { ElectronClient } from './dispatch';
+import { ElectronClient, specificInit } from './dispatch';
 
 /**
  * The Sentry Electron SDK Client.
@@ -50,7 +49,7 @@ import { ElectronClient } from './dispatch';
  * @see ElectronOptions for documentation on configuration options.
  */
 export function init(options: ElectronOptions): void {
-  initAndBind(ElectronClient, options);
+  specificInit(options);
 }
 
 /** Returns the current ElectronFrontend, if any. */

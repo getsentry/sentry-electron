@@ -87,14 +87,6 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions>
     await super.addBreadcrumb(breadcrumb, scope);
   }
 
-  // TODO
-  // /**
-  //  * @inheritDoc
-  //  */
-  // public async setContext(nextContext: Context, scope: Scope): Promise<void> {
-  //   await super.setContext(nextContext, scope);
-  // }
-
   /**
    * @inheritDoc
    */
