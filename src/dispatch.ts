@@ -129,18 +129,11 @@ export class ElectronClient implements CommonClient {
   public getOptions(): ElectronOptions {
     return this.inner.getOptions();
   }
-
-  // TODO
-  /**
-   * @inheritDoc
-   */
-  // public setContext(context: Context, scope: Scope): void {
-  //   this.inner.setContext(context, scope);
-  // }
 }
 
 /**
- * TODO
+ * This either calls init on main with node interations or renderer
+ * with browser integrations.
  * @param options Options
  */
 export function specificInit(options: ElectronOptions): void {

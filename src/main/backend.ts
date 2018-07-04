@@ -99,6 +99,30 @@ export class MainBackend implements CommonBackend {
     this.installIPC();
     this.installAutoBreadcrumbs();
 
+    // We refill the scope here to not have an empty one
+    configureScope(scope => {
+      const loadedScope = this.scope.get();
+
+      if (loadedScope.getUser()) {
+        scope.setUser(loadedScope.getUser());
+      }
+      if (loadedScope.getTags()) {
+        Object.keys(loadedScope.getTags()).forEach(key => {
+          scope.setTag(key, loadedScope.getTags()[key]);
+        });
+      }
+      if (loadedScope.getExtra()) {
+        Object.keys(loadedScope.getExtra()).forEach(key => {
+          scope.setExtra(key, loadedScope.getExtra()[key]);
+        });
+      }
+      if (loadedScope.getBreadcrumbs()) {
+        loadedScope.getBreadcrumbs().forEach(crumb => {
+          scope.addBreadcrumb(crumb);
+        });
+      }
+    });
+
     return success;
   }
 
@@ -366,15 +390,15 @@ export class MainBackend implements CommonBackend {
     if (uploader === undefined) {
       throw new SentryError('Invariant violation: Native crashes not enabled');
     }
-    // TODO: Maybe make this cleaner
-    const storedScope = this.scope.get() as any;
+
+    const storedScope = Scope.clone(this.scope.get());
     // tslint:disable:no-unsafe-any
-    const nextExtra = { ...storedScope.extra, ...extra };
+    const nextExtra = { ...storedScope.getExtra(), ...extra };
     const event: SentryEvent = {
-      breadcrumbs: storedScope.breadcrumbs,
+      breadcrumbs: storedScope.getBreadcrumbs(),
       extra: nextExtra,
-      tags: storedScope.tags,
-      user: storedScope.user,
+      tags: storedScope.getTags(),
+      user: storedScope.getUser(),
     };
     // tslint:enable:no-unsafe-any
     const paths = await uploader.getNewMinidumps();

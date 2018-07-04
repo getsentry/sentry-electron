@@ -57,14 +57,12 @@ tests.forEach(([version, arch]) => {
       expect(breadcrumbs.length).to.greaterThan(4);
     });
 
-    // TODO
-    it.skip('JavaScript exception in main process', async () => {
+    it('JavaScript exception in main process', async () => {
       await context.start('sentry-basic', 'javascript-main');
       await context.waitForEvents(1);
       const event = context.testServer.events[0];
       const breadcrumbs = event.data.breadcrumbs || [];
       const lastFrame = getLastFrame(event.data);
-
       // wait for the main process to exit (default behavior)
       await context.waitForTrue(
         async () =>
@@ -97,8 +95,7 @@ tests.forEach(([version, arch]) => {
       expect(breadcrumbs.length).to.greaterThan(4);
     });
 
-    // TODO
-    it.skip('onFatalError can be overridden', async () => {
+    it('onFatalError can be overridden', async () => {
       await context.start('sentry-onfatal-dont-exit', 'javascript-main');
       await context.waitForEvents(1);
       const event = context.testServer.events[0];
