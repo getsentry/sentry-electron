@@ -11,6 +11,7 @@ import {
   net,
   // tslint:disable-next-line:no-implicit-dependencies
 } from 'electron';
+import { isAppReady } from '../backend';
 
 /** Using net module of electron */
 export class NetTransport extends Transports.BaseTransport {
@@ -23,6 +24,7 @@ export class NetTransport extends Transports.BaseTransport {
    * @inheritDoc
    */
   public async send(event: SentryEvent): Promise<SentryResponse> {
+    await isAppReady();
     return new Promise<SentryResponse>((resolve, reject) => {
       const req = net.request(this.getRequestOptions());
       req.on('error', reject);

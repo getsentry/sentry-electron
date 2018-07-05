@@ -40,9 +40,6 @@ import { captureMinidump } from '../sdk';
 import { normalizeUrl } from './normalize';
 import { MinidumpUploader } from './uploader';
 
-/** A promise that resolves when the app is ready. */
-let appReady = Promise.resolve();
-
 /** Patch to access internal CrashReporter functionality. */
 interface CrashReporterExt {
   getCrashesDirectory(): string;
@@ -61,6 +58,17 @@ function getRendererExtra(
     crashed_process: `renderer[${contents.id}]`,
     crashed_url: normalizeUrl(contents.getURL()),
   };
+}
+
+/**
+ * Retruns a promise that resolves when app is ready.
+ */
+export async function isAppReady(): Promise<boolean> {
+  return app.isReady()
+    ? Promise.resolve(true)
+    : new Promise<boolean>(resolve => {
+        app.once('ready', resolve);
+      });
 }
 
 /** Backend implementation for Electron renderer backends. */
@@ -144,7 +152,7 @@ export class MainBackend implements CommonBackend {
    * @inheritDoc
    */
   public async sendEvent(event: SentryEvent): Promise<SentryResponse> {
-    await appReady;
+    await isAppReady();
     return this.inner.sendEvent(event);
   }
 
@@ -273,14 +281,6 @@ export class MainBackend implements CommonBackend {
     if (!this.inner.install()) {
       return false;
     }
-
-    // This is only needed for the electron net module
-    appReady = app.isReady()
-      ? Promise.resolve()
-      : new Promise(resolve => {
-          app.once('ready', resolve);
-        });
-
     return true;
   }
 
