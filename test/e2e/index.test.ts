@@ -36,6 +36,7 @@ tests.forEach(([version, arch]) => {
       expect(lastFrame.filename).to.equal(
         'app:///fixtures/javascript-renderer.js',
       );
+
       expect(event.dump_file).to.equal(undefined);
       expect(event.sentry_key).to.equal(SENTRY_KEY);
       expect(breadcrumbs.length).to.greaterThan(4);

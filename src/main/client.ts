@@ -7,8 +7,6 @@ import {
 } from '@sentry/types';
 import { CommonClient, ElectronOptions } from '../common';
 import { MainBackend } from './backend';
-import { addEventDefaults } from './context';
-import { normalizeEvent } from './normalize';
 
 /** SDK name used in every event. */
 const SDK_NAME = 'sentry-electron';
@@ -74,17 +72,5 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions>
     scope?: Scope,
   ): Promise<void> {
     await super.addBreadcrumb(breadcrumb, scope);
-  }
-
-  /**
-   * @inheritDoc
-   */
-  protected async prepareEvent(
-    event: SentryEvent,
-    scope?: Scope,
-  ): Promise<SentryEvent> {
-    const prepared = await super.prepareEvent(event, scope);
-    const merged = await addEventDefaults(prepared);
-    return normalizeEvent(merged);
   }
 }

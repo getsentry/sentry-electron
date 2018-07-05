@@ -37,7 +37,7 @@ import {
   IPC_SCOPE,
 } from '../common';
 import { captureMinidump } from '../sdk';
-import { normalizeUrl } from './normalize';
+import { normalizeUrl } from './integrations/normalize';
 import { MinidumpUploader } from './uploader';
 
 /** Patch to access internal CrashReporter functionality. */

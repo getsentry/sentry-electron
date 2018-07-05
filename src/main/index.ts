@@ -4,6 +4,7 @@ import { initAndBind } from '@sentry/core';
 import { defaultIntegrations } from '@sentry/node';
 import { ElectronOptions } from '..';
 import { MainClient } from './client';
+import { Electron } from './integrations/electron';
 import { NetTransport } from './transports/net';
 export { MainClient } from './client';
 export { MainBackend } from './backend';
@@ -16,5 +17,5 @@ export function init(options: ElectronOptions): void {
   if (!options.transport) {
     options.transport = NetTransport;
   }
-  initAndBind(MainClient, options, defaultIntegrations);
+  initAndBind(MainClient, options, [...defaultIntegrations, new Electron()]);
 }

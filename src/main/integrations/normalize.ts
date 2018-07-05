@@ -1,5 +1,4 @@
 import { SentryEvent, SentryException, Stacktrace } from '@sentry/types';
-import { clone } from '@sentry/utils/object';
 // tslint:disable-next-line:no-implicit-dependencies
 import { app } from 'electron';
 
@@ -53,24 +52,23 @@ function getStacktrace(event: SentryEvent): Stacktrace | undefined {
 
 /**
  * Normalizes all URLs in an event. See {@link normalizeUrl} for more
- * information.
+ * information. Mutates the passed in event.
  *
  * @param event The event to normalize.
- * @returns The normalized event.
  */
-export function normalizeEvent(event: SentryEvent): SentryEvent {
+export function normalizeEvent(event: SentryEvent): void {
   // NOTE: Events from Raven currently contain data that does not conform with
   // the `SentryEvent` interface. Until this has been resolved, we need to cast
   // to avoid typescript warnings.
-  const copy = clone(event);
+  // const copy = clone(event);
 
   // The culprit has been deprecated about two years ago and can safely be
   // removed. Remove this line, once this has been resolved in Raven.
-  delete (copy as { culprit: string }).culprit;
+  delete (event as { culprit: string }).culprit;
 
   // Retrieve stack traces and normalize their URLs. Without this, grouping
   // would not work due to user folders in file names.
-  const stacktrace = getStacktrace(copy);
+  const stacktrace = getStacktrace(event);
   if (stacktrace && stacktrace.frames) {
     stacktrace.frames.forEach(frame => {
       if (frame.filename) {
@@ -79,7 +77,7 @@ export function normalizeEvent(event: SentryEvent): SentryEvent {
     });
   }
 
-  const { request = {} } = copy;
+  const { request = {} } = event;
   if (request.url) {
     request.url = normalizeUrl(request.url);
   }
@@ -94,8 +92,6 @@ export function normalizeEvent(event: SentryEvent): SentryEvent {
   // The Node SDK currently adds a default tag for server_name, which contains
   // the machine name of the computer running Electron. This is not useful
   // information in this case.
-  const { tags = {} } = copy;
+  const { tags = {} } = event;
   delete tags.server_name;
-
-  return copy;
 }

@@ -1,6 +1,6 @@
 import { expect, should, use } from 'chai';
 import chaiAsPromised = require('chai-as-promised');
-import { normalizeUrl } from '../../src/main/normalize';
+import { normalizeUrl } from '../../src/main/integrations/normalize';
 
 should();
 use(chaiAsPromised);
