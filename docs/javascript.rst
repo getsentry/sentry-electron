@@ -84,10 +84,12 @@ user data:
 
 .. code-block:: javascript
 
-    Sentry.setUserContext({
-        id: '42',
-        email: 'user@example.org'
-    })
+    Sentry.configureScope(scope => {
+        scope.setUser({
+            id: '42',
+            email: 'user@example.org'
+        });
+    });
 
 This data is generally submitted with each error or message and allows you to
 figure out which users are affected by problems. If at any point the user
@@ -102,7 +104,9 @@ to be merged in with future exceptions or messages via ``setTagsContext()``:
 
 .. code-block:: javascript
 
-    Sentry.setTagsContext({ key: "value" });
+    Sentry.configureScope(scope => {
+        scope.setTag('key', 'value');
+    });
 
 Tags given in ``setTagsContext()`` are merged with existing tags. If you need to
 remove a tag, then set it explicitly to ``null`` or ``undefined``.
@@ -115,10 +119,8 @@ future events. Note that the objects you pass in must be JSON-serializable:
 
 .. code-block:: javascript
 
-    Sentry.setExtraContext({
-        my: {
-            data: 2
-        }
+    Sentry.configureScope(scope => {
+        scope.setExtra('my', {data: 2});
     });
 
 Data given in ``setExtraContext()`` is shallow-merged with existing extras. To
