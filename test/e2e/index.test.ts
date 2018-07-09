@@ -81,7 +81,10 @@ tests.forEach(([version, arch]) => {
     });
 
     it('JavaScript exception in main process with space in path', async () => {
-      await context.start('sentry-basic', 'javascript main with spaces');
+      await context.start(
+        'sentry-onfatal-dont-exit',
+        'javascript main with spaces',
+      );
       await context.waitForEvents(1);
       const event = context.testServer.events[0];
       const breadcrumbs = event.data.breadcrumbs || [];
