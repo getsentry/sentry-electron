@@ -79,7 +79,7 @@ export class TestContext {
       E2E_APP_NAME: this.appName,
       E2E_TEST_SENTRY: sentryConfig,
       E2E_USERDATA_DIRECTORY: this.tempDir.path,
-      ELECTRON_ENABLE_LOGGING: process.env.DEBUG,
+      ELECTRON_ENABLE_LOGGING: !!process.env.DEBUG,
     };
 
     if (fixture) {
@@ -88,7 +88,7 @@ export class TestContext {
 
     const childProcess = spawn(this.electronPath, [this.appPath], { env });
 
-    if (process.env.DEBUG) {
+    if (!!process.env.DEBUG) {
       childProcess.stdout.pipe(process.stdout);
       childProcess.stderr.on('data', data => {
         const str = data.toString();
