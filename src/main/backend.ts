@@ -322,7 +322,8 @@ export class MainBackend implements CommonBackend {
     });
   }
 
-  /** Installs auto-breadcrumb handlers for certain Electron events.
+  /**
+   * Installs auto-breadcrumb handlers for certain Electron events.
    * TODO: Consider moving to integration
    */
   private installAutoBreadcrumbs(): void {
