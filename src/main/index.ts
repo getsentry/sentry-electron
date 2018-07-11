@@ -14,8 +14,12 @@ export { MainBackend } from './backend';
  * @param options ElectronOptions
  */
 export function init(options: ElectronOptions): void {
-  if (!options.transport) {
-    options.transport = NetTransport;
-  }
-  initAndBind(MainClient, options, [...defaultIntegrations, new Electron()]);
+  initAndBind(
+    MainClient,
+    {
+      transport: NetTransport,
+      ...options,
+    },
+    [...defaultIntegrations, new Electron()],
+  );
 }

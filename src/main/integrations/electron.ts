@@ -1,7 +1,7 @@
-import { getDefaultHub } from '@sentry/hub';
+import { getDefaultHub } from '@sentry/node';
 import { Integration, SentryEvent } from '@sentry/types';
-import { addEventDefaults } from './context';
-import { normalizeEvent } from './normalize';
+import { addEventDefaults } from '../context';
+import { normalizeEvent } from '../normalize';
 
 /** Electron integration that cleans up the event. */
 export class Electron implements Integration {

@@ -9,7 +9,7 @@ export const IPC_PING = 'sentry-electron.ping';
 export const IPC_EVENT = 'sentry-electron.event';
 /** IPC to capture a breadcrumb globally. */
 export const IPC_CRUMB = 'sentry-electron.breadcrumbs';
-/** IPC to capture new context (user, tags, extra) globally. */
+/** IPC to capture a scope globally. */
 export const IPC_SCOPE = 'sentry-electron.scope';
 
 /**

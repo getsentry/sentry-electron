@@ -123,7 +123,7 @@ export class RendererBackend implements CommonBackend {
   /** Checks if the main processes is available and logs a warning if not. */
   private pingMainProcess(): void {
     // For whatever reason we have to wait PING_TIMEOUT until we send the ping
-    // to main. Other
+    // to main.
     setTimeout(() => {
       ipcRenderer.send(IPC_PING);
 

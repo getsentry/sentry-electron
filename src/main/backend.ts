@@ -37,7 +37,7 @@ import {
   IPC_SCOPE,
 } from '../common';
 import { captureMinidump } from '../sdk';
-import { normalizeUrl } from './integrations/normalize';
+import { normalizeUrl } from './normalize';
 import { MinidumpUploader } from './uploader';
 
 /** Patch to access internal CrashReporter functionality. */
@@ -65,7 +65,7 @@ function getRendererExtra(
  */
 export async function isAppReady(): Promise<boolean> {
   return app.isReady()
-    ? Promise.resolve(true)
+    ? true
     : new Promise<boolean>(resolve => {
         app.once('ready', resolve);
       });
@@ -77,7 +77,7 @@ export class MainBackend implements CommonBackend {
   private readonly inner: NodeBackend;
 
   /** Store to persist context information beyond application crashes. */
-  private readonly scope: Store<Scope>;
+  private readonly scopeStore: Store<Scope>;
 
   /** Uploader for minidump files. */
   private uploader?: MinidumpUploader;
@@ -87,7 +87,7 @@ export class MainBackend implements CommonBackend {
     this.inner = new NodeBackend(options);
 
     const path = getCachePath();
-    this.scope = new Store<Scope>(path, 'scope', new Scope());
+    this.scopeStore = new Store<Scope>(path, 'scope', new Scope());
   }
 
   /**
@@ -96,20 +96,9 @@ export class MainBackend implements CommonBackend {
   public install(): boolean {
     let success = true;
 
-    if (this.isNativeEnabled()) {
-      success = this.installNativeHandler() && success;
-    }
-
-    if (this.isJavaScriptEnabled()) {
-      success = this.installNodeHandler() && success;
-    }
-
-    this.installIPC();
-    this.installAutoBreadcrumbs();
-
     // We refill the scope here to not have an empty one
     configureScope(scope => {
-      const loadedScope = this.scope.get();
+      const loadedScope = this.scopeStore.get();
 
       if (loadedScope.getUser()) {
         scope.setUser(loadedScope.getUser());
@@ -130,6 +119,17 @@ export class MainBackend implements CommonBackend {
         });
       }
     });
+
+    if (this.isNativeEnabled()) {
+      success = this.installNativeHandler() && success;
+    }
+
+    if (this.isJavaScriptEnabled()) {
+      success = this.installNodeHandler() && success;
+    }
+
+    this.installIPC();
+    this.installAutoBreadcrumbs();
 
     return success;
   }
@@ -184,7 +184,7 @@ export class MainBackend implements CommonBackend {
    * @inheritDoc
    */
   public storeScope(scope: Scope): void {
-    this.scope.set(scope);
+    this.scopeStore.set(scope);
   }
 
   /** Returns whether JS is enabled. */
@@ -303,25 +303,28 @@ export class MainBackend implements CommonBackend {
     });
 
     ipcMain.on(IPC_SCOPE, (_: any, rendererScope: Scope) => {
+      const sentScope = Scope.clone(rendererScope);
       configureScope(scope => {
-        if (rendererScope.getUser()) {
-          scope.setUser(rendererScope.getUser());
+        if (sentScope.getUser()) {
+          scope.setUser(sentScope.getUser());
         }
-        if (rendererScope.getTags()) {
-          Object.keys(rendererScope.getTags()).forEach(key => {
-            scope.setTag(key, rendererScope.getTags()[key]);
+        if (sentScope.getTags()) {
+          Object.keys(sentScope.getTags()).forEach(key => {
+            scope.setTag(key, sentScope.getTags()[key]);
           });
         }
-        if (rendererScope.getExtra()) {
-          Object.keys(rendererScope.getExtra()).forEach(key => {
-            scope.setExtra(key, rendererScope.getExtra()[key]);
+        if (sentScope.getExtra()) {
+          Object.keys(sentScope.getExtra()).forEach(key => {
+            scope.setExtra(key, sentScope.getExtra()[key]);
           });
         }
       });
     });
   }
 
-  /** Installs auto-breadcrumb handlers for certain Electron events. */
+  /** Installs auto-breadcrumb handlers for certain Electron events.
+   * TODO: Consider moving to integration
+   */
   private installAutoBreadcrumbs(): void {
     this.instrumentBreadcrumbs('app', app);
 
@@ -347,6 +350,7 @@ export class MainBackend implements CommonBackend {
   /**
    * Hooks into the Electron EventEmitter to capture breadcrumbs for the
    * specified events.
+   * TODO: Consider moving to integration
    */
   private instrumentBreadcrumbs(
     category: string,
@@ -391,19 +395,13 @@ export class MainBackend implements CommonBackend {
       throw new SentryError('Invariant violation: Native crashes not enabled');
     }
 
-    const storedScope = Scope.clone(this.scope.get());
-    // tslint:disable:no-unsafe-any
-    const nextExtra = { ...storedScope.getExtra(), ...extra };
-    const event: SentryEvent = {
-      breadcrumbs: storedScope.getBreadcrumbs(),
-      extra: nextExtra,
-      tags: storedScope.getTags(),
-      user: storedScope.getUser(),
-    };
-    // tslint:enable:no-unsafe-any
+    // TODO: Check if this should go through hub
+    const storedScope = Scope.clone(this.scopeStore.get());
+    const event: SentryEvent = { extra };
+    await storedScope.applyToEvent(event);
     const paths = await uploader.getNewMinidumps();
     paths.map(path => {
-      captureMinidump(path, event);
+      captureMinidump(path, { ...event });
     });
   }
 }

@@ -1,8 +1,7 @@
-import { getDefaultHub } from '@sentry/hub';
 import { _callOnClient } from '@sentry/minimal';
 import { SentryEvent } from '@sentry/types';
 import { ElectronOptions } from './common';
-import { ElectronClient, specificInit } from './dispatch';
+import { ElectronClient, getDefaultHub, specificInit } from './dispatch';
 
 /**
  * The Sentry Electron SDK Client.

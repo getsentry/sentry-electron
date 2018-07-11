@@ -61,7 +61,6 @@ export function normalizeEvent(event: SentryEvent): void {
   // the `SentryEvent` interface. Until this has been resolved, we need to cast
   // to avoid typescript warnings.
   // const copy = clone(event);
-
   // The culprit has been deprecated about two years ago and can safely be
   // removed. Remove this line, once this has been resolved in Raven.
   delete (event as { culprit: string }).culprit;
