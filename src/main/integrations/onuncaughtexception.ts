@@ -5,12 +5,12 @@ import {
   // tslint:disable-next-line:no-implicit-dependencies
 } from 'electron';
 
-/** Capture unhandled erros but don't exit process. */
-export class NonExitOnUncaughtException implements Integration {
+/** Capture unhandled erros. */
+export class OnUncaughtException implements Integration {
   /**
    * @inheritDoc
    */
-  public name: string = 'NonExitOnUncaughtException';
+  public name: string = 'OnUncaughtException';
 
   /**
    * @inheritDoc
