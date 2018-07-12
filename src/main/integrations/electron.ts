@@ -15,8 +15,7 @@ export class Electron implements Integration {
    */
   public install(): void {
     getDefaultHub().addEventProcessor(async (event: SentryEvent) => {
-      await addEventDefaults(event);
-      normalizeEvent(event);
+      return normalizeEvent(await addEventDefaults(event));
     });
   }
 }

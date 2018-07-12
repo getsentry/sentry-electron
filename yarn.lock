@@ -2,65 +2,71 @@
 # yarn lockfile v1
 
 
-"@sentry/browser@4.0.0-beta.6":
-  version "4.0.0-beta.6"
-  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-4.0.0-beta.6.tgz#2196c8702582888b1212ecf2c7ce92d8c858af93"
+"@sentry/browser@4.0.0-beta.8":
+  version "4.0.0-beta.8"
+  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-4.0.0-beta.8.tgz#04b8f8f13d3ae58cdb8d0f13254819bec40fc1c8"
   dependencies:
-    "@sentry/core" "4.0.0-beta.6"
-    "@sentry/hub" "4.0.0-beta.6"
-    "@sentry/minimal" "4.0.0-beta.6"
-    "@sentry/types" "4.0.0-beta.6"
-    "@sentry/utils" "4.0.0-beta.6"
+    "@sentry/core" "4.0.0-beta.8"
+    "@sentry/hub" "4.0.0-beta.8"
+    "@sentry/minimal" "4.0.0-beta.8"
+    "@sentry/types" "4.0.0-beta.8"
+    "@sentry/utils" "4.0.0-beta.8"
 
-"@sentry/core@4.0.0-beta.6":
-  version "4.0.0-beta.6"
-  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-4.0.0-beta.6.tgz#e58468a72fce6bd783b256e1318dabc9aec80ab4"
+"@sentry/core@4.0.0-beta.8":
+  version "4.0.0-beta.8"
+  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-4.0.0-beta.8.tgz#fa56cf2210ba2047842c8e097faeedda8faa0c48"
   dependencies:
-    "@sentry/hub" "4.0.0-beta.6"
-    "@sentry/minimal" "4.0.0-beta.6"
-    "@sentry/types" "4.0.0-beta.6"
-    "@sentry/utils" "4.0.0-beta.6"
+    "@sentry/hub" "4.0.0-beta.8"
+    "@sentry/minimal" "4.0.0-beta.8"
+    "@sentry/types" "4.0.0-beta.8"
+    "@sentry/utils" "4.0.0-beta.8"
 
-"@sentry/hub@4.0.0-beta.6":
-  version "4.0.0-beta.6"
-  resolved "https://registry.yarnpkg.com/@sentry/hub/-/hub-4.0.0-beta.6.tgz#c2a7513eee11eaac5dab47633bcc0831f45c6820"
+"@sentry/hub@4.0.0-beta.8":
+  version "4.0.0-beta.8"
+  resolved "https://registry.yarnpkg.com/@sentry/hub/-/hub-4.0.0-beta.8.tgz#f8a5c947317c8e94099b6684a7b4e54c0cb9a94a"
   dependencies:
-    "@sentry/types" "4.0.0-beta.6"
-    "@sentry/utils" "4.0.0-beta.6"
+    "@sentry/types" "4.0.0-beta.8"
+    "@sentry/utils" "4.0.0-beta.8"
 
-"@sentry/minimal@4.0.0-beta.6":
-  version "4.0.0-beta.6"
-  resolved "https://registry.yarnpkg.com/@sentry/minimal/-/minimal-4.0.0-beta.6.tgz#d6dbc794c0fee4ae17514ec9268fd2c2a8a66820"
+"@sentry/minimal@4.0.0-beta.8":
+  version "4.0.0-beta.8"
+  resolved "https://registry.yarnpkg.com/@sentry/minimal/-/minimal-4.0.0-beta.8.tgz#39f56aa555e85e4d8151e3f9ae7669d3b547466e"
   dependencies:
-    "@sentry/hub" "4.0.0-beta.6"
-    "@sentry/types" "4.0.0-beta.6"
+    "@sentry/hub" "4.0.0-beta.8"
+    "@sentry/types" "4.0.0-beta.8"
 
-"@sentry/node@4.0.0-beta.6":
-  version "4.0.0-beta.6"
-  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-4.0.0-beta.6.tgz#8d0faf7347e4692e652acab05fbca3ab36756bb5"
+"@sentry/node@4.0.0-beta.8":
+  version "4.0.0-beta.8"
+  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-4.0.0-beta.8.tgz#f5c85eaf9ba3b5917f9d089f4a3c981e2e6eb990"
   dependencies:
-    "@sentry/core" "4.0.0-beta.6"
-    "@sentry/hub" "4.0.0-beta.6"
-    "@sentry/minimal" "4.0.0-beta.6"
-    "@sentry/types" "4.0.0-beta.6"
-    "@sentry/utils" "4.0.0-beta.6"
-    raven "^2.6.0"
+    "@sentry/core" "4.0.0-beta.8"
+    "@sentry/hub" "4.0.0-beta.8"
+    "@sentry/minimal" "4.0.0-beta.8"
+    "@sentry/types" "4.0.0-beta.8"
+    "@sentry/utils" "4.0.0-beta.8"
+    "@types/cookie" "0.3.1"
+    "@types/md5" "2.1.32"
+    "@types/stack-trace" "0.0.29"
+    cookie "0.3.1"
+    lsmod "1.0.0"
+    md5 "2.2.1"
+    stack-trace "0.0.10"
 
-"@sentry/types@4.0.0-beta.6":
-  version "4.0.0-beta.6"
-  resolved "https://registry.yarnpkg.com/@sentry/types/-/types-4.0.0-beta.6.tgz#872f3562b1bfe0fa3ee82b2122d2c582bc542cb9"
+"@sentry/types@4.0.0-beta.8":
+  version "4.0.0-beta.8"
+  resolved "https://registry.yarnpkg.com/@sentry/types/-/types-4.0.0-beta.8.tgz#c36c61c34879d992971c74f9fe0fece0bd4375ec"
 
-"@sentry/typescript@4.0.0-beta.6":
-  version "4.0.0-beta.6"
-  resolved "https://registry.yarnpkg.com/@sentry/typescript/-/typescript-4.0.0-beta.6.tgz#66f31aebd9199872feed9c0e9d9d9d64ae878f8b"
+"@sentry/typescript@4.0.0-beta.8":
+  version "4.0.0-beta.8"
+  resolved "https://registry.yarnpkg.com/@sentry/typescript/-/typescript-4.0.0-beta.8.tgz#0b7d526b3e7c3f7d324a10577ed4701949f8147e"
   dependencies:
     tslint-config-prettier "^1.12.0"
 
-"@sentry/utils@4.0.0-beta.6":
-  version "4.0.0-beta.6"
-  resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-4.0.0-beta.6.tgz#e10af6907a478fa9b3fa4d61a56d4b92bc128172"
+"@sentry/utils@4.0.0-beta.8":
+  version "4.0.0-beta.8"
+  resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-4.0.0-beta.8.tgz#4c62d67c9ee4fb7c0b1add0ed5cc89b12464e779"
   dependencies:
-    "@sentry/types" "4.0.0-beta.6"
+    "@sentry/types" "4.0.0-beta.8"
 
 "@types/body-parser@*", "@types/body-parser@^1.17.0":
   version "1.17.0"
@@ -88,6 +94,10 @@
   resolved "https://registry.yarnpkg.com/@types/connect/-/connect-3.4.32.tgz#aa0e9616b9435ccad02bc52b5b454ffc2c70ba28"
   dependencies:
     "@types/node" "*"
+
+"@types/cookie@0.3.1":
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/@types/cookie/-/cookie-0.3.1.tgz#720a756ea8e760a258708b52441bd341f1ef4296"
 
 "@types/events@*":
   version "1.2.0"
@@ -117,6 +127,12 @@
 "@types/form-data@^2.2.1":
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/@types/form-data/-/form-data-2.2.1.tgz#ee2b3b8eaa11c0938289953606b745b738c54b1e"
+  dependencies:
+    "@types/node" "*"
+
+"@types/md5@2.1.32":
+  version "2.1.32"
+  resolved "https://registry.yarnpkg.com/@types/md5/-/md5-2.1.32.tgz#93e23437fcd17a7b9ca98d02aa6002e835842fe8"
   dependencies:
     "@types/node" "*"
 
@@ -154,6 +170,10 @@
   dependencies:
     "@types/express-serve-static-core" "*"
     "@types/mime" "*"
+
+"@types/stack-trace@0.0.29":
+  version "0.0.29"
+  resolved "https://registry.yarnpkg.com/@types/stack-trace/-/stack-trace-0.0.29.tgz#eb7a7c60098edb35630ed900742a5ecb20cfcb4d"
 
 accepts@~1.3.5:
   version "1.3.5"
@@ -1246,6 +1266,10 @@ lru-cache@^4.0.1:
     pseudomap "^1.0.2"
     yallist "^2.1.2"
 
+lsmod@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/lsmod/-/lsmod-1.0.0.tgz#9a00f76dca36eb23fa05350afe1b585d4299e64b"
+
 make-error@^1.1.1:
   version "1.3.4"
   resolved "https://registry.yarnpkg.com/make-error/-/make-error-1.3.4.tgz#19978ed575f9e9545d2ff8c13e33b5d18a67d535"
@@ -1258,7 +1282,7 @@ map-stream@~0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/map-stream/-/map-stream-0.1.0.tgz#e56aa94c4c8055a16404a0674b78f215f7c8e194"
 
-md5@^2.2.1:
+md5@2.2.1:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/md5/-/md5-2.2.1.tgz#53ab38d5fe3c8891ba465329ea23fac0540126f9"
   dependencies:
@@ -1638,16 +1662,6 @@ qs@6.5.2:
 range-parser@~1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/range-parser/-/range-parser-1.2.0.tgz#f49be6b487894ddc40dcc94a322f611092e00d5e"
-
-raven@^2.6.0:
-  version "2.6.0"
-  resolved "https://registry.yarnpkg.com/raven/-/raven-2.6.0.tgz#3806a82c9ee8cd3e75c3b7ea7bb1935aad092d0c"
-  dependencies:
-    cookie "0.3.1"
-    md5 "^2.2.1"
-    stack-trace "0.0.10"
-    timed-out "4.0.1"
-    uuid "3.0.0"
 
 raw-body@2.3.2:
   version "2.3.2"
@@ -2055,10 +2069,6 @@ through@2, through@~2.3, through@~2.3.1:
   version "2.3.8"
   resolved "https://registry.yarnpkg.com/through/-/through-2.3.8.tgz#0dd4c9ffaabc357960b1b724115d7e0e86a2e1f5"
 
-timed-out@4.0.1:
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/timed-out/-/timed-out-4.0.1.tgz#f32eacac5a175bea25d7fab565ab3ed8741ef56f"
-
 tough-cookie@~2.3.3:
   version "2.3.4"
   resolved "https://registry.yarnpkg.com/tough-cookie/-/tough-cookie-2.3.4.tgz#ec60cee38ac675063ffc97a5c18970578ee83655"
@@ -2188,10 +2198,6 @@ util.promisify@^1.0.0:
 utils-merge@1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/utils-merge/-/utils-merge-1.0.1.tgz#9f95710f50a267947b2ccc124741c1028427e713"
-
-uuid@3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.0.0.tgz#6728fc0459c450d796a99c31837569bdf672d728"
 
 uuid@^3.1.0:
   version "3.2.1"

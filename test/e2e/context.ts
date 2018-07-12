@@ -80,6 +80,7 @@ export class TestContext {
       E2E_TEST_SENTRY: sentryConfig,
       E2E_USERDATA_DIRECTORY: this.tempDir.path,
       ELECTRON_ENABLE_LOGGING: !!process.env.DEBUG,
+      NODE_ENV: 'production', // This is here to prevent the dialog of electron
     };
 
     if (fixture) {

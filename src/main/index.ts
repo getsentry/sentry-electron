@@ -5,6 +5,7 @@ import { defaultIntegrations } from '@sentry/node';
 import { ElectronOptions } from '..';
 import { MainClient } from './client';
 import { Electron } from './integrations/electron';
+import { NonExitOnUncaughtException } from './integrations/nonexitonuncaughtexception';
 import { NetTransport } from './transports/net';
 export { MainClient } from './client';
 export { MainBackend } from './backend';
@@ -14,12 +15,15 @@ export { MainBackend } from './backend';
  * @param options ElectronOptions
  */
 export function init(options: ElectronOptions): void {
+  const electronIntegrations = defaultIntegrations.filter(
+    integration => integration.name != 'OnUncaughtException',
+  );
   initAndBind(
     MainClient,
     {
       transport: NetTransport,
       ...options,
     },
-    [...defaultIntegrations, new Electron()],
+    [...electronIntegrations, new NonExitOnUncaughtException(), new Electron()],
   );
 }

@@ -1,4 +1,5 @@
 import { SentryEvent, SentryException, Stacktrace } from '@sentry/types';
+import { clone } from '@sentry/utils/object';
 // tslint:disable-next-line:no-implicit-dependencies
 import { app } from 'electron';
 
@@ -56,18 +57,18 @@ function getStacktrace(event: SentryEvent): Stacktrace | undefined {
  *
  * @param event The event to normalize.
  */
-export function normalizeEvent(event: SentryEvent): void {
+export function normalizeEvent(event: SentryEvent): SentryEvent {
   // NOTE: Events from Raven currently contain data that does not conform with
   // the `SentryEvent` interface. Until this has been resolved, we need to cast
   // to avoid typescript warnings.
-  // const copy = clone(event);
+  const copy = clone(event);
   // The culprit has been deprecated about two years ago and can safely be
   // removed. Remove this line, once this has been resolved in Raven.
-  delete (event as { culprit: string }).culprit;
+  delete (copy as { culprit: string }).culprit;
 
   // Retrieve stack traces and normalize their URLs. Without this, grouping
   // would not work due to user folders in file names.
-  const stacktrace = getStacktrace(event);
+  const stacktrace = getStacktrace(copy);
   if (stacktrace && stacktrace.frames) {
     stacktrace.frames.forEach(frame => {
       if (frame.filename) {
@@ -76,7 +77,7 @@ export function normalizeEvent(event: SentryEvent): void {
     });
   }
 
-  const { request = {} } = event;
+  const { request = {} } = copy;
   if (request.url) {
     request.url = normalizeUrl(request.url);
   }
@@ -91,6 +92,7 @@ export function normalizeEvent(event: SentryEvent): void {
   // The Node SDK currently adds a default tag for server_name, which contains
   // the machine name of the computer running Electron. This is not useful
   // information in this case.
-  const { tags = {} } = event;
+  const { tags = {} } = copy;
   delete tags.server_name;
+  return copy;
 }

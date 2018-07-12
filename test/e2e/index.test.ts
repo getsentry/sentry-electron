@@ -64,14 +64,6 @@ tests.forEach(([version, arch]) => {
       const event = context.testServer.events[0];
       const breadcrumbs = event.data.breadcrumbs || [];
       const lastFrame = getLastFrame(event.data);
-      // wait for the main process to exit (default behavior)
-      await context.waitForTrue(
-        async () =>
-          context.mainProcess
-            ? !(await context.mainProcess.isRunning())
-            : false,
-        'Timeout: Waiting for app to die',
-      );
 
       expect(context.testServer.events.length).to.equal(1);
       expect(lastFrame.filename).to.equal('app:///fixtures/javascript-main.js');

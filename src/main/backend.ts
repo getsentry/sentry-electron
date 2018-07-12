@@ -37,7 +37,8 @@ import {
   IPC_SCOPE,
 } from '../common';
 import { captureMinidump } from '../sdk';
-import { normalizeUrl } from './normalize';
+import { addEventDefaults } from './context';
+import { normalizeEvent, normalizeUrl } from './normalize';
 import { MinidumpUploader } from './uploader';
 
 /** Patch to access internal CrashReporter functionality. */
@@ -98,7 +99,7 @@ export class MainBackend implements CommonBackend {
 
     // We refill the scope here to not have an empty one
     configureScope(scope => {
-      const loadedScope = this.scopeStore.get();
+      const loadedScope = Scope.clone(this.scopeStore.get());
 
       if (loadedScope.getUser()) {
         scope.setUser(loadedScope.getUser());
@@ -122,10 +123,6 @@ export class MainBackend implements CommonBackend {
 
     if (this.isNativeEnabled()) {
       success = this.installNativeHandler() && success;
-    }
-
-    if (this.isJavaScriptEnabled()) {
-      success = this.installNodeHandler() && success;
     }
 
     this.installIPC();
@@ -185,11 +182,6 @@ export class MainBackend implements CommonBackend {
    */
   public storeScope(scope: Scope): void {
     this.scopeStore.set(scope);
-  }
-
-  /** Returns whether JS is enabled. */
-  private isJavaScriptEnabled(): boolean {
-    return this.options.enableJavaScript !== false;
   }
 
   /** Returns whether native reports are enabled. */
@@ -273,14 +265,6 @@ export class MainBackend implements CommonBackend {
       });
     }
 
-    return true;
-  }
-
-  /** Activates the Node SDK for the main process. */
-  private async installNodeHandler(): Promise<boolean> {
-    if (!this.inner.install()) {
-      return false;
-    }
     return true;
   }
 
@@ -398,8 +382,9 @@ export class MainBackend implements CommonBackend {
 
     // TODO: Check if this should go through hub
     const storedScope = Scope.clone(this.scopeStore.get());
-    const event: SentryEvent = { extra };
-    await storedScope.applyToEvent(event);
+    const event: SentryEvent = await storedScope.applyToEvent(
+      normalizeEvent(await addEventDefaults({ extra })),
+    );
     const paths = await uploader.getNewMinidumps();
     paths.map(path => {
       captureMinidump(path, { ...event });
