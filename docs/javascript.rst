@@ -190,7 +190,7 @@ rejections differs by process.
 
 In the main process, such unhandled errors will cause the app to exit
 immediatly. This is in accordance with the strategy recommended by Node. By
-default, Raven will capture these events and send them to Sentry prior to
+default, Sentry will capture these events and send them to Sentry prior to
 exiting. To override this behavior, declare a custom ``onFatalError`` callback
 when configuring the SDK:
 
@@ -198,7 +198,7 @@ when configuring the SDK:
 
     Sentry.init({
       dsn: '___PUBLIC_DSN___',
-      onFatalError: function (err, sendError) {
+      onFatalError: function (err) {
         if (!sendErr) {
           console.log('Successfully sent fatal error to Sentry:');
           console.error(err.stack);
@@ -212,12 +212,4 @@ when configuring the SDK:
 Renderer processes do not crash on unhandled errors and there is no
 ``onFatalError`` configuration option. Instead, the SDK automatically captures
 them and sends them to Sentry. This also applies to Promises and polyfills that
-report a global ``unhandledrejection`` DOM event. To disable this behavior, pass
-``captureUnhandledRejections: false``:
-
-.. code-block:: javascript
-
-    Sentry.init({
-      dsn: '___PUBLIC_DSN___',
-      captureUnhandledRejections: false
-    });
+report a global ``unhandledrejection`` DOM event.

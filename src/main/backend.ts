@@ -24,7 +24,7 @@ import {
 
 import { DSN, SentryError } from '@sentry/core';
 import { Scope } from '@sentry/hub';
-import { NodeBackend } from '@sentry/node';
+import { getDefaultHub, NodeBackend } from '@sentry/node';
 import { forget } from '@sentry/utils/async';
 import { Store } from '@sentry/utils/store';
 
@@ -37,8 +37,7 @@ import {
   IPC_SCOPE,
 } from '../common';
 import { captureMinidump } from '../sdk';
-import { addEventDefaults } from './context';
-import { normalizeEvent, normalizeUrl } from './normalize';
+import { normalizeUrl } from './normalize';
 import { MinidumpUploader } from './uploader';
 
 /** Patch to access internal CrashReporter functionality. */
@@ -380,11 +379,13 @@ export class MainBackend implements CommonBackend {
       throw new SentryError('Invariant violation: Native crashes not enabled');
     }
 
-    // TODO: Check if this should go through hub
-    const storedScope = Scope.clone(this.scopeStore.get());
-    const event: SentryEvent = await storedScope.applyToEvent(
-      normalizeEvent(await addEventDefaults({ extra })),
-    );
+    const currentCloned = Scope.clone(getDefaultHub().getScope());
+    const fetchedScope = this.scopeStore.get();
+    (fetchedScope as any).eventProcessors = [];
+    const storedScope = Scope.clone(fetchedScope);
+    let event: SentryEvent = { extra };
+    event = await storedScope.applyToEvent(event);
+    event = await currentCloned.applyToEvent(event);
     const paths = await uploader.getNewMinidumps();
     paths.map(path => {
       captureMinidump(path, { ...event });

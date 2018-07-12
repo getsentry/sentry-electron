@@ -24,6 +24,11 @@ export function init(options: ElectronOptions): void {
       transport: NetTransport,
       ...options,
     },
-    [...electronIntegrations, new NonExitOnUncaughtException(), new Electron()],
+    [
+      ...electronIntegrations,
+      // tslint:disable-next-line:no-unbound-method
+      new NonExitOnUncaughtException({ onFatalError: options.onFatalError }),
+      new Electron(),
+    ],
   );
 }
