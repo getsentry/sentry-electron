@@ -14,8 +14,8 @@ export class Electron implements Integration {
    * @inheritDoc
    */
   public install(): void {
-    getDefaultHub().addEventProcessor(async (event: SentryEvent) => {
-      return normalizeEvent(await addEventDefaults(event));
-    });
+    getDefaultHub().addEventProcessor(async (event: SentryEvent) =>
+      normalizeEvent(await addEventDefaults(event)),
+    );
   }
 }

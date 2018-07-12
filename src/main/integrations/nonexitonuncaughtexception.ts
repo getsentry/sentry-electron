@@ -1,6 +1,9 @@
-import { Integration, SentryEvent, Severity } from '@sentry/types';
 import { getDefaultHub } from '@sentry/node';
-import { dialog } from 'electron';
+import { Integration, SentryEvent, Severity } from '@sentry/types';
+import {
+  dialog,
+  // tslint:disable-next-line:no-implicit-dependencies
+} from 'electron';
 import { addEventDefaults } from '../context';
 import { normalizeEvent } from '../normalize';
 
@@ -14,30 +17,26 @@ export class NonExitOnUncaughtException implements Integration {
   /**
    * @inheritDoc
    */
-  public handler(error: Error): void {
-    getDefaultHub().withScope(() => {
-      getDefaultHub().addEventProcessor(async (event: SentryEvent) => {
-        return normalizeEvent(await addEventDefaults(event));
-      });
-      getDefaultHub().addEventProcessor(async (event: SentryEvent) => ({
-        ...event,
-        level: Severity.Fatal,
-      }));
-
-      getDefaultHub().captureException(error);
-
-      process.env.NODE_ENV !== 'production' &&
-        dialog.showErrorBox(
-          error.toString(),
-          error.stack ? error.stack.toString() : 'No stacktrace available',
-        );
-    });
-  }
-
-  /**
-   * @inheritDoc
-   */
   public install(): void {
-    global.process.on('uncaughtException', this.handler);
+    global.process.on('uncaughtException', (error: Error) => {
+      getDefaultHub().withScope(() => {
+        getDefaultHub().addEventProcessor(async (event: SentryEvent) =>
+          normalizeEvent(await addEventDefaults(event)),
+        );
+        getDefaultHub().addEventProcessor(async (event: SentryEvent) => ({
+          ...event,
+          level: Severity.Fatal,
+        }));
+
+        getDefaultHub().captureException(error);
+
+        if (process.env.NODE_ENV !== 'production') {
+          dialog.showErrorBox(
+            error.toString(),
+            error.stack ? error.stack.toString() : 'No stacktrace available',
+          );
+        }
+      });
+    });
   }
 }
