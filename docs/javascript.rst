@@ -188,11 +188,10 @@ Uncaught Exceptions
 The default behavior for dealing with globally unhandled exceptions and Promise
 rejections differs by process.
 
-In the main process, such unhandled errors will cause the app to exit
-immediatly. This is in accordance with the strategy recommended by Node. By
-default, Sentry will capture these events and send them to Sentry prior to
-exiting. To override this behavior, declare a custom ``onFatalError`` callback
-when configuring the SDK:
+In the main process, such unhandled errors Sentry will capture before showing the
+default dialog electron always shows. To override this behavior, declare a
+custom ``onFatalError`` callback when configuring the SDK, for example if you
+want your app to exit do:
 
 .. code-block:: javascript
 
