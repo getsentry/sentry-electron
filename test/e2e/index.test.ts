@@ -10,7 +10,7 @@ const SENTRY_KEY = '37f8a2ee37c0409d8970bc7559c7c7e4';
 should();
 use(chaiAsPromised);
 
-const tests = getTests('1.7.14', '1.8.6', '2.0.0-beta.8');
+const tests = getTests('1.7.14', '1.8.6', '2.0.5');
 
 tests.forEach(([version, arch]) => {
   describe(`Test Electron ${version} ${arch}`, () => {
