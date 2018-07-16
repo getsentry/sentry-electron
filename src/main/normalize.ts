@@ -58,13 +58,7 @@ function getStacktrace(event: SentryEvent): Stacktrace | undefined {
  * @param event The event to normalize.
  */
 export function normalizeEvent(event: SentryEvent): SentryEvent {
-  // NOTE: Events from Raven currently contain data that does not conform with
-  // the `SentryEvent` interface. Until this has been resolved, we need to cast
-  // to avoid typescript warnings.
   const copy = clone(event);
-  // The culprit has been deprecated about two years ago and can safely be
-  // removed. Remove this line, once this has been resolved in Raven.
-  delete (copy as { culprit: string }).culprit;
 
   // Retrieve stack traces and normalize their URLs. Without this, grouping
   // would not work due to user folders in file names.

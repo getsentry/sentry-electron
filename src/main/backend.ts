@@ -64,11 +64,12 @@ function getRendererExtra(
  * Retruns a promise that resolves when app is ready.
  */
 export async function isAppReady(): Promise<boolean> {
-  return app.isReady()
-    ? true
-    : new Promise<boolean>(resolve => {
-        app.once('ready', resolve);
-      });
+  return (
+    app.isReady() ||
+    new Promise<boolean>(resolve => {
+      app.once('ready', resolve);
+    })
+  );
 }
 
 /** Backend implementation for Electron renderer backends. */
@@ -85,7 +86,6 @@ export class MainBackend implements CommonBackend {
   /** Creates a new Electron backend instance. */
   public constructor(private readonly options: ElectronOptions) {
     this.inner = new NodeBackend(options);
-
     const path = getCachePath();
     this.scopeStore = new Store<Scope>(path, 'scope', new Scope());
   }
@@ -180,7 +180,9 @@ export class MainBackend implements CommonBackend {
    * @inheritDoc
    */
   public storeScope(scope: Scope): void {
-    this.scopeStore.set(scope);
+    const cloned = Scope.clone(scope);
+    (cloned as any).eventProcessors = [];
+    this.scopeStore.set(cloned);
   }
 
   /** Returns whether native reports are enabled. */
@@ -381,7 +383,6 @@ export class MainBackend implements CommonBackend {
 
     const currentCloned = Scope.clone(getDefaultHub().getScope());
     const fetchedScope = this.scopeStore.get();
-    (fetchedScope as any).eventProcessors = [];
     const storedScope = Scope.clone(fetchedScope);
     let event: SentryEvent = { extra };
     event = await storedScope.applyToEvent(event);
