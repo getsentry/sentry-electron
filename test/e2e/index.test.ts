@@ -10,7 +10,7 @@ const SENTRY_KEY = '37f8a2ee37c0409d8970bc7559c7c7e4';
 should();
 use(chaiAsPromised);
 
-const tests = getTests('1.7.14', '1.8.6', '2.0.0-beta.8');
+const tests = getTests('1.7.14', '1.8.6', '2.0.5');
 
 tests.forEach(([version, arch]) => {
   describe(`Test Electron ${version} ${arch}`, () => {
@@ -36,6 +36,7 @@ tests.forEach(([version, arch]) => {
       expect(lastFrame.filename).to.equal(
         'app:///fixtures/javascript-renderer.js',
       );
+
       expect(event.dump_file).to.equal(undefined);
       expect(event.sentry_key).to.equal(SENTRY_KEY);
       expect(breadcrumbs.length).to.greaterThan(4);
@@ -63,7 +64,6 @@ tests.forEach(([version, arch]) => {
       const event = context.testServer.events[0];
       const breadcrumbs = event.data.breadcrumbs || [];
       const lastFrame = getLastFrame(event.data);
-
       // wait for the main process to exit (default behavior)
       await context.waitForTrue(
         async () =>
@@ -86,6 +86,14 @@ tests.forEach(([version, arch]) => {
       const event = context.testServer.events[0];
       const breadcrumbs = event.data.breadcrumbs || [];
       const lastFrame = getLastFrame(event.data);
+      // wait for the main process to exit (default behavior)
+      await context.waitForTrue(
+        async () =>
+          context.mainProcess
+            ? !(await context.mainProcess.isRunning())
+            : false,
+        'Timeout: Waiting for app to die',
+      );
 
       expect(context.testServer.events.length).to.equal(1);
       expect(lastFrame.filename).to.equal(

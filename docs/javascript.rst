@@ -84,10 +84,12 @@ user data:
 
 .. code-block:: javascript
 
-    Sentry.setUserContext({
-        id: '42',
-        email: 'user@example.org'
-    })
+    Sentry.configureScope(scope => {
+        scope.setUser({
+            id: '42',
+            email: 'user@example.org'
+        });
+    });
 
 This data is generally submitted with each error or message and allows you to
 figure out which users are affected by problems. If at any point the user
@@ -102,7 +104,9 @@ to be merged in with future exceptions or messages via ``setTagsContext()``:
 
 .. code-block:: javascript
 
-    Sentry.setTagsContext({ key: "value" });
+    Sentry.configureScope(scope => {
+        scope.setTag('key', 'value');
+    });
 
 Tags given in ``setTagsContext()`` are merged with existing tags. If you need to
 remove a tag, then set it explicitly to ``null`` or ``undefined``.
@@ -115,10 +119,8 @@ future events. Note that the objects you pass in must be JSON-serializable:
 
 .. code-block:: javascript
 
-    Sentry.setExtraContext({
-        my: {
-            data: 2
-        }
+    Sentry.configureScope(scope => {
+        scope.setExtra('my', {data: 2});
     });
 
 Data given in ``setExtraContext()`` is shallow-merged with existing extras. To
@@ -188,7 +190,7 @@ rejections differs by process.
 
 In the main process, such unhandled errors will cause the app to exit
 immediatly. This is in accordance with the strategy recommended by Node. By
-default, Raven will capture these events and send them to Sentry prior to
+default, Sentry will capture these events and send them to Sentry prior to
 exiting. To override this behavior, declare a custom ``onFatalError`` callback
 when configuring the SDK:
 
@@ -196,7 +198,7 @@ when configuring the SDK:
 
     Sentry.init({
       dsn: '___PUBLIC_DSN___',
-      onFatalError: function (err, sendError) {
+      onFatalError: function (err) {
         if (!sendErr) {
           console.log('Successfully sent fatal error to Sentry:');
           console.error(err.stack);
@@ -210,12 +212,4 @@ when configuring the SDK:
 Renderer processes do not crash on unhandled errors and there is no
 ``onFatalError`` configuration option. Instead, the SDK automatically captures
 them and sends them to Sentry. This also applies to Promises and polyfills that
-report a global ``unhandledrejection`` DOM event. To disable this behavior, pass
-``captureUnhandledRejections: false``:
-
-.. code-block:: javascript
-
-    Sentry.init({
-      dsn: '___PUBLIC_DSN___',
-      captureUnhandledRejections: false
-    });
+report a global ``unhandledrejection`` DOM event.

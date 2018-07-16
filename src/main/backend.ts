@@ -2,43 +2,43 @@ import {
   app,
   crashReporter,
   ipcMain,
-  net,
   powerMonitor,
   screen,
   // tslint:disable-next-line:no-implicit-dependencies
 } from 'electron';
 import { join } from 'path';
 
-import { Frontend, SentryError } from '@sentry/core';
-import { NodeBackend } from '@sentry/node';
 import {
   addBreadcrumb,
-  Breadcrumb,
   captureEvent,
   captureMessage,
-  Context,
+  configureScope,
+} from '@sentry/minimal';
+import {
+  Breadcrumb,
   SentryEvent,
-  setExtraContext,
-  setTagsContext,
-  setUserContext,
+  SentryResponse,
   Severity,
-} from '@sentry/shim';
-import { forget, Store } from '@sentry/utils';
+  Status,
+} from '@sentry/types';
+
+import { DSN, SentryError } from '@sentry/core';
+import { Scope } from '@sentry/hub';
+import { getDefaultHub, NodeBackend } from '@sentry/node';
+import { forget } from '@sentry/utils/async';
+import { Store } from '@sentry/utils/store';
 
 import {
   CommonBackend,
   ElectronOptions,
-  IPC_CONTEXT,
   IPC_CRUMB,
   IPC_EVENT,
   IPC_PING,
+  IPC_SCOPE,
 } from '../common';
 import { captureMinidump } from '../sdk';
 import { normalizeUrl } from './normalize';
 import { MinidumpUploader } from './uploader';
-
-/** A promise that resolves when the app is ready. */
-let appReady = Promise.resolve();
 
 /** Patch to access internal CrashReporter functionality. */
 interface CrashReporterExt {
@@ -53,38 +53,41 @@ function getCachePath(): string {
 /** Returns extra information from a renderer's web contents. */
 function getRendererExtra(
   contents: Electron.WebContents,
-): { [key: string]: string } {
+): { [key: string]: any } {
   return {
     crashed_process: `renderer[${contents.id}]`,
     crashed_url: normalizeUrl(contents.getURL()),
   };
 }
 
+/**
+ * Retruns a promise that resolves when app is ready.
+ */
+export async function isAppReady(): Promise<boolean> {
+  return (
+    app.isReady() ||
+    new Promise<boolean>(resolve => {
+      app.once('ready', resolve);
+    })
+  );
+}
+
 /** Backend implementation for Electron renderer backends. */
 export class MainBackend implements CommonBackend {
-  /** Handle to the SDK frontend for callbacks. */
-  private readonly frontend: Frontend<ElectronOptions>;
-
   /** The inner SDK used to record Node events. */
   private readonly inner: NodeBackend;
 
-  /** Store to persist breadcrumbs beyond application crashes. */
-  private readonly breadcrumbs: Store<Breadcrumb[]>;
-
   /** Store to persist context information beyond application crashes. */
-  private readonly context: Store<Context>;
+  private readonly scopeStore: Store<Scope>;
 
   /** Uploader for minidump files. */
   private uploader?: MinidumpUploader;
 
   /** Creates a new Electron backend instance. */
-  public constructor(frontend: Frontend<ElectronOptions>) {
-    this.frontend = frontend;
-    this.inner = new NodeBackend(frontend);
-
+  public constructor(private readonly options: ElectronOptions) {
+    this.inner = new NodeBackend(options);
     const path = getCachePath();
-    this.breadcrumbs = new Store<Breadcrumb[]>(path, 'breadcrumbs', []);
-    this.context = new Store<Context>(path, 'context', {});
+    this.scopeStore = new Store<Scope>(path, 'scope', new Scope());
   }
 
   /**
@@ -93,12 +96,32 @@ export class MainBackend implements CommonBackend {
   public install(): boolean {
     let success = true;
 
+    // We refill the scope here to not have an empty one
+    configureScope(scope => {
+      const loadedScope = Scope.clone(this.scopeStore.get());
+
+      if (loadedScope.getUser()) {
+        scope.setUser(loadedScope.getUser());
+      }
+      if (loadedScope.getTags()) {
+        Object.keys(loadedScope.getTags()).forEach(key => {
+          scope.setTag(key, loadedScope.getTags()[key]);
+        });
+      }
+      if (loadedScope.getExtra()) {
+        Object.keys(loadedScope.getExtra()).forEach(key => {
+          scope.setExtra(key, loadedScope.getExtra()[key]);
+        });
+      }
+      if (loadedScope.getBreadcrumbs()) {
+        loadedScope.getBreadcrumbs().forEach(crumb => {
+          scope.addBreadcrumb(crumb);
+        });
+      }
+    });
+
     if (this.isNativeEnabled()) {
       success = this.installNativeHandler() && success;
-    }
-
-    if (this.isJavaScriptEnabled()) {
-      success = this.installJavaScriptHandler() && success;
     }
 
     this.installIPC();
@@ -124,8 +147,8 @@ export class MainBackend implements CommonBackend {
   /**
    * @inheritDoc
    */
-  public async sendEvent(event: SentryEvent): Promise<number> {
-    await appReady;
+  public async sendEvent(event: SentryEvent): Promise<SentryResponse> {
+    await isAppReady();
     return this.inner.sendEvent(event);
   }
 
@@ -139,66 +162,27 @@ export class MainBackend implements CommonBackend {
   public async uploadMinidump(
     path: string,
     event: SentryEvent = {},
-  ): Promise<number> {
+  ): Promise<SentryResponse> {
     if (this.uploader) {
       return this.uploader.uploadMinidump({ path, event });
     }
-
-    return 200;
-  }
-
-  /** Returns the full list of breadcrumbs (or empty). */
-  public loadBreadcrumbs(): Breadcrumb[] {
-    return this.breadcrumbs.get();
+    return { code: 200, event_id: event.event_id, status: Status.Success };
   }
 
   /**
    * @inheritDoc
    */
-  public storeBreadcrumb(breadcrumb: Breadcrumb): boolean {
-    // We replicate the behavior of the frontend
-    const { maxBreadcrumbs = 30 } = this.frontend.getOptions();
-    this.breadcrumbs.update(breadcrumbs =>
-      [...breadcrumbs, breadcrumb].slice(
-        -Math.max(0, Math.min(maxBreadcrumbs, 100)),
-      ),
-    );
-
-    // Still, the frontend should merge breadcrumbs into events, for now
+  public storeBreadcrumb(_: Breadcrumb): boolean {
     return true;
-  }
-
-  /** Returns the latest context (or empty). */
-  public loadContext(): Context {
-    return this.context.get();
   }
 
   /**
    * @inheritDoc
    */
-  public storeContext(nextContext: Context): boolean {
-    // We replicate the behavior of the frontend
-    this.context.update(context => {
-      if (nextContext.extra) {
-        context.extra = { ...context.extra, ...nextContext.extra };
-      }
-      if (nextContext.tags) {
-        context.tags = { ...context.tags, ...nextContext.tags };
-      }
-      if (nextContext.user) {
-        context.user = { ...context.user, ...nextContext.user };
-      }
-
-      return context;
-    });
-
-    // Still, the frontend should merge context into events, for now
-    return true;
-  }
-
-  /** Returns whether JS is enabled. */
-  private isJavaScriptEnabled(): boolean {
-    return this.frontend.getOptions().enableJavaScript !== false;
+  public storeScope(scope: Scope): void {
+    const cloned = Scope.clone(scope);
+    (cloned as any).eventProcessors = [];
+    this.scopeStore.set(cloned);
   }
 
   /** Returns whether native reports are enabled. */
@@ -210,7 +194,7 @@ export class MainBackend implements CommonBackend {
       return false;
     }
 
-    return this.frontend.getOptions().enableNative !== false;
+    return this.options.enableNative !== false;
   }
 
   /** Activates the Electron CrashReporter. */
@@ -218,7 +202,7 @@ export class MainBackend implements CommonBackend {
     // We are only called by the frontend if the SDK is enabled and a valid DSN
     // has been configured. If no DSN is present, this indicates a programming
     // error.
-    const dsn = this.frontend.getDSN();
+    const dsn = this.options.dsn;
     if (!dsn) {
       throw new SentryError(
         'Invariant exception: install() must not be called when disabled',
@@ -242,7 +226,11 @@ export class MainBackend implements CommonBackend {
     const reporter: CrashReporterExt = crashReporter as any;
     const crashesDirectory = reporter.getCrashesDirectory();
 
-    this.uploader = new MinidumpUploader(dsn, crashesDirectory, getCachePath());
+    this.uploader = new MinidumpUploader(
+      new DSN(dsn),
+      crashesDirectory,
+      getCachePath(),
+    );
 
     // Flush already cached minidumps from the queue.
     forget(this.uploader.flushQueue());
@@ -270,32 +258,13 @@ export class MainBackend implements CommonBackend {
       });
     });
 
-    if (this.frontend.getOptions().enableUnresponsive !== false) {
+    if (this.options.enableUnresponsive !== false) {
       app.on('browser-window-created', (_, window) => {
         window.on('unresponsive', () => {
           captureMessage('BrowserWindow Unresponsive');
         });
       });
     }
-
-    return true;
-  }
-
-  /** Activates the Node SDK for the main process. */
-  private async installJavaScriptHandler(): Promise<boolean> {
-    if (!this.inner.install()) {
-      return false;
-    }
-
-    // Override the transport mechanism with electron's net module
-    this.inner.setTransport(net);
-
-    // This is only needed for the electron net module
-    appReady = app.isReady()
-      ? Promise.resolve()
-      : new Promise(resolve => {
-          app.once('ready', resolve);
-        });
 
     return true;
   }
@@ -311,24 +280,37 @@ export class MainBackend implements CommonBackend {
     });
 
     ipcMain.on(IPC_EVENT, (ipc: Electron.Event, event: SentryEvent) => {
-      event.extra = { ...getRendererExtra(ipc.sender), ...event.extra };
+      event.extra = {
+        ...getRendererExtra(ipc.sender),
+        ...event.extra,
+      };
       captureEvent(event);
     });
 
-    ipcMain.on(IPC_CONTEXT, (_: any, context: Context) => {
-      if (context.user) {
-        setUserContext(context.user);
-      }
-      if (context.tags) {
-        setTagsContext(context.tags);
-      }
-      if (context.extra) {
-        setExtraContext(context.extra);
-      }
+    ipcMain.on(IPC_SCOPE, (_: any, rendererScope: Scope) => {
+      const sentScope = Scope.clone(rendererScope);
+      configureScope(scope => {
+        if (sentScope.getUser()) {
+          scope.setUser(sentScope.getUser());
+        }
+        if (sentScope.getTags()) {
+          Object.keys(sentScope.getTags()).forEach(key => {
+            scope.setTag(key, sentScope.getTags()[key]);
+          });
+        }
+        if (sentScope.getExtra()) {
+          Object.keys(sentScope.getExtra()).forEach(key => {
+            scope.setExtra(key, sentScope.getExtra()[key]);
+          });
+        }
+      });
     });
   }
 
-  /** Installs auto-breadcrumb handlers for certain Electron events. */
+  /**
+   * Installs auto-breadcrumb handlers for certain Electron events.
+   * TODO: Consider moving to integration
+   */
   private installAutoBreadcrumbs(): void {
     this.instrumentBreadcrumbs('app', app);
 
@@ -354,6 +336,7 @@ export class MainBackend implements CommonBackend {
   /**
    * Hooks into the Electron EventEmitter to capture breadcrumbs for the
    * specified events.
+   * TODO: Consider moving to integration
    */
   private instrumentBreadcrumbs(
     category: string,
@@ -398,10 +381,15 @@ export class MainBackend implements CommonBackend {
       throw new SentryError('Invariant violation: Native crashes not enabled');
     }
 
-    const event: SentryEvent = { extra };
+    const currentCloned = Scope.clone(getDefaultHub().getScope());
+    const fetchedScope = this.scopeStore.get();
+    const storedScope = Scope.clone(fetchedScope);
+    let event: SentryEvent = { extra };
+    event = await storedScope.applyToEvent(event);
+    event = await currentCloned.applyToEvent(event);
     const paths = await uploader.getNewMinidumps();
     paths.map(path => {
-      captureMinidump(path, event);
+      captureMinidump(path, { ...event });
     });
   }
 }

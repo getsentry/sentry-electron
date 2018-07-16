@@ -1,6 +1,18 @@
-import { DSN, FrontendClass, Scope } from '@sentry/core';
-import { Breadcrumb, Context, SentryEvent } from '@sentry/shim';
-import { CommonFrontend, ElectronOptions } from './common';
+import { ClientClass, DSN } from '@sentry/core';
+import { getDefaultHub as getHub, Scope } from '@sentry/hub';
+import {
+  Breadcrumb,
+  SdkInfo,
+  SentryEvent,
+  SentryResponse,
+} from '@sentry/types';
+import { CommonClient, ElectronOptions } from './common';
+
+// tslint:disable:no-var-requires no-unsafe-any
+export const getDefaultHub: typeof getHub =
+  process.type === 'browser'
+    ? module.require('@sentry/node').getDefaultHub
+    : require('@sentry/hub').getDefaultHub;
 
 /**
  * The Sentry Electron SDK Frontend.
@@ -8,9 +20,9 @@ import { CommonFrontend, ElectronOptions } from './common';
  * @see ElectronOptions for documentation on configuration options.
  * @see SentryClient for usage documentation.
  */
-export class ElectronFrontend implements CommonFrontend {
+export class ElectronClient implements CommonClient {
   /** Actual frontend implementation for the main or renderer process. */
-  private readonly inner: CommonFrontend;
+  private readonly inner: CommonClient;
 
   /**
    * Creates a new Electron SDK instance.
@@ -31,15 +43,19 @@ export class ElectronFrontend implements CommonFrontend {
     // implementation, which should be fine for most cases. False positives of
     // this would be running `@sentry/electron` in a bare node process, which is
     // acceptable.
-
-    // tslint:disable:no-var-requires no-unsafe-any
-    const frontendClass: FrontendClass<CommonFrontend, ElectronOptions> =
+    const clientClass: ClientClass<CommonClient, ElectronOptions> =
       process.type === 'browser'
-        ? module.require('./main').MainFrontend
-        : require('./renderer').RendererFrontend;
-    // tslint:enable:no-var-requires no-unsafe-any
+        ? module.require('./main').MainClient
+        : require('./renderer').RendererClient;
 
-    this.inner = new frontendClass(options);
+    this.inner = new clientClass(options);
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public getSdkInfo(): SdkInfo {
+    return this.inner.getSdkInfo();
   }
 
   /**
@@ -86,7 +102,7 @@ export class ElectronFrontend implements CommonFrontend {
   public async captureEvent(
     event: SentryEvent,
     scope?: Scope | undefined,
-  ): Promise<void> {
+  ): Promise<SentryResponse> {
     return this.inner.captureEvent(event, scope);
   }
 
@@ -113,18 +129,15 @@ export class ElectronFrontend implements CommonFrontend {
   public getOptions(): ElectronOptions {
     return this.inner.getOptions();
   }
+}
 
-  /**
-   * @inheritDoc
-   */
-  public setContext(context: Context, scope: Scope): void {
-    this.inner.setContext(context, scope);
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public getInitialScope(): Scope {
-    return this.inner.getInitialScope();
-  }
+/**
+ * This either calls init on main with node interations or renderer
+ * with browser integrations.
+ * @param options Options
+ */
+export function specificInit(options: ElectronOptions): void {
+  process.type === 'browser'
+    ? module.require('./main').init(options)
+    : require('./renderer').init(options);
 }

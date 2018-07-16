@@ -1,7 +1,7 @@
 if (process.type === 'renderer') {
-  console.log('Something insightful!')
+  console.log('Something insightful!');
 
-  setInterval(() => {
+  setTimeout(() => {
     throw new Error('Error triggered in renderer process');
-  }, 1000)
+  }, 1000);
 }

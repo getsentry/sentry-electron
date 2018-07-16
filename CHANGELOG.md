@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.6.0
+
+**Breaking Changes**:
+
+* We removed `set___Context` functions, now you can configure the context with:
+
+```
+Sentry.configureScope(scope => {
+  scope.setExtra('battery', 0.7);
+  scope.setTag('user_mode', 'admin');
+  scope.setUser({ id: '4711' });
+  // scope.clear();
+});
+```
+
 ## v0.5.5
 
 * Add official support for sandbox mode (#84)

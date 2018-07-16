@@ -1,5 +1,5 @@
-import { SentryEvent, SentryException, Stacktrace } from '@sentry/shim';
-import { clone } from '@sentry/utils';
+import { SentryEvent, SentryException, Stacktrace } from '@sentry/types';
+import { clone } from '@sentry/utils/object';
 // tslint:disable-next-line:no-implicit-dependencies
 import { app } from 'electron';
 
@@ -34,7 +34,10 @@ function getStacktrace(event: SentryEvent): Stacktrace | undefined {
 
   if (exception) {
     // Raven Node adheres to the Event interface
+    // @ts-ignore
     if (exception[0]) {
+      // @ts-ignore
+      // tslint:disable-next-line:no-unsafe-any
       return exception[0].stacktrace;
     }
 
@@ -50,20 +53,12 @@ function getStacktrace(event: SentryEvent): Stacktrace | undefined {
 
 /**
  * Normalizes all URLs in an event. See {@link normalizeUrl} for more
- * information.
+ * information. Mutates the passed in event.
  *
  * @param event The event to normalize.
- * @returns The normalized event.
  */
 export function normalizeEvent(event: SentryEvent): SentryEvent {
-  // NOTE: Events from Raven currently contain data that does not conform with
-  // the `SentryEvent` interface. Until this has been resolved, we need to cast
-  // to avoid typescript warnings.
   const copy = clone(event);
-
-  // The culprit has been deprecated about two years ago and can safely be
-  // removed. Remove this line, once this has been resolved in Raven.
-  delete (copy as { culprit: string }).culprit;
 
   // Retrieve stack traces and normalize their URLs. Without this, grouping
   // would not work due to user folders in file names.
@@ -93,6 +88,5 @@ export function normalizeEvent(event: SentryEvent): SentryEvent {
   // information in this case.
   const { tags = {} } = copy;
   delete tags.server_name;
-
   return copy;
 }

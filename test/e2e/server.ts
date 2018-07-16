@@ -3,7 +3,7 @@
 import { readFileSync } from 'fs';
 import { createServer, Server } from 'http';
 
-import { SentryEvent } from '@sentry/shim';
+import { SentryEvent } from '@sentry/types';
 import bodyParser = require('body-parser');
 import express = require('express');
 import finalhandler = require('finalhandler');
@@ -50,7 +50,7 @@ export class TestServer {
   /** Starts accepting requests. */
   public start(): void {
     const app = express();
-    app.use(bodyParser.raw());
+    app.use(bodyParser.json());
 
     // Handles the Sentry store endpoint
     app.post('/api/:id/store', (req, res) => {
@@ -62,8 +62,11 @@ export class TestServer {
         return;
       }
 
+      // console.log(req);
       this.events.push({
-        data: deflateBase64ZIP(req.body as Buffer) as SentryEvent,
+        // We removed gzip in node now
+        // data: deflateBase64ZIP(req.body as Buffer) as SentryEvent,
+        data: req.body as SentryEvent,
         id: req.params.id,
         sentry_key: keyMatch[1],
       });

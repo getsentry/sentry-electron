@@ -3,8 +3,10 @@ import { basename, join } from 'path';
 import { promisify } from 'util';
 
 import { DSN } from '@sentry/core';
-import { SentryEvent } from '@sentry/shim';
-import { filterAsync, mkdirp, Store } from '@sentry/utils';
+import { SentryEvent, SentryResponse, Status } from '@sentry/types';
+import { filterAsync } from '@sentry/utils/async';
+import { mkdirp } from '@sentry/utils/fs';
+import { Store } from '@sentry/utils/store';
 import fetch = require('electron-fetch');
 import FormData = require('form-data');
 
@@ -74,10 +76,12 @@ export class MinidumpUploader {
     this.type = process.platform === 'darwin' ? 'crashpad' : 'breakpad';
     this.knownPaths = [];
 
-    const { host, path, port, protocol, user } = dsn;
-    this.url =
-      `${protocol}://${host}${port !== '' ? `:${port}` : ''}` +
-      `/api/${path}/minidump?sentry_key=${user}`;
+    // TODO: We need to put this somewhere in core
+    // we have this in 3 places now (transports browser/node/here)
+    const { host, path, projectId, port, protocol, user } = dsn;
+    this.url = `${protocol}://${host}${port !== '' ? `:${port}` : ''}${
+      path !== '' ? `/${path}` : ''
+    }/api/${projectId}/minidump?sentry_key=${user}`;
   }
 
   /**
@@ -87,7 +91,9 @@ export class MinidumpUploader {
    * @param event Event data to attach to the minidump.
    * @returns A promise that resolves when the upload is complete.
    */
-  public async uploadMinidump(request: MinidumpRequest): Promise<number> {
+  public async uploadMinidump(
+    request: MinidumpRequest,
+  ): Promise<SentryResponse> {
     try {
       const body = new FormData();
       body.append('upload_file_minidump', fs.createReadStream(request.path));
@@ -97,7 +103,11 @@ export class MinidumpUploader {
       // Too many requests, so we queue the event and send it later
       if (response.status === CODE_RETRY) {
         await this.queueMinidump(request);
-        return CODE_RETRY;
+        return {
+          code: CODE_RETRY,
+          event_id: request.event.event_id,
+          status: Status.RateLimit,
+        };
       }
 
       // We either succeeded or something went horribly wrong. Either way, we
@@ -113,7 +123,11 @@ export class MinidumpUploader {
         await this.flushQueue();
       }
 
-      return response.status;
+      return {
+        code: response.status,
+        event_id: request.event.event_id,
+        status: Status.fromHttpCode(response.status),
+      };
     } catch (err) {
       // User's internet connection was down so we queue it as well
       const error = err ? (err as { code: string }) : { code: '' };
@@ -121,7 +135,11 @@ export class MinidumpUploader {
         await this.queueMinidump(request);
       }
 
-      return 500;
+      return {
+        code: 500,
+        event_id: request.event.event_id,
+        status: Status.Failed,
+      };
     }
   }
 
