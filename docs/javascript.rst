@@ -93,14 +93,14 @@ user data:
 
 This data is generally submitted with each error or message and allows you to
 figure out which users are affected by problems. If at any point the user
-becomes unauthenticated, call ``Sentry.setUserContext()`` without arguments to
+becomes unauthenticated, call ``scope.setUser({})`` with an empty object to
 remove their data.
 
 Tagging Events
 --------------
 
 Sentry allows to filter and search for issues by tags. You can set global tags
-to be merged in with future exceptions or messages via ``setTagsContext()``:
+to be merged in with future exceptions or messages via ``scope.setTag``:
 
 .. code-block:: javascript
 
@@ -108,7 +108,7 @@ to be merged in with future exceptions or messages via ``setTagsContext()``:
         scope.setTag('key', 'value');
     });
 
-Tags given in ``setTagsContext()`` are merged with existing tags. If you need to
+Tags given in ``scope.setTag`` are merged with existing tags. If you need to
 remove a tag, then set it explicitly to ``null`` or ``undefined``.
 
 Passing Additional Data
@@ -123,7 +123,7 @@ future events. Note that the objects you pass in must be JSON-serializable:
         scope.setExtra('my', {data: 2});
     });
 
-Data given in ``setExtraContext()`` is shallow-merged with existing extras. To
+Data given in ``scope.setExtra`` is shallow-merged with existing extras. To
 remove a top-level key from extras, explicitly set it to ``null`` or
 ``undefined``.
 
