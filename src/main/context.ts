@@ -175,9 +175,7 @@ async function getLinuxInfo(): Promise<OsContext> {
     // distribution name (e.g. "red" for Red Hat). In case there is no match, we
     // just assume the first distribution in our list.
     const { distros } = distroFile;
-    linuxInfo.name =
-      distros.find(d => contents.indexOf(getLinuxDistroId(d)) >= 0) ||
-      distros[0];
+    linuxInfo.name = distros.find(d => contents.indexOf(getLinuxDistroId(d)) >= 0) || distros[0];
 
     // Based on the found distribution, we can now compute the actual version
     // number. This is different for every distribution, so several strategies
@@ -262,9 +260,7 @@ async function getEventDefaults(): Promise<SentryEvent> {
 }
 
 /** Merges the given event payload with SDK defaults. */
-export async function addEventDefaults(
-  event: SentryEvent,
-): Promise<SentryEvent> {
+export async function addEventDefaults(event: SentryEvent): Promise<SentryEvent> {
   // The event defaults are cached as long as the app is running. We create the
   // promise here synchronously to avoid multiple events computing them at the
   // same time.

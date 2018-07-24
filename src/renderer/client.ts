@@ -6,8 +6,7 @@ import { CommonClient, ElectronOptions, IPC_CRUMB } from '../common';
 import { RendererBackend } from './backend';
 
 /** Frontend implementation for Electron renderer backends. */
-export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
-  implements CommonClient {
+export class RendererClient extends BaseClient<RendererBackend, ElectronOptions> implements CommonClient {
   /**
    * Creates a new Electron SDK instance.
    * @param options Configuration options for this SDK.
@@ -23,21 +22,14 @@ export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
    * @param event Optional event payload to attach to the minidump.
    * @param scope The SDK scope used to upload.
    */
-  public async captureMinidump(
-    _path: string,
-    _event: SentryEvent,
-    _scope?: Scope,
-  ): Promise<void> {
+  public async captureMinidump(_path: string, _event: SentryEvent, _scope?: Scope): Promise<void> {
     // Noop
   }
 
   /**
    * @inheritDoc
    */
-  public async addBreadcrumb(
-    breadcrumb: Breadcrumb,
-    scope?: Scope,
-  ): Promise<void> {
+  public async addBreadcrumb(breadcrumb: Breadcrumb, scope?: Scope): Promise<void> {
     ipcRenderer.send(IPC_CRUMB, breadcrumb, scope);
   }
 }

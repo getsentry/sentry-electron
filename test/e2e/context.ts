@@ -157,14 +157,7 @@ export class TestContext {
    *
    * @param count Number of events to wait for
    */
-  public async waitForEvents(
-    count: number,
-    timeout: number = 15000,
-  ): Promise<void> {
-    await this.waitForTrue(
-      () => this.testServer.events.length >= count,
-      'Timeout: Waiting for events',
-      timeout,
-    );
+  public async waitForEvents(count: number, timeout: number = 15000): Promise<void> {
+    await this.waitForTrue(() => this.testServer.events.length >= count, 'Timeout: Waiting for events', timeout);
   }
 }

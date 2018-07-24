@@ -9,9 +9,7 @@ const electronExtract = promisify(extract);
 
 /** Gets the users home directory */
 function getHomDir(): string {
-  return (
-    process.env[process.platform === 'win32' ? 'USERPROFILE' : 'HOME'] || ''
-  );
+  return process.env[process.platform === 'win32' ? 'USERPROFILE' : 'HOME'] || '';
 }
 
 /** Gets the path to the Electron executable */
@@ -34,10 +32,7 @@ function getExecutablePath(): string {
  * @param arch The Electron arch
  * @returns Path to the Electron executable
  */
-export async function downloadElectron(
-  version: string,
-  arch: string,
-): Promise<string> {
+export async function downloadElectron(version: string, arch: string): Promise<string> {
   const dir = join(getHomDir(), '.cache', `${version}-${arch}`);
 
   if (!existsSync(dir)) {

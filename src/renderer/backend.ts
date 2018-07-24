@@ -6,13 +6,7 @@ import { SentryError } from '@sentry/core';
 import { Scope } from '@sentry/hub';
 import { Breadcrumb, SentryEvent, SentryResponse, Status } from '@sentry/types';
 
-import {
-  CommonBackend,
-  ElectronOptions,
-  IPC_EVENT,
-  IPC_PING,
-  IPC_SCOPE,
-} from '../common';
+import { CommonBackend, ElectronOptions, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
 
 /** Timeout used for registering with the main process. */
 const PING_TIMEOUT = 500;
@@ -72,9 +66,7 @@ export class RendererBackend implements CommonBackend {
    * @inheritDoc
    */
   public storeBreadcrumb(_: Breadcrumb): boolean {
-    throw new SentryError(
-      'Invariant violation: Only supported in main process',
-    );
+    throw new SentryError('Invariant violation: Only supported in main process');
   }
 
   /**
@@ -134,9 +126,7 @@ export class RendererBackend implements CommonBackend {
       ipcRenderer.send(IPC_PING);
 
       const timeout = setTimeout(() => {
-        console.warn(
-          'Could not connect to Sentry main process. Did you call init?',
-        );
+        console.warn('Could not connect to Sentry main process. Did you call init?');
       }, PING_TIMEOUT);
 
       ipcRenderer.on(IPC_PING, () => {

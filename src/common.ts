@@ -56,11 +56,7 @@ export interface CommonClient extends Client<ElectronOptions> {
    * @param event Optional event payload to attach to the minidump.
    * @param scope The SDK scope used to upload.
    */
-  captureMinidump(
-    path: string,
-    event: SentryEvent,
-    scope: Scope,
-  ): Promise<void>;
+  captureMinidump(path: string, event: SentryEvent, scope: Scope): Promise<void>;
 }
 
 /** Common interface for Electron backends. */

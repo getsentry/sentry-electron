@@ -14,9 +14,7 @@ export { MainBackend } from './backend';
  * @param options ElectronOptions
  */
 export function init(options: ElectronOptions): void {
-  const electronIntegrations = defaultIntegrations.filter(
-    integration => integration.name !== 'OnUncaughtException',
-  );
+  const electronIntegrations = defaultIntegrations.filter(integration => integration.name !== 'OnUncaughtException');
   initAndBind(
     MainClient,
     {

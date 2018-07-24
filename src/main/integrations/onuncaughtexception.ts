@@ -41,13 +41,9 @@ export class OnUncaughtException implements Integration {
           console.error('Uncaught Exception:');
           console.error(error);
           const ref = error.stack;
-          const stack =
-            ref !== undefined ? ref : `${error.name}: ${error.message}`;
+          const stack = ref !== undefined ? ref : `${error.name}: ${error.message}`;
           const message = `Uncaught Exception:\n${stack}`;
-          dialog.showErrorBox(
-            'A JavaScript error occurred in the main process',
-            message,
-          );
+          dialog.showErrorBox('A JavaScript error occurred in the main process', message);
         }
       });
     });

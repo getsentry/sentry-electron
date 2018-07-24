@@ -55,11 +55,7 @@ export class MinidumpUploader {
    * Store to persist queued Minidumps beyond application crashes or lost
    * internet connection.
    */
-  private readonly queue: Store<MinidumpRequest[]> = new Store(
-    this.cacheDirectory,
-    'queue',
-    [],
-  );
+  private readonly queue: Store<MinidumpRequest[]> = new Store(this.cacheDirectory, 'queue', []);
 
   /**
    * Creates a new uploader instance.
@@ -68,11 +64,7 @@ export class MinidumpUploader {
    * @param crashesDirectory The directory Electron stores crashes in.
    * @param cacheDirectory A persistent directory to cache minidumps.
    */
-  public constructor(
-    dsn: DSN,
-    private readonly crashesDirectory: string,
-    private readonly cacheDirectory: string,
-  ) {
+  public constructor(dsn: DSN, private readonly crashesDirectory: string, private readonly cacheDirectory: string) {
     this.type = process.platform === 'darwin' ? 'crashpad' : 'breakpad';
     this.knownPaths = [];
 
@@ -91,9 +83,7 @@ export class MinidumpUploader {
    * @param event Event data to attach to the minidump.
    * @returns A promise that resolves when the upload is complete.
    */
-  public async uploadMinidump(
-    request: MinidumpRequest,
-  ): Promise<SentryResponse> {
+  public async uploadMinidump(request: MinidumpRequest): Promise<SentryResponse> {
     try {
       const body = new FormData();
       body.append('upload_file_minidump', fs.createReadStream(request.path));
@@ -142,10 +132,7 @@ export class MinidumpUploader {
    * @returns A promise that resolves to absolute paths of those dumps.
    */
   public async getNewMinidumps(): Promise<string[]> {
-    const minidumps =
-      this.type === 'crashpad'
-        ? await this.scanCrashpadFolder()
-        : await this.scanBreakpadFolder();
+    const minidumps = this.type === 'crashpad' ? await this.scanCrashpadFolder() : await this.scanBreakpadFolder();
 
     const oldestMs = new Date().getTime() - MAX_AGE * 24 * 3600 * 1000;
     return filterAsync(minidumps, async path => {
@@ -173,9 +160,7 @@ export class MinidumpUploader {
 
   /** Flushes locally cached minidumps from the queue. */
   public async flushQueue(): Promise<void> {
-    await Promise.all(
-      this.queue.get().map(async request => this.uploadMinidump(request)),
-    );
+    await Promise.all(this.queue.get().map(async request => this.uploadMinidump(request)));
   }
 
   /** Scans the Crashpad directory structure for minidump files. */
@@ -184,9 +169,7 @@ export class MinidumpUploader {
     // load them from there, upload to the server, and then delete it.
     const dumpDirectory = join(this.crashesDirectory, 'completed');
     const files = await readdir(dumpDirectory);
-    return files
-      .filter(file => file.endsWith('.dmp'))
-      .map(file => join(dumpDirectory, file));
+    return files.filter(file => file.endsWith('.dmp')).map(file => join(dumpDirectory, file));
   }
 
   /** Scans the Breakpad directory structure for minidump files. */
@@ -200,9 +183,7 @@ export class MinidumpUploader {
       .filter(file => file.endsWith('.txt') && !file.endsWith('log.txt'))
       .forEach(async file => unlink(join(this.crashesDirectory, file)));
 
-    return files
-      .filter(file => file.endsWith('.dmp'))
-      .map(file => join(this.crashesDirectory, file));
+    return files.filter(file => file.endsWith('.dmp')).map(file => join(this.crashesDirectory, file));
   }
 
   /**
