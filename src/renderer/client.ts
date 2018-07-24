@@ -1,14 +1,8 @@
 import { BaseClient, Scope } from '@sentry/core';
-import {
-  Breadcrumb,
-  SdkInfo,
-  SentryEvent,
-  SentryResponse,
-  Status,
-} from '@sentry/types';
+import { Breadcrumb, SentryEvent } from '@sentry/types';
 // tslint:disable-next-line:no-implicit-dependencies
 import { ipcRenderer } from 'electron';
-import { CommonClient, ElectronOptions, IPC_CRUMB, IPC_EVENT } from '../common';
+import { CommonClient, ElectronOptions, IPC_CRUMB } from '../common';
 import { RendererBackend } from './backend';
 
 /** Frontend implementation for Electron renderer backends. */
@@ -20,13 +14,6 @@ export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
    */
   public constructor(options: ElectronOptions) {
     super(RendererBackend, options);
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public getSdkInfo(): SdkInfo {
-    return {};
   }
 
   /**
@@ -42,18 +29,6 @@ export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
     _scope?: Scope,
   ): Promise<void> {
     // Noop
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public async captureEvent(
-    event: SentryEvent,
-    scope?: Scope,
-  ): Promise<SentryResponse> {
-    ipcRenderer.send(IPC_EVENT, event, scope);
-    // This is a fire and forget thing
-    return { code: 200, event_id: event.event_id, status: Status.Success };
   }
 
   /**

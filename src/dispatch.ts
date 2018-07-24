@@ -1,11 +1,6 @@
 import { ClientClass, DSN } from '@sentry/core';
 import { getDefaultHub as getHub, Scope } from '@sentry/hub';
-import {
-  Breadcrumb,
-  SdkInfo,
-  SentryEvent,
-  SentryResponse,
-} from '@sentry/types';
+import { Breadcrumb, SentryEvent, SentryResponse } from '@sentry/types';
 import { CommonClient, ElectronOptions } from './common';
 
 // tslint:disable:no-var-requires no-unsafe-any
@@ -49,13 +44,6 @@ export class ElectronClient implements CommonClient {
         : require('./renderer').RendererClient;
 
     this.inner = new clientClass(options);
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public getSdkInfo(): SdkInfo {
-    return this.inner.getSdkInfo();
   }
 
   /**

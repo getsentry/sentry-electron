@@ -4,8 +4,7 @@ import { initAndBind } from '@sentry/core';
 import { defaultIntegrations } from '@sentry/node';
 import { ElectronOptions } from '..';
 import { MainClient } from './client';
-import { Electron } from './integrations/electron';
-import { OnUncaughtException } from './integrations/onuncaughtexception';
+import { Electron, OnUncaughtException, SDKInformation } from './integrations';
 import { NetTransport } from './transports/net';
 export { MainClient } from './client';
 export { MainBackend } from './backend';
@@ -29,6 +28,7 @@ export function init(options: ElectronOptions): void {
       // tslint:disable-next-line:no-unbound-method
       new OnUncaughtException({ onFatalError: options.onFatalError }),
       new Electron(),
+      new SDKInformation(),
     ],
   );
 }

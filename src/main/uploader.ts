@@ -104,8 +104,6 @@ export class MinidumpUploader {
       if (response.status === CODE_RETRY) {
         await this.queueMinidump(request);
         return {
-          code: CODE_RETRY,
-          event_id: request.event.event_id,
           status: Status.RateLimit,
         };
       }
@@ -124,8 +122,6 @@ export class MinidumpUploader {
       }
 
       return {
-        code: response.status,
-        event_id: request.event.event_id,
         status: Status.fromHttpCode(response.status),
       };
     } catch (err) {
@@ -136,8 +132,6 @@ export class MinidumpUploader {
       }
 
       return {
-        code: 500,
-        event_id: request.event.event_id,
         status: Status.Failed,
       };
     }

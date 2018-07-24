@@ -1,19 +1,7 @@
 import { BaseClient, Scope } from '@sentry/core';
-import {
-  Breadcrumb,
-  SdkInfo,
-  SentryEvent,
-  SentryResponse,
-} from '@sentry/types';
+import { Breadcrumb, SentryEvent, SentryResponse } from '@sentry/types';
 import { CommonClient, ElectronOptions } from '../common';
 import { MainBackend } from './backend';
-
-/** SDK name used in every event. */
-const SDK_NAME = 'sentry-electron';
-
-/** SDK version used in every event. */
-// tslint:disable-next-line
-const SDK_VERSION: string = require('../../package.json').version;
 
 /** Frontend implementation for Electron renderer backends. */
 export class MainClient extends BaseClient<MainBackend, ElectronOptions>
@@ -24,13 +12,6 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions>
    */
   public constructor(options: ElectronOptions) {
     super(MainBackend, options);
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public getSdkInfo(): SdkInfo {
-    return { name: SDK_NAME, version: SDK_VERSION };
   }
 
   /**

@@ -166,7 +166,7 @@ export class MainBackend implements CommonBackend {
     if (this.uploader) {
       return this.uploader.uploadMinidump({ path, event });
     }
-    return { code: 200, event_id: event.event_id, status: Status.Success };
+    return { status: Status.Success };
   }
 
   /**
@@ -384,9 +384,9 @@ export class MainBackend implements CommonBackend {
     const currentCloned = Scope.clone(getDefaultHub().getScope());
     const fetchedScope = this.scopeStore.get();
     const storedScope = Scope.clone(fetchedScope);
-    let event: SentryEvent = { extra };
+    let event: SentryEvent | null = { extra };
     event = await storedScope.applyToEvent(event);
-    event = await currentCloned.applyToEvent(event);
+    event = event && (await currentCloned.applyToEvent(event));
     const paths = await uploader.getNewMinidumps();
     paths.map(path => {
       captureMinidump(path, { ...event });
