@@ -86,8 +86,7 @@ export class MainBackend implements CommonBackend {
   /** Creates a new Electron backend instance. */
   public constructor(private readonly options: ElectronOptions) {
     this.inner = new NodeBackend(options);
-    const path = getCachePath();
-    this.scopeStore = new Store<Scope>(path, 'scope', new Scope());
+    this.scopeStore = new Store<Scope>(getCachePath(), 'scope', new Scope());
   }
 
   /**
@@ -182,7 +181,13 @@ export class MainBackend implements CommonBackend {
   public storeScope(scope: Scope): void {
     const cloned = Scope.clone(scope);
     (cloned as any).eventProcessors = [];
-    this.scopeStore.set(cloned);
+    this.scopeStore.update(
+      (current: Scope) =>
+        ({
+          ...current,
+          ...cloned,
+        } as Scope),
+    );
   }
 
   /** Returns whether native reports are enabled. */
