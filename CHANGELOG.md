@@ -1,15 +1,19 @@
 # Changelog
 
+## v0.8.0
+
+* Updated deps to use `@sentry/*` `4.0.0-beta.11`
+* Send new SDK identifier `sentry.javascript.electron`
+* Expose `getIntegrations()` to retrieve all Integrations
+
 ## v0.7.0
 
 **Breaking Changes**:
 
-* We no longer exit your app by default. Before `0.7.0` we would call
-  `process.exit(1)` after we caught and uncaught error. As of version `0.7.0` we
-  no longer change electrons default behaviour which is showing a dialog with
-  the error and keep the app alive. If you want to exit the app or do something
-  else if a global uncaught error happens you have to set the `onFatalError`
-  option in init like (we will send the error to Sentry before this is called):
+* We no longer exit your app by default. Before `0.7.0` we would call `process.exit(1)` after we caught and uncaught
+  error. As of version `0.7.0` we no longer change electrons default behaviour which is showing a dialog with the error
+  and keep the app alive. If you want to exit the app or do something else if a global uncaught error happens you have
+  to set the `onFatalError` option in init like (we will send the error to Sentry before this is called):
 
   ```javascript
   init({
@@ -73,8 +77,7 @@ Sentry.configureScope(scope => {
 * The SDK is now initialized via `init()` (was `create` before)
 
 See the readme for full usage instructions, as well as the
-[@sentry/next tracking issue](https://github.com/getsentry/raven-js/issues/1281)
-for details on this change.
+[@sentry/next tracking issue](https://github.com/getsentry/raven-js/issues/1281) for details on this change.
 
 **Other Changes**:
 
@@ -91,7 +94,6 @@ for details on this change.
 ## v0.4.1
 
 * Support for JavaScript errors and native crashes (Electron `CrashReporter`)
-* Record breadcrumbs and context information across renderers and the main
-  process
+* Record breadcrumbs and context information across renderers and the main process
 * Device and event information is included in every event
 * Buffer crash reports and events as long as the device is offline
