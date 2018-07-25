@@ -5,11 +5,7 @@ interface ExtractOptions {
 }
 
 declare module 'extract-zip' {
-  function extract(
-    source: string,
-    options: ExtractOptions,
-    callback: (err: Error) => void,
-  ): void;
+  function extract(source: string, options: ExtractOptions, callback: (err: Error) => void): void;
 
   export = extract;
 }

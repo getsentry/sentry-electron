@@ -33,9 +33,7 @@ tests.forEach(([version, arch]) => {
       const lastFrame = getLastFrame(event.data);
 
       expect(context.testServer.events.length).to.equal(1);
-      expect(lastFrame.filename).to.equal(
-        'app:///fixtures/javascript-renderer.js',
-      );
+      expect(lastFrame.filename).to.equal('app:///fixtures/javascript-renderer.js');
 
       expect(event.dump_file).to.equal(undefined);
       expect(event.sentry_key).to.equal(SENTRY_KEY);
@@ -50,9 +48,7 @@ tests.forEach(([version, arch]) => {
       const lastFrame = getLastFrame(event.data);
 
       expect(context.testServer.events.length).to.equal(1);
-      expect(lastFrame.filename).to.equal(
-        'app:///fixtures/javascript-unhandledrejection.js',
-      );
+      expect(lastFrame.filename).to.equal('app:///fixtures/javascript-unhandledrejection.js');
       expect(event.dump_file).to.equal(undefined);
       expect(event.sentry_key).to.equal(SENTRY_KEY);
       expect(breadcrumbs.length).to.greaterThan(4);
@@ -80,9 +76,7 @@ tests.forEach(([version, arch]) => {
       const lastFrame = getLastFrame(event.data);
 
       expect(context.testServer.events.length).to.equal(1);
-      expect(lastFrame.filename).to.equal(
-        'app:///fixtures/javascript main with spaces.js',
-      );
+      expect(lastFrame.filename).to.equal('app:///fixtures/javascript main with spaces.js');
       expect(event.dump_file).to.equal(undefined);
       expect(event.sentry_key).to.equal(SENTRY_KEY);
       expect(breadcrumbs.length).to.greaterThan(4);
@@ -102,10 +96,7 @@ tests.forEach(([version, arch]) => {
       expect(breadcrumbs.length).to.greaterThan(4);
 
       await context.waitForTrue(
-        async () =>
-          context.mainProcess
-            ? !(await context.mainProcess.isRunning())
-            : false,
+        async () => (context.mainProcess ? !(await context.mainProcess.isRunning()) : false),
         'Timeout: Waiting for app to die',
       );
     });
@@ -128,10 +119,7 @@ tests.forEach(([version, arch]) => {
 
       // wait for the main process to die
       await context.waitForTrue(
-        async () =>
-          context.mainProcess
-            ? !(await context.mainProcess.isRunning())
-            : false,
+        async () => (context.mainProcess ? !(await context.mainProcess.isRunning()) : false),
         'Timeout: Waiting for app to die',
       );
 
@@ -155,9 +143,7 @@ tests.forEach(([version, arch]) => {
       const event = context.testServer.events[0];
       let breadcrumbs = event.data.breadcrumbs || [];
 
-      breadcrumbs = breadcrumbs.filter(
-        crumb => crumb.message === 'Something insightful!',
-      );
+      breadcrumbs = breadcrumbs.filter(crumb => crumb.message === 'Something insightful!');
 
       expect(context.testServer.events.length).to.equal(1);
       expect(event.dump_file).to.equal(undefined);

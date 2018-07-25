@@ -6,10 +6,7 @@ interface DownloadOptions {
 }
 
 declare module 'electron-download' {
-  function download(
-    options: DownloadOptions,
-    callback: (err: Error, zipPath: string) => void,
-  ): void;
+  function download(options: DownloadOptions, callback: (err: Error, zipPath: string) => void): void;
 
   export = download;
 }

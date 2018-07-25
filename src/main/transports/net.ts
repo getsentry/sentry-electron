@@ -1,11 +1,6 @@
 import { SentryError } from '@sentry/core';
 import { Transports } from '@sentry/node';
-import {
-  SentryEvent,
-  SentryResponse,
-  Status,
-  TransportOptions,
-} from '@sentry/types';
+import { SentryEvent, SentryResponse, Status, TransportOptions } from '@sentry/types';
 import { serialize } from '@sentry/utils/object';
 import {
   net,
@@ -31,8 +26,6 @@ export class NetTransport extends Transports.BaseTransport {
       req.on('response', (res: Electron.IncomingMessage) => {
         if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
           resolve({
-            code: res.statusCode,
-            event_id: event.event_id,
             status: Status.fromHttpCode(res.statusCode),
           });
         } else {
@@ -40,9 +33,7 @@ export class NetTransport extends Transports.BaseTransport {
           if (res.headers && res.headers['x-sentry-error']) {
             const reason = res.headers['x-sentry-error'];
             // tslint:enable:no-unsafe-any
-            reject(
-              new SentryError(`HTTP Error (${res.statusCode}): ${reason}`),
-            );
+            reject(new SentryError(`HTTP Error (${res.statusCode}): ${reason}`));
           } else {
             reject(new SentryError(`HTTP Error (${res.statusCode})`));
           }

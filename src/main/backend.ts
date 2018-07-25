@@ -8,19 +8,8 @@ import {
 } from 'electron';
 import { join } from 'path';
 
-import {
-  addBreadcrumb,
-  captureEvent,
-  captureMessage,
-  configureScope,
-} from '@sentry/minimal';
-import {
-  Breadcrumb,
-  SentryEvent,
-  SentryResponse,
-  Severity,
-  Status,
-} from '@sentry/types';
+import { addBreadcrumb, captureEvent, captureMessage, configureScope } from '@sentry/minimal';
+import { Breadcrumb, SentryEvent, SentryResponse, Severity, Status } from '@sentry/types';
 
 import { DSN, SentryError } from '@sentry/core';
 import { Scope } from '@sentry/hub';
@@ -28,14 +17,7 @@ import { getDefaultHub, NodeBackend } from '@sentry/node';
 import { forget } from '@sentry/utils/async';
 import { Store } from '@sentry/utils/store';
 
-import {
-  CommonBackend,
-  ElectronOptions,
-  IPC_CRUMB,
-  IPC_EVENT,
-  IPC_PING,
-  IPC_SCOPE,
-} from '../common';
+import { CommonBackend, ElectronOptions, IPC_CRUMB, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
 import { captureMinidump } from '../sdk';
 import { normalizeUrl } from './normalize';
 import { MinidumpUploader } from './uploader';
@@ -51,9 +33,7 @@ function getCachePath(): string {
 }
 
 /** Returns extra information from a renderer's web contents. */
-function getRendererExtra(
-  contents: Electron.WebContents,
-): { [key: string]: any } {
+function getRendererExtra(contents: Electron.WebContents): { [key: string]: any } {
   return {
     crashed_process: `renderer[${contents.id}]`,
     crashed_url: normalizeUrl(contents.getURL()),
@@ -86,8 +66,7 @@ export class MainBackend implements CommonBackend {
   /** Creates a new Electron backend instance. */
   public constructor(private readonly options: ElectronOptions) {
     this.inner = new NodeBackend(options);
-    const path = getCachePath();
-    this.scopeStore = new Store<Scope>(path, 'scope', new Scope());
+    this.scopeStore = new Store<Scope>(getCachePath(), 'scope', new Scope());
   }
 
   /**
@@ -159,14 +138,11 @@ export class MainBackend implements CommonBackend {
    * @param event Optional event information to add to the minidump request.
    * @returns A promise that resolves to the status code of the request.
    */
-  public async uploadMinidump(
-    path: string,
-    event: SentryEvent = {},
-  ): Promise<SentryResponse> {
+  public async uploadMinidump(path: string, event: SentryEvent = {}): Promise<SentryResponse> {
     if (this.uploader) {
       return this.uploader.uploadMinidump({ path, event });
     }
-    return { code: 200, event_id: event.event_id, status: Status.Success };
+    return { status: Status.Success };
   }
 
   /**
@@ -182,7 +158,8 @@ export class MainBackend implements CommonBackend {
   public storeScope(scope: Scope): void {
     const cloned = Scope.clone(scope);
     (cloned as any).eventProcessors = [];
-    this.scopeStore.set(cloned);
+    // tslint:disable-next-line:no-object-literal-type-assertion
+    this.scopeStore.update((current: Scope) => ({ ...current, ...cloned } as Scope));
   }
 
   /** Returns whether native reports are enabled. */
@@ -204,9 +181,7 @@ export class MainBackend implements CommonBackend {
     // error.
     const dsn = this.options.dsn;
     if (!dsn) {
-      throw new SentryError(
-        'Invariant exception: install() must not be called when disabled',
-      );
+      throw new SentryError('Invariant exception: install() must not be called when disabled');
     }
 
     // We will manually submit errors, but CrashReporter requires a submitURL in
@@ -226,11 +201,7 @@ export class MainBackend implements CommonBackend {
     const reporter: CrashReporterExt = crashReporter as any;
     const crashesDirectory = reporter.getCrashesDirectory();
 
-    this.uploader = new MinidumpUploader(
-      new DSN(dsn),
-      crashesDirectory,
-      getCachePath(),
-    );
+    this.uploader = new MinidumpUploader(new DSN(dsn), crashesDirectory, getCachePath());
 
     // Flush already cached minidumps from the queue.
     forget(this.uploader.flushQueue());
@@ -324,11 +295,7 @@ export class MainBackend implements CommonBackend {
       // SetImmediate is required for contents.id to be correct
       // https://github.com/electron/electron/issues/12036
       setImmediate(() => {
-        this.instrumentBreadcrumbs(`WebContents[${contents.id}]`, contents, [
-          'dom-ready',
-          'load-url',
-          'destroyed',
-        ]);
+        this.instrumentBreadcrumbs(`WebContents[${contents.id}]`, contents, ['dom-ready', 'load-url', 'destroyed']);
       });
     });
   }
@@ -338,11 +305,7 @@ export class MainBackend implements CommonBackend {
    * specified events.
    * TODO: Consider moving to integration
    */
-  private instrumentBreadcrumbs(
-    category: string,
-    emitter: Electron.EventEmitter,
-    events: string[] = [],
-  ): void {
+  private instrumentBreadcrumbs(category: string, emitter: Electron.EventEmitter, events: string[] = []): void {
     type Emit = (event: string, ...args: any[]) => boolean;
     const emit = emitter.emit.bind(emitter) as Emit;
 
@@ -384,9 +347,9 @@ export class MainBackend implements CommonBackend {
     const currentCloned = Scope.clone(getDefaultHub().getScope());
     const fetchedScope = this.scopeStore.get();
     const storedScope = Scope.clone(fetchedScope);
-    let event: SentryEvent = { extra };
+    let event: SentryEvent | null = { extra };
     event = await storedScope.applyToEvent(event);
-    event = await currentCloned.applyToEvent(event);
+    event = event && (await currentCloned.applyToEvent(event));
     const paths = await uploader.getNewMinidumps();
     paths.map(path => {
       captureMinidump(path, { ...event });

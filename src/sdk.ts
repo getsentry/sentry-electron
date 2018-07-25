@@ -1,3 +1,6 @@
+export const SDK_NAME = 'sentry.javascript.electron';
+// Version will be taken directly from package.json in sdkpackage.ts integration
+
 import { _callOnClient } from '@sentry/minimal';
 import { SentryEvent } from '@sentry/types';
 import { ElectronOptions } from './common';

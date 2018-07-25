@@ -4,6 +4,7 @@ import { ElectronOptions } from '..';
 import { RendererClient } from './client';
 export { RendererBackend } from './backend';
 export { RendererClient } from './client';
+export { Integrations as BrowserIntegrations } from '@sentry/browser';
 
 /**
  * Call init on @sentry/browser with all browser integrations

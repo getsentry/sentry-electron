@@ -1,18 +1,11 @@
 import { ClientClass, DSN } from '@sentry/core';
 import { getDefaultHub as getHub, Scope } from '@sentry/hub';
-import {
-  Breadcrumb,
-  SdkInfo,
-  SentryEvent,
-  SentryResponse,
-} from '@sentry/types';
+import { Breadcrumb, Integration, SentryEvent, SentryResponse } from '@sentry/types';
 import { CommonClient, ElectronOptions } from './common';
 
 // tslint:disable:no-var-requires no-unsafe-any
 export const getDefaultHub: typeof getHub =
-  process.type === 'browser'
-    ? module.require('@sentry/node').getDefaultHub
-    : require('@sentry/hub').getDefaultHub;
+  process.type === 'browser' ? module.require('@sentry/node').getDefaultHub : require('@sentry/hub').getDefaultHub;
 
 /**
  * The Sentry Electron SDK Frontend.
@@ -44,9 +37,7 @@ export class ElectronClient implements CommonClient {
     // this would be running `@sentry/electron` in a bare node process, which is
     // acceptable.
     const clientClass: ClientClass<CommonClient, ElectronOptions> =
-      process.type === 'browser'
-        ? module.require('./main').MainClient
-        : require('./renderer').RendererClient;
+      process.type === 'browser' ? module.require('./main').MainClient : require('./renderer').RendererClient;
 
     this.inner = new clientClass(options);
   }
@@ -54,18 +45,7 @@ export class ElectronClient implements CommonClient {
   /**
    * @inheritDoc
    */
-  public getSdkInfo(): SdkInfo {
-    return this.inner.getSdkInfo();
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public async captureMinidump(
-    path: string,
-    event: SentryEvent,
-    scope: Scope,
-  ): Promise<void> {
+  public async captureMinidump(path: string, event: SentryEvent, scope: Scope): Promise<void> {
     return this.inner.captureMinidump(path, event, scope);
   }
 
@@ -79,40 +59,28 @@ export class ElectronClient implements CommonClient {
   /**
    * @inheritDoc
    */
-  public async captureException(
-    exception: any,
-    scope?: Scope | undefined,
-  ): Promise<void> {
+  public async captureException(exception: any, scope?: Scope | undefined): Promise<void> {
     return this.inner.captureException(exception, scope);
   }
 
   /**
    * @inheritDoc
    */
-  public async captureMessage(
-    message: string,
-    scope?: Scope | undefined,
-  ): Promise<void> {
+  public async captureMessage(message: string, scope?: Scope | undefined): Promise<void> {
     return this.inner.captureMessage(message, scope);
   }
 
   /**
    * @inheritDoc
    */
-  public async captureEvent(
-    event: SentryEvent,
-    scope?: Scope | undefined,
-  ): Promise<SentryResponse> {
+  public async captureEvent(event: SentryEvent, scope?: Scope | undefined): Promise<SentryResponse> {
     return this.inner.captureEvent(event, scope);
   }
 
   /**
    * @inheritDoc
    */
-  public addBreadcrumb(
-    breadcrumb: Breadcrumb,
-    scope?: Scope | undefined,
-  ): void {
+  public addBreadcrumb(breadcrumb: Breadcrumb, scope?: Scope | undefined): void {
     this.inner.addBreadcrumb(breadcrumb, scope);
   }
 
@@ -137,7 +105,16 @@ export class ElectronClient implements CommonClient {
  * @param options Options
  */
 export function specificInit(options: ElectronOptions): void {
-  process.type === 'browser'
-    ? module.require('./main').init(options)
-    : require('./renderer').init(options);
+  process.type === 'browser' ? module.require('./main').init(options) : require('./renderer').init(options);
+}
+
+/** Convenience interface used to expose Integrations */
+export interface Integrations {
+  [key: string]: Integration;
+}
+/** Return all integrations depending if running in browser or renderer. */
+export function getIntegrations(): { node: Integrations; electron: Integrations } | { browser: Integrations } {
+  return process.type === 'browser'
+    ? { node: module.require('./main').NodeIntegrations, electron: module.require('./main').ElectronIntegrations }
+    : { browser: require('./renderer').BrowserIntegrations };
 }
