@@ -17,19 +17,19 @@ export class SDKInformation implements Integration {
    * @inheritDoc
    */
   public install(): void {
-    getDefaultHub().addEventProcessor(async (event: SentryEvent) => {
-      event.sdk = {
+    getDefaultHub().addEventProcessor(async (event: SentryEvent) => ({
+      ...event,
+      sdk: {
         name: SDK_NAME,
         packages: [
           ...((event.sdk && event.sdk.packages) || []),
           {
-            name: 'npm:@sentry/electron',
+            name: 'npm:@sentry/node',
             version: SDK_VERSION,
           },
         ],
         version: SDK_VERSION,
-      };
-      return event;
-    });
+      },
+    }));
   }
 }
