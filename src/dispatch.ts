@@ -1,6 +1,6 @@
 import { ClientClass, DSN } from '@sentry/core';
 import { getDefaultHub as getHub, Scope } from '@sentry/hub';
-import { Breadcrumb, SentryEvent, SentryResponse } from '@sentry/types';
+import { Breadcrumb, Integration, SentryEvent, SentryResponse } from '@sentry/types';
 import { CommonClient, ElectronOptions } from './common';
 
 // tslint:disable:no-var-requires no-unsafe-any
@@ -106,4 +106,15 @@ export class ElectronClient implements CommonClient {
  */
 export function specificInit(options: ElectronOptions): void {
   process.type === 'browser' ? module.require('./main').init(options) : require('./renderer').init(options);
+}
+
+/** Convenience interface used to expose Integrations */
+export interface Integrations {
+  [key: string]: Integration;
+}
+/** Return all integrations depending if running in browser or renderer. */
+export function getIntegrations(): { node: Integrations; electron: Integrations } | { browser: Integrations } {
+  return process.type === 'browser'
+    ? { node: module.require('./main').NodeIntegrations, electron: module.require('./main').ElectronIntegrations }
+    : { browser: require('./renderer').BrowserIntegrations };
 }

@@ -8,6 +8,10 @@ import { Electron, OnUncaughtException, SDKInformation } from './integrations';
 import { NetTransport } from './transports/net';
 export { MainClient } from './client';
 export { MainBackend } from './backend';
+export { Integrations as NodeIntegrations } from '@sentry/node';
+
+// tslint:disable-next-line:variable-name
+export const ElectronIntegrations = { Electron, OnUncaughtException, SDKInformation };
 
 /**
  * Init call to node, if no transport is set, we use net of electron
