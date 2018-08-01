@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.8.1
+
+* Updated deps to use `@sentry/*` `4.0.0-beta.12`
+
 ## v0.8.0
 
 * Updated deps to use `@sentry/*` `4.0.0-beta.11`
@@ -11,7 +15,7 @@
 **Breaking Changes**:
 
 * We no longer exit your app by default. Before `0.7.0` we would call `process.exit(1)` after we caught and uncaught
-  error. As of version `0.7.0` we no longer change electrons default behaviour which is showing a dialog with the error
+  error. As of version `0.7.0` we no longer change electrons default behavior which is showing a dialog with the error
   and keep the app alive. If you want to exit the app or do something else if a global uncaught error happens you have
   to set the `onFatalError` option in init like (we will send the error to Sentry before this is called):
 
