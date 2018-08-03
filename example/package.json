@@ -9,7 +9,7 @@
     "start": "electron ."
   },
   "dependencies": {
-    "@sentry/electron": "^0.5.5"
+    "@sentry/electron": "^0.8.1"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^4.5.1",
