@@ -37,9 +37,9 @@
     "@sentry/minimal": "4.0.0-beta.12",
     "@sentry/utils": "4.0.0-beta.12",
     "@sentry/types": "4.0.0-beta.12",
-    "electron-fetch": "^1.1.0",
-    "form-data": "^2.3.2",
-    "util.promisify": "^1.0.0"
+    "electron-fetch": "1.1.0",
+    "form-data": "2.3.2",
+    "util.promisify": "1.0.0"
   },
   "devDependencies": {
     "@sentry/typescript": "4.0.0-beta.12",
