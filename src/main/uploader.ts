@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import { basename, join } from 'path';
 import { promisify } from 'util';
 
-import { DSN } from '@sentry/core';
+import { Dsn } from '@sentry/core';
 import { SentryEvent, SentryResponse, Status } from '@sentry/types';
 import { filterAsync } from '@sentry/utils/async';
 import { mkdirp } from '@sentry/utils/fs';
@@ -64,7 +64,7 @@ export class MinidumpUploader {
    * @param crashesDirectory The directory Electron stores crashes in.
    * @param cacheDirectory A persistent directory to cache minidumps.
    */
-  public constructor(dsn: DSN, private readonly crashesDirectory: string, private readonly cacheDirectory: string) {
+  public constructor(dsn: Dsn, private readonly crashesDirectory: string, private readonly cacheDirectory: string) {
     this.type = process.platform === 'darwin' ? 'crashpad' : 'breakpad';
     this.knownPaths = [];
 

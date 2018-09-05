@@ -1,11 +1,19 @@
-import { ClientClass, DSN } from '@sentry/core';
-import { getDefaultHub as getHub, Scope } from '@sentry/hub';
-import { Breadcrumb, Integration, SentryEvent, SentryResponse } from '@sentry/types';
+import { ClientClass, Dsn } from '@sentry/core';
+import { getCurrentHub as getHub, Scope } from '@sentry/hub';
+import {
+  Breadcrumb,
+  Integration,
+  SentryBreadcrumbHint,
+  SentryEvent,
+  SentryEventHint,
+  SentryResponse,
+  Severity,
+} from '@sentry/types';
 import { CommonClient, ElectronOptions } from './common';
 
 // tslint:disable:no-var-requires no-unsafe-any
-export const getDefaultHub: typeof getHub =
-  process.type === 'browser' ? module.require('@sentry/node').getDefaultHub : require('@sentry/hub').getDefaultHub;
+export const getCurrentHub: typeof getHub =
+  process.type === 'browser' ? module.require('@sentry/node').getCurrentHub : require('@sentry/hub').getCurrentHub;
 
 /**
  * The Sentry Electron SDK Frontend.
@@ -59,36 +67,41 @@ export class ElectronClient implements CommonClient {
   /**
    * @inheritDoc
    */
-  public async captureException(exception: any, scope?: Scope | undefined): Promise<void> {
-    return this.inner.captureException(exception, scope);
+  public async captureException(exception: any, hint?: SentryEventHint, scope?: Scope): Promise<SentryResponse> {
+    return this.inner.captureException(exception, hint, scope);
   }
 
   /**
    * @inheritDoc
    */
-  public async captureMessage(message: string, scope?: Scope | undefined): Promise<void> {
-    return this.inner.captureMessage(message, scope);
+  public async captureMessage(
+    message: string,
+    level?: Severity,
+    hint?: SentryEventHint,
+    scope?: Scope,
+  ): Promise<SentryResponse> {
+    return this.inner.captureMessage(message, level, hint, scope);
   }
 
   /**
    * @inheritDoc
    */
-  public async captureEvent(event: SentryEvent, scope?: Scope | undefined): Promise<SentryResponse> {
-    return this.inner.captureEvent(event, scope);
+  public async captureEvent(event: SentryEvent, hint?: SentryEventHint, scope?: Scope): Promise<SentryResponse> {
+    return this.inner.captureEvent(event, hint, scope);
   }
 
   /**
    * @inheritDoc
    */
-  public addBreadcrumb(breadcrumb: Breadcrumb, scope?: Scope | undefined): void {
-    this.inner.addBreadcrumb(breadcrumb, scope);
+  public addBreadcrumb(breadcrumb: Breadcrumb, hint?: SentryBreadcrumbHint, scope?: Scope | undefined): void {
+    this.inner.addBreadcrumb(breadcrumb, hint, scope);
   }
 
   /**
    * @inheritDoc
    */
-  public getDSN(): DSN | undefined {
-    return this.inner.getDSN();
+  public getDsn(): Dsn | undefined {
+    return this.inner.getDsn();
   }
 
   /**
@@ -96,6 +109,13 @@ export class ElectronClient implements CommonClient {
    */
   public getOptions(): ElectronOptions {
     return this.inner.getOptions();
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public async close(timeout?: number): Promise<boolean> {
+    return this.inner.close(timeout);
   }
 }
 

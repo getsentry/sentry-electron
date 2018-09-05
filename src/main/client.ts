@@ -1,5 +1,5 @@
 import { BaseClient, Scope } from '@sentry/core';
-import { Breadcrumb, SentryEvent, SentryResponse } from '@sentry/types';
+import { Breadcrumb, SentryBreadcrumbHint, SentryEvent, SentryEventHint, SentryResponse } from '@sentry/types';
 import { CommonClient, ElectronOptions } from '../common';
 import { MainBackend } from './backend';
 
@@ -22,21 +22,21 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
    */
   public async captureMinidump(path: string, event: SentryEvent = {}, scope?: Scope): Promise<void> {
     event.tags = { event_type: 'native', ...event.tags };
-    await this.processEvent(event, async finalEvent => this.getBackend().uploadMinidump(path, finalEvent), scope);
+    await this.processEvent(event, async finalEvent => this.getBackend().uploadMinidump(path, finalEvent), {}, scope);
   }
 
   /**
    * @inheritDoc
    */
-  public async captureEvent(event: SentryEvent, scope?: Scope): Promise<SentryResponse> {
+  public async captureEvent(event: SentryEvent, hint?: SentryEventHint, scope?: Scope): Promise<SentryResponse> {
     event.tags = { event_type: 'javascript', ...event.tags };
-    return super.captureEvent(event, scope);
+    return super.captureEvent(event, hint, scope);
   }
 
   /**
    * @inheritDoc
    */
-  public async addBreadcrumb(breadcrumb: Breadcrumb, scope?: Scope): Promise<void> {
-    await super.addBreadcrumb(breadcrumb, scope);
+  public async addBreadcrumb(breadcrumb: Breadcrumb, hint?: SentryBreadcrumbHint, scope?: Scope): Promise<void> {
+    await super.addBreadcrumb(breadcrumb, hint, scope);
   }
 }

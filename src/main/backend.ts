@@ -11,9 +11,9 @@ import { join } from 'path';
 import { addBreadcrumb, captureEvent, captureMessage, configureScope } from '@sentry/minimal';
 import { Breadcrumb, SentryEvent, SentryResponse, Severity, Status } from '@sentry/types';
 
-import { DSN, SentryError } from '@sentry/core';
+import { BaseBackend, Dsn, SentryError } from '@sentry/core';
 import { Scope } from '@sentry/hub';
-import { getDefaultHub, NodeBackend } from '@sentry/node';
+import { getCurrentHub, NodeBackend } from '@sentry/node';
 import { forget } from '@sentry/utils/async';
 import { Store } from '@sentry/utils/store';
 
@@ -53,7 +53,7 @@ export async function isAppReady(): Promise<boolean> {
 }
 
 /** Backend implementation for Electron renderer backends. */
-export class MainBackend implements CommonBackend {
+export class MainBackend extends BaseBackend<ElectronOptions> implements CommonBackend {
   /** The inner SDK used to record Node events. */
   private readonly inner: NodeBackend;
 
@@ -64,7 +64,8 @@ export class MainBackend implements CommonBackend {
   private uploader?: MinidumpUploader;
 
   /** Creates a new Electron backend instance. */
-  public constructor(private readonly options: ElectronOptions) {
+  public constructor(options: ElectronOptions) {
+    super(options);
     this.inner = new NodeBackend(options);
     this.scopeStore = new Store<Scope>(getCachePath(), 'scope', new Scope());
   }
@@ -148,13 +149,6 @@ export class MainBackend implements CommonBackend {
   /**
    * @inheritDoc
    */
-  public storeBreadcrumb(_: Breadcrumb): boolean {
-    return true;
-  }
-
-  /**
-   * @inheritDoc
-   */
   public storeScope(scope: Scope): void {
     const cloned = Scope.clone(scope);
     (cloned as any).eventProcessors = [];
@@ -201,7 +195,7 @@ export class MainBackend implements CommonBackend {
     const reporter: CrashReporterExt = crashReporter as any;
     const crashesDirectory = reporter.getCrashesDirectory();
 
-    this.uploader = new MinidumpUploader(new DSN(dsn), crashesDirectory, getCachePath());
+    this.uploader = new MinidumpUploader(new Dsn(dsn), crashesDirectory, getCachePath());
 
     // Flush already cached minidumps from the queue.
     forget(this.uploader.flushQueue());
@@ -255,6 +249,7 @@ export class MainBackend implements CommonBackend {
         ...getRendererExtra(ipc.sender),
         ...event.extra,
       };
+      console.log('IPC_EVENT');
       captureEvent(event);
     });
 
@@ -344,7 +339,7 @@ export class MainBackend implements CommonBackend {
       throw new SentryError('Invariant violation: Native crashes not enabled');
     }
 
-    const currentCloned = Scope.clone(getDefaultHub().getScope());
+    const currentCloned = Scope.clone(getCurrentHub().getScope());
     const fetchedScope = this.scopeStore.get();
     const storedScope = Scope.clone(fetchedScope);
     let event: SentryEvent | null = { extra };
