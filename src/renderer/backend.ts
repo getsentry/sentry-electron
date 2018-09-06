@@ -2,9 +2,9 @@
 import { crashReporter, ipcRenderer, remote } from 'electron';
 
 import { BrowserBackend } from '@sentry/browser';
-import { SentryError } from '@sentry/core';
+import { BaseBackend, SentryError } from '@sentry/core';
 import { Scope } from '@sentry/hub';
-import { Breadcrumb, SentryEvent, SentryResponse, Status } from '@sentry/types';
+import { Breadcrumb, SentryEvent, SentryEventHint, SentryResponse, Severity, Status } from '@sentry/types';
 
 import { CommonBackend, ElectronOptions, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
 
@@ -12,12 +12,13 @@ import { CommonBackend, ElectronOptions, IPC_EVENT, IPC_PING, IPC_SCOPE } from '
 const PING_TIMEOUT = 500;
 
 /** Backend implementation for Electron renderer backends. */
-export class RendererBackend implements CommonBackend {
+export class RendererBackend extends BaseBackend<ElectronOptions> implements CommonBackend {
   /** The inner SDK used to record JavaScript events. */
   private readonly inner: BrowserBackend;
 
   /** Creates a new Electron backend instance. */
-  public constructor(private readonly options: ElectronOptions) {
+  public constructor(options: ElectronOptions) {
+    super(options);
     this.inner = new BrowserBackend(options);
   }
 
@@ -42,15 +43,15 @@ export class RendererBackend implements CommonBackend {
   /**
    * @inheritDoc
    */
-  public async eventFromException(exception: any): Promise<SentryEvent> {
-    return this.inner.eventFromException(exception);
+  public async eventFromException(exception: any, hint?: SentryEventHint): Promise<SentryEvent> {
+    return this.inner.eventFromException(exception, hint);
   }
 
   /**
    * @inheritDoc
    */
-  public async eventFromMessage(message: string): Promise<SentryEvent> {
-    return this.inner.eventFromMessage(message);
+  public async eventFromMessage(message: string, level?: Severity, hint?: SentryEventHint): Promise<SentryEvent> {
+    return this.inner.eventFromMessage(message, level, hint);
   }
 
   /**

@@ -18,7 +18,7 @@ export class NetTransport extends Transports.BaseTransport {
   /**
    * @inheritDoc
    */
-  public async send(event: SentryEvent): Promise<SentryResponse> {
+  public async captureEvent(event: SentryEvent): Promise<SentryResponse> {
     await isAppReady();
     return new Promise<SentryResponse>((resolve, reject) => {
       const req = net.request(this.getRequestOptions());

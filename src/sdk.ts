@@ -4,7 +4,7 @@ export const SDK_NAME = 'sentry.javascript.electron';
 import { _callOnClient } from '@sentry/minimal';
 import { SentryEvent } from '@sentry/types';
 import { ElectronOptions } from './common';
-import { ElectronClient, getDefaultHub, specificInit } from './dispatch';
+import { ElectronClient, getCurrentHub, specificInit } from './dispatch';
 
 /**
  * The Sentry Electron SDK Client.
@@ -56,7 +56,7 @@ export function init(options: ElectronOptions): void {
 
 /** Returns the current ElectronFrontend, if any. */
 export function getCurrentFrontend(): ElectronClient {
-  return getDefaultHub().getClient() as ElectronClient;
+  return getCurrentHub().getClient() as ElectronClient;
 }
 
 /**

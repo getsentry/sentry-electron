@@ -1,5 +1,5 @@
 import { BaseClient, Scope } from '@sentry/core';
-import { Breadcrumb, SentryEvent } from '@sentry/types';
+import { Breadcrumb, SentryBreadcrumbHint, SentryEvent } from '@sentry/types';
 // tslint:disable-next-line:no-implicit-dependencies
 import { ipcRenderer } from 'electron';
 import { CommonClient, ElectronOptions, IPC_CRUMB } from '../common';
@@ -29,7 +29,7 @@ export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
   /**
    * @inheritDoc
    */
-  public async addBreadcrumb(breadcrumb: Breadcrumb, scope?: Scope): Promise<void> {
-    ipcRenderer.send(IPC_CRUMB, breadcrumb, scope);
+  public async addBreadcrumb(breadcrumb: Breadcrumb, _hint?: SentryBreadcrumbHint, _scope?: Scope): Promise<void> {
+    ipcRenderer.send(IPC_CRUMB, breadcrumb);
   }
 }
