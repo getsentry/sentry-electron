@@ -249,7 +249,6 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
         ...getRendererExtra(ipc.sender),
         ...event.extra,
       };
-      console.log('IPC_EVENT');
       captureEvent(event);
     });
 
