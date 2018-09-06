@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.9.0
+
+* Updated deps to use `@sentry/*` `4.0.0-rc.1`
+* Fixed #109
+* Fixes #106
+* Fixes #94
+* `captureMessage` now accepts `level` as a second parameter.
+
 ## v0.8.1
 
 * Updated deps to use `@sentry/*` `4.0.0-beta.12`
