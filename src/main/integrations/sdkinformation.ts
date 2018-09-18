@@ -1,4 +1,3 @@
-import { Scope } from '@sentry/hub';
 import { getCurrentHub } from '@sentry/node';
 import { Integration, SentryEvent } from '@sentry/types';
 import { SDK_NAME } from '../../sdk';
@@ -12,13 +11,13 @@ export class SDKInformation implements Integration {
   /**
    * @inheritDoc
    */
-  public name: string = 'SDKInformation';
+  public name: string = 'SDKInformationElectron';
 
   /**
    * @inheritDoc
    */
   public install(): void {
-    getCurrentHub().configureScope((scope: Scope) => {
+    getCurrentHub().configureScope(scope => {
       scope.addEventProcessor(async (event: SentryEvent) => ({
         ...event,
         sdk: {

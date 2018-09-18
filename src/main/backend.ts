@@ -8,11 +8,18 @@ import {
 } from 'electron';
 import { join } from 'path';
 
-import { addBreadcrumb, captureEvent, captureMessage, configureScope } from '@sentry/minimal';
 import { Breadcrumb, SentryEvent, SentryResponse, Severity, Status } from '@sentry/types';
 
-import { BaseBackend, Dsn, SentryError } from '@sentry/core';
-import { Scope } from '@sentry/hub';
+import {
+  addBreadcrumb,
+  BaseBackend,
+  captureEvent,
+  captureMessage,
+  configureScope,
+  Dsn,
+  Scope,
+  SentryError,
+} from '@sentry/core';
 import { getCurrentHub, NodeBackend } from '@sentry/node';
 import { forget } from '@sentry/utils/async';
 import { Store } from '@sentry/utils/store';

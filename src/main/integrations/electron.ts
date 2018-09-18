@@ -1,4 +1,3 @@
-import { Scope } from '@sentry/hub';
 import { getCurrentHub } from '@sentry/node';
 import { Integration, SentryEvent } from '@sentry/types';
 import { addEventDefaults } from '../context';
@@ -15,7 +14,7 @@ export class Electron implements Integration {
    * @inheritDoc
    */
   public install(): void {
-    getCurrentHub().configureScope((scope: Scope) => {
+    getCurrentHub().configureScope(scope => {
       scope.addEventProcessor(async (event: SentryEvent) => normalizeEvent(await addEventDefaults(event)));
     });
   }

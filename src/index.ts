@@ -15,7 +15,7 @@ export {
 
 export { addBreadcrumb, captureMessage, captureException, captureEvent, configureScope } from '@sentry/minimal';
 
-export { getHubFromCarrier, Hub, Scope } from '@sentry/hub';
+export { getHubFromCarrier, Hub, Scope } from '@sentry/core';
 
 export { ElectronOptions } from './common';
 export { ElectronClient, getCurrentHub, getIntegrations } from './dispatch';
