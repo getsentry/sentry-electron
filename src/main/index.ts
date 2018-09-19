@@ -18,6 +18,7 @@ export const ElectronIntegrations = { Electron, OnUncaughtException, SDKInformat
  * @param options ElectronOptions
  */
 export function init(options: ElectronOptions): void {
+  const electronIntegrations = defaultIntegrations.filter(integration => integration.name !== 'OnUncaughtException');
   initAndBind(
     MainClient,
     {
@@ -25,7 +26,7 @@ export function init(options: ElectronOptions): void {
       ...options,
     },
     [
-      ...defaultIntegrations,
+      ...electronIntegrations,
       // tslint:disable-next-line:no-unbound-method
       new OnUncaughtException({ onFatalError: options.onFatalError }),
       new Electron(),

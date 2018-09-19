@@ -17,7 +17,7 @@ export class OnUncaughtException implements Integration {
    */
   public constructor(
     private readonly options: {
-      onFatalError?(error: Error): void;
+      onFatalError?(firstError: Error, secondError?: Error): void;
     } = {},
   ) {}
 

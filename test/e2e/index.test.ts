@@ -101,7 +101,7 @@ tests.forEach(([version, arch]) => {
       );
     });
 
-    it.only('Native crash in renderer process', async () => {
+    it('Native crash in renderer process', async () => {
       await context.start('sentry-basic', 'native-renderer');
       // It can take rather a long time to get the event on Mac
       await context.waitForEvents(1, 20000);
