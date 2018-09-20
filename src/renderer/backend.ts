@@ -2,8 +2,7 @@
 import { crashReporter, ipcRenderer, remote } from 'electron';
 
 import { BrowserBackend } from '@sentry/browser';
-import { BaseBackend, SentryError } from '@sentry/core';
-import { Scope } from '@sentry/hub';
+import { BaseBackend, Scope, SentryError } from '@sentry/core';
 import { Breadcrumb, SentryEvent, SentryEventHint, SentryResponse, Severity, Status } from '@sentry/types';
 
 import { CommonBackend, ElectronOptions, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';

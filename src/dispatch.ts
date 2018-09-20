@@ -1,5 +1,4 @@
-import { ClientClass, Dsn } from '@sentry/core';
-import { getCurrentHub as getHub, Scope } from '@sentry/hub';
+import { ClientClass, Dsn, getCurrentHub as getHub, Scope } from '@sentry/core';
 import {
   Breadcrumb,
   Integration,
@@ -13,7 +12,7 @@ import { CommonClient, ElectronOptions } from './common';
 
 // tslint:disable:no-var-requires no-unsafe-any
 export const getCurrentHub: typeof getHub =
-  process.type === 'browser' ? module.require('@sentry/node').getCurrentHub : require('@sentry/hub').getCurrentHub;
+  process.type === 'browser' ? module.require('@sentry/node').getCurrentHub : require('@sentry/core').getCurrentHub;
 
 /**
  * The Sentry Electron SDK Frontend.
