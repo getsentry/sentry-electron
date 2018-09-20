@@ -2,22 +2,22 @@
 # yarn lockfile v1
 
 
-"@sentry/browser@^4.0.0":
-  version "4.0.2"
-  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-4.0.2.tgz#c8442777b5acd513f66308a18fdd527c48e27ff3"
+"@sentry/browser@^4.0.3":
+  version "4.0.3"
+  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-4.0.3.tgz#a748ce8b7695246d8d36f6c1fe209d259e18f1c2"
   dependencies:
-    "@sentry/core" "4.0.1"
+    "@sentry/core" "4.0.3"
     "@sentry/types" "4.0.1"
     "@sentry/utils" "4.0.1"
     md5 "2.2.1"
 
-"@sentry/core@4.0.1", "@sentry/core@^4.0.0":
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-4.0.1.tgz#4e772707eb55ff7bdeb75e87efc5b3eabab66de6"
+"@sentry/core@4.0.3", "@sentry/core@^4.0.3":
+  version "4.0.3"
+  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-4.0.3.tgz#4f8fd67888f1cf0f1a984c5fa362122b60e8bd08"
   dependencies:
     "@sentry/hub" "4.0.1"
     "@sentry/minimal" "4.0.1"
-    "@sentry/types" "4.0.0"
+    "@sentry/types" "4.0.1"
     "@sentry/utils" "4.0.1"
 
 "@sentry/hub@4.0.1":
@@ -34,13 +34,13 @@
     "@sentry/hub" "4.0.1"
     "@sentry/types" "4.0.0"
 
-"@sentry/node@^4.0.0":
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-4.0.1.tgz#40a1b103a05be09e30c8d098197b0e456a8d7765"
+"@sentry/node@^4.0.3":
+  version "4.0.3"
+  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-4.0.3.tgz#4c1bfd222ebc100844a4d8a9a599ff3ace5e8518"
   dependencies:
-    "@sentry/core" "4.0.1"
+    "@sentry/core" "4.0.3"
     "@sentry/hub" "4.0.1"
-    "@sentry/types" "4.0.0"
+    "@sentry/types" "4.0.1"
     "@sentry/utils" "4.0.1"
     cookie "0.3.1"
     lsmod "1.0.0"

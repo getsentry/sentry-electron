@@ -30,9 +30,9 @@
     "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only --timeout 30000 ./test/e2e/**/*.ts"
   },
   "dependencies": {
-    "@sentry/browser": "^4.0.0",
-    "@sentry/core": "^4.0.0",
-    "@sentry/node": "^4.0.0",
+    "@sentry/browser": "^4.0.3",
+    "@sentry/core": "^4.0.3",
+    "@sentry/node": "^4.0.3",
     "@sentry/minimal": "^4.0.0",
     "@sentry/types": "^4.0.0",
     "@sentry/utils": "^4.0.0",
