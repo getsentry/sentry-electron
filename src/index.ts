@@ -13,10 +13,18 @@ export {
   User,
 } from '@sentry/types';
 
-export { addBreadcrumb, captureMessage, captureException, captureEvent, configureScope } from '@sentry/minimal';
+export {
+  addBreadcrumb,
+  captureException,
+  captureEvent,
+  captureMessage,
+  configureScope,
+  withScope,
+  getHubFromCarrier,
+  Hub,
+  Scope,
+} from '@sentry/core';
 
-export { getHubFromCarrier, Hub, Scope } from '@sentry/core';
-
-export { ElectronOptions } from './common';
+export { CommonBackend, ElectronOptions } from './common';
 export { ElectronClient, getCurrentHub, getIntegrations } from './dispatch';
 export { captureMinidump, init, getCurrentFrontend } from './sdk';
