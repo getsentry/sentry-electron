@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.10.1
+
+- Fix exports, `withScope` is now available
+
 ## v0.10.0
 
 - Updated deps to use `@sentry/*` `^4.0.0`
