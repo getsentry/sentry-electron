@@ -116,6 +116,13 @@ export class ElectronClient implements CommonClient {
   public async close(timeout?: number): Promise<boolean> {
     return this.inner.close(timeout);
   }
+
+  /**
+   * @inheritDoc
+   */
+  public showReportDialog(options: any): void {
+    this.inner.showReportDialog(options);
+  }
 }
 
 /**

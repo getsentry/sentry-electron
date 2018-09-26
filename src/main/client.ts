@@ -2,6 +2,11 @@ import { BaseClient, Scope } from '@sentry/core';
 import { Breadcrumb, SentryBreadcrumbHint, SentryEvent, SentryEventHint, SentryResponse } from '@sentry/types';
 import { CommonClient, ElectronOptions } from '../common';
 import { MainBackend } from './backend';
+import { SDK_NAME } from '../sdk';
+
+/** SDK version used in every event. */
+// tslint:disable-next-line
+export const SDK_VERSION: string = require('../../package.json').version;
 
 /** Frontend implementation for Electron renderer backends. */
 export class MainClient extends BaseClient<MainBackend, ElectronOptions> implements CommonClient {
@@ -11,6 +16,26 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
    */
   public constructor(options: ElectronOptions) {
     super(MainBackend, options);
+  }
+
+  /**
+   * @inheritDoc
+   */
+  protected async prepareEvent(event: SentryEvent, scope?: Scope, hint?: SentryEventHint): Promise<SentryEvent | null> {
+    event.sdk = {
+      ...event.sdk,
+      name: SDK_NAME,
+      packages: [
+        ...((event.sdk && event.sdk.packages) || []),
+        {
+          name: 'npm:@sentry/electron',
+          version: SDK_VERSION,
+        },
+      ],
+      version: SDK_VERSION,
+    };
+
+    return super.prepareEvent(event, scope, hint);
   }
 
   /**
@@ -38,5 +63,12 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
    */
   public async addBreadcrumb(breadcrumb: Breadcrumb, hint?: SentryBreadcrumbHint, scope?: Scope): Promise<void> {
     await super.addBreadcrumb(breadcrumb, hint, scope);
+  }
+
+  /**
+   * Does nothing in main/node
+   */
+  public showReportDialog(_: any): void {
+    // noop
   }
 }

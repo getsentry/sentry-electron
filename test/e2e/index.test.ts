@@ -51,6 +51,7 @@ tests.forEach(([version, arch]) => {
       expect(lastFrame.filename).to.equal('app:///fixtures/javascript-unhandledrejection.js');
       expect(event.dump_file).to.equal(undefined);
       expect(event.sentry_key).to.equal(SENTRY_KEY);
+      expect(event.data.sdk!.name).to.equal('sentry.javascript.electron');
       expect(breadcrumbs.length).to.greaterThan(4);
     });
 
@@ -65,6 +66,7 @@ tests.forEach(([version, arch]) => {
       expect(lastFrame.filename).to.equal('app:///fixtures/javascript-main.js');
       expect(event.dump_file).to.equal(undefined);
       expect(event.sentry_key).to.equal(SENTRY_KEY);
+      expect(event.data.sdk!.name).to.equal('sentry.javascript.electron');
       expect(breadcrumbs.length).to.greaterThan(4);
     });
 

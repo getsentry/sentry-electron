@@ -1,4 +1,4 @@
-import { BrowserOptions } from '@sentry/browser';
+import { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
 import { Backend, Client, Options, Scope } from '@sentry/core';
 import { NodeOptions } from '@sentry/node';
 import { SentryEvent } from '@sentry/types';
@@ -57,6 +57,11 @@ export interface CommonClient extends Client<ElectronOptions> {
    * @param scope The SDK scope used to upload.
    */
   captureMinidump(path: string, event: SentryEvent, scope: Scope): Promise<void>;
+
+  /**
+   * @inheritdoc {@link BrowserClient.showReportDialog}
+   */
+  showReportDialog(options: ReportDialogOptions): void;
 }
 
 /** Common interface for Electron backends. */
