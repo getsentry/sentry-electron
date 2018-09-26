@@ -1,8 +1,8 @@
 import { BaseClient, Scope } from '@sentry/core';
 import { Breadcrumb, SentryBreadcrumbHint, SentryEvent, SentryEventHint, SentryResponse } from '@sentry/types';
 import { CommonClient, ElectronOptions } from '../common';
-import { MainBackend } from './backend';
 import { SDK_NAME } from '../sdk';
+import { MainBackend } from './backend';
 
 /** SDK version used in every event. */
 // tslint:disable-next-line

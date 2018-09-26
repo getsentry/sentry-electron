@@ -1,17 +1,17 @@
+import { BrowserClient, ReportDialogOptions } from '@sentry/browser';
 import { BaseClient, getCurrentHub, Scope } from '@sentry/core';
 import { Breadcrumb, SentryBreadcrumbHint, SentryEvent } from '@sentry/types';
 // tslint:disable-next-line:no-implicit-dependencies
 import { ipcRenderer } from 'electron';
 import { CommonClient, ElectronOptions, IPC_CRUMB } from '../common';
 import { RendererBackend } from './backend';
-import { BrowserClient, ReportDialogOptions } from '@sentry/browser';
 
 /** Frontend implementation for Electron renderer backends. */
 export class RendererClient extends BaseClient<RendererBackend, ElectronOptions> implements CommonClient {
   /**
    * Internal used browser client
    */
-  private inner: BrowserClient;
+  private readonly inner: BrowserClient;
 
   /**
    * Creates a new Electron SDK instance.
@@ -41,7 +41,8 @@ export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
   }
 
   /**
-   * @inheritdoc {@link BrowserClient.showReportDialog}
+   * Basically calling {@link BrowserClient.showReportDialog}
+   * @inheritdoc
    */
   public showReportDialog(options: ReportDialogOptions = {}): void {
     if (!options.eventId) {
