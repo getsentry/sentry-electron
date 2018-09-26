@@ -5,6 +5,7 @@ import { _callOnClient } from '@sentry/minimal';
 import { SentryEvent } from '@sentry/types';
 import { ElectronOptions } from './common';
 import { ElectronClient, getCurrentHub, specificInit } from './dispatch';
+import { ReportDialogOptions } from '@sentry/browser';
 
 /**
  * The Sentry Electron SDK Client.
@@ -54,9 +55,13 @@ export function init(options: ElectronOptions): void {
   specificInit(options);
 }
 
-/** Returns the current ElectronFrontend, if any. */
-export function getCurrentFrontend(): ElectronClient {
-  return getCurrentHub().getClient() as ElectronClient;
+/**
+ * Present the user with a report dialog.
+ *
+ * @param options Everything is optional, we try to fetch all info need from the global scope.
+ */
+export function showReportDialog(options: ReportDialogOptions = {}): void {
+  (getCurrentHub().getClient() as ElectronClient).showReportDialog(options);
 }
 
 /**
