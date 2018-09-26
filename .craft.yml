@@ -1,3 +1,5 @@
+---
+minVersion: '0.5.1'
 github:
   owner: getsentry
   repo: sentry-electron
