@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.11.0
+
+- Expose `showReportDialog`
+
+**Breaking Changes**:
+
+- Removed `getCurrentFrontend()` function, you can achieve the same with `getCurrentHub().getClient()`
+
 ## v0.10.1
 
 - Fix exports, `withScope` is now available

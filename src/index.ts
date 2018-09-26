@@ -27,4 +27,4 @@ export {
 
 export { CommonBackend, ElectronOptions } from './common';
 export { ElectronClient, getCurrentHub, getIntegrations } from './dispatch';
-export { captureMinidump, init, getCurrentFrontend } from './sdk';
+export { captureMinidump, init, showReportDialog } from './sdk';
