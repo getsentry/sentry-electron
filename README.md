@@ -84,10 +84,10 @@ Sentry.captureEvent({
 
 ## Deep Dive
 
-* [Configuration](https://docs.sentry.io/clients/electron/config/)
-* [JavaScript Usage](https://docs.sentry.io/clients/electron/javascript/)
-* [Native Usage](https://docs.sentry.io/clients/electron/native/)
-* [Source Maps](https://docs.sentry.io/clients/electron/sourcemaps/)
+* [Configuration](https://docs.sentry.io/platforms/javascript/electron/#configuring-the-client)
+* [JavaScript Usage](https://docs.sentry.io/platforms/javascript/electron/)
+* [Native Usage](https://docs.sentry.io/platforms/javascript/electron/native/)
+* [Source Maps](https://docs.sentry.io/platforms/javascript/electron/sourcemaps/)
 
 ## Resources
 
