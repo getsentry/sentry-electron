@@ -38,7 +38,6 @@ export class Electron implements Integration {
   /**
    * Hooks into the Electron EventEmitter to capture breadcrumbs for the
    * specified events.
-   * TODO: Consider moving to integration
    */
   private instrumentBreadcrumbs(category: string, emitter: Electron.EventEmitter, events: string[] = []): void {
     type Emit = (event: string, ...args: any[]) => boolean;

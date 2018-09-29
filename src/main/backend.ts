@@ -24,8 +24,7 @@ import { Store } from '@sentry/utils/store';
 
 import { CommonBackend, ElectronOptions, IPC_CRUMB, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
 import { captureMinidump } from '../sdk';
-import { addEventDefaults } from './context';
-import { normalizeEvent, normalizeUrl } from './normalize';
+import { normalizeUrl } from './normalize';
 import { MinidumpUploader } from './uploader';
 
 /** Patch to access internal CrashReporter functionality. */
@@ -104,8 +103,6 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
           scope.addBreadcrumb(crumb);
         });
       }
-
-      scope.addEventProcessor(async (event: SentryEvent) => normalizeEvent(await addEventDefaults(event)));
     });
 
     if (this.isNativeEnabled()) {
