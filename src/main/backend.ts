@@ -2,8 +2,6 @@ import {
   app,
   crashReporter,
   ipcMain,
-  powerMonitor,
-  screen,
   // tslint:disable-next-line:no-implicit-dependencies
 } from 'electron';
 import { join } from 'path';
@@ -26,7 +24,8 @@ import { Store } from '@sentry/utils/store';
 
 import { CommonBackend, ElectronOptions, IPC_CRUMB, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
 import { captureMinidump } from '../sdk';
-import { normalizeUrl } from './normalize';
+import { addEventDefaults } from './context';
+import { normalizeEvent, normalizeUrl } from './normalize';
 import { MinidumpUploader } from './uploader';
 
 /** Patch to access internal CrashReporter functionality. */
@@ -105,6 +104,8 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
           scope.addBreadcrumb(crumb);
         });
       }
+
+      scope.addEventProcessor(async (event: SentryEvent) => normalizeEvent(await addEventDefaults(event)));
     });
 
     if (this.isNativeEnabled()) {
@@ -112,7 +113,6 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     }
 
     this.installIPC();
-    this.installAutoBreadcrumbs();
 
     return success;
   }
@@ -277,53 +277,6 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
         }
       });
     });
-  }
-
-  /**
-   * Installs auto-breadcrumb handlers for certain Electron events.
-   * TODO: Consider moving to integration
-   */
-  private installAutoBreadcrumbs(): void {
-    this.instrumentBreadcrumbs('app', app);
-
-    app.once('ready', () => {
-      // We can't access these until 'ready'
-      this.instrumentBreadcrumbs('Screen', screen);
-      this.instrumentBreadcrumbs('PowerMonitor', powerMonitor);
-    });
-
-    app.on('web-contents-created', (_, contents) => {
-      // SetImmediate is required for contents.id to be correct
-      // https://github.com/electron/electron/issues/12036
-      setImmediate(() => {
-        this.instrumentBreadcrumbs(`WebContents[${contents.id}]`, contents, ['dom-ready', 'load-url', 'destroyed']);
-      });
-    });
-  }
-
-  /**
-   * Hooks into the Electron EventEmitter to capture breadcrumbs for the
-   * specified events.
-   * TODO: Consider moving to integration
-   */
-  private instrumentBreadcrumbs(category: string, emitter: Electron.EventEmitter, events: string[] = []): void {
-    type Emit = (event: string, ...args: any[]) => boolean;
-    const emit = emitter.emit.bind(emitter) as Emit;
-
-    emitter.emit = (event, ...args) => {
-      if (events.length === 0 || events.indexOf(event) > -1) {
-        const breadcrumb = {
-          category: 'electron',
-          message: `${category}.${event}`,
-          timestamp: new Date().getTime() / 1000,
-          type: 'ui',
-        };
-
-        addBreadcrumb(breadcrumb);
-      }
-
-      return emit(event, ...args);
-    };
   }
 
   /** Loads new native crashes from disk and sends them to Sentry. */
