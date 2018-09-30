@@ -1,9 +1,4 @@
-import {
-  app,
-  crashReporter,
-  ipcMain,
-  // tslint:disable-next-line:no-implicit-dependencies
-} from 'electron';
+import { app, crashReporter, ipcMain } from 'electron';
 import { join } from 'path';
 
 import { Breadcrumb, SentryEvent, SentryResponse, Severity, Status } from '@sentry/types';

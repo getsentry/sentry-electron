@@ -1,6 +1,5 @@
 import { SentryEvent, SentryException, Stacktrace } from '@sentry/types';
 import { clone } from '@sentry/utils/object';
-// tslint:disable-next-line:no-implicit-dependencies
 import { app } from 'electron';
 
 /** Application base path used for URL normalization. */

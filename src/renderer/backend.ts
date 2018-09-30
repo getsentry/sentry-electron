@@ -1,4 +1,3 @@
-// tslint:disable-next-line:no-implicit-dependencies
 import { crashReporter, ipcRenderer, remote } from 'electron';
 
 import { BrowserBackend } from '@sentry/browser';
