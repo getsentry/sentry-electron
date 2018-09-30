@@ -3,8 +3,8 @@ import { Breadcrumb, SentryBreadcrumbHint, SentryEvent, SentryEventHint, SentryR
 import { CommonClient, ElectronOptions } from '../common';
 import { SDK_NAME } from '../sdk';
 import { MainBackend } from './backend';
-import { normalizeEvent } from './normalize';
 import { addEventDefaults } from './context';
+import { normalizeEvent } from './normalize';
 
 /** SDK version used in every event. */
 // tslint:disable-next-line
