@@ -1,9 +1,6 @@
 import { getCurrentHub, NodeClient } from '@sentry/node';
 import { Integration, SentryEvent, Severity } from '@sentry/types';
-import {
-  dialog,
-  // tslint:disable-next-line:no-implicit-dependencies
-} from 'electron';
+import { dialog } from 'electron';
 
 /** Capture unhandled erros. */
 export class OnUncaughtException implements Integration {

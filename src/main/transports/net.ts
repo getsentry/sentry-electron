@@ -2,10 +2,7 @@ import { SentryError } from '@sentry/core';
 import { Transports } from '@sentry/node';
 import { SentryEvent, SentryResponse, Status, TransportOptions } from '@sentry/types';
 import { serialize } from '@sentry/utils/object';
-import {
-  net,
-  // tslint:disable-next-line:no-implicit-dependencies
-} from 'electron';
+import { net } from 'electron';
 import { isAppReady } from '../backend';
 
 /** Using net module of electron */
