@@ -5,7 +5,6 @@ import { join } from 'path';
 import { promisify } from 'util';
 
 import { SentryEvent } from '@sentry/types';
-// tslint:disable-next-line:no-implicit-dependencies
 import { app } from 'electron';
 
 const execFile = promisify(child.execFile);
