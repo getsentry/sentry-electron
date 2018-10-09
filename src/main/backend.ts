@@ -220,15 +220,13 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
           timestamp: new Date().getTime() / 1000,
         });
       });
-    });
 
-    if (this.options.enableUnresponsive !== false) {
-      app.on('browser-window-created', (_, window) => {
-        window.on('unresponsive', () => {
+      if (this.options.enableUnresponsive !== false) {
+        contents.on('unresponsive', () => {
           captureMessage('BrowserWindow Unresponsive');
         });
-      });
-    }
+      }
+    });
 
     return true;
   }
