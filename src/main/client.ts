@@ -37,7 +37,8 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
       version: SDK_VERSION,
     };
 
-    return super.prepareEvent(normalizeEvent(await addEventDefaults(event)), scope, hint);
+    const prepared = await super.prepareEvent(event, scope, hint);
+    return prepared ? normalizeEvent(await addEventDefaults(prepared)) : null;
   }
 
   /**

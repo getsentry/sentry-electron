@@ -162,5 +162,37 @@ tests.forEach(([version, arch]) => {
       expect(context.testServer.events.length).to.equal(1);
       expect(event.dump_file).to.equal(undefined);
     });
+
+    it('Custom release string for JavaScript error', async () => {
+      await context.start('sentry-custom-release', 'javascript-renderer');
+      await context.waitForEvents(1);
+      const event = context.testServer.events[0];
+      const breadcrumbs = event.data.breadcrumbs || [];
+      const lastFrame = getLastFrame(event.data);
+
+      expect(event.data.release).to.equal('some-custom-release');
+
+      expect(context.testServer.events.length).to.equal(1);
+      expect(lastFrame.filename).to.equal('app:///fixtures/javascript-renderer.js');
+
+      expect(event.dump_file).to.equal(undefined);
+      expect(event.sentry_key).to.equal(SENTRY_KEY);
+      expect(breadcrumbs.length).to.greaterThan(4);
+    });
+
+    it('Custom release string for minidump', async () => {
+      await context.start('sentry-custom-release', 'native-renderer');
+      // It can take rather a long time to get the event on Mac
+      await context.waitForEvents(1, 20000);
+      const event = context.testServer.events[0];
+      const breadcrumbs = event.data.breadcrumbs || [];
+
+      expect(event.data.release).to.equal('some-custom-release');
+
+      expect(context.testServer.events.length).to.equal(1);
+      expect(event.dump_file).to.be.instanceOf(Buffer);
+      expect(event.sentry_key).to.equal(SENTRY_KEY);
+      expect(breadcrumbs.length).to.greaterThan(4);
+    });
   });
 });
