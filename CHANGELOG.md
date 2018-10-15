@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+## v0.12.0
+
+- Bump deps to use `@sentry/*` `~4.1.1`
+- Move `normalizeEvent` to `prepareEvent`
+- Fix `unresponsive` electron event
+
 ## v0.11.0
 
 - Expose `showReportDialog`
