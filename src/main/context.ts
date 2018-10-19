@@ -122,7 +122,7 @@ async function getDarwinInfo(): Promise<OsContext> {
     // We try to load the actual macOS version by executing the `sw_vers` tool.
     // This tool should be available on every standard macOS installation. In
     // case this fails, we stick with the values computed above.
-    const output = (await execFile('/usr/bin/sw_vers')).toString();
+    const output = (await execFile('/usr/bin/sw_vers')).stdout;
     darwinInfo.name = matchFirst(/^ProductName:\s+(.*)$/m, output);
     darwinInfo.version = matchFirst(/^ProductVersion:\s+(.*)$/m, output);
     darwinInfo.build = matchFirst(/^BuildVersion:\s+(.*)$/m, output);
