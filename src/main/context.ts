@@ -23,11 +23,6 @@ interface OsContext {
   kernel_version?: string;
 }
 
-/** Shim interface to access this app's package.json. */
-interface PackageJson {
-  name: string;
-}
-
 /** Linux version file to check for a distribution. */
 interface DistroFile {
   /** The file name, located in `/etc`. */
