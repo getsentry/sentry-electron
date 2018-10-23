@@ -90,12 +90,6 @@ function matchFirst(regex: RegExp, text: string): string | undefined {
   return match ? match[1] : undefined;
 }
 
-/** Synchronously loads this app's package.json or throws if not possible. */
-function getPackageJson(): PackageJson {
-  const packagePath = join(app.getAppPath(), 'package.json');
-  return require(packagePath) as PackageJson;
-}
-
 /** Returns the build type of this app, if possible. */
 function getBuildType(): string | undefined {
   if (process.mas) {
@@ -253,7 +247,7 @@ async function getEventDefaults(): Promise<SentryEvent> {
     },
     environment: process.defaultApp ? 'development' : 'production',
     extra: { crashed_process: 'browser' },
-    release: `${getPackageJson().name}@${app.getVersion()}`,
+    release: `${app.getName()}@${app.getVersion()}`,
     user: { ip_address: '{{auto}}' },
   };
 }
