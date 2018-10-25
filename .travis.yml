@@ -17,24 +17,27 @@ addons:
 
 matrix:
   include:
-    - env: NAME="lint"
+    - name: 'Lint [node v8]'
       script:
         - yarn lint
-    - env: NAME="test"
+    - name: 'Test + e2e [node v8]'
       script:
         - yarn test
         - yarn e2e
-    - env: NAME="test"
+    - name: 'Test + e2e [node v8]'
       os: osx
       script:
         - yarn test
         - yarn e2e
-    - env: NAME="test"
+    - name: 'Test + e2e [node v8]'
       os: windows
+      install:
+        - choco install yarn
+        - yarn
       script:
         - yarn test
         - yarn e2e
-    - env: NAME="package"
+    - name: 'Package / Deploy'
       script:
         - yarn build
         - yarn pack
