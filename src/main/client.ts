@@ -64,7 +64,7 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
   /**
    * @inheritDoc
    */
-  public async addBreadcrumb(breadcrumb: Breadcrumb, hint?: SentryBreadcrumbHint, scope?: Scope): void {
+  public addBreadcrumb(breadcrumb: Breadcrumb, hint?: SentryBreadcrumbHint, scope?: Scope): void {
     super.addBreadcrumb(breadcrumb, hint, scope);
   }
 
