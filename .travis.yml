@@ -29,6 +29,11 @@ matrix:
       script:
         - yarn test
         - yarn e2e
+    - env: NAME="test"
+      os: windows
+      script:
+        - yarn test
+        - yarn e2e
     - env: NAME="package"
       script:
         - yarn build
