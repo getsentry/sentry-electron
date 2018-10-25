@@ -78,23 +78,23 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
 
     // We refill the scope here to not have an empty one
     configureScope(scope => {
-      const loadedScope = Scope.clone(this.scopeStore.get());
+      const loadedScope = Scope.clone(this.scopeStore.get()) as any;
 
-      if (loadedScope.getUser()) {
-        scope.setUser(loadedScope.getUser());
+      if (loadedScope.user) {
+        scope.setUser(loadedScope.user);
       }
-      if (loadedScope.getTags()) {
-        Object.keys(loadedScope.getTags()).forEach(key => {
-          scope.setTag(key, loadedScope.getTags()[key]);
+      if (loadedScope.tags) {
+        Object.keys(loadedScope.tags).forEach(key => {
+          scope.setTag(key, loadedScope.tags[key]);
         });
       }
-      if (loadedScope.getExtra()) {
-        Object.keys(loadedScope.getExtra()).forEach(key => {
-          scope.setExtra(key, loadedScope.getExtra()[key]);
+      if (loadedScope.extra) {
+        Object.keys(loadedScope.extra).forEach(key => {
+          scope.setExtra(key, loadedScope.extra[key]);
         });
       }
-      if (loadedScope.getBreadcrumbs()) {
-        loadedScope.getBreadcrumbs().forEach(crumb => {
+      if (loadedScope.breadcrumbs) {
+        loadedScope.breadcrumbs.forEach((crumb: any) => {
           scope.addBreadcrumb(crumb);
         });
       }
@@ -250,19 +250,19 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     });
 
     ipcMain.on(IPC_SCOPE, (_: any, rendererScope: Scope) => {
-      const sentScope = Scope.clone(rendererScope);
+      const sentScope = Scope.clone(rendererScope) as any;
       configureScope(scope => {
-        if (sentScope.getUser()) {
-          scope.setUser(sentScope.getUser());
+        if (sentScope.user) {
+          scope.setUser(sentScope.user);
         }
-        if (sentScope.getTags()) {
-          Object.keys(sentScope.getTags()).forEach(key => {
-            scope.setTag(key, sentScope.getTags()[key]);
+        if (sentScope.tags) {
+          Object.keys(sentScope.tags).forEach(key => {
+            scope.setTag(key, sentScope.tags[key]);
           });
         }
-        if (sentScope.getExtra()) {
-          Object.keys(sentScope.getExtra()).forEach(key => {
-            scope.setExtra(key, sentScope.getExtra()[key]);
+        if (sentScope.extra) {
+          Object.keys(sentScope.extra).forEach(key => {
+            scope.setExtra(key, sentScope.extra[key]);
           });
         }
       });

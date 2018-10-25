@@ -11,5 +11,8 @@ export { Integrations as BrowserIntegrations } from '@sentry/browser';
  * @param options ElectronOptions
  */
 export function init(options: ElectronOptions): void {
-  initAndBind(RendererClient, options, defaultIntegrations);
+  if (options.defaultIntegrations === undefined) {
+    options.defaultIntegrations = defaultIntegrations;
+  }
+  initAndBind(RendererClient, options);
 }

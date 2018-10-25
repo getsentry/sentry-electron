@@ -12,12 +12,17 @@ export class Electron implements Integration {
   /**
    * @inheritDoc
    */
-  public name: string = 'Electron';
+  public name: string = Electron.id;
 
   /**
    * @inheritDoc
    */
-  public install(): void {
+  public static id: string = 'Electron';
+
+  /**
+   * @inheritDoc
+   */
+  public setupOnce(): void {
     this.instrumentBreadcrumbs('app', app);
 
     app.once('ready', () => {
@@ -51,8 +56,10 @@ export class Electron implements Integration {
           timestamp: new Date().getTime() / 1000,
           type: 'ui',
         };
-
-        getCurrentHub().addBreadcrumb(breadcrumb);
+        const self = getCurrentHub().getIntegration(Electron);
+        if (self) {
+          getCurrentHub().addBreadcrumb(breadcrumb);
+        }
       }
 
       return emit(event, ...args);

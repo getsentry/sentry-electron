@@ -5,6 +5,7 @@ import { join } from 'path';
 import { promisify } from 'util';
 
 import { SentryEvent } from '@sentry/types';
+import { dynamicRequire } from '@sentry/utils/misc';
 import { app } from 'electron';
 
 const execFile = promisify(child.execFile);
@@ -93,7 +94,7 @@ function matchFirst(regex: RegExp, text: string): string | undefined {
 /** Synchronously loads this app's package.json or throws if not possible. */
 function getPackageJson(): PackageJson {
   const packagePath = join(app.getAppPath(), 'package.json');
-  return module.require(packagePath) as PackageJson;
+  return dynamicRequire(module, packagePath) as PackageJson;
 }
 
 /** Returns the build type of this app, if possible. */

@@ -1,18 +1,16 @@
-import { ClientClass, Dsn, getCurrentHub as getHub, Scope } from '@sentry/core';
+import { ClientClass, Dsn, Scope } from '@sentry/core';
 import {
   Breadcrumb,
   Integration,
+  IntegrationClass,
   SentryBreadcrumbHint,
   SentryEvent,
   SentryEventHint,
   SentryResponse,
   Severity,
 } from '@sentry/types';
+import { dynamicRequire } from '@sentry/utils/misc';
 import { CommonClient, ElectronOptions } from './common';
-
-// tslint:disable:no-var-requires no-unsafe-any
-export const getCurrentHub: typeof getHub =
-  process.type === 'browser' ? module.require('@sentry/node').getCurrentHub : require('@sentry/core').getCurrentHub;
 
 /**
  * The Sentry Electron SDK Frontend.
@@ -35,7 +33,7 @@ export class ElectronClient implements CommonClient {
   public constructor(options: ElectronOptions) {
     // We dynamically load the frontend implementation for the current process
     // type. In frontend bundlers such as webpack or rollup, those requires are
-    // resolved statically. For this reason, we use `module.require` for the
+    // resolved statically. For this reason, we use `dynamicRequire` for the
     // main implementation here, which is only defined in the main process. The
     // renderer implementation must use the default `require`.
 
@@ -44,7 +42,7 @@ export class ElectronClient implements CommonClient {
     // this would be running `@sentry/electron` in a bare node process, which is
     // acceptable.
     const clientClass: ClientClass<CommonClient, ElectronOptions> =
-      process.type === 'browser' ? module.require('./main').MainClient : require('./renderer').RendererClient;
+      process.type === 'browser' ? dynamicRequire(module, './main').MainClient : require('./renderer').RendererClient;
 
     this.inner = new clientClass(options);
   }
@@ -123,15 +121,23 @@ export class ElectronClient implements CommonClient {
   public showReportDialog(options: any): void {
     this.inner.showReportDialog(options);
   }
+
+  /**
+   * @inheritDoc
+   */
+  public getIntegration<T extends Integration>(integration: IntegrationClass<T>): T | null {
+    return this.inner.getIntegration(integration);
+  }
 }
 
 /**
  * This either calls init on main with node interations or renderer
  * with browser integrations.
+ *
  * @param options Options
  */
 export function specificInit(options: ElectronOptions): void {
-  process.type === 'browser' ? module.require('./main').init(options) : require('./renderer').init(options);
+  process.type === 'browser' ? dynamicRequire(module, './main').init(options) : require('./renderer').init(options);
 }
 
 /** Convenience interface used to expose Integrations */
@@ -141,6 +147,9 @@ export interface Integrations {
 /** Return all integrations depending if running in browser or renderer. */
 export function getIntegrations(): { node: Integrations; electron: Integrations } | { browser: Integrations } {
   return process.type === 'browser'
-    ? { node: module.require('./main').NodeIntegrations, electron: module.require('./main').ElectronIntegrations }
+    ? {
+        node: dynamicRequire(module, './main').NodeIntegrations,
+        electron: dynamicRequire(module, './main').ElectronIntegrations,
+      }
     : { browser: require('./renderer').BrowserIntegrations };
 }
