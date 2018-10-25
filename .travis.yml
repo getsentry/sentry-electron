@@ -29,8 +29,9 @@ matrix:
       script:
         - yarn test
         - yarn e2e
-    - name: 'Test + e2e [node v8]'
+    - name: 'Test + e2e [node v10]'
       os: windows
+      node_js: '10'
       install:
         - choco install yarn
         - yarn
