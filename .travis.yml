@@ -29,6 +29,14 @@ matrix:
       script:
         - yarn test
         - yarn e2e
+    - name: 'Package / Deploy'
+      script:
+        - yarn build
+        - yarn pack
+      after_success:
+        - npm install -g @zeus-ci/cli
+        - zeus upload -t "application/tar+npm" *.tgz
+  allow_failures:
     - name: 'Test + e2e [node v10]'
       os: windows
       node_js: '10'
@@ -38,13 +46,6 @@ matrix:
       script:
         - yarn test
         - yarn e2e
-    - name: 'Package / Deploy'
-      script:
-        - yarn build
-        - yarn pack
-      after_success:
-        - npm install -g @zeus-ci/cli
-        - zeus upload -t "application/tar+npm" *.tgz
 
 notifications:
   webhooks:
