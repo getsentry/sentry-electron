@@ -41,9 +41,10 @@ export class ElectronClient implements CommonClient {
     // implementation, which should be fine for most cases. False positives of
     // this would be running `@sentry/electron` in a bare node process, which is
     // acceptable.
+    // tslint:disable:no-unsafe-any
     const clientClass: ClientClass<CommonClient, ElectronOptions> =
       process.type === 'browser' ? dynamicRequire(module, './main').MainClient : require('./renderer').RendererClient;
-
+    // tslint:enable:no-unsafe-any
     this.inner = new clientClass(options);
   }
 
@@ -119,6 +120,7 @@ export class ElectronClient implements CommonClient {
    * @inheritDoc
    */
   public showReportDialog(options: any): void {
+    // tslint:disable-next-line
     this.inner.showReportDialog(options);
   }
 
@@ -137,6 +139,7 @@ export class ElectronClient implements CommonClient {
  * @param options Options
  */
 export function specificInit(options: ElectronOptions): void {
+  // tslint:disable-next-line
   process.type === 'browser' ? dynamicRequire(module, './main').init(options) : require('./renderer').init(options);
 }
 
@@ -146,10 +149,12 @@ export interface Integrations {
 }
 /** Return all integrations depending if running in browser or renderer. */
 export function getIntegrations(): { node: Integrations; electron: Integrations } | { browser: Integrations } {
+  // tslint:disable:no-unsafe-any
   return process.type === 'browser'
     ? {
-        node: dynamicRequire(module, './main').NodeIntegrations,
         electron: dynamicRequire(module, './main').ElectronIntegrations,
+        node: dynamicRequire(module, './main').NodeIntegrations,
       }
     : { browser: require('./renderer').BrowserIntegrations };
+  // tslint:enable:no-unsafe-any
 }

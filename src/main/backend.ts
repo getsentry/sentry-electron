@@ -78,6 +78,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
 
     // We refill the scope here to not have an empty one
     configureScope(scope => {
+      // tslint:disable:no-unsafe-any
       const loadedScope = Scope.clone(this.scopeStore.get()) as any;
 
       if (loadedScope.user) {
@@ -98,6 +99,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
           scope.addBreadcrumb(crumb);
         });
       }
+      // tslint:enable:no-unsafe-any
     });
 
     if (this.isNativeEnabled()) {
@@ -250,6 +252,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     });
 
     ipcMain.on(IPC_SCOPE, (_: any, rendererScope: Scope) => {
+      // tslint:disable:no-unsafe-any
       const sentScope = Scope.clone(rendererScope) as any;
       configureScope(scope => {
         if (sentScope.user) {
@@ -266,6 +269,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
           });
         }
       });
+      // tslint:enable:no-unsafe-any
     });
   }
 
