@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## v0.13.0
+
+- Bump deps to use `@sentry/*` `~4.2.3`
+- Fixed #131
+- Fixed #132
+
 ## v0.12.1
 
 - Bump deps to use `@sentry/utils` `~4.1.1`
