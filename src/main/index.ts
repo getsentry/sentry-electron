@@ -19,17 +19,16 @@ export const ElectronIntegrations = { Electron, OnUncaughtException };
  */
 export function init(options: ElectronOptions): void {
   const electronIntegrations = defaultIntegrations.filter(integration => integration.name !== 'OnUncaughtException');
-  initAndBind(
-    MainClient,
-    {
-      transport: NetTransport,
-      ...options,
-    },
-    [
+  if (options.defaultIntegrations === undefined) {
+    options.defaultIntegrations = [
       ...electronIntegrations,
       // tslint:disable-next-line:no-unbound-method
       new OnUncaughtException({ onFatalError: options.onFatalError }),
       new Electron(),
-    ],
-  );
+    ];
+  }
+  initAndBind(MainClient, {
+    transport: NetTransport,
+    ...options,
+  });
 }

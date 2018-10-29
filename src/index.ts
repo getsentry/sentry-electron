@@ -19,12 +19,13 @@ export {
   captureEvent,
   captureMessage,
   configureScope,
-  withScope,
+  getCurrentHub,
   getHubFromCarrier,
   Hub,
   Scope,
+  withScope,
 } from '@sentry/core';
 
 export { CommonBackend, ElectronOptions } from './common';
-export { ElectronClient, getCurrentHub, getIntegrations } from './dispatch';
+export { ElectronClient, getIntegrations } from './dispatch';
 export { captureMinidump, init, showReportDialog } from './sdk';

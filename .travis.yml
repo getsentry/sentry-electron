@@ -17,25 +17,36 @@ addons:
 
 matrix:
   include:
-    - env: NAME="lint"
+    - name: 'Lint [node v8]'
       script:
         - yarn lint
-    - env: NAME="test"
+    - name: 'Test + e2e [node v8]'
       script:
         - yarn test
         - yarn e2e
-    - env: NAME="test"
+    - name: 'Test + e2e [node v8]'
       os: osx
       script:
         - yarn test
         - yarn e2e
-    - env: NAME="package"
+    - name: 'Test + e2e [node v10]'
+      os: windows
+      node_js: '10'
+      install:
+        - choco install yarn
+        - yarn
+      script:
+        - yarn test
+        - yarn e2e
+    - name: 'Package / Deploy'
       script:
         - yarn build
         - yarn pack
       after_success:
         - npm install -g @zeus-ci/cli
         - zeus upload -t "application/tar+npm" *.tgz
+  allow_failures:
+    - os: windows
 
 notifications:
   webhooks:
