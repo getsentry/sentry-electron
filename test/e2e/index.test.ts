@@ -3,7 +3,7 @@ import chaiAsPromised = require('chai-as-promised');
 import { join } from 'path';
 import { TestContext } from './context';
 import { downloadElectron } from './download';
-import { getLastFrame, getTests, delay } from './utils';
+import { delay, getLastFrame, getTests } from './utils';
 
 const SENTRY_KEY = '37f8a2ee37c0409d8970bc7559c7c7e4';
 
