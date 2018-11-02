@@ -195,7 +195,7 @@ tests.forEach(([version, arch]) => {
       expect(breadcrumbs.length).to.greaterThan(4);
     });
 
-    it.only('Scope is persisted between app restarts', async () => {
+    it('Scope is persisted between app restarts', async () => {
       await context.start('sentry-basic');
 
       await delay(3000);
