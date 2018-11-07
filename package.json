@@ -30,12 +30,12 @@
     "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only --timeout 30000 ./test/e2e/**/*.ts"
   },
   "dependencies": {
-    "@sentry/browser": "~4.2.3",
-    "@sentry/core": "~4.2.3",
-    "@sentry/node": "~4.2.3",
-    "@sentry/minimal": "~4.2.3",
-    "@sentry/types": "~4.2.3",
-    "@sentry/utils": "~4.2.3",
+    "@sentry/browser": "~4.3.0",
+    "@sentry/core": "~4.3.0",
+    "@sentry/node": "~4.3.0",
+    "@sentry/minimal": "~4.3.0",
+    "@sentry/types": "~4.3.0",
+    "@sentry/utils": "~4.3.0",
     "electron-fetch": "1.1.0",
     "form-data": "2.3.2",
     "util.promisify": "1.0.0"
