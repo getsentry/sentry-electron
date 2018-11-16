@@ -24,6 +24,7 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
    * @inheritDoc
    */
   protected async prepareEvent(event: SentryEvent, scope?: Scope, hint?: SentryEventHint): Promise<SentryEvent | null> {
+    event.platform = event.platform || 'node';
     event.sdk = {
       ...event.sdk,
       name: SDK_NAME,
