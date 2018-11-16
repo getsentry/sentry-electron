@@ -36,6 +36,7 @@ tests.forEach(([version, arch]) => {
       expect(lastFrame.filename).to.equal('app:///fixtures/javascript-renderer.js');
 
       expect(event.dump_file).to.equal(undefined);
+      expect(event.data.platform).to.equal('javascript');
       expect(event.sentry_key).to.equal(SENTRY_KEY);
       expect(breadcrumbs.length).to.greaterThan(4);
     });
@@ -65,6 +66,7 @@ tests.forEach(([version, arch]) => {
       expect(context.testServer.events.length).to.equal(1);
       expect(lastFrame.filename).to.equal('app:///fixtures/javascript-main.js');
       expect(event.dump_file).to.equal(undefined);
+      expect(event.data.platform).to.equal('node');
       expect(event.sentry_key).to.equal(SENTRY_KEY);
       expect(event.data.sdk!.name).to.equal('sentry.javascript.electron');
       expect(breadcrumbs.length).to.greaterThan(4);
