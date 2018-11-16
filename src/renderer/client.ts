@@ -26,7 +26,7 @@ export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
    */
   protected async prepareEvent(event: SentryEvent, scope?: Scope, hint?: SentryEventHint): Promise<SentryEvent | null> {
     event.platform = event.platform || 'javascript';
-    return await super.prepareEvent(event, scope, hint);
+    return super.prepareEvent(event, scope, hint);
   }
 
   /**
