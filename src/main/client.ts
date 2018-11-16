@@ -41,7 +41,7 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
     // We need to load the options here and set release from options
     // Otherwise addEventDefaults will add default values there
     const { environment, release, dist } = this.getOptions();
-    let prepared = { ...event };
+    const prepared = { ...event };
 
     if (prepared.environment === undefined && environment !== undefined) {
       prepared.environment = environment;
@@ -54,7 +54,7 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
       prepared.dist = dist;
     }
 
-    return await super.prepareEvent(normalizeEvent(await addEventDefaults(prepared)), scope, hint);
+    return super.prepareEvent(normalizeEvent(await addEventDefaults(prepared)), scope, hint);
   }
 
   /**
