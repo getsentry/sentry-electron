@@ -2,53 +2,59 @@
 # yarn lockfile v1
 
 
-"@sentry/browser@~4.3.2":
-  version "4.3.2"
-  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-4.3.2.tgz#430b83583c5c25d33041dd80bf6ed19216086f70"
+"@sentry/browser@~4.3.3":
+  version "4.3.3"
+  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-4.3.3.tgz#97b7e69fab2c860a966cd36b9d7726714f0e273a"
   dependencies:
-    "@sentry/core" "4.3.2"
-    "@sentry/types" "4.3.2"
-    "@sentry/utils" "4.3.2"
+    "@sentry/core" "4.3.3"
+    "@sentry/types" "4.3.3"
+    "@sentry/utils" "4.3.3"
+    tslib "^1.9.3"
 
-"@sentry/core@4.3.2", "@sentry/core@~4.3.2":
-  version "4.3.2"
-  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-4.3.2.tgz#e8a2850a11316d865ed7d3030ee2c4a1608bb1d8"
+"@sentry/core@4.3.3", "@sentry/core@~4.3.3":
+  version "4.3.3"
+  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-4.3.3.tgz#d229ac567f30eb051af1bdb8f89e2887da484f24"
   dependencies:
-    "@sentry/hub" "4.3.2"
-    "@sentry/minimal" "4.3.2"
-    "@sentry/types" "4.3.2"
-    "@sentry/utils" "4.3.2"
+    "@sentry/hub" "4.3.3"
+    "@sentry/minimal" "4.3.3"
+    "@sentry/types" "4.3.3"
+    "@sentry/utils" "4.3.3"
+    tslib "^1.9.3"
 
-"@sentry/hub@4.3.2":
-  version "4.3.2"
-  resolved "https://registry.yarnpkg.com/@sentry/hub/-/hub-4.3.2.tgz#1ea10038e2080035d2bc09f5f26829cd106a1516"
+"@sentry/hub@4.3.3":
+  version "4.3.3"
+  resolved "https://registry.yarnpkg.com/@sentry/hub/-/hub-4.3.3.tgz#48f7501ddfde683f4df383dfc28ffabb71a74ac3"
   dependencies:
-    "@sentry/types" "4.3.2"
-    "@sentry/utils" "4.3.2"
+    "@sentry/types" "4.3.3"
+    "@sentry/utils" "4.3.3"
+    tslib "^1.9.3"
 
-"@sentry/minimal@4.3.2", "@sentry/minimal@~4.3.2":
-  version "4.3.2"
-  resolved "https://registry.yarnpkg.com/@sentry/minimal/-/minimal-4.3.2.tgz#c0958e5858b2105a6a0b523787e459a03af603cc"
+"@sentry/minimal@4.3.3", "@sentry/minimal@~4.3.3":
+  version "4.3.3"
+  resolved "https://registry.yarnpkg.com/@sentry/minimal/-/minimal-4.3.3.tgz#ca4eb729175610ae04575048c1cd9afa383156b3"
   dependencies:
-    "@sentry/hub" "4.3.2"
-    "@sentry/types" "4.3.2"
+    "@sentry/hub" "4.3.3"
+    "@sentry/types" "4.3.3"
+    tslib "^1.9.3"
 
-"@sentry/node@~4.3.2":
-  version "4.3.2"
-  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-4.3.2.tgz#3c7cd3aff238f3b1eb3252147b963cbdf520aa45"
+"@sentry/node@~4.3.3":
+  version "4.3.3"
+  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-4.3.3.tgz#e909750771bfe649bf6222317ec21cc60514f852"
   dependencies:
-    "@sentry/core" "4.3.2"
-    "@sentry/hub" "4.3.2"
-    "@sentry/types" "4.3.2"
-    "@sentry/utils" "4.3.2"
+    "@sentry/core" "4.3.3"
+    "@sentry/hub" "4.3.3"
+    "@sentry/types" "4.3.3"
+    "@sentry/utils" "4.3.3"
+    "@types/stack-trace" "0.0.29"
     cookie "0.3.1"
     lsmod "1.0.0"
     md5 "2.2.1"
     stack-trace "0.0.10"
+    tslib "^1.9.3"
 
-"@sentry/types@4.3.2", "@sentry/types@~4.3.2":
-  version "4.3.2"
-  resolved "https://registry.yarnpkg.com/@sentry/types/-/types-4.3.2.tgz#28b143979482fcbc9f9e520250482dde015b13fa"
+"@sentry/types@4.3.3", "@sentry/types@~4.3.3":
+  version "4.3.3"
+  resolved "https://registry.yarnpkg.com/@sentry/types/-/types-4.3.3.tgz#ec692daef004d9c26c72e0f4fb63e9d96b1a29ed"
 
 "@sentry/typescript@^4.0.0":
   version "4.0.1"
@@ -56,11 +62,12 @@
   dependencies:
     tslint-config-prettier "^1.12.0"
 
-"@sentry/utils@4.3.2", "@sentry/utils@~4.3.2":
-  version "4.3.2"
-  resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-4.3.2.tgz#de14046eba972af9d62508f78cd998b0352d634a"
+"@sentry/utils@4.3.3", "@sentry/utils@~4.3.3":
+  version "4.3.3"
+  resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-4.3.3.tgz#3610c3bcf0f9555754077302523ca4af86c15ea1"
   dependencies:
-    "@sentry/types" "4.3.2"
+    "@sentry/types" "4.3.3"
+    tslib "^1.9.3"
 
 "@types/body-parser@*", "@types/body-parser@^1.17.0":
   version "1.17.0"
@@ -155,7 +162,7 @@
     "@types/express-serve-static-core" "*"
     "@types/mime" "*"
 
-"@types/stack-trace@^0.0.29":
+"@types/stack-trace@0.0.29", "@types/stack-trace@^0.0.29":
   version "0.0.29"
   resolved "https://registry.yarnpkg.com/@types/stack-trace/-/stack-trace-0.0.29.tgz#eb7a7c60098edb35630ed900742a5ecb20cfcb4d"
 
@@ -2045,6 +2052,10 @@ ts-node@^7.0.1:
 tslib@1.9.0, tslib@^1.8.0, tslib@^1.8.1:
   version "1.9.0"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.9.0.tgz#e37a86fda8cbbaf23a057f473c9f4dc64e5fc2e8"
+
+tslib@^1.9.3:
+  version "1.9.3"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.9.3.tgz#d7e4dd79245d85428c4d7e4822a79917954ca286"
 
 tslint-config-prettier@^1.12.0:
   version "1.12.0"
