@@ -4,7 +4,7 @@
 
 ## v0.14.0
 
-- Bump deps to use `@sentry/*` `~4.3.3`
+- Bump deps to use `@sentry/*` `~4.3.4`
 - Fixed #139
 
 ## v0.13.0
