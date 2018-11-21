@@ -2,49 +2,49 @@
 # yarn lockfile v1
 
 
-"@sentry/browser@~4.3.3":
-  version "4.3.3"
-  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-4.3.3.tgz#97b7e69fab2c860a966cd36b9d7726714f0e273a"
+"@sentry/browser@~4.3.4":
+  version "4.3.4"
+  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-4.3.4.tgz#5c17184781c4fb6ad8ab48f5c48e01630d4fc3dc"
   dependencies:
-    "@sentry/core" "4.3.3"
-    "@sentry/types" "4.3.3"
-    "@sentry/utils" "4.3.3"
+    "@sentry/core" "4.3.4"
+    "@sentry/types" "4.3.4"
+    "@sentry/utils" "4.3.4"
     tslib "^1.9.3"
 
-"@sentry/core@4.3.3", "@sentry/core@~4.3.3":
-  version "4.3.3"
-  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-4.3.3.tgz#d229ac567f30eb051af1bdb8f89e2887da484f24"
+"@sentry/core@4.3.4", "@sentry/core@~4.3.4":
+  version "4.3.4"
+  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-4.3.4.tgz#414e050b9e963ac7f839331ad33590e59d883988"
   dependencies:
-    "@sentry/hub" "4.3.3"
-    "@sentry/minimal" "4.3.3"
-    "@sentry/types" "4.3.3"
-    "@sentry/utils" "4.3.3"
+    "@sentry/hub" "4.3.4"
+    "@sentry/minimal" "4.3.4"
+    "@sentry/types" "4.3.4"
+    "@sentry/utils" "4.3.4"
     tslib "^1.9.3"
 
-"@sentry/hub@4.3.3":
-  version "4.3.3"
-  resolved "https://registry.yarnpkg.com/@sentry/hub/-/hub-4.3.3.tgz#48f7501ddfde683f4df383dfc28ffabb71a74ac3"
+"@sentry/hub@4.3.4":
+  version "4.3.4"
+  resolved "https://registry.yarnpkg.com/@sentry/hub/-/hub-4.3.4.tgz#48915f5867e8ef1d964c89394e8500d1d050719b"
   dependencies:
-    "@sentry/types" "4.3.3"
-    "@sentry/utils" "4.3.3"
+    "@sentry/types" "4.3.4"
+    "@sentry/utils" "4.3.4"
     tslib "^1.9.3"
 
-"@sentry/minimal@4.3.3", "@sentry/minimal@~4.3.3":
-  version "4.3.3"
-  resolved "https://registry.yarnpkg.com/@sentry/minimal/-/minimal-4.3.3.tgz#ca4eb729175610ae04575048c1cd9afa383156b3"
+"@sentry/minimal@4.3.4", "@sentry/minimal@~4.3.4":
+  version "4.3.4"
+  resolved "https://registry.yarnpkg.com/@sentry/minimal/-/minimal-4.3.4.tgz#8375c3d040621dd30eeddaebf4ef1bf22be0f643"
   dependencies:
-    "@sentry/hub" "4.3.3"
-    "@sentry/types" "4.3.3"
+    "@sentry/hub" "4.3.4"
+    "@sentry/types" "4.3.4"
     tslib "^1.9.3"
 
-"@sentry/node@~4.3.3":
-  version "4.3.3"
-  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-4.3.3.tgz#e909750771bfe649bf6222317ec21cc60514f852"
+"@sentry/node@~4.3.4":
+  version "4.3.4"
+  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-4.3.4.tgz#627b75114c4ac3dcc63db0a9257d852ffd0aaaa7"
   dependencies:
-    "@sentry/core" "4.3.3"
-    "@sentry/hub" "4.3.3"
-    "@sentry/types" "4.3.3"
-    "@sentry/utils" "4.3.3"
+    "@sentry/core" "4.3.4"
+    "@sentry/hub" "4.3.4"
+    "@sentry/types" "4.3.4"
+    "@sentry/utils" "4.3.4"
     "@types/stack-trace" "0.0.29"
     cookie "0.3.1"
     lsmod "1.0.0"
@@ -52,9 +52,9 @@
     stack-trace "0.0.10"
     tslib "^1.9.3"
 
-"@sentry/types@4.3.3", "@sentry/types@~4.3.3":
-  version "4.3.3"
-  resolved "https://registry.yarnpkg.com/@sentry/types/-/types-4.3.3.tgz#ec692daef004d9c26c72e0f4fb63e9d96b1a29ed"
+"@sentry/types@4.3.4", "@sentry/types@~4.3.4":
+  version "4.3.4"
+  resolved "https://registry.yarnpkg.com/@sentry/types/-/types-4.3.4.tgz#563f9def51da301cfd474ecf35ae4d97847aed61"
 
 "@sentry/typescript@^4.0.0":
   version "4.0.1"
@@ -62,11 +62,11 @@
   dependencies:
     tslint-config-prettier "^1.12.0"
 
-"@sentry/utils@4.3.3", "@sentry/utils@~4.3.3":
-  version "4.3.3"
-  resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-4.3.3.tgz#3610c3bcf0f9555754077302523ca4af86c15ea1"
+"@sentry/utils@4.3.4", "@sentry/utils@~4.3.4":
+  version "4.3.4"
+  resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-4.3.4.tgz#4473d9f4d1b909e51b6aea7051ebe1bd838d56e9"
   dependencies:
-    "@sentry/types" "4.3.3"
+    "@sentry/types" "4.3.4"
     tslib "^1.9.3"
 
 "@types/body-parser@*", "@types/body-parser@^1.17.0":
