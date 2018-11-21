@@ -20,3 +20,11 @@ export function getTests(...versions: string[]): Array<[string, string]> {
     [] as Array<[string, string]>,
   );
 }
+
+export async function delay(timeout: number): Promise<void> {
+  return new Promise<void>(resolve => {
+    setTimeout(() => {
+      resolve();
+    }, timeout);
+  });
+}

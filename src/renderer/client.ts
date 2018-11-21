@@ -1,6 +1,6 @@
 import { BrowserClient, ReportDialogOptions } from '@sentry/browser';
 import { BaseClient, getCurrentHub, Scope } from '@sentry/core';
-import { Breadcrumb, SentryBreadcrumbHint, SentryEvent } from '@sentry/types';
+import { Breadcrumb, SentryBreadcrumbHint, SentryEvent, SentryEventHint } from '@sentry/types';
 import { ipcRenderer } from 'electron';
 import { CommonClient, ElectronOptions, IPC_CRUMB } from '../common';
 import { RendererBackend } from './backend';
@@ -19,6 +19,14 @@ export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
   public constructor(options: ElectronOptions) {
     super(RendererBackend, options);
     this.inner = new BrowserClient(options);
+  }
+
+  /**
+   * @inheritDoc
+   */
+  protected async prepareEvent(event: SentryEvent, scope?: Scope, hint?: SentryEventHint): Promise<SentryEvent | null> {
+    event.platform = event.platform || 'javascript';
+    return super.prepareEvent(event, scope, hint);
   }
 
   /**

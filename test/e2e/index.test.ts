@@ -3,7 +3,7 @@ import chaiAsPromised = require('chai-as-promised');
 import { join } from 'path';
 import { TestContext } from './context';
 import { downloadElectron } from './download';
-import { getLastFrame, getTests } from './utils';
+import { delay, getLastFrame, getTests } from './utils';
 
 const SENTRY_KEY = '37f8a2ee37c0409d8970bc7559c7c7e4';
 
@@ -36,6 +36,7 @@ tests.forEach(([version, arch]) => {
       expect(lastFrame.filename).to.equal('app:///fixtures/javascript-renderer.js');
 
       expect(event.dump_file).to.equal(undefined);
+      expect(event.data.platform).to.equal('javascript');
       expect(event.sentry_key).to.equal(SENTRY_KEY);
       expect(breadcrumbs.length).to.greaterThan(4);
     });
@@ -65,6 +66,7 @@ tests.forEach(([version, arch]) => {
       expect(context.testServer.events.length).to.equal(1);
       expect(lastFrame.filename).to.equal('app:///fixtures/javascript-main.js');
       expect(event.dump_file).to.equal(undefined);
+      expect(event.data.platform).to.equal('node');
       expect(event.sentry_key).to.equal(SENTRY_KEY);
       expect(event.data.sdk!.name).to.equal('sentry.javascript.electron');
       expect(breadcrumbs.length).to.greaterThan(4);
@@ -193,6 +195,28 @@ tests.forEach(([version, arch]) => {
       expect(event.dump_file).to.be.instanceOf(Buffer);
       expect(event.sentry_key).to.equal(SENTRY_KEY);
       expect(breadcrumbs.length).to.greaterThan(4);
+    });
+
+    it('Scope is persisted between app restarts', async () => {
+      await context.start('sentry-basic');
+
+      await delay(5000);
+
+      // We restart the app and keep the context
+      await context.stop(false);
+      await context.start('sentry-basic', 'javascript-renderer');
+
+      await context.waitForEvents(1);
+      const event = context.testServer.events[0];
+      const breadcrumbs = event.data.breadcrumbs || [];
+      const appReadyBreadCrumbs = breadcrumbs.filter(b => b.message && b.message.includes('app.ready'));
+
+      // This test fails on Ubuntu Ubuntu 14.04.5 LTS just on Travis
+      if (version === '2.0.10') {
+        expect(appReadyBreadCrumbs.length).to.greaterThan(0);
+      } else {
+        expect(appReadyBreadCrumbs.length).to.equal(2);
+      }
     });
   });
 });

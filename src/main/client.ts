@@ -24,6 +24,7 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
    * @inheritDoc
    */
   protected async prepareEvent(event: SentryEvent, scope?: Scope, hint?: SentryEventHint): Promise<SentryEvent | null> {
+    event.platform = event.platform || 'node';
     event.sdk = {
       ...event.sdk,
       name: SDK_NAME,
@@ -37,8 +38,23 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
       version: SDK_VERSION,
     };
 
-    const prepared = await super.prepareEvent(event, scope, hint);
-    return prepared ? normalizeEvent(await addEventDefaults(prepared)) : null;
+    // We need to load the options here and set release from options
+    // Otherwise addEventDefaults will add default values there
+    const { environment, release, dist } = this.getOptions();
+    const prepared = { ...event };
+
+    if (prepared.environment === undefined && environment !== undefined) {
+      prepared.environment = environment;
+    }
+    if (prepared.release === undefined && release !== undefined) {
+      prepared.release = release;
+    }
+
+    if (prepared.dist === undefined && dist !== undefined) {
+      prepared.dist = dist;
+    }
+
+    return super.prepareEvent(normalizeEvent(await addEventDefaults(prepared)), scope, hint);
   }
 
   /**
