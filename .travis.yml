@@ -5,7 +5,15 @@ branches:
 
 language: node_js
 node_js: '8'
-cache: yarn
+
+env:
+  global:
+    - ELECTRON_CACHE=$HOME/.cache/electron
+
+cache:
+  directories:
+    - node_modules
+    - $ELECTRON_CACHE
 
 git:
   depth: 1
