@@ -1,7 +1,6 @@
 import { SentryError } from '@sentry/core';
 import { Transports } from '@sentry/node';
-import { SentryEvent, SentryResponse, Status, TransportOptions } from '@sentry/types';
-import { serialize } from '@sentry/utils/object';
+import { SentryResponse, Status, TransportOptions } from '@sentry/types';
 import { net } from 'electron';
 import { isAppReady } from '../backend';
 
@@ -15,7 +14,7 @@ export class NetTransport extends Transports.BaseTransport {
   /**
    * @inheritDoc
    */
-  public async captureEvent(event: SentryEvent): Promise<SentryResponse> {
+  public async sendEvent(body: string): Promise<SentryResponse> {
     await isAppReady();
     return new Promise<SentryResponse>((resolve, reject) => {
       const req = net.request(this.getRequestOptions());
@@ -43,7 +42,7 @@ export class NetTransport extends Transports.BaseTransport {
           // Drain
         });
       });
-      req.write(serialize(event));
+      req.write(body);
       req.end();
     });
   }

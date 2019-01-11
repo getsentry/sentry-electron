@@ -5,7 +5,6 @@ import { join } from 'path';
 import { promisify } from 'util';
 
 import { SentryEvent } from '@sentry/types';
-import { dynamicRequire } from '@sentry/utils/misc';
 import { app } from 'electron';
 
 const execFile = promisify(child.execFile);
@@ -22,11 +21,6 @@ interface OsContext {
   build?: string;
   /** Version-independent kernel version. */
   kernel_version?: string;
-}
-
-/** Shim interface to access this app's package.json. */
-interface PackageJson {
-  name: string;
 }
 
 /** Linux version file to check for a distribution. */
@@ -89,12 +83,6 @@ let defaultsPromise: Promise<SentryEvent>;
 function matchFirst(regex: RegExp, text: string): string | undefined {
   const match = regex.exec(text);
   return match ? match[1] : undefined;
-}
-
-/** Synchronously loads this app's package.json or throws if not possible. */
-function getPackageJson(): PackageJson {
-  const packagePath = join(app.getAppPath(), 'package.json');
-  return dynamicRequire(module, packagePath) as PackageJson;
 }
 
 /** Returns the build type of this app, if possible. */
@@ -254,7 +242,7 @@ async function getEventDefaults(): Promise<SentryEvent> {
     },
     environment: process.defaultApp ? 'development' : 'production',
     extra: { crashed_process: 'browser' },
-    release: `${getPackageJson().name}@${app.getVersion()}`,
+    release: `${app.getVersion()}`,
     user: { ip_address: '{{auto}}' },
   };
 }
