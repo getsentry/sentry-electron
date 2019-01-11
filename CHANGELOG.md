@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## v0.15.0
+
+- Bump deps to use `@sentry/*` `~4.5.0`
+- Remove dynamic app name loading from package.json for release name. Release now only is the version number of the app.
+
 ## v0.14.0
 
 - Bump deps to use `@sentry/*` `~4.3.4`

@@ -3,7 +3,6 @@
   "include": ["src/**/*.ts", "test/**/*.ts"],
   "exclude": ["dist"],
   "compilerOptions": {
-    "rootDir": ".",
-    "plugins": [{ "name": "tslint-language-service" }]
+    "rootDir": "."
   }
 }
