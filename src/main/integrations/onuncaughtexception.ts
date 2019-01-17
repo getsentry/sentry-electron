@@ -41,7 +41,9 @@ export class OnUncaughtException implements Integration {
 
           if (this.options.onFatalError) {
             this.options.onFatalError(error);
-          } else {
+          } else if (global.process.listenerCount('uncaughtException') <= 2) {
+            // In addition to this handler there is always one in Electron
+            // The dialog is only show if there are no other handlers
             console.error('Uncaught Exception:');
             console.error(error);
             const ref = error.stack;
