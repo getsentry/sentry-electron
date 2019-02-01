@@ -14,9 +14,11 @@ const APP_PATH = app.getAppPath().replace(/\\/g, '/');
  * @returns The normalized URL.
  */
 export function normalizeUrl(url: string, base: string = APP_PATH): string {
+  // Escape RegExp special characters
+  const escapedBase = base.replace( /[|\\{}()[\]^$+*?.]/g, '\\$&');
   return decodeURI(url)
     .replace(/\\/g, '/')
-    .replace(new RegExp(`(file:\/\/)?\/*${base}\/*`, 'ig'), 'app:///');
+    .replace(new RegExp(`(file:\/\/)?\/*${escapedBase}\/*`, 'ig'), 'app:///');
 }
 
 /**

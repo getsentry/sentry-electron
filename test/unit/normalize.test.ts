@@ -22,6 +22,23 @@ describe('Normalize URLs', () => {
     );
   });
 
+
+  it('Example app with parentheses', () => {
+    const base = 'c:/Users/Username/sentry-electron (beta)/example';
+
+    expect(normalizeUrl('C:\\Users\\Username\\sentry-electron%20(beta)\\example\\renderer.js', base)).to.equal(
+      'app:///renderer.js',
+    );
+
+    expect(normalizeUrl('C:\\Users\\Username\\sentry-electron%20(beta)\\example\\sub-directory\\renderer.js', base)).to.equal(
+      'app:///sub-directory/renderer.js',
+    );
+
+    expect(normalizeUrl('file:///C:/Users/Username/sentry-electron%20(beta)/example/index.html', base)).to.equal(
+      'app:///index.html',
+    );
+  });
+
   it('Asar packaged app in Windows Program Files', () => {
     const base = 'C:/Program Files/My App/resources/app.asar';
 
