@@ -119,6 +119,13 @@ export class ElectronClient implements CommonClient {
   /**
    * @inheritDoc
    */
+  public async flush(timeout?: number): Promise<boolean> {
+    return this.inner.flush(timeout);
+  }
+
+  /**
+   * @inheritDoc
+   */
   public showReportDialog(options: any): void {
     // tslint:disable-next-line
     this.inner.showReportDialog(options);

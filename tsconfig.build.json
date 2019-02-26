@@ -3,6 +3,7 @@
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"],
   "compilerOptions": {
+    "skipLibCheck": true,
     "baseUrl": ".",
     "lib": ["es7", "dom"],
     "outDir": "dist",
