@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## v0.16.0
+
+- Bump deps to use `@sentry/*` `4.6.2 || ~4.6.4`
+- Escape base path (#153)
+- Only show dialog if there are no uncaughtException handlers (#147)
+
 ## v0.15.0
 
 - Bump deps to use `@sentry/*` `~4.5.0`
