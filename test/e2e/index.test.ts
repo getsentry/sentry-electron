@@ -218,5 +218,14 @@ tests.forEach(([version, arch]) => {
         expect(appReadyBreadCrumbs.length).to.equal(2);
       }
     });
+
+    it('Custom named renderer process', async () => {
+      await context.start('sentry-custom-renderer-name', 'javascript-renderer');
+      await context.waitForEvents(1);
+      const event = context.testServer.events[0];
+
+      expect(context.testServer.events.length).to.equal(1);
+      expect(event.data.extra && event.data.extra.crashed_process).to.equal('renderer');
+    });
   });
 });

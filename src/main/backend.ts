@@ -32,14 +32,6 @@ function getCachePath(): string {
   return join(app.getPath('userData'), 'sentry');
 }
 
-/** Returns extra information from a renderer's web contents. */
-function getRendererExtra(contents: Electron.WebContents): { [key: string]: any } {
-  return {
-    crashed_process: `renderer[${contents.id}]`,
-    crashed_url: normalizeUrl(contents.getURL()),
-  };
-}
-
 /**
  * Retruns a promise that resolves when app is ready.
  */
@@ -210,7 +202,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     app.on('web-contents-created', (_, contents) => {
       contents.on('crashed', async () => {
         try {
-          await this.sendNativeCrashes(getRendererExtra(contents));
+          await this.sendNativeCrashes(this.getRendererExtra(contents));
         } catch (e) {
           console.error(e);
         }
@@ -245,7 +237,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
 
     ipcMain.on(IPC_EVENT, (ipc: Electron.Event, event: SentryEvent) => {
       event.extra = {
-        ...getRendererExtra(ipc.sender),
+        ...this.getRendererExtra(ipc.sender),
         ...event.extra,
       };
       captureEvent(event);
@@ -302,5 +294,15 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     paths.map(path => {
       captureMinidump(path, { ...event });
     });
+  }
+
+  /** Returns extra information from a renderer's web contents. */
+  private getRendererExtra(contents: Electron.WebContents): { [key: string]: any } {
+    const customName = this.options.getRendererName && this.options.getRendererName(contents);
+
+    return {
+      crashed_process: customName || `renderer[${contents.id}]`,
+      crashed_url: normalizeUrl(contents.getURL()),
+    };
   }
 }

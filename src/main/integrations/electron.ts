@@ -6,6 +6,7 @@ import {
   screen,
   // tslint:disable-next-line:no-implicit-dependencies
 } from 'electron';
+import { ElectronClient } from '../../dispatch';
 
 /** Electron integration that cleans up the event. */
 export class Electron implements Integration {
@@ -35,7 +36,14 @@ export class Electron implements Integration {
       // SetImmediate is required for contents.id to be correct
       // https://github.com/electron/electron/issues/12036
       setImmediate(() => {
-        this.instrumentBreadcrumbs(`WebContents[${contents.id}]`, contents, ['dom-ready', 'load-url', 'destroyed']);
+        const options = (getCurrentHub().getClient() as ElectronClient).getOptions();
+        const customName = options.getRendererName && options.getRendererName(contents);
+
+        this.instrumentBreadcrumbs(customName || `WebContents[${contents.id}]`, contents, [
+          'dom-ready',
+          'load-url',
+          'destroyed',
+        ]);
       });
     });
   }
