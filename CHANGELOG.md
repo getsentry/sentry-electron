@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## v0.17.0
+
+- Add new option to define the renderer name: `getRendererName?(contents: Electron.WebContents): string | undefined;`
+- Fixed a bug where native crashes wouldn't be sent.
+- Trim all whitespaces from release.
+
 ## v0.16.0
 
 - Bump deps to use `@sentry/*` `4.6.2 || ~4.6.4`
