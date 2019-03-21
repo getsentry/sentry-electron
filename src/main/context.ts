@@ -242,7 +242,7 @@ async function getEventDefaults(): Promise<SentryEvent> {
     },
     environment: process.defaultApp ? 'development' : 'production',
     extra: { crashed_process: 'browser' },
-    release: `${app.getName().replace(/\W/, '-')}${app.getVersion()}`,
+    release: `${app.getName().replace(/\W/g, '-')}${app.getVersion()}`,
     user: { ip_address: '{{auto}}' },
   };
 }

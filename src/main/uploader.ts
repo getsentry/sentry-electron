@@ -68,10 +68,16 @@ export class MinidumpUploader {
     this.type = process.platform === 'darwin' ? 'crashpad' : 'breakpad';
     this.knownPaths = [];
 
-    // TODO: We need to put this somewhere in core
-    // we have this in 3 places now (transports browser/node/here)
+    this.url = MinidumpUploader.minidumpUrlFromDsn(dsn);
+  }
+
+  /**
+   * Returns the minidump endpoint in Sentry
+   * @param dsn Dsn
+   */
+  public static minidumpUrlFromDsn(dsn: Dsn): string {
     const { host, path, projectId, port, protocol, user } = dsn;
-    this.url = `${protocol}://${host}${port !== '' ? `:${port}` : ''}${
+    return `${protocol}://${host}${port !== '' ? `:${port}` : ''}${
       path !== '' ? `/${path}` : ''
     }/api/${projectId}/minidump?sentry_key=${user}`;
   }
