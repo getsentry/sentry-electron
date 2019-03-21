@@ -186,7 +186,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       companyName: '',
       ignoreSystemCrashHandler: true,
       productName: app.getName(),
-      submitURL: '',
+      submitURL: 'xxx',
       uploadToServer: false,
     });
 
