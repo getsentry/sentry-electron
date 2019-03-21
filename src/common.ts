@@ -45,6 +45,13 @@ export interface ElectronOptions extends Options, BrowserOptions, NodeOptions {
    * Defaults to `true`.
    */
   enableUnresponsive?: boolean;
+
+  /**
+   * Callback to allow custom naming of renderer processes
+   * If the callback is not set, or it returns `undefined`, the default naming
+   * scheme is used.
+   */
+  getRendererName?(contents: Electron.WebContents): string | undefined;
 }
 
 /** Common interface for Electron clients. */
