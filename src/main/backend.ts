@@ -174,10 +174,12 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     // We are only called by the frontend if the SDK is enabled and a valid DSN
     // has been configured. If no DSN is present, this indicates a programming
     // error.
-    const dsn = this.options.dsn;
-    if (!dsn) {
+    const dsnString = this.options.dsn;
+    if (!dsnString) {
       throw new SentryError('Invariant exception: install() must not be called when disabled');
     }
+
+    const dsn = new Dsn(dsnString);
 
     // We will manually submit errors, but CrashReporter requires a submitURL in
     // some versions. Also, provide a productName and companyName, which we will
@@ -186,7 +188,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       companyName: '',
       ignoreSystemCrashHandler: true,
       productName: app.getName(),
-      submitURL: '',
+      submitURL: MinidumpUploader.minidumpUrlFromDsn(dsn),
       uploadToServer: false,
     });
 
@@ -196,7 +198,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     const reporter: CrashReporterExt = crashReporter as any;
     const crashesDirectory = reporter.getCrashesDirectory();
 
-    this.uploader = new MinidumpUploader(new Dsn(dsn), crashesDirectory, getCachePath());
+    this.uploader = new MinidumpUploader(dsn, crashesDirectory, getCachePath());
 
     // Flush already cached minidumps from the queue.
     forget(this.uploader.flushQueue());
