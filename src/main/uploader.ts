@@ -7,7 +7,7 @@ import { SentryEvent, SentryResponse, Status } from '@sentry/types';
 import { filterAsync } from '@sentry/utils/async';
 import { mkdirp } from '@sentry/utils/fs';
 import { Store } from '@sentry/utils/store';
-import fetch = require('electron-fetch');
+import fetch from 'electron-fetch';
 import FormData = require('form-data');
 
 const readdir = promisify(fs.readdir);
