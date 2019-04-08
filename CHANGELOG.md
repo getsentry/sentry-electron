@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.17.1
+
+- Fix electron-fetch dependency/ fixing windows crash reports #165
+
 ## v0.17.0
 
 - Add new option to define the renderer name: `getRendererName?(contents: Electron.WebContents): string | undefined;`
