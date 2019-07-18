@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix: Add `device.family` and `browser.name` context
+
 ## v0.17.1
 
 - Fix electron-fetch dependency/ fixing windows crash reports #165
