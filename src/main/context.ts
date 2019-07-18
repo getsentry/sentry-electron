@@ -221,6 +221,9 @@ async function getEventDefaults(): Promise<SentryEvent> {
         app_version: app.getVersion(),
         build_type: getBuildType(),
       },
+      browser: {
+        name: 'Chrome',
+      },
       chrome: {
         name: 'Chrome',
         type: 'runtime',
@@ -228,6 +231,7 @@ async function getEventDefaults(): Promise<SentryEvent> {
       },
       device: {
         arch: process.arch,
+        family: 'Desktop',
       },
       node: {
         name: 'Node',
