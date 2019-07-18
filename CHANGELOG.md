@@ -2,7 +2,10 @@
 
 ## Unreleased
 
+## v0.17.2
+
 - Fix: Add `device.family` and `browser.name` context
+- Fix: `undefined` event_id #171
 
 ## v0.17.1
 
