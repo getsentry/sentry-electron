@@ -1,5 +1,4 @@
 import { SentryEvent, SentryException, Stacktrace } from '@sentry/types';
-import { clone } from '@sentry/utils/object';
 import { app } from 'electron';
 
 /** Application base path used for URL normalization. */
@@ -59,11 +58,9 @@ function getStacktrace(event: SentryEvent): Stacktrace | undefined {
  * @param event The event to normalize.
  */
 export function normalizeEvent(event: SentryEvent): SentryEvent {
-  const copy = clone(event);
-
   // Retrieve stack traces and normalize their URLs. Without this, grouping
   // would not work due to user folders in file names.
-  const stacktrace = getStacktrace(copy);
+  const stacktrace = getStacktrace(event);
   if (stacktrace && stacktrace.frames) {
     stacktrace.frames.forEach(frame => {
       if (frame.filename) {
@@ -72,7 +69,7 @@ export function normalizeEvent(event: SentryEvent): SentryEvent {
     });
   }
 
-  const { request = {} } = copy;
+  const { request = {} } = event;
   if (request.url) {
     request.url = normalizeUrl(request.url);
   }
@@ -87,7 +84,7 @@ export function normalizeEvent(event: SentryEvent): SentryEvent {
   // The Node SDK currently adds a default tag for server_name, which contains
   // the machine name of the computer running Electron. This is not useful
   // information in this case.
-  const { tags = {} } = copy;
+  const { tags = {} } = event;
   delete tags.server_name;
-  return copy;
+  return event;
 }
