@@ -7,7 +7,7 @@
 
 # Official Sentry SDK for Electron (Beta)
 
-[![Travis](https://img.shields.io/travis/getsentry/sentry-electron.svg?maxAge=2592000)](https://travis-ci.org/getsentry/sentry-electron)
+[![Travis](https://travis-ci.com/getsentry/sentry-electron.svg?branch=master)](https://travis-ci.com/getsentry/sentry-electron)
 [![AppVeyor](https://img.shields.io/appveyor/ci/sentry/sentry-electron.svg)](https://ci.appveyor.com/project/sentry/sentry-electron)
 [![npm version](https://img.shields.io/npm/v/@sentry/electron.svg)](https://www.npmjs.com/package/@sentry/electron)
 [![license](https://img.shields.io/github/license/getsentry/sentry-electron.svg)](https://github.com/getsentry/sentry-electron/blob/master/LICENSE)
