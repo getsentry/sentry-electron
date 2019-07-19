@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.17.3
+
+- Fix: Remove `webpack:/` part of base path in normalize
+
 ## v0.17.2
 
 - Fix: Add `device.family` and `browser.name` context

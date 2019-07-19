@@ -53,4 +53,11 @@ describe('Normalize URLs', () => {
       'app:///a/index.html',
     );
   });
+
+  it('Webpack builds', () => {
+    const base = '/home/haza/Desktop/foo/app/';
+    expect(
+      normalizeUrl('/home/haza/Desktop/foo/app/webpack:/electron/src/common/models/ipc-request.ts', base),
+    ).to.equal('app:///electron/src/common/models/ipc-request.ts');
+  });
 });

@@ -17,6 +17,7 @@ export function normalizeUrl(url: string, base: string = APP_PATH): string {
   const escapedBase = base.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&');
   return decodeURI(url)
     .replace(/\\/g, '/')
+    .replace(/webpack:\/?/g, '') // Remove intermediate base path
     .replace(new RegExp(`(file:\/\/)?\/*${escapedBase}\/*`, 'ig'), 'app:///');
 }
 
