@@ -1,6 +1,7 @@
 import { BrowserClient, ReportDialogOptions } from '@sentry/browser';
 import { BaseClient, getCurrentHub, Scope } from '@sentry/core';
-import { Breadcrumb, SentryBreadcrumbHint, SentryEvent, SentryEventHint } from '@sentry/types';
+import { Breadcrumb, BreadcrumbHint, Event, EventHint } from '@sentry/types';
+import { SyncPromise } from '@sentry/utils';
 import { ipcRenderer } from 'electron';
 import { CommonClient, ElectronOptions, IPC_CRUMB } from '../common';
 import { RendererBackend } from './backend';
@@ -10,7 +11,7 @@ export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
   /**
    * Internal used browser client
    */
-  private readonly inner: BrowserClient;
+  private readonly _inner: BrowserClient;
 
   /**
    * Creates a new Electron SDK instance.
@@ -18,15 +19,15 @@ export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
    */
   public constructor(options: ElectronOptions) {
     super(RendererBackend, options);
-    this.inner = new BrowserClient(options);
+    this._inner = new BrowserClient(options);
   }
 
   /**
    * @inheritDoc
    */
-  protected async prepareEvent(event: SentryEvent, scope?: Scope, hint?: SentryEventHint): Promise<SentryEvent | null> {
+  protected _prepareEvent(event: Event, scope?: Scope, hint?: EventHint): SyncPromise<Event | null> {
     event.platform = event.platform || 'javascript';
-    return super.prepareEvent(event, scope, hint);
+    return super._prepareEvent(event, scope, hint);
   }
 
   /**
@@ -36,14 +37,16 @@ export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
    * @param event Optional event payload to attach to the minidump.
    * @param scope The SDK scope used to upload.
    */
-  public async captureMinidump(_path: string, _event: SentryEvent, _scope?: Scope): Promise<void> {
+  public captureMinidump(): string | undefined {
     // Noop
+    return undefined;
   }
 
   /**
    * @inheritDoc
+   * TODO
    */
-  public async addBreadcrumb(breadcrumb: Breadcrumb, _hint?: SentryBreadcrumbHint, _scope?: Scope): Promise<void> {
+  public async addBreadcrumb(breadcrumb: Breadcrumb, _hint?: BreadcrumbHint, _scope?: Scope): Promise<void> {
     ipcRenderer.send(IPC_CRUMB, breadcrumb);
   }
 
@@ -55,6 +58,6 @@ export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
     if (!options.eventId) {
       options.eventId = getCurrentHub().lastEventId();
     }
-    this.inner.showReportDialog(options);
+    this._inner.showReportDialog(options);
   }
 }

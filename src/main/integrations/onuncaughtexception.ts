@@ -1,5 +1,5 @@
 import { getCurrentHub, NodeClient } from '@sentry/node';
-import { Integration, SentryEvent, Severity } from '@sentry/types';
+import { Integration, Event, Severity } from '@sentry/types';
 import { dialog } from 'electron';
 
 /** Capture unhandled erros. */
@@ -31,14 +31,15 @@ export class OnUncaughtException implements Integration {
       const self = getCurrentHub().getIntegration(OnUncaughtException);
       if (self) {
         getCurrentHub().withScope(async scope => {
-          scope.addEventProcessor(async (event: SentryEvent) => ({
+          scope.addEventProcessor(async (event: Event) => ({
             ...event,
             level: Severity.Fatal,
           }));
 
           const nodeClient = getCurrentHub().getClient() as NodeClient;
-          await nodeClient.captureException(error, { originalException: error }, getCurrentHub().getScope());
+          nodeClient.captureException(error, { originalException: error }, getCurrentHub().getScope());
 
+          // TODO: use flush here
           if (this.options.onFatalError) {
             this.options.onFatalError(error);
           } else if (global.process.listenerCount('uncaughtException') <= 2) {

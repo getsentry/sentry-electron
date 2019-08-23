@@ -1,5 +1,6 @@
 import { BaseClient, Scope } from '@sentry/core';
-import { Breadcrumb, SentryBreadcrumbHint, SentryEvent, SentryEventHint, SentryResponse } from '@sentry/types';
+import { Event, EventHint } from '@sentry/types';
+import { logger, SyncPromise } from '@sentry/utils';
 import { CommonClient, ElectronOptions } from '../common';
 import { SDK_NAME } from '../sdk';
 import { MainBackend } from './backend';
@@ -23,7 +24,7 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
   /**
    * @inheritDoc
    */
-  protected async prepareEvent(event: SentryEvent, scope?: Scope, hint?: SentryEventHint): Promise<SentryEvent | null> {
+  protected _prepareEvent(event: Event, scope?: Scope, hint?: EventHint): SyncPromise<Event | null> {
     event.platform = event.platform || 'node';
     event.sdk = {
       ...event.sdk,
@@ -38,23 +39,10 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
       version: SDK_VERSION,
     };
 
-    // We need to load the options here and set release from options
-    // Otherwise addEventDefaults will add default values there
-    const { environment, release, dist } = this.getOptions();
-    const prepared = { ...event };
-
-    if (prepared.environment === undefined && environment !== undefined) {
-      prepared.environment = environment;
-    }
-    if (prepared.release === undefined && release !== undefined) {
-      prepared.release = release;
-    }
-
-    if (prepared.dist === undefined && dist !== undefined) {
-      prepared.dist = dist;
-    }
-
-    return super.prepareEvent(normalizeEvent(await addEventDefaults(prepared)), scope, hint);
+    return new SyncPromise<Event>(async resolve => {
+      const finalEvent = await addEventDefaults(event);
+      resolve(super._prepareEvent(normalizeEvent(finalEvent), scope, hint));
+    });
   }
 
   /**
@@ -64,25 +52,42 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
    * @param event Optional event payload to attach to the minidump.
    * @param scope Optional SDK scope used to upload.
    */
-  public async captureMinidump(path: string, event: SentryEvent = {}, scope?: Scope): Promise<void> {
+  public captureMinidump(path: string, event: Event = {}, scope?: Scope): string | undefined {
+    let eventId: string | undefined;
+
+    this._processing = true;
+
     event.tags = { event_type: 'native', ...event.tags };
-    await this.processEvent(event, async finalEvent => this.getBackend().uploadMinidump(path, finalEvent), {}, scope);
+
+    this._processEvent(event, undefined, scope)
+      .then(async finalEvent => {
+        eventId = finalEvent && finalEvent.event_id;
+        await this._getBackend().uploadMinidump(path, finalEvent);
+        this._processing = false;
+      })
+      .catch(reason => {
+        logger.error(reason);
+        this._processing = false;
+      });
+
+    return eventId;
   }
 
   /**
    * @inheritDoc
    */
-  public async captureEvent(event: SentryEvent, hint?: SentryEventHint, scope?: Scope): Promise<SentryResponse> {
+  public captureEvent(event: Event, hint?: EventHint, scope?: Scope): string | undefined {
     event.tags = { event_type: 'javascript', ...event.tags };
     return super.captureEvent(event, hint, scope);
   }
 
   /**
    * @inheritDoc
+   * TODO
    */
-  public addBreadcrumb(breadcrumb: Breadcrumb, hint?: SentryBreadcrumbHint, scope?: Scope): void {
-    super.addBreadcrumb(breadcrumb, hint, scope);
-  }
+  // public addBreadcrumb(breadcrumb: Breadcrumb, hint?: BreadcrumbHint, scope?: Scope): void {
+  //   super.addBreadcrumb(breadcrumb, hint, scope);
+  // }
 
   /**
    * Does nothing in main/node

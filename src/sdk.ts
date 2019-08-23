@@ -4,7 +4,7 @@ export const SDK_NAME = 'sentry.javascript.electron';
 import { ReportDialogOptions } from '@sentry/browser';
 import { getCurrentHub } from '@sentry/core';
 import { _callOnClient } from '@sentry/minimal';
-import { SentryEvent } from '@sentry/types';
+import { Event } from '@sentry/types';
 import { ElectronOptions } from './common';
 import { ElectronClient, specificInit } from './dispatch';
 
@@ -71,6 +71,6 @@ export function showReportDialog(options: ReportDialogOptions = {}): void {
  * @param path The relative or absolute path to the minidump.
  * @param event Optional event payload to attach to the minidump.
  */
-export function captureMinidump(path: string, event: SentryEvent = {}): void {
+export function captureMinidump(path: string, event: Event = {}): void {
   _callOnClient('captureMinidump', path, event);
 }

@@ -2,9 +2,9 @@ export {
   Breadcrumb,
   Request,
   SdkInfo,
-  SentryEvent,
-  SentryException,
-  SentryResponse,
+  Event,
+  Exception,
+  Response,
   Severity,
   StackFrame,
   Stacktrace,
@@ -14,15 +14,23 @@ export {
 } from '@sentry/types';
 
 export {
+  addGlobalEventProcessor,
   addBreadcrumb,
   captureException,
   captureEvent,
   captureMessage,
   configureScope,
-  getCurrentHub,
   getHubFromCarrier,
+  getCurrentHub,
   Hub,
   Scope,
+  setContext,
+  setExtra,
+  setExtras,
+  setTag,
+  setTags,
+  setUser,
+  Span,
   withScope,
 } from '@sentry/core';
 
