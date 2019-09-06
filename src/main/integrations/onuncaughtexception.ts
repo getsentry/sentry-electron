@@ -1,5 +1,5 @@
 import { getCurrentHub, NodeClient } from '@sentry/node';
-import { Integration, Event, Severity } from '@sentry/types';
+import { Event, Integration, Severity } from '@sentry/types';
 import { dialog } from 'electron';
 
 /** Capture unhandled erros. */
@@ -18,7 +18,7 @@ export class OnUncaughtException implements Integration {
    * @inheritDoc
    */
   public constructor(
-    private readonly options: {
+    private readonly _options: {
       onFatalError?(firstError: Error, secondError?: Error): void;
     } = {},
   ) {}
@@ -38,10 +38,10 @@ export class OnUncaughtException implements Integration {
 
           const nodeClient = getCurrentHub().getClient() as NodeClient;
           nodeClient.captureException(error, { originalException: error }, getCurrentHub().getScope());
+          await nodeClient.flush(nodeClient.getOptions().shutdownTimeout || 2000);
 
-          // TODO: use flush here
-          if (this.options.onFatalError) {
-            this.options.onFatalError(error);
+          if (this._options.onFatalError) {
+            this._options.onFatalError(error);
           } else if (global.process.listenerCount('uncaughtException') <= 2) {
             // In addition to this handler there is always one in Electron
             // The dialog is only show if there are no other handlers

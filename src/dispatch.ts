@@ -63,9 +63,7 @@ export class ElectronClient implements CommonClient {
    * @inheritDoc
    */
   public captureEvent(event: Event, hint?: EventHint, scope?: Scope): string | undefined {
-    console.log(event, hint, scope);
-    return undefined;
-    // return this._inner.captureEvent(event, hint, scope);
+    return this._inner.captureEvent(event, hint, scope);
   }
 
   /**

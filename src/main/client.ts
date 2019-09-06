@@ -39,7 +39,6 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
       version: SDK_VERSION,
     };
 
-    // tslint:disable-next-line: no-unbound-method
     return super._prepareEvent(event, scope, hint).then(
       (filledEvent: Event | null) =>
         new SyncPromise<Event>(async resolve => {
@@ -66,10 +65,13 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
 
     event.tags = { event_type: 'native', ...event.tags };
 
-    this._processEvent(event, undefined, scope)
+    // We are not calling _processEvent here since we do not have beforeSend for minidump crashes
+    this._prepareEvent(event, scope, undefined)
       .then(async finalEvent => {
-        eventId = finalEvent && finalEvent.event_id;
-        await this._getBackend().uploadMinidump(path, finalEvent);
+        if (finalEvent) {
+          eventId = finalEvent && finalEvent.event_id;
+          this._getBackend().uploadMinidump(path, finalEvent);
+        }
         this._processing = false;
       })
       .catch(reason => {

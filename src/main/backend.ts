@@ -1,13 +1,22 @@
 import { app, crashReporter, ipcMain } from 'electron';
 import { join } from 'path';
 
-import { addBreadcrumb, BaseBackend, captureEvent, captureMessage, configureScope, Dsn, Scope } from '@sentry/core';
+import {
+  addBreadcrumb,
+  BaseBackend,
+  captureEvent,
+  captureMessage,
+  configureScope,
+  Dsn,
+  getCurrentHub,
+  Scope,
+} from '@sentry/core';
 import { NodeBackend } from '@sentry/node/dist/backend';
-import { Event, EventHint, Response, Severity, Status, Transport, TransportOptions } from '@sentry/types';
-import { forget, SentryError, SyncPromise } from '@sentry/utils';
+import { Event, EventHint, Severity, Transport, TransportOptions } from '@sentry/types';
+import { forget, logger, SentryError, SyncPromise } from '@sentry/utils';
 
 import { CommonBackend, ElectronOptions, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
-// import { captureMinidump } from '../sdk'; TODO
+import { captureMinidump } from '../sdk';
 import { normalizeUrl } from './normalize';
 import { Store } from './store';
 import { NetTransport } from './transports/net';
@@ -59,26 +68,29 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       // tslint:disable:no-unsafe-any
       const loadedScope = Scope.clone(this._scopeStore.get()) as any;
 
-      if (loadedScope.user) {
-        scope.setUser(loadedScope.user);
+      if (loadedScope._user) {
+        scope.setUser(loadedScope._user);
       }
-      if (loadedScope.tags) {
-        Object.keys(loadedScope.tags).forEach(key => {
-          scope.setTag(key, loadedScope.tags[key]);
-        });
-      }
-      if (loadedScope.extra) {
-        Object.keys(loadedScope.extra).forEach(key => {
-          scope.setExtra(key, loadedScope.extra[key]);
-        });
-      }
-      if (loadedScope.breadcrumbs) {
-        loadedScope.breadcrumbs.forEach((crumb: any) => {
+      scope.setTags(loadedScope._tags);
+      scope.setExtras(loadedScope._extra);
+      if (loadedScope._breadcrumbs) {
+        loadedScope._breadcrumbs.forEach((crumb: any) => {
           scope.addBreadcrumb(crumb);
         });
       }
       // tslint:enable:no-unsafe-any
     });
+
+    const hubScope = getCurrentHub().getScope();
+    if (hubScope) {
+      hubScope.addScopeListener(updatedScope => {
+        const cloned = Scope.clone(updatedScope);
+        (cloned as any)._eventProcessors = [];
+        (cloned as any)._scopeListeners = [];
+        // tslint:disable-next-line:no-object-literal-type-assertion
+        this._scopeStore.update((current: Scope) => ({ ...current, ...cloned } as Scope));
+      });
+    }
 
     if (this._isNativeEnabled()) {
       success = this._installNativeHandler() && success;
@@ -129,23 +141,11 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
    *
    * @param path A relative or absolute path to the minidump file.
    * @param event Optional event information to add to the minidump request.
-   * @returns A promise that resolves to the status code of the request.
    */
-  public async uploadMinidump(path: string, event: Event = {}): Promise<Response> {
+  public uploadMinidump(path: string, event: Event = {}): void {
     if (this._uploader) {
-      return this._uploader.uploadMinidump({ path, event });
+      forget(this._uploader.uploadMinidump({ path, event }));
     }
-    return { status: Status.Success };
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public storeScope(scope: Scope): void {
-    const cloned = Scope.clone(scope);
-    (cloned as any).eventProcessors = [];
-    // tslint:disable-next-line:no-object-literal-type-assertion
-    this._scopeStore.update((current: Scope) => ({ ...current, ...cloned } as Scope));
   }
 
   /** Returns whether native reports are enabled. */
@@ -258,7 +258,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   }
 
   /** Loads new native crashes from disk and sends them to Sentry. */
-  private async _sendNativeCrashes(_extra: object): Promise<void> {
+  private async _sendNativeCrashes(extra: object): Promise<void> {
     // Whenever we are called, assume that the crashes we are going to load down
     // below have occurred recently. This means, we can use the same event data
     // for all minidumps that we load now. There are two conditions:
@@ -276,17 +276,27 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       throw new SentryError('Invariant violation: Native crashes not enabled');
     }
 
-    // TODO
-    // const currentCloned = Scope.clone(getCurrentHub().getScope());
-    // const fetchedScope = this._scopeStore.get();
-    // const storedScope = Scope.clone(fetchedScope);
-    // let event: Event | null = { extra };
-    // event = await storedScope.applyToEvent(event);
-    // event = event && (await currentCloned.applyToEvent(event));
-    // const paths = await uploader.getNewMinidumps();
-    // paths.map(path => {
-    //   captureMinidump(path, { ...event });
-    // });
+    const currentCloned = Scope.clone(getCurrentHub().getScope());
+    const fetchedScope = this._scopeStore.get();
+    try {
+      const storedScope = Scope.clone(fetchedScope);
+      storedScope
+        .applyToEvent({ extra })
+        .then(event => {
+          if (event) {
+            return currentCloned.applyToEvent(event);
+          }
+          return null;
+        })
+        .then(async event => {
+          const paths = await uploader.getNewMinidumps();
+          paths.map(path => {
+            captureMinidump(path, { ...event });
+          });
+        });
+    } catch (_oO) {
+      logger.error('Error while sending native crash.');
+    }
   }
 
   /** Returns extra information from a renderer's web contents. */

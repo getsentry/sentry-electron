@@ -3,7 +3,7 @@ import { basename, join } from 'path';
 import { promisify } from 'util';
 
 import { Dsn } from '@sentry/core';
-import { Event, Response, Status } from '@sentry/types';
+import { Event } from '@sentry/types';
 import fetch from 'electron-fetch';
 import FormData = require('form-data');
 
@@ -98,7 +98,7 @@ export class MinidumpUploader {
    * @param event Event data to attach to the minidump.
    * @returns A promise that resolves when the upload is complete.
    */
-  public async uploadMinidump(request: MinidumpRequest): Promise<Response> {
+  public async uploadMinidump(request: MinidumpRequest): Promise<void> {
     try {
       const body = new FormData();
       body.append('upload_file_minidump', fs.createReadStream(request.path));
@@ -108,9 +108,6 @@ export class MinidumpUploader {
       // Too many requests, so we queue the event and send it later
       if (response.status === CODE_RETRY) {
         await this._queueMinidump(request);
-        return {
-          status: Status.RateLimit,
-        };
       }
 
       // We either succeeded or something went horribly wrong. Either way, we
@@ -125,20 +122,12 @@ export class MinidumpUploader {
       if (response.ok) {
         await this.flushQueue();
       }
-
-      return {
-        status: Status.fromHttpCode(response.status),
-      };
     } catch (err) {
       // User's internet connection was down so we queue it as well
       const error = err ? (err as { code: string }) : { code: '' };
       if (error.code === 'ENOTFOUND') {
         await this._queueMinidump(request);
       }
-
-      return {
-        status: Status.Failed,
-      };
     }
   }
 
