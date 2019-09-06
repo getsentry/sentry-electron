@@ -19,7 +19,7 @@ export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
    */
   public constructor(options: ElectronOptions) {
     super(RendererBackend, options);
-    this._inner = new BrowserClient(options);
+    this._inner = new BrowserClient({ ...options, defaultIntegrations: false });
   }
 
   /**

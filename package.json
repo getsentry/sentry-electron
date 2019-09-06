@@ -15,6 +15,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "build:watch": "tsc -p tsconfig.build.json  -w --preserveWatchOutput",
     "clean": "rimraf dist coverage",
     "preexample": "run-s clean build",
     "example": "electron example",

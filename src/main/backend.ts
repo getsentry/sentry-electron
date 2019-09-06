@@ -1,16 +1,17 @@
 import { app, crashReporter, ipcMain } from 'electron';
 import { join } from 'path';
 
-import { addBreadcrumb, BaseBackend, captureEvent, captureMessage, configureScope, Dsn, Scope } from '@sentry/core';
+import { addBreadcrumb, BaseBackend, captureMessage, configureScope, Dsn, Scope } from '@sentry/core';
 // import { getCurrentHub } from '@sentry/node'; TODO
 import { NodeBackend } from '@sentry/node/dist/backend';
-import { Breadcrumb, Event, EventHint, Response, Severity, Status } from '@sentry/types';
+import { Breadcrumb, Event, EventHint, Response, Severity, Status, Transport, TransportOptions } from '@sentry/types';
 import { forget, SentryError, SyncPromise } from '@sentry/utils';
 
 import { CommonBackend, ElectronOptions, IPC_CRUMB, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
 // import { captureMinidump } from '../sdk'; TODO
 import { normalizeUrl } from './normalize';
 import { Store } from './store';
+import { NetTransport } from './transports/net';
 import { MinidumpUploader } from './uploader';
 
 /** Patch to access internal CrashReporter functionality. */
@@ -85,6 +86,29 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     }
 
     this._installIPC();
+  }
+
+  /**
+   * @inheritdoc
+   */
+  protected _setupTransport(): Transport {
+    if (!this._options.dsn) {
+      // We return the noop transport here in case there is no Dsn.
+      return super._setupTransport();
+    }
+
+    const transportOptions: TransportOptions = {
+      ...this._options.transportOptions,
+      ...(this._options.httpProxy && { httpProxy: this._options.httpProxy }),
+      ...(this._options.httpsProxy && { httpsProxy: this._options.httpsProxy }),
+      ...(this._options.caCerts && { caCerts: this._options.caCerts }),
+      dsn: this._options.dsn,
+    };
+
+    if (this._options.transport) {
+      return new this._options.transport(transportOptions);
+    }
+    return new NetTransport(transportOptions);
   }
 
   /**
@@ -226,7 +250,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
         ...this._getRendererExtra(ipc.sender),
         ...event.extra,
       };
-      captureEvent(event);
+      this.sendEvent(event);
     });
 
     ipcMain.on(IPC_SCOPE, (_: any, rendererScope: Scope) => {

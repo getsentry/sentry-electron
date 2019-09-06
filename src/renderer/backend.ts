@@ -2,7 +2,7 @@ import { crashReporter, ipcRenderer, remote } from 'electron';
 
 import { BrowserBackend } from '@sentry/browser/dist/backend';
 import { BaseBackend, Scope } from '@sentry/core';
-import { Event, EventHint, Response, Severity, Status } from '@sentry/types';
+import { Event, EventHint, Severity } from '@sentry/types';
 import { SyncPromise } from '@sentry/utils';
 
 import { CommonBackend, ElectronOptions, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
@@ -47,18 +47,16 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
 
   /**
    * @inheritDoc
-   * TODO
    */
-  public async sendEvent(event: Event): Promise<Response> {
+  public sendEvent(event: Event): void {
     ipcRenderer.send(IPC_EVENT, event);
-    // This is a fire and forget thing
-    return { status: Status.Success };
   }
 
   /**
    * @inheritDoc
    */
   public storeScope(scope: Scope): void {
+    // TODO
     ipcRenderer.send(IPC_SCOPE, scope);
   }
 

@@ -39,9 +39,12 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
       version: SDK_VERSION,
     };
 
+    // tslint:disable-next-line: no-unbound-method
+    const parentPrepare = super._prepareEvent;
+
     return new SyncPromise<Event>(async resolve => {
       const finalEvent = await addEventDefaults(event);
-      resolve(super._prepareEvent(normalizeEvent(finalEvent), scope, hint));
+      resolve(parentPrepare(normalizeEvent(finalEvent), scope, hint));
     });
   }
 

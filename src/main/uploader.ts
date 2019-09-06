@@ -61,7 +61,7 @@ export class MinidumpUploader {
    * Store to persist queued Minidumps beyond application crashes or lost
    * internet connection.
    */
-  private readonly _queue: Store<MinidumpRequest[]> = new Store(this._cacheDirectory, 'queue', []);
+  private readonly _queue: Store<MinidumpRequest[]>;
 
   /**
    * Creates a new uploader instance.
@@ -77,6 +77,7 @@ export class MinidumpUploader {
     this._url = MinidumpUploader.minidumpUrlFromDsn(dsn);
     this._crashesDirectory = crashesDirectory;
     this._cacheDirectory = cacheDirectory;
+    this._queue = new Store(this._cacheDirectory, 'queue', []);
   }
 
   /**

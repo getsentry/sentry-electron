@@ -18,6 +18,9 @@ export class NetTransport extends Transports.BaseTransport {
    * @inheritDoc
    */
   public async sendEvent(event: Event): Promise<Response> {
+    if (!this._buffer.isReady()) {
+      return Promise.reject(new SentryError('Not adding Promise due to buffer limit reached.'));
+    }
     await isAppReady();
     return this._buffer.add(
       new Promise<Response>((resolve, reject) => {

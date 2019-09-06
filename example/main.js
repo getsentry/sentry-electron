@@ -19,7 +19,7 @@ app.on('ready', () => {
       sandbox: true,
     },
   });
-
+  window.webContents.openDevTools();
   window.loadURL(
     url.format({
       pathname: path.join(DIST_PATH, 'index.html'),
