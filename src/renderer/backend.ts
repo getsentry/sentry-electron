@@ -1,7 +1,7 @@
 import { crashReporter, ipcRenderer, remote } from 'electron';
 
 import { BrowserBackend } from '@sentry/browser/dist/backend';
-import { BaseBackend, Scope } from '@sentry/core';
+import { BaseBackend, getCurrentHub } from '@sentry/core';
 import { Event, EventHint, Severity } from '@sentry/types';
 import { SyncPromise } from '@sentry/utils';
 
@@ -29,6 +29,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
     });
 
     this._pingMainProcess();
+    this._setupScopeListener();
   }
 
   /**
@@ -53,11 +54,15 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
   }
 
   /**
-   * @inheritDoc
+   * Sends the scope to the main process once it updates.
    */
-  public storeScope(scope: Scope): void {
-    // TODO
-    ipcRenderer.send(IPC_SCOPE, scope);
+  private _setupScopeListener(): void {
+    const scope = getCurrentHub().getScope();
+    if (scope) {
+      scope.addScopeListener(updatedScope => {
+        ipcRenderer.send(IPC_SCOPE, updatedScope);
+      });
+    }
   }
 
   /** Returns whether JS is enabled. */

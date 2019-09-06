@@ -1,9 +1,8 @@
 import { BrowserClient, ReportDialogOptions } from '@sentry/browser';
 import { BaseClient, getCurrentHub, Scope } from '@sentry/core';
-import { Breadcrumb, BreadcrumbHint, Event, EventHint } from '@sentry/types';
-import { SyncPromise } from '@sentry/utils';
-import { ipcRenderer } from 'electron';
-import { CommonClient, ElectronOptions, IPC_CRUMB } from '../common';
+import { Event, EventHint } from '@sentry/types';
+import { logger, SyncPromise } from '@sentry/utils';
+import { CommonClient, ElectronOptions } from '../common';
 import { RendererBackend } from './backend';
 
 /** Frontend implementation for Electron renderer backends. */
@@ -38,16 +37,8 @@ export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
    * @param scope The SDK scope used to upload.
    */
   public captureMinidump(): string | undefined {
-    // Noop
+    logger.warn('captureMinidump is a noop on the renderer');
     return undefined;
-  }
-
-  /**
-   * @inheritDoc
-   * TODO
-   */
-  public async addBreadcrumb(breadcrumb: Breadcrumb, _hint?: BreadcrumbHint, _scope?: Scope): Promise<void> {
-    ipcRenderer.send(IPC_CRUMB, breadcrumb);
   }
 
   /**

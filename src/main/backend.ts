@@ -1,13 +1,12 @@
 import { app, crashReporter, ipcMain } from 'electron';
 import { join } from 'path';
 
-import { addBreadcrumb, BaseBackend, captureMessage, configureScope, Dsn, Scope } from '@sentry/core';
-// import { getCurrentHub } from '@sentry/node'; TODO
+import { addBreadcrumb, BaseBackend, captureEvent, captureMessage, configureScope, Dsn, Scope } from '@sentry/core';
 import { NodeBackend } from '@sentry/node/dist/backend';
-import { Breadcrumb, Event, EventHint, Response, Severity, Status, Transport, TransportOptions } from '@sentry/types';
+import { Event, EventHint, Response, Severity, Status, Transport, TransportOptions } from '@sentry/types';
 import { forget, SentryError, SyncPromise } from '@sentry/utils';
 
-import { CommonBackend, ElectronOptions, IPC_CRUMB, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
+import { CommonBackend, ElectronOptions, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
 // import { captureMinidump } from '../sdk'; TODO
 import { normalizeUrl } from './normalize';
 import { Store } from './store';
@@ -126,14 +125,6 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   }
 
   /**
-   * @inheritDoc
-   */
-  public sendEvent(event: Event): void {
-    // await isAppReady(); TODO
-    this._inner.sendEvent(event);
-  }
-
-  /**
    * Uploads the given minidump and attaches event information.
    *
    * @param path A relative or absolute path to the minidump file.
@@ -241,35 +232,26 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       event.sender.send(IPC_PING);
     });
 
-    ipcMain.on(IPC_CRUMB, (_: any, crumb: Breadcrumb) => {
-      addBreadcrumb(crumb);
-    });
-
     ipcMain.on(IPC_EVENT, (ipc: Electron.Event, event: Event) => {
       event.extra = {
         ...this._getRendererExtra(ipc.sender),
         ...event.extra,
       };
-      this.sendEvent(event);
+      captureEvent(event);
     });
 
     ipcMain.on(IPC_SCOPE, (_: any, rendererScope: Scope) => {
       // tslint:disable:no-unsafe-any
       const sentScope = Scope.clone(rendererScope) as any;
       configureScope(scope => {
-        if (sentScope.user) {
-          scope.setUser(sentScope.user);
+        if (sentScope._user) {
+          scope.setUser(sentScope._user);
         }
-        if (sentScope.tags) {
-          Object.keys(sentScope.tags).forEach(key => {
-            scope.setTag(key, sentScope.tags[key]);
-          });
-        }
-        if (sentScope.extra) {
-          Object.keys(sentScope.extra).forEach(key => {
-            scope.setExtra(key, sentScope.extra[key]);
-          });
-        }
+        scope.setTags(sentScope._tags);
+        scope.setExtras(sentScope._extra);
+        // Since we do not have updates for individual breadcrumbs anymore and only for the whole scope
+        // we just add the last added breadcrumb on scope updates
+        scope.addBreadcrumb(sentScope._breadcrumbs.pop());
       });
       // tslint:enable:no-unsafe-any
     });

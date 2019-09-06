@@ -7,8 +7,6 @@ import { Client, Event, Options, Scope } from '@sentry/types';
 export const IPC_PING = 'sentry-electron.ping';
 /** IPC to send a captured event (exception or message) to Sentry. */
 export const IPC_EVENT = 'sentry-electron.event';
-/** IPC to capture a breadcrumb globally. */
-export const IPC_CRUMB = 'sentry-electron.breadcrumbs';
 /** IPC to capture a scope globally. */
 export const IPC_SCOPE = 'sentry-electron.scope';
 

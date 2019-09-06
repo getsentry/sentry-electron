@@ -40,12 +40,16 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
     };
 
     // tslint:disable-next-line: no-unbound-method
-    const parentPrepare = super._prepareEvent;
-
-    return new SyncPromise<Event>(async resolve => {
-      const finalEvent = await addEventDefaults(event);
-      resolve(parentPrepare(normalizeEvent(finalEvent), scope, hint));
-    });
+    return super._prepareEvent(event, scope, hint).then(
+      (filledEvent: Event | null) =>
+        new SyncPromise<Event>(async resolve => {
+          if (filledEvent) {
+            resolve(normalizeEvent(await addEventDefaults(filledEvent)));
+          } else {
+            resolve(filledEvent);
+          }
+        }),
+    );
   }
 
   /**
@@ -83,14 +87,6 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
     event.tags = { event_type: 'javascript', ...event.tags };
     return super.captureEvent(event, hint, scope);
   }
-
-  /**
-   * @inheritDoc
-   * TODO
-   */
-  // public addBreadcrumb(breadcrumb: Breadcrumb, hint?: BreadcrumbHint, scope?: Scope): void {
-  //   super.addBreadcrumb(breadcrumb, hint, scope);
-  // }
 
   /**
    * Does nothing in main/node
