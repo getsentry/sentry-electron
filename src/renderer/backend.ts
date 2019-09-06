@@ -61,6 +61,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
     if (scope) {
       scope.addScopeListener(updatedScope => {
         ipcRenderer.send(IPC_SCOPE, updatedScope);
+        scope.clearBreadcrumbs();
       });
     }
   }

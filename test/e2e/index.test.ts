@@ -204,6 +204,7 @@ tests.forEach(([version, arch]) => {
 
       // We restart the app and keep the context
       await context.stop(false);
+
       await context.start('sentry-basic', 'javascript-renderer');
 
       await context.waitForEvents(1);

@@ -62,7 +62,6 @@ export class TestServer {
         return;
       }
 
-      // console.log(req);
       this.events.push({
         // We removed gzip in node now
         // data: deflateBase64ZIP(req.body as Buffer) as SentryEvent,

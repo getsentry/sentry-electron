@@ -63,34 +63,11 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
 
     let success = true;
 
-    // We refill the scope here to not have an empty one
-    configureScope(scope => {
-      // tslint:disable:no-unsafe-any
-      const loadedScope = Scope.clone(this._scopeStore.get()) as any;
-
-      if (loadedScope._user) {
-        scope.setUser(loadedScope._user);
-      }
-      scope.setTags(loadedScope._tags);
-      scope.setExtras(loadedScope._extra);
-      if (loadedScope._breadcrumbs) {
-        loadedScope._breadcrumbs.forEach((crumb: any) => {
-          scope.addBreadcrumb(crumb);
-        });
-      }
-      // tslint:enable:no-unsafe-any
+    // The setImmediate is important here since the client has to be on the hub already that configureScope works
+    setImmediate(() => {
+      this._rehydrateScope();
+      this._setupScopeListener();
     });
-
-    const hubScope = getCurrentHub().getScope();
-    if (hubScope) {
-      hubScope.addScopeListener(updatedScope => {
-        const cloned = Scope.clone(updatedScope);
-        (cloned as any)._eventProcessors = [];
-        (cloned as any)._scopeListeners = [];
-        // tslint:disable-next-line:no-object-literal-type-assertion
-        this._scopeStore.update((current: Scope) => ({ ...current, ...cloned } as Scope));
-      });
-    }
 
     if (this._isNativeEnabled()) {
       success = this._installNativeHandler() && success;
@@ -145,6 +122,45 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   public uploadMinidump(path: string, event: Event = {}): void {
     if (this._uploader) {
       forget(this._uploader.uploadMinidump({ path, event }));
+    }
+  }
+
+  /**
+   * Loads the stored scope from disk ands sets it int the current scope
+   */
+  private _rehydrateScope(): void {
+    // We refill the scope here to not have an empty one
+    configureScope(scope => {
+      // tslint:disable:no-unsafe-any
+      const loadedScope = Scope.clone(this._scopeStore.get()) as any;
+
+      if (loadedScope._user) {
+        scope.setUser(loadedScope._user);
+      }
+      scope.setTags(loadedScope._tags);
+      scope.setExtras(loadedScope._extra);
+      if (loadedScope._breadcrumbs) {
+        loadedScope._breadcrumbs.forEach((crumb: any) => {
+          scope.addBreadcrumb(crumb);
+        });
+      }
+      // tslint:enable:no-unsafe-any
+    });
+  }
+
+  /**
+   * Adds a scope listener to persist changes to disk.
+   */
+  private _setupScopeListener(): void {
+    const hubScope = getCurrentHub().getScope();
+    if (hubScope) {
+      hubScope.addScopeListener(updatedScope => {
+        const cloned = Scope.clone(updatedScope);
+        (cloned as any)._eventProcessors = [];
+        (cloned as any)._scopeListeners = [];
+        // tslint:disable-next-line:no-object-literal-type-assertion
+        this._scopeStore.update((current: Scope) => ({ ...current, ...cloned } as Scope));
+      });
     }
   }
 
