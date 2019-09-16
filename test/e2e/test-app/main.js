@@ -10,7 +10,8 @@ app.on('ready', () => {
     width: 800,
     height: 600,
     titleBarStyle: 'hidden',
-    show: false
+    show: false,
+    webPreferences: { nodeIntegration: true, contextIsolation: false },
   });
 
   window.loadURL(
@@ -23,4 +24,3 @@ app.on('ready', () => {
 
   require('./load-fixture');
 });
-
