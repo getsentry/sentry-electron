@@ -13,6 +13,10 @@ use(chaiAsPromised);
 const tests = getTests('1.7.16', '1.8.8', '2.0.10', '3.0.2', '4.2.10', '5.0.10', '6.0.7');
 
 tests.forEach(([version, arch]) => {
+  if (parseFloat(version) < 3 && process.platform !== 'win32' && process.platform !== 'darwin') {
+    // We skip test on linux for electron version < 3
+    return;
+  }
   describe(`Test Electron ${version} ${arch}`, () => {
     let context: TestContext;
 
