@@ -5,6 +5,7 @@
     "no-unused-expression": false,
     "no-implicit-dependencies": [true, "dev"],
     "no-unsafe-any": false,
+    "naming-convention": false,
     // We disable this rule, because order in `serialize()` tests matter
     "object-literal-sort-keys": false
   }
