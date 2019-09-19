@@ -1,7 +1,7 @@
 {
   "name": "@sentry/electron",
   "description": "Offical Sentry SDK for Electron",
-  "version": "0.17.3",
+  "version": "0.17.4",
   "main": "./dist/index.js",
   "repository": "https://github.com/getsentry/sentry-electron.git",
   "author": "Sentry",
