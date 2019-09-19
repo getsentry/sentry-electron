@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.17.4
+
+- meta: Empty release for latest npm tag
+
 ## v0.17.3
 
 - Fix: Remove `webpack:/` part of base path in normalize
