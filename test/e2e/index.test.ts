@@ -203,9 +203,7 @@ tests.forEach(([version, arch]) => {
 
     it('Scope is persisted between app restarts', async () => {
       await context.start('sentry-basic');
-
       await delay(5000);
-
       // We restart the app and keep the context
       await context.stop(false);
 
