@@ -7,6 +7,10 @@ of the JS/Node SDK.
 
 - Feat: Bump `@sentry/*` `~5.7.0`
 
+## v0.17.4
+
+- meta: Empty release for latest npm tag
+
 ## v0.17.3
 
 - Fix: Remove `webpack:/` part of base path in normalize
