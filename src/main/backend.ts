@@ -309,6 +309,9 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
           paths.map(path => {
             captureMinidump(path, { ...event });
           });
+        })
+        .catch(error => {
+          logger.error(error);
         });
     } catch (_oO) {
       logger.error('Error while sending native crash.');
