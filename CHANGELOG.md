@@ -5,7 +5,7 @@
 There shouldn't be any breaking changes, interally we needed to do some changes because we were upgrading to use `5.x`
 of the JS/Node SDK.
 
-- Feat: Bump `@sentry/*` `~5.6.0`
+- Feat: Bump `@sentry/*` `~5.7.0`
 
 ## v0.17.3
 

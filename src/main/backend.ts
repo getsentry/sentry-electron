@@ -59,7 +59,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   public constructor(options: ElectronOptions) {
     super(options);
     this._inner = new NodeBackend(options);
-    this._scopeStore = new Store<Scope>(getCachePath(), 'scope', new Scope());
+    this._scopeStore = new Store<Scope>(getCachePath(), 'scope_v2', new Scope());
 
     let success = true;
 
