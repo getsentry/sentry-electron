@@ -3,7 +3,6 @@ import { crashReporter, ipcRenderer, remote } from 'electron';
 import { BrowserBackend } from '@sentry/browser/dist/backend';
 import { BaseBackend, getCurrentHub } from '@sentry/core';
 import { Event, EventHint, Severity } from '@sentry/types';
-import { SyncPromise } from '@sentry/utils';
 
 import { CommonBackend, ElectronOptions, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
 
@@ -35,14 +34,14 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
   /**
    * @inheritDoc
    */
-  public eventFromException(exception: any, hint?: EventHint): SyncPromise<Event> {
+  public eventFromException(exception: any, hint?: EventHint): PromiseLike<Event> {
     return this._inner.eventFromException(exception, hint);
   }
 
   /**
    * @inheritDoc
    */
-  public eventFromMessage(message: string, level?: Severity, hint?: EventHint): SyncPromise<Event> {
+  public eventFromMessage(message: string, level?: Severity, hint?: EventHint): PromiseLike<Event> {
     return this._inner.eventFromMessage(message, level, hint);
   }
 

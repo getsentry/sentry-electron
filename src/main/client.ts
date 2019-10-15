@@ -24,7 +24,7 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
   /**
    * @inheritDoc
    */
-  protected _prepareEvent(event: Event, scope?: Scope, hint?: EventHint): SyncPromise<Event | null> {
+  protected _prepareEvent(event: Event, scope?: Scope, hint?: EventHint): PromiseLike<Event | null> {
     event.platform = event.platform || 'node';
     event.sdk = {
       ...event.sdk,
@@ -39,16 +39,17 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
       version: SDK_VERSION,
     };
 
-    return super._prepareEvent(event, scope, hint).then(
-      (filledEvent: Event | null) =>
-        new SyncPromise<Event>(async resolve => {
-          if (filledEvent) {
-            resolve(normalizeEvent(await addEventDefaults(filledEvent)));
-          } else {
-            resolve(filledEvent);
-          }
-        }),
-    );
+    // tslint:disable-next-line: no-unbound-method
+    const parentPrepare = super._prepareEvent;
+
+    return new SyncPromise<Event>(async resolve => {
+      const filledEvent = await parentPrepare(event, scope, hint);
+      if (filledEvent) {
+        resolve(normalizeEvent(await addEventDefaults(filledEvent)));
+      } else {
+        resolve(filledEvent);
+      }
+    });
   }
 
   /**
@@ -66,18 +67,19 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
     event.tags = { event_type: 'native', ...event.tags };
 
     // We are not calling _processEvent here since we do not have beforeSend for minidump crashes
-    this._prepareEvent(event, scope, undefined)
-      .then(async finalEvent => {
+    this._prepareEvent(event, scope, undefined).then(
+      async finalEvent => {
         if (finalEvent) {
           eventId = finalEvent && finalEvent.event_id;
           this._getBackend().uploadMinidump(path, finalEvent);
         }
         this._processing = false;
-      })
-      .catch(reason => {
+      },
+      reason => {
         logger.error(reason);
         this._processing = false;
-      });
+      },
+    );
 
     return eventId;
   }

@@ -13,7 +13,7 @@ import {
 } from '@sentry/core';
 import { NodeBackend } from '@sentry/node/dist/backend';
 import { Event, EventHint, Severity, Transport, TransportOptions } from '@sentry/types';
-import { forget, logger, SentryError, SyncPromise } from '@sentry/utils';
+import { forget, logger, SentryError } from '@sentry/utils';
 
 import { CommonBackend, ElectronOptions, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
 import { captureMinidump } from '../sdk';
@@ -102,15 +102,15 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   /**
    * @inheritDoc
    */
-  public eventFromException(exception: any, hint?: EventHint): SyncPromise<Event> {
+  public eventFromException(exception: any, hint?: EventHint): PromiseLike<Event> {
     return this._inner.eventFromException(exception, hint);
   }
 
   /**
    * @inheritDoc
    */
-  public eventFromMessage(message: string): SyncPromise<Event> {
-    return this._inner.eventFromMessage(message);
+  public eventFromMessage(message: string, level: Severity = Severity.Info, hint?: EventHint): PromiseLike<Event> {
+    return this._inner.eventFromMessage(message, level, hint);
   }
 
   /**
@@ -296,23 +296,15 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     const fetchedScope = this._scopeStore.get();
     try {
       const storedScope = Scope.clone(fetchedScope);
-      storedScope
-        .applyToEvent({ extra })
-        .then(event => {
-          if (event) {
-            return currentCloned.applyToEvent(event);
-          }
-          return null;
-        })
-        .then(async event => {
-          const paths = await uploader.getNewMinidumps();
-          paths.map(path => {
-            captureMinidump(path, { ...event });
-          });
-        })
-        .catch(error => {
-          logger.error(error);
+      let newEvent = await storedScope.applyToEvent({ extra });
+
+      if (newEvent) {
+        newEvent = await currentCloned.applyToEvent(newEvent);
+        const paths = await uploader.getNewMinidumps();
+        paths.map(path => {
+          captureMinidump(path, { ...newEvent });
         });
+      }
     } catch (_oO) {
       logger.error('Error while sending native crash.');
     }

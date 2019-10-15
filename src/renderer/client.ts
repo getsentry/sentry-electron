@@ -1,7 +1,7 @@
 import { BrowserClient, ReportDialogOptions } from '@sentry/browser';
 import { BaseClient, getCurrentHub, Scope } from '@sentry/core';
 import { Event, EventHint } from '@sentry/types';
-import { logger, SyncPromise } from '@sentry/utils';
+import { logger } from '@sentry/utils';
 import { CommonClient, ElectronOptions } from '../common';
 import { RendererBackend } from './backend';
 
@@ -24,7 +24,7 @@ export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
   /**
    * @inheritDoc
    */
-  protected _prepareEvent(event: Event, scope?: Scope, hint?: EventHint): SyncPromise<Event | null> {
+  protected _prepareEvent(event: Event, scope?: Scope, hint?: EventHint): PromiseLike<Event | null> {
     event.platform = event.platform || 'javascript';
     return super._prepareEvent(event, scope, hint);
   }
