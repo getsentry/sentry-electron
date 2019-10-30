@@ -1,16 +1,15 @@
 # Changelog
 
-## Unreleased
+## v1.0.0
 
-There shouldn't be any breaking changes, interally we needed to do some changes because we were upgrading to use `5.x`
-of the JS/Node SDK.
+A lot of internal changes making use of the latest `5.x` relesase of the Browser/Node SDK.
 
 **Breaking**: We persist scope data to disk in case of a native crash. Since the internal scope data changed, existing
 scope data is not compatible with the new format. When upgrading to `1.x.x`, existing scope data will be wiped on disk.
 This only affects your app if the update occurs immediately after a crash, in which case this single event will not have
 scope data attached.
 
-- Feat: Bump `@sentry/*` `~5.7.0`
+- Feat: Bump `@sentry/*` `~5.7.1`
 
 ## v0.17.4
 
