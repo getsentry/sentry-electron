@@ -5,7 +5,7 @@
   <br />
 </p>
 
-# Official Sentry SDK for Electron (Beta)
+# Official Sentry SDK for Electron
 
 [![Travis](https://travis-ci.com/getsentry/sentry-electron.svg?branch=master)](https://travis-ci.com/getsentry/sentry-electron)
 [![npm version](https://img.shields.io/npm/v/@sentry/electron.svg)](https://www.npmjs.com/package/@sentry/electron)

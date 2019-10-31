@@ -1,19 +1,17 @@
 import { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
-import { Backend, Client, Options, Scope } from '@sentry/core';
+import { BaseBackend } from '@sentry/core';
 import { NodeOptions } from '@sentry/node';
-import { SentryEvent } from '@sentry/types';
+import { Client, Event, Options, Scope } from '@sentry/types';
 
 /** IPC to ping the main process when initializing in the renderer. */
 export const IPC_PING = 'sentry-electron.ping';
 /** IPC to send a captured event (exception or message) to Sentry. */
 export const IPC_EVENT = 'sentry-electron.event';
-/** IPC to capture a breadcrumb globally. */
-export const IPC_CRUMB = 'sentry-electron.breadcrumbs';
 /** IPC to capture a scope globally. */
 export const IPC_SCOPE = 'sentry-electron.scope';
 
 /**
- * Configuration options for {@link SentryElectron}.
+ * Configuration options for {@link ElectronOptions}.
  *
  * By default, all native crashes and JavaScript errors will be captured and
  * sent to Sentry. Note that these settings have to be specified during startup
@@ -23,9 +21,9 @@ export const IPC_SCOPE = 'sentry-electron.scope';
  * which are being used under the hood to record JavaScript errors. Please refer
  * to their documentation for a description of the fields.
  *
- * @see SentryBrowserOptions
- * @see SentryNodeOptions
- * @see SentryElectron
+ * @see BrowserOptions
+ * @see NodeOptions
+ * @see ElectronOptions
  */
 export interface ElectronOptions extends Options, BrowserOptions, NodeOptions {
   /**
@@ -61,9 +59,9 @@ export interface CommonClient extends Client<ElectronOptions> {
    *
    * @param path The relative or absolute path to the minidump.
    * @param event Optional event payload to attach to the minidump.
-   * @param scope The SDK scope used to upload.
+   * @param scope Optional The SDK scope used to upload.
    */
-  captureMinidump(path: string, event: SentryEvent, scope: Scope): Promise<void>;
+  captureMinidump(path: string, event?: Event, scope?: Scope): string | undefined;
 
   /**
    * @inheritdoc {@link BrowserClient.showReportDialog}
@@ -72,4 +70,4 @@ export interface CommonClient extends Client<ElectronOptions> {
 }
 
 /** Common interface for Electron backends. */
-export { Backend as CommonBackend };
+export { BaseBackend as CommonBackend };

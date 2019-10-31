@@ -1,4 +1,4 @@
-import { SentryEvent, SentryException, Stacktrace } from '@sentry/types';
+import { Event, Exception, Stacktrace } from '@sentry/types';
 import { app } from 'electron';
 
 /** Application base path used for URL normalization. */
@@ -25,7 +25,7 @@ export function normalizeUrl(url: string, base: string = APP_PATH): string {
  * Returns a reference to the exception stack trace in the given event.
  * @param event An event potentially containing stack traces.
  */
-function getStacktrace(event: SentryEvent): Stacktrace | undefined {
+function getStacktrace(event: Event): Stacktrace | undefined {
   const { stacktrace, exception } = event;
 
   // Try the main event stack trace first
@@ -43,7 +43,7 @@ function getStacktrace(event: SentryEvent): Stacktrace | undefined {
     }
 
     // Raven JS uses the full values interface, which has been removed
-    const raven = (exception as any) as { values: SentryException[] };
+    const raven = (exception as any) as { values: Exception[] };
     if (raven.values && raven.values[0]) {
       return raven.values[0].stacktrace;
     }
@@ -58,7 +58,7 @@ function getStacktrace(event: SentryEvent): Stacktrace | undefined {
  *
  * @param event The event to normalize.
  */
-export function normalizeEvent(event: SentryEvent): SentryEvent {
+export function normalizeEvent(event: Event): Event {
   // Retrieve stack traces and normalize their URLs. Without this, grouping
   // would not work due to user folders in file names.
   const stacktrace = getStacktrace(event);
