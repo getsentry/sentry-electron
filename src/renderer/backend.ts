@@ -1,8 +1,8 @@
 import { crashReporter, ipcRenderer, remote } from 'electron';
 
-import { BrowserBackend } from '@sentry/browser';
-import { BaseBackend, Scope, SentryError } from '@sentry/core';
-import { Breadcrumb, SentryEvent, SentryEventHint, SentryResponse, Severity, Status } from '@sentry/types';
+import { BrowserBackend } from '@sentry/browser/dist/backend';
+import { BaseBackend, getCurrentHub } from '@sentry/core';
+import { Event, EventHint, Severity } from '@sentry/types';
 
 import { CommonBackend, ElectronOptions, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
 
@@ -10,78 +10,68 @@ import { CommonBackend, ElectronOptions, IPC_EVENT, IPC_PING, IPC_SCOPE } from '
 const PING_TIMEOUT = 500;
 
 /** Backend implementation for Electron renderer backends. */
-export class RendererBackend extends BaseBackend<ElectronOptions> implements CommonBackend {
+export class RendererBackend extends BaseBackend<ElectronOptions> implements CommonBackend<ElectronOptions> {
   /** The inner SDK used to record JavaScript events. */
-  private readonly inner: BrowserBackend;
+  private readonly _inner: BrowserBackend;
 
   /** Creates a new Electron backend instance. */
   public constructor(options: ElectronOptions) {
     super(options);
-    this.inner = new BrowserBackend(options);
-  }
 
-  /**
-   * @inheritDoc
-   */
-  public install(): boolean {
-    let success = true;
-
-    if (this.isNativeEnabled()) {
-      success = this.installNativeHandler() && success;
+    if (this._isNativeEnabled()) {
+      this._installNativeHandler();
     }
 
-    if (this.isJavaScriptEnabled()) {
-      success = this.inner.install() && success;
-    }
+    this._inner = new BrowserBackend({
+      enabled: this._isJavaScriptEnabled(),
+      ...options,
+    });
 
-    this.pingMainProcess();
-    return success;
+    this._pingMainProcess();
+    this._setupScopeListener();
   }
 
   /**
    * @inheritDoc
    */
-  public async eventFromException(exception: any, hint?: SentryEventHint): Promise<SentryEvent> {
-    return this.inner.eventFromException(exception, hint);
+  public eventFromException(exception: any, hint?: EventHint): PromiseLike<Event> {
+    return this._inner.eventFromException(exception, hint);
   }
 
   /**
    * @inheritDoc
    */
-  public async eventFromMessage(message: string, level?: Severity, hint?: SentryEventHint): Promise<SentryEvent> {
-    return this.inner.eventFromMessage(message, level, hint);
+  public eventFromMessage(message: string, level?: Severity, hint?: EventHint): PromiseLike<Event> {
+    return this._inner.eventFromMessage(message, level, hint);
   }
 
   /**
    * @inheritDoc
    */
-  public async sendEvent(event: SentryEvent): Promise<SentryResponse> {
+  public sendEvent(event: Event): void {
     ipcRenderer.send(IPC_EVENT, event);
-    // This is a fire and forget thing
-    return { status: Status.Success };
   }
 
   /**
-   * @inheritDoc
+   * Sends the scope to the main process once it updates.
    */
-  public storeBreadcrumb(_: Breadcrumb): boolean {
-    throw new SentryError('Invariant violation: Only supported in main process');
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public storeScope(scope: Scope): void {
-    ipcRenderer.send(IPC_SCOPE, scope);
+  private _setupScopeListener(): void {
+    const scope = getCurrentHub().getScope();
+    if (scope) {
+      scope.addScopeListener(updatedScope => {
+        ipcRenderer.send(IPC_SCOPE, updatedScope);
+        scope.clearBreadcrumbs();
+      });
+    }
   }
 
   /** Returns whether JS is enabled. */
-  private isJavaScriptEnabled(): boolean {
-    return this.options.enableJavaScript !== false;
+  private _isJavaScriptEnabled(): boolean {
+    return this._options.enableJavaScript !== false;
   }
 
   /** Returns whether native reports are enabled. */
-  private isNativeEnabled(): boolean {
+  private _isNativeEnabled(): boolean {
     // On macOS, we should start the Electron CrashReporter only in the main
     // process. It uses Crashpad internally, which will catch errors from all
     // sub processes thanks to out-of-processes crash handling. On other
@@ -98,11 +88,11 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
       return false;
     }
 
-    return this.options.enableNative !== false;
+    return this._options.enableNative !== false;
   }
 
   /** Activates the Electron CrashReporter. */
-  private installNativeHandler(): boolean {
+  private _installNativeHandler(): boolean {
     // We will manually submit errors, but CrashReporter requires a submitURL in
     // some versions. Also, provide a productName and companyName, which we will
     // add manually to the event's context during submission.
@@ -118,7 +108,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
   }
 
   /** Checks if the main processes is available and logs a warning if not. */
-  private pingMainProcess(): void {
+  private _pingMainProcess(): void {
     // For whatever reason we have to wait PING_TIMEOUT until we send the ping
     // to main.
     setTimeout(() => {

@@ -24,12 +24,12 @@ export class Electron implements Integration {
    * @inheritDoc
    */
   public setupOnce(): void {
-    this.instrumentBreadcrumbs('app', app);
+    this._instrumentBreadcrumbs('app', app);
 
     app.once('ready', () => {
       // We can't access these until 'ready'
-      this.instrumentBreadcrumbs('Screen', screen);
-      this.instrumentBreadcrumbs('PowerMonitor', powerMonitor);
+      this._instrumentBreadcrumbs('Screen', screen);
+      this._instrumentBreadcrumbs('PowerMonitor', powerMonitor);
     });
 
     app.on('web-contents-created', (_, contents) => {
@@ -39,7 +39,7 @@ export class Electron implements Integration {
         const options = (getCurrentHub().getClient() as ElectronClient).getOptions();
         const customName = options.getRendererName && options.getRendererName(contents);
 
-        this.instrumentBreadcrumbs(customName || `WebContents[${contents.id}]`, contents, [
+        this._instrumentBreadcrumbs(customName || `WebContents[${contents.id}]`, contents, [
           'dom-ready',
           'load-url',
           'destroyed',
@@ -52,7 +52,7 @@ export class Electron implements Integration {
    * Hooks into the Electron EventEmitter to capture breadcrumbs for the
    * specified events.
    */
-  private instrumentBreadcrumbs(category: string, emitter: Electron.EventEmitter, events: string[] = []): void {
+  private _instrumentBreadcrumbs(category: string, emitter: Electron.EventEmitter, events: string[] = []): void {
     type Emit = (event: string, ...args: any[]) => boolean;
     const emit = emitter.emit.bind(emitter) as Emit;
 

@@ -10,9 +10,13 @@ const SENTRY_KEY = '37f8a2ee37c0409d8970bc7559c7c7e4';
 should();
 use(chaiAsPromised);
 
-const tests = getTests('1.7.16', '1.8.8', '2.0.10', '3.0.2');
+const tests = getTests('1.7.16', '1.8.8', '2.0.10', '3.0.2', '4.2.10', '5.0.10', '6.0.7');
 
 tests.forEach(([version, arch]) => {
+  if (parseFloat(version) < 3 && process.platform !== 'win32' && process.platform !== 'darwin') {
+    // We skip test on linux for electron version < 3
+    return;
+  }
   describe(`Test Electron ${version} ${arch}`, () => {
     let context: TestContext;
 
@@ -202,6 +206,7 @@ tests.forEach(([version, arch]) => {
       await delay(5000);
       // We restart the app and keep the context
       await context.stop(false);
+
       await context.start('sentry-basic', 'javascript-renderer');
 
       await context.waitForEvents(1);

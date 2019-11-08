@@ -15,8 +15,7 @@ app.on('ready', () => {
     show: false,
     webPreferences: {
       preload: sentryPath,
-      nodeIntegration: false
-    }
+    },
   });
 
   window.loadURL(
@@ -27,4 +26,3 @@ app.on('ready', () => {
     }),
   );
 });
-
