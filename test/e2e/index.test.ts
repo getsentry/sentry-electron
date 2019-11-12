@@ -90,6 +90,20 @@ tests.forEach(([version, arch]) => {
       expect(breadcrumbs.length).to.greaterThan(4);
     });
 
+    it('JavaScript exception in main process with parentheses in path', async () => {
+      await context.start('sentry-basic', 'javascript main with (parens)');
+      await context.waitForEvents(1);
+      const event = context.testServer.events[0];
+      const breadcrumbs = event.data.breadcrumbs || [];
+      const lastFrame = getLastFrame(event.data);
+
+      expect(context.testServer.events.length).to.equal(1);
+      expect(lastFrame.filename).to.equal('app:///fixtures/javascript main with (parens).js');
+      expect(event.dump_file).to.equal(undefined);
+      expect(event.sentry_key).to.equal(SENTRY_KEY);
+      expect(breadcrumbs.length).to.greaterThan(4);
+    });
+
     it('onFatalError can be overridden', async () => {
       await context.start('sentry-onfatal-exit', 'javascript-main');
       await context.waitForEvents(1);
