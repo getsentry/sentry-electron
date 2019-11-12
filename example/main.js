@@ -16,10 +16,10 @@ app.on('ready', () => {
     titleBarStyle: 'hidden',
     webPreferences: {
       preload: path.join(DIST_PATH, 'bundle.js'),
-      sandbox: true,
+      sandbox: false,
     },
   });
-
+  window.webContents.openDevTools();
   window.loadURL(
     url.format({
       pathname: path.join(DIST_PATH, 'index.html'),

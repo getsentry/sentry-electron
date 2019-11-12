@@ -1,26 +1,16 @@
-import { ClientClass, Dsn, Scope } from '@sentry/core';
-import {
-  Breadcrumb,
-  Integration,
-  IntegrationClass,
-  SentryBreadcrumbHint,
-  SentryEvent,
-  SentryEventHint,
-  SentryResponse,
-  Severity,
-} from '@sentry/types';
-import { dynamicRequire } from '@sentry/utils/misc';
+import { ClientClass, Scope } from '@sentry/core';
+import { Dsn, Event, EventHint, Integration, IntegrationClass, Severity } from '@sentry/types';
+import { dynamicRequire } from '@sentry/utils';
 import { CommonClient, ElectronOptions } from './common';
 
 /**
  * The Sentry Electron SDK Frontend.
  *
  * @see ElectronOptions for documentation on configuration options.
- * @see SentryClient for usage documentation.
  */
 export class ElectronClient implements CommonClient {
   /** Actual frontend implementation for the main or renderer process. */
-  private readonly inner: CommonClient;
+  private readonly _inner: CommonClient;
 
   /**
    * Creates a new Electron SDK instance.
@@ -45,75 +35,63 @@ export class ElectronClient implements CommonClient {
     const clientClass: ClientClass<CommonClient, ElectronOptions> =
       process.type === 'browser' ? dynamicRequire(module, './main').MainClient : require('./renderer').RendererClient;
     // tslint:enable:no-unsafe-any
-    this.inner = new clientClass(options);
+    this._inner = new clientClass(options);
   }
 
   /**
    * @inheritDoc
    */
-  public async captureMinidump(path: string, event: SentryEvent, scope: Scope): Promise<void> {
-    return this.inner.captureMinidump(path, event, scope);
+  public captureMinidump(path: string, event: Event, scope: Scope): string | undefined {
+    return this._inner.captureMinidump(path, event, scope);
   }
 
   /**
    * @inheritDoc
    */
-  public install(): boolean {
-    return this.inner.install();
+  public captureException(exception: any, hint?: EventHint, scope?: Scope): string | undefined {
+    return this._inner.captureException(exception, hint, scope);
   }
 
   /**
    * @inheritDoc
    */
-  public async captureException(exception: any, hint?: SentryEventHint, scope?: Scope): Promise<SentryResponse> {
-    return this.inner.captureException(exception, hint, scope);
+  public captureMessage(message: string, level?: Severity, hint?: EventHint, scope?: Scope): string | undefined {
+    return this._inner.captureMessage(message, level, hint, scope);
   }
 
   /**
    * @inheritDoc
    */
-  public async captureMessage(
-    message: string,
-    level?: Severity,
-    hint?: SentryEventHint,
-    scope?: Scope,
-  ): Promise<SentryResponse> {
-    return this.inner.captureMessage(message, level, hint, scope);
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public async captureEvent(event: SentryEvent, hint?: SentryEventHint, scope?: Scope): Promise<SentryResponse> {
-    return this.inner.captureEvent(event, hint, scope);
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public addBreadcrumb(breadcrumb: Breadcrumb, hint?: SentryBreadcrumbHint, scope?: Scope | undefined): void {
-    this.inner.addBreadcrumb(breadcrumb, hint, scope);
+  public captureEvent(event: Event, hint?: EventHint, scope?: Scope): string | undefined {
+    return this._inner.captureEvent(event, hint, scope);
   }
 
   /**
    * @inheritDoc
    */
   public getDsn(): Dsn | undefined {
-    return this.inner.getDsn();
+    return this._inner.getDsn();
   }
 
   /**
    * @inheritDoc
    */
   public getOptions(): ElectronOptions {
-    return this.inner.getOptions();
+    return this._inner.getOptions();
   }
 
   /**
    * @inheritDoc
    */
   public async close(timeout?: number): Promise<boolean> {
-    return this.inner.close(timeout);
+    return this._inner.close(timeout);
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public async flush(timeout?: number): Promise<boolean> {
+    return this._inner.flush(timeout);
   }
 
   /**
@@ -121,14 +99,14 @@ export class ElectronClient implements CommonClient {
    */
   public showReportDialog(options: any): void {
     // tslint:disable-next-line
-    this.inner.showReportDialog(options);
+    this._inner.showReportDialog(options);
   }
 
   /**
    * @inheritDoc
    */
   public getIntegration<T extends Integration>(integration: IntegrationClass<T>): T | null {
-    return this.inner.getIntegration(integration);
+    return this._inner.getIntegration(integration);
   }
 }
 

@@ -4,7 +4,7 @@ import { platform, release } from 'os';
 import { join } from 'path';
 import { promisify } from 'util';
 
-import { SentryEvent } from '@sentry/types';
+import { Event } from '@sentry/types';
 import { app } from 'electron';
 
 const execFile = promisify(child.execFile);
@@ -71,7 +71,7 @@ const LINUX_VERSIONS: {
 };
 
 /** Cached event prototype with default values. */
-let defaultsPromise: Promise<SentryEvent>;
+let defaultsPromise: Promise<Event>;
 
 /**
  * Executes a regular expression with one capture group.
@@ -213,13 +213,16 @@ async function getOsContext(): Promise<OsContext> {
  * runtimes, limited device information, operating system context and defaults
  * for the release and environment.
  */
-async function getEventDefaults(): Promise<SentryEvent> {
+async function getEventDefaults(): Promise<Event> {
   return {
     contexts: {
       app: {
         app_name: app.getName(),
         app_version: app.getVersion(),
         build_type: getBuildType(),
+      },
+      browser: {
+        name: 'Chrome',
       },
       chrome: {
         name: 'Chrome',
@@ -228,6 +231,7 @@ async function getEventDefaults(): Promise<SentryEvent> {
       },
       device: {
         arch: process.arch,
+        family: 'Desktop',
       },
       node: {
         name: 'Node',
@@ -242,13 +246,13 @@ async function getEventDefaults(): Promise<SentryEvent> {
     },
     environment: process.defaultApp ? 'development' : 'production',
     extra: { crashed_process: 'browser' },
-    release: `${app.getName().replace(/\W/, '-')}${app.getVersion()}`,
+    release: `${app.getName().replace(/\W/g, '-')}${app.getVersion()}`,
     user: { ip_address: '{{auto}}' },
   };
 }
 
 /** Merges the given event payload with SDK defaults. */
-export async function addEventDefaults(event: SentryEvent): Promise<SentryEvent> {
+export async function addEventDefaults(event: Event): Promise<Event> {
   // The event defaults are cached as long as the app is running. We create the
   // promise here synchronously to avoid multiple events computing them at the
   // same time.

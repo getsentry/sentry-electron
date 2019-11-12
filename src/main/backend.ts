@@ -1,8 +1,6 @@
 import { app, crashReporter, ipcMain } from 'electron';
 import { join } from 'path';
 
-import { Breadcrumb, SentryEvent, SentryResponse, Severity, Status } from '@sentry/types';
-
 import {
   addBreadcrumb,
   BaseBackend,
@@ -10,16 +8,18 @@ import {
   captureMessage,
   configureScope,
   Dsn,
+  getCurrentHub,
   Scope,
-  SentryError,
 } from '@sentry/core';
-import { getCurrentHub, NodeBackend } from '@sentry/node';
-import { forget } from '@sentry/utils/async';
-import { Store } from '@sentry/utils/store';
+import { NodeBackend } from '@sentry/node/dist/backend';
+import { Event, EventHint, Severity, Transport, TransportOptions } from '@sentry/types';
+import { forget, logger, SentryError } from '@sentry/utils';
 
-import { CommonBackend, ElectronOptions, IPC_CRUMB, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
+import { CommonBackend, ElectronOptions, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
 import { captureMinidump } from '../sdk';
 import { normalizeUrl } from './normalize';
+import { Store } from './store';
+import { NetTransport } from './transports/net';
 import { MinidumpUploader } from './uploader';
 
 /** Patch to access internal CrashReporter functionality. */
@@ -30,14 +30,6 @@ interface CrashReporterExt {
 /** Gets the path to the Sentry cache directory. */
 function getCachePath(): string {
   return join(app.getPath('userData'), 'sentry');
-}
-
-/** Returns extra information from a renderer's web contents. */
-function getRendererExtra(contents: Electron.WebContents): { [key: string]: any } {
-  return {
-    crashed_process: `renderer[${contents.id}]`,
-    crashed_url: normalizeUrl(contents.getURL()),
-  };
 }
 
 /**
@@ -53,84 +45,72 @@ export async function isAppReady(): Promise<boolean> {
 }
 
 /** Backend implementation for Electron renderer backends. */
-export class MainBackend extends BaseBackend<ElectronOptions> implements CommonBackend {
+export class MainBackend extends BaseBackend<ElectronOptions> implements CommonBackend<ElectronOptions> {
   /** The inner SDK used to record Node events. */
-  private readonly inner: NodeBackend;
+  private readonly _inner: NodeBackend;
 
   /** Store to persist context information beyond application crashes. */
-  private readonly scopeStore: Store<Scope>;
+  private readonly _scopeStore: Store<Scope>;
 
   /** Uploader for minidump files. */
-  private uploader?: MinidumpUploader;
+  private _uploader?: MinidumpUploader;
 
   /** Creates a new Electron backend instance. */
   public constructor(options: ElectronOptions) {
     super(options);
-    this.inner = new NodeBackend(options);
-    this.scopeStore = new Store<Scope>(getCachePath(), 'scope', new Scope());
-  }
+    this._inner = new NodeBackend(options);
+    this._scopeStore = new Store<Scope>(getCachePath(), 'scope_v2', new Scope());
 
-  /**
-   * @inheritDoc
-   */
-  public install(): boolean {
     let success = true;
 
-    // We refill the scope here to not have an empty one
-    configureScope(scope => {
-      // tslint:disable:no-unsafe-any
-      const loadedScope = Scope.clone(this.scopeStore.get()) as any;
-
-      if (loadedScope.user) {
-        scope.setUser(loadedScope.user);
-      }
-      if (loadedScope.tags) {
-        Object.keys(loadedScope.tags).forEach(key => {
-          scope.setTag(key, loadedScope.tags[key]);
-        });
-      }
-      if (loadedScope.extra) {
-        Object.keys(loadedScope.extra).forEach(key => {
-          scope.setExtra(key, loadedScope.extra[key]);
-        });
-      }
-      if (loadedScope.breadcrumbs) {
-        loadedScope.breadcrumbs.forEach((crumb: any) => {
-          scope.addBreadcrumb(crumb);
-        });
-      }
-      // tslint:enable:no-unsafe-any
+    // The setImmediate is important here since the client has to be on the hub already that configureScope works
+    setImmediate(() => {
+      this._rehydrateScope();
+      this._setupScopeListener();
     });
 
-    if (this.isNativeEnabled()) {
-      success = this.installNativeHandler() && success;
+    if (this._isNativeEnabled()) {
+      success = this._installNativeHandler() && success;
     }
 
-    this.installIPC();
+    this._installIPC();
+  }
 
-    return success;
+  /**
+   * @inheritdoc
+   */
+  protected _setupTransport(): Transport {
+    if (!this._options.dsn) {
+      // We return the noop transport here in case there is no Dsn.
+      return super._setupTransport();
+    }
+
+    const transportOptions: TransportOptions = {
+      ...this._options.transportOptions,
+      ...(this._options.httpProxy && { httpProxy: this._options.httpProxy }),
+      ...(this._options.httpsProxy && { httpsProxy: this._options.httpsProxy }),
+      ...(this._options.caCerts && { caCerts: this._options.caCerts }),
+      dsn: this._options.dsn,
+    };
+
+    if (this._options.transport) {
+      return new this._options.transport(transportOptions);
+    }
+    return new NetTransport(transportOptions);
   }
 
   /**
    * @inheritDoc
    */
-  public async eventFromException(exception: any): Promise<SentryEvent> {
-    return this.inner.eventFromException(exception);
+  public eventFromException(exception: any, hint?: EventHint): PromiseLike<Event> {
+    return this._inner.eventFromException(exception, hint);
   }
 
   /**
    * @inheritDoc
    */
-  public async eventFromMessage(message: string): Promise<SentryEvent> {
-    return this.inner.eventFromMessage(message);
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public async sendEvent(event: SentryEvent): Promise<SentryResponse> {
-    await isAppReady();
-    return this.inner.sendEvent(event);
+  public eventFromMessage(message: string, level: Severity = Severity.Info, hint?: EventHint): PromiseLike<Event> {
+    return this._inner.eventFromMessage(message, level, hint);
   }
 
   /**
@@ -138,27 +118,54 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
    *
    * @param path A relative or absolute path to the minidump file.
    * @param event Optional event information to add to the minidump request.
-   * @returns A promise that resolves to the status code of the request.
    */
-  public async uploadMinidump(path: string, event: SentryEvent = {}): Promise<SentryResponse> {
-    if (this.uploader) {
-      return this.uploader.uploadMinidump({ path, event });
+  public uploadMinidump(path: string, event: Event = {}): void {
+    if (this._uploader) {
+      forget(this._uploader.uploadMinidump({ path, event }));
     }
-    return { status: Status.Success };
   }
 
   /**
-   * @inheritDoc
+   * Loads the stored scope from disk ands sets it int the current scope
    */
-  public storeScope(scope: Scope): void {
-    const cloned = Scope.clone(scope);
-    (cloned as any).eventProcessors = [];
-    // tslint:disable-next-line:no-object-literal-type-assertion
-    this.scopeStore.update((current: Scope) => ({ ...current, ...cloned } as Scope));
+  private _rehydrateScope(): void {
+    // We refill the scope here to not have an empty one
+    configureScope(scope => {
+      // tslint:disable:no-unsafe-any
+      const loadedScope = Scope.clone(this._scopeStore.get()) as any;
+
+      if (loadedScope._user) {
+        scope.setUser(loadedScope._user);
+      }
+      scope.setTags(loadedScope._tags);
+      scope.setExtras(loadedScope._extra);
+      if (loadedScope._breadcrumbs) {
+        loadedScope._breadcrumbs.forEach((crumb: any) => {
+          scope.addBreadcrumb(crumb);
+        });
+      }
+      // tslint:enable:no-unsafe-any
+    });
+  }
+
+  /**
+   * Adds a scope listener to persist changes to disk.
+   */
+  private _setupScopeListener(): void {
+    const hubScope = getCurrentHub().getScope();
+    if (hubScope) {
+      hubScope.addScopeListener(updatedScope => {
+        const cloned = Scope.clone(updatedScope);
+        (cloned as any)._eventProcessors = [];
+        (cloned as any)._scopeListeners = [];
+        // tslint:disable-next-line:no-object-literal-type-assertion
+        this._scopeStore.update((current: Scope) => ({ ...current, ...cloned } as Scope));
+      });
+    }
   }
 
   /** Returns whether native reports are enabled. */
-  private isNativeEnabled(): boolean {
+  private _isNativeEnabled(): boolean {
     // Mac AppStore builds cannot run the crash reporter due to the sandboxing
     // requirements. In this case, we prevent enabling native crashes entirely.
     // https://electronjs.org/docs/tutorial/mac-app-store-submission-guide#limitations-of-mas-build
@@ -166,18 +173,20 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       return false;
     }
 
-    return this.options.enableNative !== false;
+    return this._options.enableNative !== false;
   }
 
   /** Activates the Electron CrashReporter. */
-  private installNativeHandler(): boolean {
+  private _installNativeHandler(): boolean {
     // We are only called by the frontend if the SDK is enabled and a valid DSN
     // has been configured. If no DSN is present, this indicates a programming
     // error.
-    const dsn = this.options.dsn;
-    if (!dsn) {
+    const dsnString = this._options.dsn;
+    if (!dsnString) {
       throw new SentryError('Invariant exception: install() must not be called when disabled');
     }
+
+    const dsn = new Dsn(dsnString);
 
     // We will manually submit errors, but CrashReporter requires a submitURL in
     // some versions. Also, provide a productName and companyName, which we will
@@ -186,7 +195,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       companyName: '',
       ignoreSystemCrashHandler: true,
       productName: app.getName(),
-      submitURL: '',
+      submitURL: MinidumpUploader.minidumpUrlFromDsn(dsn),
       uploadToServer: false,
     });
 
@@ -196,21 +205,21 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     const reporter: CrashReporterExt = crashReporter as any;
     const crashesDirectory = reporter.getCrashesDirectory();
 
-    this.uploader = new MinidumpUploader(new Dsn(dsn), crashesDirectory, getCachePath());
+    this._uploader = new MinidumpUploader(dsn, crashesDirectory, getCachePath());
 
     // Flush already cached minidumps from the queue.
-    forget(this.uploader.flushQueue());
+    forget(this._uploader.flushQueue());
 
     // Start to submit recent minidump crashes. This will load breadcrumbs and
     // context information that was cached on disk prior to the crash.
-    forget(this.sendNativeCrashes({}));
+    forget(this._sendNativeCrashes({}));
 
     // Every time a subprocess or renderer crashes, start sending minidumps
     // right away.
     app.on('web-contents-created', (_, contents) => {
       contents.on('crashed', async () => {
         try {
-          await this.sendNativeCrashes(getRendererExtra(contents));
+          await this._sendNativeCrashes(this._getRendererExtra(contents));
         } catch (e) {
           console.error(e);
         }
@@ -223,7 +232,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
         });
       });
 
-      if (this.options.enableUnresponsive !== false) {
+      if (this._options.enableUnresponsive !== false) {
         contents.on('unresponsive', () => {
           captureMessage('BrowserWindow Unresponsive');
         });
@@ -234,18 +243,14 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   }
 
   /** Installs IPC handlers to receive events and metadata from renderers. */
-  private installIPC(): void {
+  private _installIPC(): void {
     ipcMain.on(IPC_PING, (event: Electron.Event) => {
       event.sender.send(IPC_PING);
     });
 
-    ipcMain.on(IPC_CRUMB, (_: any, crumb: Breadcrumb) => {
-      addBreadcrumb(crumb);
-    });
-
-    ipcMain.on(IPC_EVENT, (ipc: Electron.Event, event: SentryEvent) => {
+    ipcMain.on(IPC_EVENT, (ipc: Electron.Event, event: Event) => {
       event.extra = {
-        ...getRendererExtra(ipc.sender),
+        ...this._getRendererExtra(ipc.sender),
         ...event.extra,
       };
       captureEvent(event);
@@ -255,26 +260,21 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       // tslint:disable:no-unsafe-any
       const sentScope = Scope.clone(rendererScope) as any;
       configureScope(scope => {
-        if (sentScope.user) {
-          scope.setUser(sentScope.user);
+        if (sentScope._user) {
+          scope.setUser(sentScope._user);
         }
-        if (sentScope.tags) {
-          Object.keys(sentScope.tags).forEach(key => {
-            scope.setTag(key, sentScope.tags[key]);
-          });
-        }
-        if (sentScope.extra) {
-          Object.keys(sentScope.extra).forEach(key => {
-            scope.setExtra(key, sentScope.extra[key]);
-          });
-        }
+        scope.setTags(sentScope._tags);
+        scope.setExtras(sentScope._extra);
+        // Since we do not have updates for individual breadcrumbs anymore and only for the whole scope
+        // we just add the last added breadcrumb on scope updates
+        scope.addBreadcrumb(sentScope._breadcrumbs.pop());
       });
       // tslint:enable:no-unsafe-any
     });
   }
 
   /** Loads new native crashes from disk and sends them to Sentry. */
-  private async sendNativeCrashes(extra: object): Promise<void> {
+  private async _sendNativeCrashes(extra: object): Promise<void> {
     // Whenever we are called, assume that the crashes we are going to load down
     // below have occurred recently. This means, we can use the same event data
     // for all minidumps that we load now. There are two conditions:
@@ -287,20 +287,36 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     //     about it. Just use the breadcrumbs and context information we have
     //     right now and hope that the delay was not too long.
 
-    const uploader = this.uploader;
+    const uploader = this._uploader;
     if (uploader === undefined) {
       throw new SentryError('Invariant violation: Native crashes not enabled');
     }
 
     const currentCloned = Scope.clone(getCurrentHub().getScope());
-    const fetchedScope = this.scopeStore.get();
-    const storedScope = Scope.clone(fetchedScope);
-    let event: SentryEvent | null = { extra };
-    event = await storedScope.applyToEvent(event);
-    event = event && (await currentCloned.applyToEvent(event));
-    const paths = await uploader.getNewMinidumps();
-    paths.map(path => {
-      captureMinidump(path, { ...event });
-    });
+    const fetchedScope = this._scopeStore.get();
+    try {
+      const storedScope = Scope.clone(fetchedScope);
+      let newEvent = await storedScope.applyToEvent({ extra });
+
+      if (newEvent) {
+        newEvent = await currentCloned.applyToEvent(newEvent);
+        const paths = await uploader.getNewMinidumps();
+        paths.map(path => {
+          captureMinidump(path, { ...newEvent });
+        });
+      }
+    } catch (_oO) {
+      logger.error('Error while sending native crash.');
+    }
+  }
+
+  /** Returns extra information from a renderer's web contents. */
+  private _getRendererExtra(contents: Electron.WebContents): { [key: string]: any } {
+    const customName = this._options.getRendererName && this._options.getRendererName(contents);
+
+    return {
+      crashed_process: customName || `renderer[${contents.id}]`,
+      crashed_url: normalizeUrl(contents.getURL()),
+    };
   }
 }

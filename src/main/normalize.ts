@@ -1,5 +1,4 @@
-import { SentryEvent, SentryException, Stacktrace } from '@sentry/types';
-import { clone } from '@sentry/utils/object';
+import { Event, Exception, Stacktrace } from '@sentry/types';
 import { app } from 'electron';
 
 /** Application base path used for URL normalization. */
@@ -14,16 +13,19 @@ const APP_PATH = app.getAppPath().replace(/\\/g, '/');
  * @returns The normalized URL.
  */
 export function normalizeUrl(url: string, base: string = APP_PATH): string {
+  // Escape RegExp special characters
+  const escapedBase = base.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&');
   return decodeURI(url)
     .replace(/\\/g, '/')
-    .replace(new RegExp(`(file:\/\/)?\/*${base}\/*`, 'ig'), 'app:///');
+    .replace(/webpack:\/?/g, '') // Remove intermediate base path
+    .replace(new RegExp(`(file:\/\/)?\/*${escapedBase}\/*`, 'ig'), 'app:///');
 }
 
 /**
  * Returns a reference to the exception stack trace in the given event.
  * @param event An event potentially containing stack traces.
  */
-function getStacktrace(event: SentryEvent): Stacktrace | undefined {
+function getStacktrace(event: Event): Stacktrace | undefined {
   const { stacktrace, exception } = event;
 
   // Try the main event stack trace first
@@ -41,7 +43,7 @@ function getStacktrace(event: SentryEvent): Stacktrace | undefined {
     }
 
     // Raven JS uses the full values interface, which has been removed
-    const raven = (exception as any) as { values: SentryException[] };
+    const raven = (exception as any) as { values: Exception[] };
     if (raven.values && raven.values[0]) {
       return raven.values[0].stacktrace;
     }
@@ -56,12 +58,10 @@ function getStacktrace(event: SentryEvent): Stacktrace | undefined {
  *
  * @param event The event to normalize.
  */
-export function normalizeEvent(event: SentryEvent): SentryEvent {
-  const copy = clone(event);
-
+export function normalizeEvent(event: Event): Event {
   // Retrieve stack traces and normalize their URLs. Without this, grouping
   // would not work due to user folders in file names.
-  const stacktrace = getStacktrace(copy);
+  const stacktrace = getStacktrace(event);
   if (stacktrace && stacktrace.frames) {
     stacktrace.frames.forEach(frame => {
       if (frame.filename) {
@@ -70,7 +70,7 @@ export function normalizeEvent(event: SentryEvent): SentryEvent {
     });
   }
 
-  const { request = {} } = copy;
+  const { request = {} } = event;
   if (request.url) {
     request.url = normalizeUrl(request.url);
   }
@@ -85,7 +85,7 @@ export function normalizeEvent(event: SentryEvent): SentryEvent {
   // The Node SDK currently adds a default tag for server_name, which contains
   // the machine name of the computer running Electron. This is not useful
   // information in this case.
-  const { tags = {} } = copy;
+  const { tags = {} } = event;
   delete tags.server_name;
-  return copy;
+  return event;
 }

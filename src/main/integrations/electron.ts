@@ -6,6 +6,7 @@ import {
   screen,
   // tslint:disable-next-line:no-implicit-dependencies
 } from 'electron';
+import { ElectronClient } from '../../dispatch';
 
 /** Electron integration that cleans up the event. */
 export class Electron implements Integration {
@@ -23,19 +24,26 @@ export class Electron implements Integration {
    * @inheritDoc
    */
   public setupOnce(): void {
-    this.instrumentBreadcrumbs('app', app);
+    this._instrumentBreadcrumbs('app', app);
 
     app.once('ready', () => {
       // We can't access these until 'ready'
-      this.instrumentBreadcrumbs('Screen', screen);
-      this.instrumentBreadcrumbs('PowerMonitor', powerMonitor);
+      this._instrumentBreadcrumbs('Screen', screen);
+      this._instrumentBreadcrumbs('PowerMonitor', powerMonitor);
     });
 
     app.on('web-contents-created', (_, contents) => {
       // SetImmediate is required for contents.id to be correct
       // https://github.com/electron/electron/issues/12036
       setImmediate(() => {
-        this.instrumentBreadcrumbs(`WebContents[${contents.id}]`, contents, ['dom-ready', 'load-url', 'destroyed']);
+        const options = (getCurrentHub().getClient() as ElectronClient).getOptions();
+        const customName = options.getRendererName && options.getRendererName(contents);
+
+        this._instrumentBreadcrumbs(customName || `WebContents[${contents.id}]`, contents, [
+          'dom-ready',
+          'load-url',
+          'destroyed',
+        ]);
       });
     });
   }
@@ -44,7 +52,7 @@ export class Electron implements Integration {
    * Hooks into the Electron EventEmitter to capture breadcrumbs for the
    * specified events.
    */
-  private instrumentBreadcrumbs(category: string, emitter: Electron.EventEmitter, events: string[] = []): void {
+  private _instrumentBreadcrumbs(category: string, emitter: Electron.EventEmitter, events: string[] = []): void {
     type Emit = (event: string, ...args: any[]) => boolean;
     const emit = emitter.emit.bind(emitter) as Emit;
 

@@ -10,9 +10,13 @@ const SENTRY_KEY = '37f8a2ee37c0409d8970bc7559c7c7e4';
 should();
 use(chaiAsPromised);
 
-const tests = getTests('1.7.16', '1.8.8', '2.0.10', '3.0.2');
+const tests = getTests('1.7.16', '1.8.8', '2.0.10', '3.0.2', '4.2.10', '5.0.10', '6.0.7');
 
 tests.forEach(([version, arch]) => {
+  if (parseFloat(version) < 3 && process.platform !== 'win32' && process.platform !== 'darwin') {
+    // We skip test on linux for electron version < 3
+    return;
+  }
   describe(`Test Electron ${version} ${arch}`, () => {
     let context: TestContext;
 
@@ -213,11 +217,10 @@ tests.forEach(([version, arch]) => {
 
     it('Scope is persisted between app restarts', async () => {
       await context.start('sentry-basic');
-
       await delay(5000);
-
       // We restart the app and keep the context
       await context.stop(false);
+
       await context.start('sentry-basic', 'javascript-renderer');
 
       await context.waitForEvents(1);
@@ -231,6 +234,15 @@ tests.forEach(([version, arch]) => {
       } else {
         expect(appReadyBreadCrumbs.length).to.equal(2);
       }
+    });
+
+    it('Custom named renderer process', async () => {
+      await context.start('sentry-custom-renderer-name', 'javascript-renderer');
+      await context.waitForEvents(1);
+      const event = context.testServer.events[0];
+
+      expect(context.testServer.events.length).to.equal(1);
+      expect(event.data.extra && event.data.extra.crashed_process).to.equal('renderer');
     });
   });
 });

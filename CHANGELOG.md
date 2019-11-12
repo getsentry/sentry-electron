@@ -1,6 +1,44 @@
 # Changelog
 
-## Unreleased
+## v1.0.0
+
+A lot of internal changes making use of the latest `5.x` relesase of the Browser/Node SDK.
+
+**Breaking**: We persist scope data to disk in case of a native crash. Since the internal scope data changed, existing
+scope data is not compatible with the new format. When upgrading to `1.x.x`, existing scope data will be wiped on disk.
+This only affects your app if the update occurs immediately after a crash, in which case this single event will not have
+scope data attached.
+
+- Feat: Bump `@sentry/*` `~5.7.1`
+
+## v0.17.4
+
+- meta: Empty release for latest npm tag
+
+## v0.17.3
+
+- Fix: Remove `webpack:/` part of base path in normalize
+
+## v0.17.2
+
+- Fix: Add `device.family` and `browser.name` context
+- Fix: `undefined` event_id #171
+
+## v0.17.1
+
+- Fix electron-fetch dependency/ fixing windows crash reports #165
+
+## v0.17.0
+
+- Add new option to define the renderer name: `getRendererName?(contents: Electron.WebContents): string | undefined;`
+- Fixed a bug where native crashes wouldn't be sent.
+- Trim all whitespaces from release.
+
+## v0.16.0
+
+- Bump deps to use `@sentry/*` `4.6.2 || ~4.6.4`
+- Escape base path (#153)
+- Only show dialog if there are no uncaughtException handlers (#147)
 
 ## v0.15.0
 
