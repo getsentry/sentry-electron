@@ -132,7 +132,11 @@ export class MinidumpUploader {
 
       // We either succeeded or something went horribly wrong. Either way, we
       // can remove the minidump file.
-      await unlink(request.path);
+      try {
+        await unlink(request.path);
+      } catch (e) {
+        logger.warn('Could not delete', request.path);
+      }
 
       // Forget this minidump in all caches
       // tslint:disable-next-line: strict-comparisons
@@ -194,7 +198,11 @@ export class MinidumpUploader {
       // certain threshold. Those old files can be deleted immediately.
       const stats = await stat(path);
       if (stats.birthtimeMs < oldestMs) {
-        await unlink(path);
+        try {
+          await unlink(path);
+        } catch (e) {
+          logger.warn('Could not delete', path);
+        }
         this._knownPaths.splice(this._knownPaths.indexOf(path), 1);
         return false;
       }
@@ -223,10 +231,20 @@ export class MinidumpUploader {
     // the crashes directory.
     const files = await readdir(this._crashesDirectory);
 
-    // Remove all metadata files (asynchronously) and forget about them.
-    files
-      .filter(file => file.endsWith('.txt') && !file.endsWith('log.txt'))
-      .forEach(async file => unlink(join(this._crashesDirectory, file)));
+    // Remove all metadata files and forget about them.
+    // tslint:disable-next-line: no-floating-promises
+    Promise.all(
+      files
+        .filter(file => file.endsWith('.txt') && !file.endsWith('log.txt'))
+        .map(async file => {
+          const path = join(this._crashesDirectory, file);
+          try {
+            await unlink(path);
+          } catch (e) {
+            logger.warn('Could not delete', path);
+          }
+        }),
+    );
 
     return files.filter(file => file.endsWith('.dmp')).map(file => join(this._crashesDirectory, file));
   }
@@ -260,6 +278,14 @@ export class MinidumpUploader {
     const stale = requests.splice(-MAX_REQUESTS_COUNT);
     this._queue.set(requests);
 
-    await Promise.all(stale.map(async req => unlink(req.path)));
+    await Promise.all(
+      stale.map(async req => {
+        try {
+          await unlink(req.path);
+        } catch (e) {
+          logger.warn('Could not delete', req.path);
+        }
+      }),
+    );
   }
 }
