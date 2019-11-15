@@ -1,11 +1,10 @@
-import * as fs from 'fs';
-import { basename, join } from 'path';
-import { promisify } from 'util';
-
 import { Dsn } from '@sentry/core';
 import { Event } from '@sentry/types';
-import fetch from 'electron-fetch';
 import FormData = require('form-data');
+import * as fs from 'fs';
+import fetch from 'node-fetch';
+import { basename, join } from 'path';
+import { promisify } from 'util';
 
 import { mkdirp } from './fs';
 import { Store } from './store';
@@ -48,6 +47,9 @@ export class MinidumpUploader {
   /** The type of the Electron CrashReporter used to search for Minidumps. */
   private readonly _type: CrashReporterType;
 
+  /** The sub-directory where crashpad dumps can be found */
+  private readonly _crashpadSubDirectory: string;
+
   /** List of minidumps that have been found already. */
   private readonly _knownPaths: string[];
 
@@ -71,7 +73,9 @@ export class MinidumpUploader {
    * @param cacheDirectory A persistent directory to cache minidumps.
    */
   public constructor(dsn: Dsn, crashesDirectory: string, cacheDirectory: string) {
-    this._type = process.platform === 'darwin' ? 'crashpad' : 'breakpad';
+    const crashpadWindows = process.platform === 'win32' && parseInt(process.versions.electron.split('.')[0], 10) >= 6;
+    this._type = process.platform === 'darwin' || crashpadWindows ? 'crashpad' : 'breakpad';
+    this._crashpadSubDirectory = process.platform === 'darwin' ? 'completed' : 'reports';
     this._knownPaths = [];
 
     this._url = MinidumpUploader.minidumpUrlFromDsn(dsn);
@@ -100,6 +104,14 @@ export class MinidumpUploader {
    */
   public async uploadMinidump(request: MinidumpRequest): Promise<void> {
     try {
+      // On Windows this fetches Root CAs from the Windows store (Trusted Root
+      // Certification Authorities) and makes them available to Node.js.
+      //
+      // Without this, Node.js cannot upload minidumps on corporate networks
+      // that perform deep SSL inspection by installing a custom root certificate
+      // on every machine.
+      require('win-ca/fallback');
+
       const body = new FormData();
       body.append('upload_file_minidump', fs.createReadStream(request.path));
       body.append('sentry', JSON.stringify(request.event));
@@ -186,9 +198,9 @@ export class MinidumpUploader {
 
   /** Scans the Crashpad directory structure for minidump files. */
   private async _scanCrashpadFolder(): Promise<string[]> {
-    // Crashpad moves minidump files directly into the completed/ folder. We can
+    // Crashpad moves minidump files directly into the 'completed' or 'reports' folder. We can
     // load them from there, upload to the server, and then delete it.
-    const dumpDirectory = join(this._crashesDirectory, 'completed');
+    const dumpDirectory = join(this._crashesDirectory, this._crashpadSubDirectory);
     const files = await readdir(dumpDirectory);
     return files.filter(file => file.endsWith('.dmp')).map(file => join(dumpDirectory, file));
   }

@@ -1,6 +1,3 @@
-import { app, crashReporter, ipcMain } from 'electron';
-import { join } from 'path';
-
 import {
   addBreadcrumb,
   BaseBackend,
@@ -14,9 +11,12 @@ import {
 import { NodeBackend } from '@sentry/node/dist/backend';
 import { Event, EventHint, Severity, Transport, TransportOptions } from '@sentry/types';
 import { forget, logger, SentryError } from '@sentry/utils';
+import { app, crashReporter, ipcMain } from 'electron';
+import { join } from 'path';
 
 import { CommonBackend, ElectronOptions, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
 import { captureMinidump } from '../sdk';
+
 import { normalizeUrl } from './normalize';
 import { Store } from './store';
 import { NetTransport } from './transports/net';
