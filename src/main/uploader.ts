@@ -1,5 +1,6 @@
 import { Dsn } from '@sentry/core';
 import { Event } from '@sentry/types';
+import { logger } from '@sentry/utils';
 import FormData = require('form-data');
 import * as fs from 'fs';
 import fetch from 'node-fetch';
@@ -105,6 +106,8 @@ export class MinidumpUploader {
    * @returns A promise that resolves when the upload is complete.
    */
   public async uploadMinidump(request: MinidumpRequest): Promise<void> {
+    logger.log('Uploading minidump', request.path);
+
     try {
       if (!this._loadedWinCA) {
         this._loadedWinCA = true;
@@ -141,6 +144,8 @@ export class MinidumpUploader {
         await this.flushQueue();
       }
     } catch (err) {
+      logger.warn('Failed to upload minidump', err);
+
       // User's internet connection was down so we queue it as well
       const error = err ? (err as { code: string }) : { code: '' };
       if (error.code === 'ENOTFOUND') {
@@ -172,6 +177,7 @@ export class MinidumpUploader {
    */
   public async getNewMinidumps(): Promise<string[]> {
     const minidumps = this._type === 'crashpad' ? await this._scanCrashpadFolder() : await this._scanBreakpadFolder();
+    logger.log(`Found ${minidumps.length} minidumps`);
 
     const oldestMs = new Date().getTime() - MAX_AGE * 24 * 3600 * 1000;
     return this._filterAsync(minidumps, async path => {
