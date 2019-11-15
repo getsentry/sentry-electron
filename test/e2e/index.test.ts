@@ -27,7 +27,7 @@ describe('E2E Tests', () => {
   });
 
   tests.forEach(([version, arch]) => {
-    if (parseFloat(version) < 3 && process.platform !== 'win32' && process.platform !== 'darwin') {
+    if (parseFloat(version) < 3 && process.platform === 'linux') {
       // We skip test on linux for electron version < 3
       return;
     }

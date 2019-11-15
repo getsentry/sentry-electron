@@ -7,6 +7,10 @@ function getFrames(event: Event): StackFrame[] {
   return stacktrace && stacktrace.frames ? stacktrace.frames : [];
 }
 
+export function isWindowsOnCI(): boolean {
+  return process.platform === 'win32' && !!process.env.CI;
+}
+
 /** Get the last stack frame from SentryEvent */
 export function getLastFrame(event: Event): StackFrame {
   const frames = getFrames(event);
@@ -18,7 +22,8 @@ export function getTests(...versions: string[]): Array<[string, string]> {
   return versions.reduce(
     (prev, curr) =>
       prev.concat(
-        process.platform === 'win32'
+        // We dont run both architectures on Windows CI because it takes too long
+        process.platform === 'win32' && !isWindowsOnCI()
           ? [
               [curr, 'x64'],
               [curr, 'ia32'],
