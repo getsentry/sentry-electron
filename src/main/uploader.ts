@@ -59,6 +59,8 @@ export class MinidumpUploader {
   /* A persistent directory to cache minidumps. */
   private readonly _cacheDirectory: string;
 
+  private _loadedWinCA: boolean = false;
+
   /**
    * Store to persist queued Minidumps beyond application crashes or lost
    * internet connection.
@@ -104,13 +106,16 @@ export class MinidumpUploader {
    */
   public async uploadMinidump(request: MinidumpRequest): Promise<void> {
     try {
-      // On Windows this fetches Root CAs from the Windows store (Trusted Root
-      // Certification Authorities) and makes them available to Node.js.
-      //
-      // Without this, Node.js cannot upload minidumps on corporate networks
-      // that perform deep SSL inspection by installing a custom root certificate
-      // on every machine.
-      require('win-ca/fallback');
+      if (!this._loadedWinCA) {
+        this._loadedWinCA = true;
+        // On Windows this fetches Root CAs from the Windows store (Trusted Root
+        // Certification Authorities) and makes them available to Node.js.
+        //
+        // Without this, Node.js cannot upload minidumps on corporate networks
+        // that perform deep SSL inspection by installing a custom root certificate
+        // on every machine.
+        require('win-ca/fallback');
+      }
 
       const body = new FormData();
       body.append('upload_file_minidump', fs.createReadStream(request.path));
