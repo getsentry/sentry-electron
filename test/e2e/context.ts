@@ -80,18 +80,18 @@ export class TestContext {
       env.E2E_TEST_FIXTURE = fixture;
     }
 
-    const childProcess = spawn(this.electronPath, [this.appPath], { env });
+    const childProcess = spawn(this.electronPath, [this.appPath], { env, stdio: 'inherit' });
 
-    if (!!process.env.DEBUG) {
-      childProcess.stdout.pipe(process.stdout);
-      childProcess.stderr.on('data', data => {
-        const str = data.toString();
-        if (str.match(/^\[\d+\:\d+/)) {
-          return;
-        }
-        process.stderr.write(data);
-      });
-    }
+    // if (!!process.env.DEBUG) {
+    //   childProcess.stdout.pipe(process.stdout);
+    //   childProcess.stderr.on('data', data => {
+    //     const str = data.toString();
+    //     if (str.match(/^\[\d+\:\d+/)) {
+    //       return;
+    //     }
+    //     process.stderr.write(data);
+    //   });
+    // }
 
     this.mainProcess = new ProcessStatus(childProcess);
 
