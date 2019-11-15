@@ -27,15 +27,16 @@ describe('E2E Tests', () => {
   });
 
   tests.forEach(([version, arch]) => {
-    if (parseFloat(version) < 3 && process.platform === 'linux') {
+    const majorVersion = Math.floor(parseFloat(version));
+    if (majorVersion < 3 && process.platform === 'linux') {
       // We skip tests on linux for electron version < 3
       return;
     }
 
-    // if (Math.floor(parseFloat(version)) === 4 && process.platform === 'win32') {
-    //   // We skip electron version 4 on Windows as it wont pass on Travis
-    //   return;
-    // }
+    if (majorVersion === 4 && process.platform === 'win32') {
+      // We skip electron version 4 on Windows as it wont pass on Travis
+      return;
+    }
 
     describe(`Electron ${version} ${arch}`, () => {
       let context: TestContext;
