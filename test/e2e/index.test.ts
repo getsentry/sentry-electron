@@ -4,12 +4,16 @@ import { join } from 'path';
 
 import { TestContext } from './context';
 import { downloadElectron } from './download';
+import { TestServer } from './server';
 import { delay, getLastFrame, getTests } from './utils';
 
 const SENTRY_KEY = '37f8a2ee37c0409d8970bc7559c7c7e4';
 
 should();
 use(chaiAsPromised);
+
+const testServer = new TestServer();
+testServer.start();
 
 const tests = getTests('1.7.16', '1.8.8', '2.0.18', '3.1.13', '4.2.12', '5.0.12', '6.1.4', '7.1.1', '8.0.0-beta.2');
 
@@ -23,6 +27,8 @@ tests.forEach(([version, arch]) => {
     let context: TestContext;
 
     beforeEach(async () => {
+      testServer.clearEvents();
+
       const electronPath = await downloadElectron(version, arch);
       context = new TestContext(electronPath);
     });
@@ -33,12 +39,12 @@ tests.forEach(([version, arch]) => {
 
     it('JavaScript exception in renderer process', async () => {
       await context.start('sentry-basic', 'javascript-renderer');
-      await context.waitForEvents(1);
-      const event = context.testServer.events[0];
+      await context.waitForEvents(testServer, 1);
+      const event = testServer.events[0];
       const breadcrumbs = event.data.breadcrumbs || [];
       const lastFrame = getLastFrame(event.data);
 
-      expect(context.testServer.events.length).to.equal(1);
+      expect(testServer.events.length).to.equal(1);
       expect(lastFrame.filename).to.equal('app:///fixtures/javascript-renderer.js');
 
       expect(event.dump_file).to.equal(undefined);
@@ -49,12 +55,12 @@ tests.forEach(([version, arch]) => {
 
     it('JavaScript unhandledrejection in renderer process', async () => {
       await context.start('sentry-basic', 'javascript-unhandledrejection');
-      await context.waitForEvents(1);
-      const event = context.testServer.events[0];
+      await context.waitForEvents(testServer, 1);
+      const event = testServer.events[0];
       const breadcrumbs = event.data.breadcrumbs || [];
       const lastFrame = getLastFrame(event.data);
 
-      expect(context.testServer.events.length).to.equal(1);
+      expect(testServer.events.length).to.equal(1);
       expect(lastFrame.filename).to.equal('app:///fixtures/javascript-unhandledrejection.js');
       expect(event.dump_file).to.equal(undefined);
       expect(event.sentry_key).to.equal(SENTRY_KEY);
@@ -64,12 +70,12 @@ tests.forEach(([version, arch]) => {
 
     it('JavaScript exception in main process', async () => {
       await context.start('sentry-basic', 'javascript-main');
-      await context.waitForEvents(1);
-      const event = context.testServer.events[0];
+      await context.waitForEvents(testServer, 1);
+      const event = testServer.events[0];
       const breadcrumbs = event.data.breadcrumbs || [];
       const lastFrame = getLastFrame(event.data);
 
-      expect(context.testServer.events.length).to.equal(1);
+      expect(testServer.events.length).to.equal(1);
       expect(lastFrame.filename).to.equal('app:///fixtures/javascript-main.js');
       expect(event.dump_file).to.equal(undefined);
       expect(event.data.platform).to.equal('node');
@@ -80,12 +86,12 @@ tests.forEach(([version, arch]) => {
 
     it('JavaScript exception in main process with space in path', async () => {
       await context.start('sentry-basic', 'javascript main with spaces');
-      await context.waitForEvents(1);
-      const event = context.testServer.events[0];
+      await context.waitForEvents(testServer, 1);
+      const event = testServer.events[0];
       const breadcrumbs = event.data.breadcrumbs || [];
       const lastFrame = getLastFrame(event.data);
 
-      expect(context.testServer.events.length).to.equal(1);
+      expect(testServer.events.length).to.equal(1);
       expect(lastFrame.filename).to.equal('app:///fixtures/javascript main with spaces.js');
       expect(event.dump_file).to.equal(undefined);
       expect(event.sentry_key).to.equal(SENTRY_KEY);
@@ -94,12 +100,12 @@ tests.forEach(([version, arch]) => {
 
     it('JavaScript exception in main process with parentheses in path', async () => {
       await context.start('sentry-basic', 'javascript main with (parens)');
-      await context.waitForEvents(1);
-      const event = context.testServer.events[0];
+      await context.waitForEvents(testServer, 1);
+      const event = testServer.events[0];
       const breadcrumbs = event.data.breadcrumbs || [];
       const lastFrame = getLastFrame(event.data);
 
-      expect(context.testServer.events.length).to.equal(1);
+      expect(testServer.events.length).to.equal(1);
       expect(lastFrame.filename).to.equal('app:///fixtures/javascript main with (parens).js');
       expect(event.dump_file).to.equal(undefined);
       expect(event.sentry_key).to.equal(SENTRY_KEY);
@@ -108,12 +114,12 @@ tests.forEach(([version, arch]) => {
 
     it('onFatalError can be overridden', async () => {
       await context.start('sentry-onfatal-exit', 'javascript-main');
-      await context.waitForEvents(1);
-      const event = context.testServer.events[0];
+      await context.waitForEvents(testServer, 1);
+      const event = testServer.events[0];
       const breadcrumbs = event.data.breadcrumbs || [];
       const lastFrame = getLastFrame(event.data);
 
-      expect(context.testServer.events.length).to.equal(1);
+      expect(testServer.events.length).to.equal(1);
       expect(lastFrame.filename).to.equal('app:///fixtures/javascript-main.js');
       expect(event.dump_file).to.equal(undefined);
       expect(event.sentry_key).to.equal(SENTRY_KEY);
@@ -128,11 +134,11 @@ tests.forEach(([version, arch]) => {
     it('Native crash in renderer process', async () => {
       await context.start('sentry-basic', 'native-renderer');
       // It can take rather a long time to get the event on Mac
-      await context.waitForEvents(1, 20000);
-      const event = context.testServer.events[0];
+      await context.waitForEvents(testServer, 1, 20000);
+      const event = testServer.events[0];
       const breadcrumbs = event.data.breadcrumbs || [];
 
-      expect(context.testServer.events.length).to.equal(1);
+      expect(testServer.events.length).to.equal(1);
       expect(event.dump_file).to.be.instanceOf(Buffer);
       expect(event.sentry_key).to.equal(SENTRY_KEY);
       expect(breadcrumbs.length).to.greaterThan(4);
@@ -151,11 +157,11 @@ tests.forEach(([version, arch]) => {
       await context.stop(false);
       await context.start('sentry-basic');
 
-      await context.waitForEvents(1);
-      const event = context.testServer.events[0];
+      await context.waitForEvents(testServer, 1);
+      const event = testServer.events[0];
       const breadcrumbs = event.data.breadcrumbs || [];
 
-      expect(context.testServer.events.length).to.equal(1);
+      expect(testServer.events.length).to.equal(1);
       expect(event.dump_file).to.be.instanceOf(Buffer);
       expect(event.sentry_key).to.equal(SENTRY_KEY);
       expect(breadcrumbs.length).to.greaterThan(4);
@@ -163,13 +169,13 @@ tests.forEach(([version, arch]) => {
 
     it('Captures breadcrumbs in renderer process', async () => {
       await context.start('sentry-basic', 'breadcrumbs-in-renderer');
-      await context.waitForEvents(1);
-      const event = context.testServer.events[0];
+      await context.waitForEvents(testServer, 1);
+      const event = testServer.events[0];
       let breadcrumbs = event.data.breadcrumbs || [];
 
       breadcrumbs = breadcrumbs.filter(crumb => crumb.message === 'Something insightful!');
 
-      expect(context.testServer.events.length).to.equal(1);
+      expect(testServer.events.length).to.equal(1);
       expect(event.dump_file).to.equal(undefined);
       expect(breadcrumbs.length, 'filtered breadcrumbs').to.equal(1);
     });
@@ -178,23 +184,23 @@ tests.forEach(([version, arch]) => {
       const electronPath = await downloadElectron(version, arch);
       context = new TestContext(electronPath, join(__dirname, 'preload-app'));
       await context.start();
-      await context.waitForEvents(1);
-      const event = context.testServer.events[0];
+      await context.waitForEvents(testServer, 1);
+      const event = testServer.events[0];
 
-      expect(context.testServer.events.length).to.equal(1);
+      expect(testServer.events.length).to.equal(1);
       expect(event.dump_file).to.equal(undefined);
     });
 
     it('Custom release string for JavaScript error', async () => {
       await context.start('sentry-custom-release', 'javascript-renderer');
-      await context.waitForEvents(1);
-      const event = context.testServer.events[0];
+      await context.waitForEvents(testServer, 1);
+      const event = testServer.events[0];
       const breadcrumbs = event.data.breadcrumbs || [];
       const lastFrame = getLastFrame(event.data);
 
       expect(event.data.release).to.equal('some-custom-release');
 
-      expect(context.testServer.events.length).to.equal(1);
+      expect(testServer.events.length).to.equal(1);
       expect(lastFrame.filename).to.equal('app:///fixtures/javascript-renderer.js');
 
       expect(event.dump_file).to.equal(undefined);
@@ -205,13 +211,13 @@ tests.forEach(([version, arch]) => {
     it('Custom release string for minidump', async () => {
       await context.start('sentry-custom-release', 'native-renderer');
       // It can take rather a long time to get the event on Mac
-      await context.waitForEvents(1, 20000);
-      const event = context.testServer.events[0];
+      await context.waitForEvents(testServer, 1, 20000);
+      const event = testServer.events[0];
       const breadcrumbs = event.data.breadcrumbs || [];
 
       expect(event.data.release).to.equal('some-custom-release');
 
-      expect(context.testServer.events.length).to.equal(1);
+      expect(testServer.events.length).to.equal(1);
       expect(event.dump_file).to.be.instanceOf(Buffer);
       expect(event.sentry_key).to.equal(SENTRY_KEY);
       expect(breadcrumbs.length).to.greaterThan(4);
@@ -225,25 +231,20 @@ tests.forEach(([version, arch]) => {
 
       await context.start('sentry-basic', 'javascript-renderer');
 
-      await context.waitForEvents(1);
-      const event = context.testServer.events[0];
+      await context.waitForEvents(testServer, 1);
+      const event = testServer.events[0];
       const breadcrumbs = event.data.breadcrumbs || [];
       const appReadyBreadCrumbs = breadcrumbs.filter(b => b.message && b.message.includes('app.ready'));
 
-      // This test fails on Ubuntu Ubuntu 14.04.5 LTS just on Travis
-      if (version === '2.0.10') {
-        expect(appReadyBreadCrumbs.length).to.greaterThan(0);
-      } else {
-        expect(appReadyBreadCrumbs.length).to.equal(2);
-      }
+      expect(appReadyBreadCrumbs.length).to.equal(2);
     });
 
     it('Custom named renderer process', async () => {
       await context.start('sentry-custom-renderer-name', 'javascript-renderer');
-      await context.waitForEvents(1);
-      const event = context.testServer.events[0];
+      await context.waitForEvents(testServer, 1);
+      const event = testServer.events[0];
 
-      expect(context.testServer.events.length).to.equal(1);
+      expect(testServer.events.length).to.equal(1);
       expect(event.data.extra && event.data.extra.crashed_process).to.equal('renderer');
     });
   });

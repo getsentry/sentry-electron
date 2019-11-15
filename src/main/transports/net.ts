@@ -2,6 +2,7 @@ import { Transports } from '@sentry/node';
 import { Event, Response, Status, TransportOptions } from '@sentry/types';
 import { PromiseBuffer, SentryError } from '@sentry/utils';
 import { net } from 'electron';
+
 import { isAppReady } from '../backend';
 
 /** Using net module of electron */

@@ -1,11 +1,10 @@
+import { Event } from '@sentry/types';
 import * as child from 'child_process';
+import { app } from 'electron';
 import * as fs from 'fs';
 import { platform, release } from 'os';
 import { join } from 'path';
 import { promisify } from 'util';
-
-import { Event } from '@sentry/types';
-import { app } from 'electron';
 
 const execFile = promisify(child.execFile);
 const readdir = promisify(fs.readdir);
@@ -89,11 +88,13 @@ function matchFirst(regex: RegExp, text: string): string | undefined {
 function getBuildType(): string | undefined {
   if (process.mas) {
     return 'app-store';
-  } else if (process.windowsStore) {
-    return 'windows-store';
-  } else {
-    return undefined;
   }
+
+  if (process.windowsStore) {
+    return 'windows-store';
+  }
+
+  return undefined;
 }
 
 /** Loads the macOS operating system context. */
@@ -256,6 +257,7 @@ export async function addEventDefaults(event: Event): Promise<Event> {
   // The event defaults are cached as long as the app is running. We create the
   // promise here synchronously to avoid multiple events computing them at the
   // same time.
+  // tslint:disable-next-line: no-promise-as-boolean
   if (!defaultsPromise) {
     defaultsPromise = getEventDefaults();
   }

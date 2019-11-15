@@ -2,7 +2,9 @@
 require('util.promisify/shim')();
 import { initAndBind } from '@sentry/core';
 import { defaultIntegrations } from '@sentry/node';
+
 import { ElectronOptions } from '..';
+
 import { MainClient } from './client';
 import { Electron, OnUncaughtException } from './integrations';
 import { NetTransport } from './transports/net';

@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import { join } from 'path';
-
 import tmpdir = require('temporary-directory');
+
 import { ProcessStatus } from './process';
 import { TestServer } from './server';
 
@@ -56,16 +56,10 @@ export class TestContext {
   public constructor(
     private readonly electronPath: string,
     private readonly appPath: string = join(__dirname, 'test-app'),
-    public testServer: TestServer = new TestServer(),
   ) {}
 
   /** Starts the app. */
   public async start(sentryConfig?: string, fixture?: string): Promise<void> {
-    // Start the test server if required
-    if (this.testServer) {
-      this.testServer.start();
-    }
-
     // Only setup the tempDir if this the first start of the context
     // Subsequent starts will use the same path
     if (!this.tempDir) {
@@ -73,13 +67,13 @@ export class TestContext {
       this.tempDir = await getTempDir();
     }
 
-    const env: { [key: string]: string | boolean | undefined } = {
+    const env: { [key: string]: string | undefined } = {
       ...process.env,
       DSN: 'http://37f8a2ee37c0409d8970bc7559c7c7e4@localhost:8123/277345',
       E2E_APP_NAME: this.appName,
       E2E_TEST_SENTRY: sentryConfig,
       E2E_USERDATA_DIRECTORY: this.tempDir.path,
-      ELECTRON_ENABLE_LOGGING: !!process.env.DEBUG,
+      ELECTRON_ENABLE_LOGGING: process.env.DEBUG,
     };
 
     if (fixture) {
@@ -99,7 +93,7 @@ export class TestContext {
       });
     }
 
-    this.mainProcess = new ProcessStatus(childProcess.pid);
+    this.mainProcess = new ProcessStatus(childProcess);
 
     await this.waitForTrue(
       async () => (this.mainProcess ? this.mainProcess.isRunning() : false),
@@ -117,10 +111,6 @@ export class TestContext {
 
     if (this.tempDir && clearData) {
       this.tempDir.cleanup();
-    }
-
-    if (this.testServer) {
-      await this.testServer.stop();
     }
   }
 
@@ -157,7 +147,7 @@ export class TestContext {
    *
    * @param count Number of events to wait for
    */
-  public async waitForEvents(count: number, timeout: number = 15000): Promise<void> {
-    await this.waitForTrue(() => this.testServer.events.length >= count, 'Timeout: Waiting for events', timeout);
+  public async waitForEvents(testServer: TestServer, count: number, timeout: number = 15000): Promise<void> {
+    await this.waitForTrue(() => testServer.events.length >= count, 'Timeout: Waiting for events', timeout);
   }
 }

@@ -1,6 +1,8 @@
 import { defaultIntegrations } from '@sentry/browser';
 import { initAndBind } from '@sentry/core';
+
 import { ElectronOptions } from '..';
+
 import { RendererClient } from './client';
 export { RendererBackend } from './backend';
 export { RendererClient } from './client';
