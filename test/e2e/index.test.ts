@@ -127,7 +127,12 @@ describe('E2E Tests', () => {
         expect(breadcrumbs.length).to.greaterThan(4);
       });
 
-      it('onFatalError can be overridden', async () => {
+      // tslint:disable-next-line
+      it('onFatalError can be overridden', async function() {
+        if (majorVersion === 5 && process.platform === 'win32') {
+          this.skip();
+        }
+
         await context.start('sentry-onfatal-exit', 'javascript-main');
         await context.waitForEvents(testServer, 1);
         const event = testServer.events[0];
