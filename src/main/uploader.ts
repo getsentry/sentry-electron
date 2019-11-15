@@ -54,12 +54,13 @@ export class MinidumpUploader {
   /** List of minidumps that have been found already. */
   private readonly _knownPaths: string[];
 
-  /* The directory Electron stores crashes in. */
+  /** The directory Electron stores crashes in. */
   private readonly _crashesDirectory: string;
 
-  /* A persistent directory to cache minidumps. */
+  /** A persistent directory to cache minidumps. */
   private readonly _cacheDirectory: string;
 
+  /** Ensures we only call win-ca once */
   private _loadedWinCA: boolean = false;
 
   /**

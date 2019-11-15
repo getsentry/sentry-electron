@@ -129,6 +129,7 @@ describe('E2E Tests', () => {
 
       // tslint:disable-next-line
       it('onFatalError can be overridden', async function() {
+        // For some unknown reason this test fails on Electron v5 only on Travis
         if (majorVersion === 5 && process.platform === 'win32') {
           this.skip();
         }
