@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.1.0-beta.0
+
+- meta: Update dependencies
+- fix: Use crashpad logic for Electron >= v6 on Windows
+- fix: Use node-fetch rather than electron-fetch
+- feat: Use win-ca to load Windows root CA's to give same behaviour as electron-fetch
+- meta: Use Sentry logger to trace some caught exceptions
+
 ## v1.0.0
 
 A lot of internal changes making use of the latest `5.x` relesase of the Browser/Node SDK.
