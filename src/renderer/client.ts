@@ -2,7 +2,9 @@ import { BrowserClient, ReportDialogOptions } from '@sentry/browser';
 import { BaseClient, getCurrentHub, Scope } from '@sentry/core';
 import { Event, EventHint } from '@sentry/types';
 import { logger } from '@sentry/utils';
+
 import { CommonClient, ElectronOptions } from '../common';
+
 import { RendererBackend } from './backend';
 
 /** Frontend implementation for Electron renderer backends. */

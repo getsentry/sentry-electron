@@ -3,5 +3,5 @@ if (process.type === 'renderer') {
 
   setTimeout(() => {
     throw new Error('Error triggered in renderer process');
-  }, 1000);
+  }, 100);
 }

@@ -1,5 +1,7 @@
+import { logger } from '@sentry/utils';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
+
 import { mkdirpSync } from './fs';
 
 /**
@@ -83,6 +85,7 @@ export class Store<T> {
       mkdirpSync(dirname(this._path));
       writeFileSync(this._path, JSON.stringify(this._data));
     } catch (e) {
+      logger.warn('Failed to flush store', e);
       // This usually fails due to anti virus scanners, issues in the file
       // system, or problems with network drives. We cannot fix or handle this
       // issue and must resume gracefully. Thus, we have to ignore this error.

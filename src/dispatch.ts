@@ -1,6 +1,7 @@
 import { ClientClass, Scope } from '@sentry/core';
 import { Dsn, Event, EventHint, Integration, IntegrationClass, Severity } from '@sentry/types';
 import { dynamicRequire } from '@sentry/utils';
+
 import { CommonClient, ElectronOptions } from './common';
 
 /**

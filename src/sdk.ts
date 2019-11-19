@@ -5,6 +5,7 @@ import { ReportDialogOptions } from '@sentry/browser';
 import { getCurrentHub } from '@sentry/core';
 import { _callOnClient } from '@sentry/minimal';
 import { Event } from '@sentry/types';
+
 import { ElectronOptions } from './common';
 import { ElectronClient, specificInit } from './dispatch';
 

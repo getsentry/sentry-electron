@@ -64,7 +64,7 @@ export interface CommonClient extends Client<ElectronOptions> {
   captureMinidump(path: string, event?: Event, scope?: Scope): string | undefined;
 
   /**
-   * @inheritdoc {@link BrowserClient.showReportDialog}
+   * Shows Report Dialog
    */
   showReportDialog(options: ReportDialogOptions): void;
 }

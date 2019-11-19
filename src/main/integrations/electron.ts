@@ -6,6 +6,7 @@ import {
   screen,
   // tslint:disable-next-line:no-implicit-dependencies
 } from 'electron';
+
 import { ElectronClient } from '../../dispatch';
 
 /** Electron integration that cleans up the event. */

@@ -53,8 +53,6 @@ matrix:
       after_success:
         - npm install -g @zeus-ci/cli
         - zeus upload -t "application/tar+npm" *.tgz
-  allow_failures:
-    - os: windows
 
 notifications:
   webhooks:

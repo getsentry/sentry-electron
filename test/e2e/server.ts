@@ -1,26 +1,12 @@
 // tslint:disable:no-unsafe-any
 
-import { readFileSync } from 'fs';
-import { createServer, Server } from 'http';
-
-import { SentryEvent } from '@sentry/types';
+import { Event } from '@sentry/types';
 import bodyParser = require('body-parser');
 import express = require('express');
 import finalhandler = require('finalhandler');
+import { readFileSync } from 'fs';
+import { createServer, Server } from 'http';
 import { Form } from 'multiparty';
-import { inflateSync } from 'zlib';
-
-/**
- * Decodes and deflates a ZIP payload in base64 representation.
- *
- * @param raw The raw base64 encoded input.
- * @returns A decoded object.
- */
-function deflateBase64ZIP(raw: Buffer): any {
-  const base64Str = raw.toString();
-  const compressed = Buffer.from(base64Str, 'base64');
-  return JSON.parse(inflateSync(compressed).toString());
-}
 
 /** Event payload that has been submitted to the test server. */
 export interface TestServerEvent {
@@ -29,7 +15,7 @@ export interface TestServerEvent {
   /** Public auth key from the DSN. */
   sentry_key: string;
   /** Sentry Event data (should conform to the SentryEvent interface). */
-  data: SentryEvent;
+  data: Event;
   /** An optional minidump file, if included in the event. */
   dump_file?: Buffer;
 }
@@ -38,8 +24,6 @@ export interface TestServerEvent {
  * A mock Sentry server.
  *
  * Use `server.start()` to start execution and `server.stop()` to terminate it.
- * Note that you must call stop after every test, so place it in `afterEach`
- * or make sure it is called in a finally-block.
  */
 export class TestServer {
   /** All events received by this server instance. */
@@ -63,9 +47,7 @@ export class TestServer {
       }
 
       this.events.push({
-        // We removed gzip in node now
-        // data: deflateBase64ZIP(req.body as Buffer) as SentryEvent,
-        data: req.body as SentryEvent,
+        data: req.body as Event,
         id: req.params.id,
         sentry_key: keyMatch[1],
       });
@@ -79,7 +61,7 @@ export class TestServer {
       const form = new Form();
       form.parse(req, (_, fields, files) => {
         this.events.push({
-          data: JSON.parse(fields.sentry[0]) as SentryEvent,
+          data: JSON.parse(fields.sentry[0]) as Event,
           dump_file: readFileSync(files.upload_file_minidump[0].path),
           id: req.params.id,
           sentry_key: req.originalUrl.replace(/.*sentry_key=/, ''),
@@ -98,11 +80,21 @@ export class TestServer {
     this.server.listen(8123);
   }
 
+  public clearEvents(): void {
+    this.events = [];
+  }
+
   /** Stops accepting requests and closes the server. */
   public async stop(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       if (this.server) {
-        this.server.close(resolve);
+        this.server.close(e => {
+          if (e) {
+            reject(e);
+          } else {
+            resolve();
+          }
+        });
       } else {
         reject(new Error('Invariant violation: Call .start() first'));
       }

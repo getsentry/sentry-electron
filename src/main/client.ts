@@ -1,8 +1,10 @@
 import { BaseClient, Scope } from '@sentry/core';
 import { Event, EventHint } from '@sentry/types';
 import { logger, SyncPromise } from '@sentry/utils';
+
 import { CommonClient, ElectronOptions } from '../common';
 import { SDK_NAME } from '../sdk';
+
 import { MainBackend } from './backend';
 import { addEventDefaults } from './context';
 import { normalizeEvent } from './normalize';
@@ -66,7 +68,7 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
 
     // We are not calling _processEvent here since we do not have beforeSend for minidump crashes
     this._prepareEvent(event, scope, undefined).then(
-      async finalEvent => {
+      finalEvent => {
         if (finalEvent) {
           eventId = finalEvent && finalEvent.event_id;
           this._getBackend().uploadMinidump(path, finalEvent);

@@ -1,11 +1,11 @@
-import * as fs from 'fs';
-import { basename, join } from 'path';
-import { promisify } from 'util';
-
 import { Dsn } from '@sentry/core';
 import { Event } from '@sentry/types';
-import fetch from 'electron-fetch';
+import { logger } from '@sentry/utils';
 import FormData = require('form-data');
+import * as fs from 'fs';
+import fetch from 'node-fetch';
+import { basename, join } from 'path';
+import { promisify } from 'util';
 
 import { mkdirp } from './fs';
 import { Store } from './store';
@@ -48,14 +48,20 @@ export class MinidumpUploader {
   /** The type of the Electron CrashReporter used to search for Minidumps. */
   private readonly _type: CrashReporterType;
 
+  /** The sub-directory where crashpad dumps can be found */
+  private readonly _crashpadSubDirectory: string;
+
   /** List of minidumps that have been found already. */
   private readonly _knownPaths: string[];
 
-  /* The directory Electron stores crashes in. */
+  /** The directory Electron stores crashes in. */
   private readonly _crashesDirectory: string;
 
-  /* A persistent directory to cache minidumps. */
+  /** A persistent directory to cache minidumps. */
   private readonly _cacheDirectory: string;
+
+  /** Ensures we only call win-ca once */
+  private _loadedWinCA: boolean = false;
 
   /**
    * Store to persist queued Minidumps beyond application crashes or lost
@@ -71,7 +77,9 @@ export class MinidumpUploader {
    * @param cacheDirectory A persistent directory to cache minidumps.
    */
   public constructor(dsn: Dsn, crashesDirectory: string, cacheDirectory: string) {
-    this._type = process.platform === 'darwin' ? 'crashpad' : 'breakpad';
+    const crashpadWindows = process.platform === 'win32' && parseInt(process.versions.electron.split('.')[0], 10) >= 6;
+    this._type = process.platform === 'darwin' || crashpadWindows ? 'crashpad' : 'breakpad';
+    this._crashpadSubDirectory = process.platform === 'darwin' ? 'completed' : 'reports';
     this._knownPaths = [];
 
     this._url = MinidumpUploader.minidumpUrlFromDsn(dsn);
@@ -99,7 +107,20 @@ export class MinidumpUploader {
    * @returns A promise that resolves when the upload is complete.
    */
   public async uploadMinidump(request: MinidumpRequest): Promise<void> {
+    logger.log('Uploading minidump', request.path);
+
     try {
+      if (!this._loadedWinCA) {
+        this._loadedWinCA = true;
+        // On Windows this fetches Root CAs from the Windows store (Trusted Root
+        // Certification Authorities) and makes them available to Node.js.
+        //
+        // Without this, Node.js cannot upload minidumps on corporate networks
+        // that perform deep SSL inspection by installing a custom root certificate
+        // on every machine.
+        require('win-ca/fallback');
+      }
+
       const body = new FormData();
       body.append('upload_file_minidump', fs.createReadStream(request.path));
       body.append('sentry', JSON.stringify(request.event));
@@ -112,9 +133,14 @@ export class MinidumpUploader {
 
       // We either succeeded or something went horribly wrong. Either way, we
       // can remove the minidump file.
-      await unlink(request.path);
+      try {
+        await unlink(request.path);
+      } catch (e) {
+        logger.warn('Could not delete', request.path);
+      }
 
       // Forget this minidump in all caches
+      // tslint:disable-next-line: strict-comparisons
       this._queue.update(queued => queued.filter(stored => stored !== request));
       this._knownPaths.splice(this._knownPaths.indexOf(request.path), 1);
 
@@ -123,6 +149,8 @@ export class MinidumpUploader {
         await this.flushQueue();
       }
     } catch (err) {
+      logger.warn('Failed to upload minidump', err);
+
       // User's internet connection was down so we queue it as well
       const error = err ? (err as { code: string }) : { code: '' };
       if (error.code === 'ENOTFOUND') {
@@ -154,6 +182,7 @@ export class MinidumpUploader {
    */
   public async getNewMinidumps(): Promise<string[]> {
     const minidumps = this._type === 'crashpad' ? await this._scanCrashpadFolder() : await this._scanBreakpadFolder();
+    logger.log(`Found ${minidumps.length} minidumps`);
 
     const oldestMs = new Date().getTime() - MAX_AGE * 24 * 3600 * 1000;
     return this._filterAsync(minidumps, async path => {
@@ -170,7 +199,11 @@ export class MinidumpUploader {
       // certain threshold. Those old files can be deleted immediately.
       const stats = await stat(path);
       if (stats.birthtimeMs < oldestMs) {
-        await unlink(path);
+        try {
+          await unlink(path);
+        } catch (e) {
+          logger.warn('Could not delete', path);
+        }
         this._knownPaths.splice(this._knownPaths.indexOf(path), 1);
         return false;
       }
@@ -186,9 +219,9 @@ export class MinidumpUploader {
 
   /** Scans the Crashpad directory structure for minidump files. */
   private async _scanCrashpadFolder(): Promise<string[]> {
-    // Crashpad moves minidump files directly into the completed/ folder. We can
+    // Crashpad moves minidump files directly into the 'completed' or 'reports' folder. We can
     // load them from there, upload to the server, and then delete it.
-    const dumpDirectory = join(this._crashesDirectory, 'completed');
+    const dumpDirectory = join(this._crashesDirectory, this._crashpadSubDirectory);
     const files = await readdir(dumpDirectory);
     return files.filter(file => file.endsWith('.dmp')).map(file => join(dumpDirectory, file));
   }
@@ -199,10 +232,20 @@ export class MinidumpUploader {
     // the crashes directory.
     const files = await readdir(this._crashesDirectory);
 
-    // Remove all metadata files (asynchronously) and forget about them.
-    files
-      .filter(file => file.endsWith('.txt') && !file.endsWith('log.txt'))
-      .forEach(async file => unlink(join(this._crashesDirectory, file)));
+    // Remove all metadata files and forget about them.
+    // tslint:disable-next-line: no-floating-promises
+    Promise.all(
+      files
+        .filter(file => file.endsWith('.txt') && !file.endsWith('log.txt'))
+        .map(async file => {
+          const path = join(this._crashesDirectory, file);
+          try {
+            await unlink(path);
+          } catch (e) {
+            logger.warn('Could not delete', path);
+          }
+        }),
+    );
 
     return files.filter(file => file.endsWith('.dmp')).map(file => join(this._crashesDirectory, file));
   }
@@ -236,6 +279,14 @@ export class MinidumpUploader {
     const stale = requests.splice(-MAX_REQUESTS_COUNT);
     this._queue.set(requests);
 
-    await Promise.all(stale.map(async req => unlink(req.path)));
+    await Promise.all(
+      stale.map(async req => {
+        try {
+          await unlink(req.path);
+        } catch (e) {
+          logger.warn('Could not delete', req.path);
+        }
+      }),
+    );
   }
 }

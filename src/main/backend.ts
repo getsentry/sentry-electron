@@ -1,6 +1,3 @@
-import { app, crashReporter, ipcMain } from 'electron';
-import { join } from 'path';
-
 import {
   addBreadcrumb,
   BaseBackend,
@@ -14,9 +11,12 @@ import {
 import { NodeBackend } from '@sentry/node/dist/backend';
 import { Event, EventHint, Severity, Transport, TransportOptions } from '@sentry/types';
 import { forget, logger, SentryError } from '@sentry/utils';
+import { app, crashReporter, ipcMain } from 'electron';
+import { join } from 'path';
 
 import { CommonBackend, ElectronOptions, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
 import { captureMinidump } from '../sdk';
+
 import { normalizeUrl } from './normalize';
 import { Store } from './store';
 import { NetTransport } from './transports/net';
@@ -24,6 +24,7 @@ import { MinidumpUploader } from './uploader';
 
 /** Patch to access internal CrashReporter functionality. */
 interface CrashReporterExt {
+  /** Gets the crashes directory */
   getCrashesDirectory(): string;
 }
 
@@ -38,6 +39,7 @@ function getCachePath(): string {
 export async function isAppReady(): Promise<boolean> {
   return (
     app.isReady() ||
+    // tslint:disable-next-line: no-promise-as-boolean
     new Promise<boolean>(resolve => {
       app.once('ready', resolve);
     })
@@ -77,7 +79,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   }
 
   /**
-   * @inheritdoc
+   * Setup Transport
    */
   protected _setupTransport(): Transport {
     if (!this._options.dsn) {
