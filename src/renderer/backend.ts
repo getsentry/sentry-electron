@@ -98,7 +98,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
     crashReporter.start({
       companyName: '',
       ignoreSystemCrashHandler: true,
-      productName: remote.app.getName(),
+      productName: remote.app.name || remote.app.getName(),
       submitURL: '',
       uploadToServer: false,
     });

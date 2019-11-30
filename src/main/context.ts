@@ -218,7 +218,7 @@ async function getEventDefaults(): Promise<Event> {
   return {
     contexts: {
       app: {
-        app_name: app.getName(),
+        app_name: app.name || app.getName(),
         app_version: app.getVersion(),
         build_type: getBuildType(),
       },
@@ -247,7 +247,7 @@ async function getEventDefaults(): Promise<Event> {
     },
     environment: process.defaultApp ? 'development' : 'production',
     extra: { crashed_process: 'browser' },
-    release: `${app.getName().replace(/\W/g, '-')}${app.getVersion()}`,
+    release: `${(app.name || app.getName()).replace(/\W/g, '-')}${app.getVersion()}`,
     user: { ip_address: '{{auto}}' },
   };
 }
