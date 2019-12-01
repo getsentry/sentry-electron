@@ -6,6 +6,8 @@ import { platform, release } from 'os';
 import { join } from 'path';
 import { promisify } from 'util';
 
+import { getName } from '../common';
+
 const execFile = promisify(child.execFile);
 const readdir = promisify(fs.readdir);
 const readFile = promisify(fs.readFile);
@@ -218,7 +220,7 @@ async function getEventDefaults(): Promise<Event> {
   return {
     contexts: {
       app: {
-        app_name: app.name || app.getName(),
+        app_name: getName(app),
         app_version: app.getVersion(),
         build_type: getBuildType(),
       },
@@ -247,7 +249,7 @@ async function getEventDefaults(): Promise<Event> {
     },
     environment: process.defaultApp ? 'development' : 'production',
     extra: { crashed_process: 'browser' },
-    release: `${(app.name || app.getName()).replace(/\W/g, '-')}${app.getVersion()}`,
+    release: `${getName(app).replace(/\W/g, '-')}${app.getVersion()}`,
     user: { ip_address: '{{auto}}' },
   };
 }
