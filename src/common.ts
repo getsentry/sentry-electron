@@ -2,6 +2,7 @@ import { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
 import { BaseBackend } from '@sentry/core';
 import { NodeOptions } from '@sentry/node';
 import { Client, Event, Options, Scope } from '@sentry/types';
+import { App } from 'electron';
 
 /** IPC to ping the main process when initializing in the renderer. */
 export const IPC_PING = 'sentry-electron.ping';
@@ -67,6 +68,34 @@ export interface CommonClient extends Client<ElectronOptions> {
    * Shows Report Dialog
    */
   showReportDialog(options: ReportDialogOptions): void;
+}
+
+/** Name retrieval references for both Electron <v5 and v7< */
+declare interface CrossApp extends App {
+  /**
+   * Usually the name field of package.json is a short lowercased name, according to
+   * the npm modules spec. You should usually also specify a productName field, which
+   * is your application's full capitalized name, and which will be preferred over
+   * name by Electron.
+   */
+  getName(): string;
+
+  /**
+   * A `String` property that indicates the current application's name, which is the
+   * name in the application's `package.json` file.
+   *
+   * Usually the `name` field of `package.json` is a short lowercase name, according
+   * to the npm modules spec. You should usually also specify a `productName` field,
+   * which is your application's full capitalized name, and which will be preferred
+   * over `name` by Electron.
+   */
+  name: string;
+}
+
+/** Get the name of an electron app for <v5 and v7< */
+export function getName(app: App): string {
+  const a = app as CrossApp;
+  return a.name || a.getName();
 }
 
 /** Common interface for Electron backends. */

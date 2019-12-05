@@ -14,7 +14,7 @@ import { forget, logger, SentryError } from '@sentry/utils';
 import { app, crashReporter, ipcMain } from 'electron';
 import { join } from 'path';
 
-import { CommonBackend, ElectronOptions, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
+import { CommonBackend, ElectronOptions, getName, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
 import { captureMinidump } from '../sdk';
 
 import { normalizeUrl } from './normalize';
@@ -196,7 +196,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     crashReporter.start({
       companyName: '',
       ignoreSystemCrashHandler: true,
-      productName: app.getName(),
+      productName: getName(app),
       submitURL: MinidumpUploader.minidumpUrlFromDsn(dsn),
       uploadToServer: false,
     });
