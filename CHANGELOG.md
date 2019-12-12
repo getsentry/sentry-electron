@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.1.0-beta.1
+## v1.1.0
 
 - meta: Update dependencies
 - feat: Support electron 7
