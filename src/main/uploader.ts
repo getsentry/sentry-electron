@@ -1,5 +1,6 @@
+import { Dsn } from '@sentry/core';
 import { Event } from '@sentry/types';
-import { Dsn, logger } from '@sentry/utils';
+import { logger } from '@sentry/utils';
 import FormData = require('form-data');
 import * as fs from 'fs';
 import fetch from 'node-fetch';

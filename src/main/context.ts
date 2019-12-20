@@ -6,7 +6,7 @@ import { platform, release } from 'os';
 import { join } from 'path';
 import { promisify } from 'util';
 
-import { getNameFallback, ElectronOptions } from '../common';
+import { getNameFallback } from '../common';
 
 const execFile = promisify(child.execFile);
 const readdir = promisify(fs.readdir);

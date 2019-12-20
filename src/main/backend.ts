@@ -4,12 +4,13 @@ import {
   captureEvent,
   captureMessage,
   configureScope,
+  Dsn,
   getCurrentHub,
   Scope,
 } from '@sentry/core';
 import { NodeBackend } from '@sentry/node/dist/backend';
 import { Event, EventHint, Severity, Transport, TransportOptions } from '@sentry/types';
-import { Dsn, forget, logger, SentryError } from '@sentry/utils';
+import { forget, logger, SentryError } from '@sentry/utils';
 import { app, crashReporter, ipcMain } from 'electron';
 import { join } from 'path';
 

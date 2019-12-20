@@ -2,8 +2,8 @@ import { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
 import { BaseBackend } from '@sentry/core';
 import { NodeOptions } from '@sentry/node';
 import { Client, Event, Options, Scope } from '@sentry/types';
-import { App } from 'electron';
 import { SentryError } from '@sentry/utils';
+import { App } from 'electron';
 
 /** IPC to ping the main process when initializing in the renderer. */
 export const IPC_PING = 'sentry-electron.ping';
