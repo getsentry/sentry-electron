@@ -117,7 +117,9 @@ export class MinidumpUploader {
         // Without this, Node.js cannot upload minidumps on corporate networks
         // that perform deep SSL inspection by installing a custom root certificate
         // on every machine.
-        require('win-ca/fallback');
+        const caPath = join(this._cacheDirectory, 'win-ca', 'pem');
+        // tslint:disable-next-line: no-unsafe-any
+        require('win-ca/api')({ fallback: true, save: caPath });
       }
 
       const body = new FormData();
