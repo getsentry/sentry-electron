@@ -2,7 +2,7 @@ import { Event } from '@sentry/types';
 import { Dsn, logger } from '@sentry/utils';
 import FormData = require('form-data');
 import * as fs from 'fs';
-import fetch from 'node-fetch';
+import fetch from 'electron-fetch';
 import { basename, join } from 'path';
 import { promisify } from 'util';
 
@@ -59,9 +59,6 @@ export class MinidumpUploader {
   /** A persistent directory to cache minidumps. */
   private readonly _cacheDirectory: string;
 
-  /** Ensures we only call win-ca once */
-  private _loadedWinCA: boolean = false;
-
   /**
    * Store to persist queued Minidumps beyond application crashes or lost
    * internet connection.
@@ -109,24 +106,6 @@ export class MinidumpUploader {
     logger.log('Uploading minidump', request.path);
 
     try {
-      if (!this._loadedWinCA) {
-        this._loadedWinCA = true;
-        // On Windows this fetches Root CAs from the Windows store (Trusted Root
-        // Certification Authorities) and makes them available to Node.js.
-        //
-        // Without this, Node.js cannot upload minidumps on corporate networks
-        // that perform deep SSL inspection by installing a custom root certificate
-        // on every machine.
-        const caPath = join(this._cacheDirectory, 'win-ca', 'pem');
-        try {
-          // tslint:disable-next-line: no-unsafe-any
-          require('win-ca/api')({ fallback: true, save: caPath });
-        } catch (e) {
-          // If this fails, upload will still work on networks that don't MITM SSL
-          logger.warn('Could not initialize win-ca', e);
-        }
-      }
-
       const body = new FormData();
       body.append('upload_file_minidump', fs.createReadStream(request.path));
       body.append('sentry', JSON.stringify(request.event));
