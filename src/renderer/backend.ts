@@ -1,9 +1,9 @@
 import { BrowserBackend } from '@sentry/browser/dist/backend';
 import { BaseBackend, getCurrentHub } from '@sentry/core';
 import { Event, EventHint, Severity } from '@sentry/types';
-import { crashReporter, ipcRenderer, remote } from 'electron';
+import { crashReporter, ipcRenderer } from 'electron';
 
-import { CommonBackend, ElectronOptions, getName, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
+import { CommonBackend, ElectronOptions, getNameFallback, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
 
 /** Timeout used for registering with the main process. */
 const PING_TIMEOUT = 500;
@@ -98,7 +98,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
     crashReporter.start({
       companyName: '',
       ignoreSystemCrashHandler: true,
-      productName: getName(remote.app),
+      productName: this._options.appName || getNameFallback(),
       submitURL: '',
       uploadToServer: false,
     });

@@ -6,7 +6,7 @@ import { platform, release } from 'os';
 import { join } from 'path';
 import { promisify } from 'util';
 
-import { getName } from '../common';
+import { getNameFallback } from '../common';
 
 const execFile = promisify(child.execFile);
 const readdir = promisify(fs.readdir);
@@ -216,11 +216,13 @@ async function getOsContext(): Promise<OsContext> {
  * runtimes, limited device information, operating system context and defaults
  * for the release and environment.
  */
-async function getEventDefaults(): Promise<Event> {
+async function getEventDefaults(appName: string | undefined): Promise<Event> {
+  const name = appName || getNameFallback();
+
   return {
     contexts: {
       app: {
-        app_name: getName(app),
+        app_name: name,
         app_version: app.getVersion(),
         build_type: getBuildType(),
       },
@@ -249,19 +251,19 @@ async function getEventDefaults(): Promise<Event> {
     },
     environment: process.defaultApp ? 'development' : 'production',
     extra: { crashed_process: 'browser' },
-    release: `${getName(app).replace(/\W/g, '-')}${app.getVersion()}`,
+    release: `${name.replace(/\W/g, '-')}${app.getVersion()}`,
     user: { ip_address: '{{auto}}' },
   };
 }
 
 /** Merges the given event payload with SDK defaults. */
-export async function addEventDefaults(event: Event): Promise<Event> {
+export async function addEventDefaults(appName: string | undefined, event: Event): Promise<Event> {
   // The event defaults are cached as long as the app is running. We create the
   // promise here synchronously to avoid multiple events computing them at the
   // same time.
   // tslint:disable-next-line: no-promise-as-boolean
   if (!defaultsPromise) {
-    defaultsPromise = getEventDefaults();
+    defaultsPromise = getEventDefaults(appName);
   }
 
   const { contexts = {} } = event;

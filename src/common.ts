@@ -2,6 +2,7 @@ import { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
 import { BaseBackend } from '@sentry/core';
 import { NodeOptions } from '@sentry/node';
 import { Client, Event, Options, Scope } from '@sentry/types';
+import { SentryError } from '@sentry/utils';
 import { App } from 'electron';
 
 /** IPC to ping the main process when initializing in the renderer. */
@@ -27,6 +28,13 @@ export const IPC_SCOPE = 'sentry-electron.scope';
  * @see ElectronOptions
  */
 export interface ElectronOptions extends Options, BrowserOptions, NodeOptions {
+  /**
+   * The name of the application. Primarily used for crash directory naming. If this property is not supplied,
+   * it will be retrieved using the Electron `app.getName/name` API. If you disable the Electron `remote` module in
+   * the renderer, this property is required.
+   */
+  appName?: string;
+
   /**
    * Enables crash reporting for JavaScript errors in this process. Defaults to
    * `true`.
@@ -93,8 +101,31 @@ declare interface CrossApp extends App {
 }
 
 /** Get the name of an electron app for <v5 and v7< */
-export function getName(app: App): string {
-  const a = app as CrossApp;
+export function getNameFallback(): string {
+  // tslint:disable-next-line: strict-type-predicates
+  if (require === undefined) {
+    throw new SentryError(
+      'Could not require("electron") to get appName. Please ensure you pass `appName` to Sentry options',
+    );
+  }
+
+  const electron = require('electron');
+
+  // if we're in the main process
+  if (electron && electron.app) {
+    const appMain = electron.app as CrossApp;
+    return appMain.name || appMain.getName();
+  }
+
+  // We're in the renderer process but the remote module is not available
+  if (!electron || !electron.remote) {
+    throw new SentryError(
+      'The Electron `remote` module was not available to get appName. Please ensure you pass `appName` to Sentry options',
+    );
+  }
+
+  // Remote is available so get the app name
+  const a = electron.remote.app as CrossApp;
   return a.name || a.getName();
 }
 
