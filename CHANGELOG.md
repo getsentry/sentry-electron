@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.2.0
+
+- meta: Update dependencies
+- fix: Fixed location for win-ca write path
+- feat: Allow usage without remote module
+- ref: Use electron-fetch again
+- fix: Add try/catch for decode
+
 ## v1.1.0
 
 - meta: Update dependencies
