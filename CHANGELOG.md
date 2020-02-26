@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.1
+
+- Add Support for Electron 8
+
 ## v1.2.0
 
 - meta: Update dependencies
