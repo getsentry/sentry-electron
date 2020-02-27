@@ -14,9 +14,9 @@
 ## Features
 
 - Captures **Node errors** in the main process (using
-  [`@sentry/node`](https://github.com/getsentry/raven-js/tree/master/packages/node))
+  [`@sentry/node`](https://github.com/getsentry/sentry-javascript/tree/master/packages/node))
 - Captures **JavaScript errors** in renderer processes (using
-  [`@sentry/browser`](https://github.com/getsentry/raven-js/tree/master/packages/browser))
+  [`@sentry/browser`](https://github.com/getsentry/sentry-javascript/tree/master/packages/browser))
 - Captures **native crashes** (Minidump crash reports) from renderers and the main process
 - Collects **breadcrumbs and context** information along with events across renderers and the main process
 
