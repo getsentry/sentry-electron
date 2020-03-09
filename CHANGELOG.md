@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.3.0
+
+- feat: Bump `@sentry/*` `~5.13.2`
+
 ## v1.2.1
 
 - Add Support for Electron 8
