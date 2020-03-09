@@ -5,6 +5,8 @@ github:
   repo: sentry-electron
 changelogPolicy: simple
 preReleaseCommand: bash scripts/craft-pre-release.sh
+statusProvider:
+  name: github
 targets:
   - name: npm
   - name: registry
