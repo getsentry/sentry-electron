@@ -21,12 +21,6 @@ import { Store } from './store';
 import { NetTransport } from './transports/net';
 import { MinidumpUploader } from './uploader';
 
-/** Patch to access internal CrashReporter functionality. */
-interface CrashReporterExt {
-  /** Gets the crashes directory */
-  getCrashesDirectory(): string;
-}
-
 /** Gets the path to the Sentry cache directory. */
 function getCachePath(): string {
   return join(app.getPath('userData'), 'sentry');
@@ -40,7 +34,7 @@ export async function isAppReady(): Promise<boolean> {
     app.isReady() ||
     // tslint:disable-next-line: no-promise-as-boolean
     new Promise<boolean>(resolve => {
-      app.once('ready', resolve);
+      app.once('ready', () => resolve(true));
     })
   );
 }
@@ -244,11 +238,11 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
 
   /** Installs IPC handlers to receive events and metadata from renderers. */
   private _installIPC(): void {
-    ipcMain.on(IPC_PING, (event: Electron.Event) => {
+    ipcMain.on(IPC_PING, (event: Electron.IpcMainEvent) => {
       event.sender.send(IPC_PING);
     });
 
-    ipcMain.on(IPC_EVENT, (ipc: Electron.Event, event: Event) => {
+    ipcMain.on(IPC_EVENT, (ipc: Electron.IpcMainEvent, event: Event) => {
       event.extra = {
         ...this._getRendererExtra(ipc.sender),
         ...event.extra,

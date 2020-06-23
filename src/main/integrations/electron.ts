@@ -53,11 +53,11 @@ export class Electron implements Integration {
    * Hooks into the Electron EventEmitter to capture breadcrumbs for the
    * specified events.
    */
-  private _instrumentBreadcrumbs(category: string, emitter: Electron.EventEmitter, events: string[] = []): void {
+  private _instrumentBreadcrumbs(category: string, emitter: NodeJS.EventEmitter, events: string[] = []): void {
     type Emit = (event: string, ...args: any[]) => boolean;
     const emit = emitter.emit.bind(emitter) as Emit;
 
-    emitter.emit = (event, ...args) => {
+    emitter.emit = (event: string, ...args) => {
       if (events.length === 0 || events.indexOf(event) > -1) {
         const breadcrumb = {
           category: 'electron',
