@@ -200,11 +200,10 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       uploadToServer: false,
     });
 
-    // The crashReporter has an undocumented method to retrieve the directory
+    // The crashReporter has a method to retrieve the directory
     // it uses to store minidumps in. The structure in this directory depends
     // on the crash library being used (Crashpad or Breakpad).
-    const reporter: CrashReporterExt = crashReporter as any;
-    const crashesDirectory = reporter.getCrashesDirectory();
+    const crashesDirectory = crashReporter.getCrashesDirectory();
 
     this._uploader = new MinidumpUploader(dsn, crashesDirectory, getCachePath());
 
