@@ -35,7 +35,10 @@ export class NetTransport extends Transports.BaseTransport {
           } else {
             // tslint:disable:no-unsafe-any
             if (res.headers && res.headers['x-sentry-error']) {
-              const reason = res.headers['x-sentry-error'];
+              let reason: string | string[] = res.headers['x-sentry-error'];
+              if (Array.isArray(reason)) {
+                reason = reason.join(', ');
+              }
               // tslint:enable:no-unsafe-any
               reject(new SentryError(`HTTP Error (${res.statusCode}): ${reason}`));
             } else {

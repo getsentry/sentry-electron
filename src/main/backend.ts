@@ -34,7 +34,9 @@ export async function isAppReady(): Promise<boolean> {
     app.isReady() ||
     // tslint:disable-next-line: no-promise-as-boolean
     new Promise<boolean>(resolve => {
-      app.once('ready', () => resolve(true));
+      app.once('ready', () => {
+        resolve(true);
+      });
     })
   );
 }
