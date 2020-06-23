@@ -249,7 +249,14 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       event.sender.send(IPC_PING);
     });
 
-    ipcMain.on(IPC_EVENT, (ipc: Electron.Event, event: Event) => {
+    ipcMain.on(IPC_EVENT, (ipc: Electron.Event, jsonEvent: string) => {
+      let event: Event;
+      try {
+        event = JSON.parse(jsonEvent) as Event;
+      } catch {
+        console.warn('sentry-electron received an invalid IPC_EVENT message');
+        return;
+      }
       event.extra = {
         ...this._getRendererExtra(ipc.sender),
         ...event.extra,
@@ -257,7 +264,14 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       captureEvent(event);
     });
 
-    ipcMain.on(IPC_SCOPE, (_: any, rendererScope: Scope) => {
+    ipcMain.on(IPC_SCOPE, (_: any, jsonRendererScope: string) => {
+      let rendererScope: Scope;
+      try {
+        rendererScope = JSON.parse(jsonRendererScope) as Scope;
+      } catch {
+        console.warn('sentry-electron received an invalid IPC_SCOPE message');
+        return;
+      }
       // tslint:disable:no-unsafe-any
       const sentScope = Scope.clone(rendererScope) as any;
       configureScope(scope => {
