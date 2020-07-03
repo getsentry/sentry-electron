@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.3.1
+
+- fix: Add test for electron.net module (#235)
+- fix: getCrashesDirectory is documented as API now (#234)
+- fix: check if contents is destroyed before hooking for breadcrumbs (#230)
+- perf: dont double serialize IPC messages (#232)
+
 ## v1.3.0
 
 - feat: Bump `@sentry/*` `~5.13.2`

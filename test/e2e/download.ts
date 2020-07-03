@@ -33,10 +33,11 @@ function getExecutablePath(): string {
  * @returns Path to the Electron executable
  */
 export async function downloadElectron(version: string, arch: string): Promise<string> {
-  const dir = join(getHomDir(), '.cache', `${version}-${arch}`);
+  const cacheDir = join(getHomDir(), '.cache');
+  const dir = join(cacheDir, `${version}-${arch}`);
 
   if (!existsSync(dir)) {
-    const zipPath = await electronDownload({ version, arch });
+    const zipPath = await electronDownload({ version, arch, cache: cacheDir });
     await electronExtract(zipPath, { dir });
   }
 

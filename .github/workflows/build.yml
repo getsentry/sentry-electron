@@ -15,7 +15,7 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: |
-            ~/.cache/electron
+            ~/.cache
             **/node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
       - name: Install
@@ -37,7 +37,7 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: |
-            ~/.cache/electron
+            ~/.cache
             **/node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
       - run: yarn install
@@ -59,7 +59,7 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: |
-            ~/.cache/electron
+            ~/.cache
             **/node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
       - run: yarn install
@@ -82,7 +82,7 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: |
-            ~/.cache/electron
+            ~/.cache
             **/node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
       - name: Download Artifacts
