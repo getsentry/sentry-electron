@@ -18,18 +18,10 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v2
-      - uses: borales/actions-yarn@v2.3.0
-        with:
-          cmd: install # will run `yarn install` command
-      - uses: borales/actions-yarn@v2.3.0
-        with:
-          cmd: build # will run `yarn build` command
-      - uses: borales/actions-yarn@v2.3.0
-        with:
-          cmd: lint
-      - uses: borales/actions-yarn@v2.3.0
-        with:
-          cmd: test
-      - uses: borales/actions-yarn@v2.3.0
-        with:
-          cmd: e2e
+      - uses: actions/setup-node@v1
+      - uses: microsoft/playwright-github-action@v1
+      - run: yarn install
+      - run: yarn build
+      - run: yarn lint
+      - run: yarn test
+      - run: yarn e2e
