@@ -50,7 +50,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
   public sendEvent(event: Event): void {
     // We pass through JSON because in Electron >= 8, IPC uses v8's structured clone algorithm and throws errors if
     // objects have functions
-    ipcRenderer.send(IPC_EVENT, JSON.parse(JSON.stringify(event)));
+    ipcRenderer.send(IPC_EVENT, JSON.stringify(event));
   }
 
   /**
@@ -62,7 +62,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
       scope.addScopeListener(updatedScope => {
         // We pass through JSON because in Electron >= 8, IPC uses v8's structured clone algorithm and throws errors if
         // objects have functions
-        ipcRenderer.send(IPC_SCOPE, JSON.parse(JSON.stringify(updatedScope)));
+        ipcRenderer.send(IPC_SCOPE, JSON.stringify(updatedScope));
         scope.clearBreadcrumbs();
       });
     }
