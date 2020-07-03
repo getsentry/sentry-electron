@@ -4,12 +4,49 @@ on:
     branches:
       - master
   pull_request:
-    branches:
-      - '*'
 
 jobs:
   job_1:
     name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/electron
+            **/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Install
+        run: yarn install
+      - name: Build
+        run: yarn build
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v1
+        with:
+          name: dist
+          path: dist
+
+  job_2:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/electron
+            **/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - run: yarn install
+      - name: Run Linter
+        run: yarn lint
+
+  job_3:
+    name: Test
+    needs: job_1
     runs-on: ${{ matrix.os }}
     strategy:
       # we want that the matrix keeps running, default is to cancel them if it fails.
@@ -19,9 +56,18 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
-      - uses: microsoft/playwright-github-action@v1
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/electron
+            **/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
       - run: yarn install
-      - run: yarn build
-      - run: yarn lint
-      - run: yarn test
-      - run: yarn e2e
+      - name: Download Artifacts
+        uses: actions/download-artifact@v1
+        with:
+          name: dist
+      - name: Run Unit Tests
+        run: yarn test
+      - name: Run Unit Tests
+        run: yarn e2e
