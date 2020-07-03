@@ -25,7 +25,7 @@ export class NetTransport extends Transports.BaseTransport {
     await isAppReady();
     return this._buffer.add(
       new Promise<Response>((resolve, reject) => {
-        const req = net.request(this._getRequestOptions());
+        const req = net.request(this._getRequestOptions() as Electron.ClientRequestConstructorOptions);
         req.on('error', reject);
         req.on('response', (res: Electron.IncomingMessage) => {
           if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
@@ -35,7 +35,10 @@ export class NetTransport extends Transports.BaseTransport {
           } else {
             // tslint:disable:no-unsafe-any
             if (res.headers && res.headers['x-sentry-error']) {
-              const reason = res.headers['x-sentry-error'];
+              let reason: string | string[] = res.headers['x-sentry-error'];
+              if (Array.isArray(reason)) {
+                reason = reason.join(', ');
+              }
               // tslint:enable:no-unsafe-any
               reject(new SentryError(`HTTP Error (${res.statusCode}): ${reason}`));
             } else {

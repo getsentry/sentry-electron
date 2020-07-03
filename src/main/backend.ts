@@ -21,12 +21,6 @@ import { Store } from './store';
 import { NetTransport } from './transports/net';
 import { MinidumpUploader } from './uploader';
 
-/** Patch to access internal CrashReporter functionality. */
-interface CrashReporterExt {
-  /** Gets the crashes directory */
-  getCrashesDirectory(): string;
-}
-
 /** Gets the path to the Sentry cache directory. */
 function getCachePath(): string {
   return join(app.getPath('userData'), 'sentry');
@@ -40,7 +34,9 @@ export async function isAppReady(): Promise<boolean> {
     app.isReady() ||
     // tslint:disable-next-line: no-promise-as-boolean
     new Promise<boolean>(resolve => {
-      app.once('ready', resolve);
+      app.once('ready', () => {
+        resolve(true);
+      });
     })
   );
 }
@@ -200,11 +196,10 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       uploadToServer: false,
     });
 
-    // The crashReporter has an undocumented method to retrieve the directory
+    // The crashReporter has a method to retrieve the directory
     // it uses to store minidumps in. The structure in this directory depends
     // on the crash library being used (Crashpad or Breakpad).
-    const reporter: CrashReporterExt = crashReporter as any;
-    const crashesDirectory = reporter.getCrashesDirectory();
+    const crashesDirectory = crashReporter.getCrashesDirectory();
 
     this._uploader = new MinidumpUploader(dsn, crashesDirectory, getCachePath());
 
@@ -245,18 +240,11 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
 
   /** Installs IPC handlers to receive events and metadata from renderers. */
   private _installIPC(): void {
-    ipcMain.on(IPC_PING, (event: Electron.Event) => {
+    ipcMain.on(IPC_PING, (event: Electron.IpcMainEvent) => {
       event.sender.send(IPC_PING);
     });
 
-    ipcMain.on(IPC_EVENT, (ipc: Electron.Event, jsonEvent: string) => {
-      let event: Event;
-      try {
-        event = JSON.parse(jsonEvent) as Event;
-      } catch {
-        console.warn('sentry-electron received an invalid IPC_EVENT message');
-        return;
-      }
+    ipcMain.on(IPC_EVENT, (ipc: Electron.IpcMainEvent, event: Event) => {
       event.extra = {
         ...this._getRendererExtra(ipc.sender),
         ...event.extra,
