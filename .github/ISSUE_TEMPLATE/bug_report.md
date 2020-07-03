@@ -14,7 +14,7 @@ assignees: ''
 
 ## Versions + Platform
 
-- [ ] SKD version - `@sentry/electron@v?.?.?`
+- [ ] SDK version - `@sentry/electron@v?.?.?`
 - [ ] Electron version - `electron@v?.?.?`
 - [ ] Platform - `Windows/macOS/Linux`
 
