@@ -1,0 +1,105 @@
+name: 'Test'
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  job_1:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/electron
+            **/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Install
+        run: yarn install
+      - name: Build
+        run: yarn build
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v1
+        with:
+          name: dist
+          path: dist
+
+  job_2:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/electron
+            **/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - run: yarn install
+      - name: Run Linter
+        run: yarn lint
+
+  job_3:
+    name: Test
+    needs: job_1
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # we want that the matrix keeps running, default is to cancel them if it fails.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/electron
+            **/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - run: yarn install
+      - name: Download Artifacts
+        uses: actions/download-artifact@v1
+        with:
+          name: dist
+      - name: Run Unit Tests
+        run: yarn test
+      - name: Run E2E Tests
+        run: yarn e2e
+
+  job_4:
+    name: Zeus
+    needs: job_1
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/electron
+            **/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Download Artifacts
+        uses: actions/download-artifact@v1
+        with:
+          name: dist
+      - name: Pack
+        run: yarn pack
+      - name: Install Zeus
+        run: |
+          yarn global add @zeus-ci/cli
+          echo "::add-path::$(yarn global bin)"
+      - name: Upload to Zeus
+        env:
+          ZEUS_API_TOKEN: ${{ secrets.ZEUS_API_TOKEN }}
+          ZEUS_HOOK_BASE: ${{ secrets.ZEUS_HOOK_BASE }}
+        run: |
+          zeus job update -b $GITHUB_RUN_ID -j $GITHUB_RUN_NUMBER -r $GITHUB_SHA
+          zeus upload -b $GITHUB_RUN_ID -j $GITHUB_RUN_NUMBER -t "application/tar+npm" *.tgz
+          zeus job update --status=passed -b $GITHUB_RUN_ID -j $GITHUB_RUN_NUMBER -r $GITHUB_SHA
