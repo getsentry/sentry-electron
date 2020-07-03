@@ -252,7 +252,14 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       captureEvent(event);
     });
 
-    ipcMain.on(IPC_SCOPE, (_: any, rendererScope: Scope) => {
+    ipcMain.on(IPC_SCOPE, (_: any, jsonRendererScope: string) => {
+      let rendererScope: Scope;
+      try {
+        rendererScope = JSON.parse(jsonRendererScope) as Scope;
+      } catch {
+        console.warn('sentry-electron received an invalid IPC_SCOPE message');
+        return;
+      }
       // tslint:disable:no-unsafe-any
       const sentScope = Scope.clone(rendererScope) as any;
       configureScope(scope => {

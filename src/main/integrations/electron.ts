@@ -37,6 +37,10 @@ export class Electron implements Integration {
       // SetImmediate is required for contents.id to be correct
       // https://github.com/electron/electron/issues/12036
       setImmediate(() => {
+        if (contents.isDestroyed()) {
+          return;
+        }
+
         const options = (getCurrentHub().getClient() as ElectronClient).getOptions();
         const customName = options.getRendererName && options.getRendererName(contents);
 
