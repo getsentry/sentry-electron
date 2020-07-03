@@ -71,3 +71,29 @@ jobs:
         run: yarn test
       - name: Run Unit Tests
         run: yarn e2e
+
+  job_4:
+    name: Zeus
+    needs: job_1
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/electron
+            **/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Download Artifacts
+        uses: actions/download-artifact@v1
+        with:
+          name: dist
+      - name: Pack
+        run: yarn pack
+      - name: Install Zeus
+        run: yarn global add @zeus-ci/cli
+      - name: Upload to Zeus
+        env:
+          ZEUS_API_TOKEN: ${{ secrets.ZEUS_API_TOKEN }}
+        run: zeus upload -t "application/tar+npm" *.tgz

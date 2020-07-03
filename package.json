@@ -25,9 +25,9 @@
     "fix": "run-s fix:tslint fix:prettier",
     "fix:prettier": "prettier --write \"{src,test}/**/*.ts\"",
     "fix:tslint": "tslint --fix -t stylish -p .",
-    "pretest": "run-s clean build",
+    "pretest": "[ \"${CI+1}\" ] || run-s clean build",
     "test": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe electron-mocha --require ts-node/register/transpile-only --timeout 3000 ./test/unit/**/*.ts",
-    "pree2e": "run-s clean build",
+    "pree2e": "[ \"${CI+1}\" ] || run-s clean build",
     "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only --timeout 30000 --retries 5 ./test/e2e/**/*.ts"
   },
   "dependencies": {
