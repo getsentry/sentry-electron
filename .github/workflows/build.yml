@@ -96,4 +96,4 @@ jobs:
       - name: Upload to Zeus
         env:
           ZEUS_API_TOKEN: ${{ secrets.ZEUS_API_TOKEN }}
-        run: zeus upload -t "application/tar+npm" *.tgz
+        run: ${{ steps.yarn-bin.outputs.dir }}/zeus upload -t "application/tar+npm" *.tgz
