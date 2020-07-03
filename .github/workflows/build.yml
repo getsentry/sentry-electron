@@ -69,7 +69,7 @@ jobs:
           name: dist
       - name: Run Unit Tests
         run: yarn test
-      - name: Run Unit Tests
+      - name: Run E2E Tests
         run: yarn e2e
 
   job_4:
@@ -99,4 +99,7 @@ jobs:
         env:
           ZEUS_API_TOKEN: ${{ secrets.ZEUS_API_TOKEN }}
           ZEUS_HOOK_BASE: ${{ secrets.ZEUS_HOOK_BASE }}
-        run: zeus upload -b $GITHUB_RUN_ID -j $GITHUB_RUN_NUMBER -t "application/tar+npm" *.tgz
+        run: |
+          zeus job update -b $GITHUB_RUN_ID -j $GITHUB_RUN_NUMBER -ref $GITHUB_SHA
+          zeus upload -b $GITHUB_RUN_ID -j $GITHUB_RUN_NUMBER -t "application/tar+npm" *.tgz
+          zeus job update --status=passed -b $GITHUB_RUN_ID -j $GITHUB_RUN_NUMBER -ref $GITHUB_SHA
