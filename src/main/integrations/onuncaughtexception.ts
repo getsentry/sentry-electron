@@ -39,7 +39,7 @@ export class OnUncaughtException implements Integration {
           }));
 
           let theError = error;
-          if (!isError(error) && error.message && error.stack && error.name) {
+          if (!isError(error) && error.stack) {
             theError = new Error();
             theError.message = error.message;
             theError.stack = error.stack;
