@@ -1,7 +1,7 @@
 import { getCurrentHub, NodeClient } from '@sentry/node';
 import { Event, Integration, Severity } from '@sentry/types';
-import { dialog } from 'electron';
 import { isError } from '@sentry/utils';
+import { dialog } from 'electron';
 
 /** Capture unhandled erros. */
 export class OnUncaughtException implements Integration {
