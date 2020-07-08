@@ -1,4 +1,4 @@
-name: 'Test'
+name: 'Build & Test'
 on:
   push:
     branches:
@@ -27,7 +27,7 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: dist
-          path: dist
+          path: ${{ github.workspace }}/dist
 
   job_2:
     name: Lint
@@ -46,7 +46,7 @@ jobs:
         run: yarn lint
 
   job_3:
-    name: Test
+    name: Unit Tests
     needs: job_1
     runs-on: ${{ matrix.os }}
     strategy:
@@ -68,15 +68,19 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: dist
+          path: ${{ github.workspace }}/dist
       - name: Run Unit Tests
         run: yarn test
-      - name: Run E2E Tests
-        run: yarn e2e
 
   job_4:
-    name: Zeus
+    name: E2E Tests
     needs: job_1
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # we want that the matrix keeps running, default is to cancel them if it fails.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
@@ -86,10 +90,27 @@ jobs:
             ~/.cache
             **/node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - run: yarn install
       - name: Download Artifacts
         uses: actions/download-artifact@v1
         with:
           name: dist
+          path: ${{ github.workspace }}/dist
+      - name: Run E2E Tests
+        run: yarn e2e
+
+  job_5:
+    name: Zeus
+    needs: job_1
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+      - name: Download Artifacts
+        uses: actions/download-artifact@v1
+        with:
+          name: dist
+          path: ${{ github.workspace }}/dist
       - name: Pack
         run: yarn pack
       - name: Install Zeus
