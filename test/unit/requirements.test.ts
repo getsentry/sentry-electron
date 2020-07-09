@@ -11,7 +11,7 @@ describe('TS -> JS conversion check', () => {
   });
 });
 
-describe('Bundle with webpack', () => {
+(process.platform === 'linux' ? describe : describe.skip)('Bundle with webpack', () => {
   it('should not throw TypeError: mod.require is not a function', done => {
     exec('cd test/integration/bundle-test-app/; yarn && yarn build && yarn start', (_err, stdout) => {
       expect(stdout).to.not.match(/TypeError: mod\.require is not a function/);
