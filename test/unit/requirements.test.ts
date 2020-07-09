@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import * as fs from 'fs';
 import { exec } from 'child_process';
+import * as fs from 'fs';
 
 describe('TS -> JS conversion check', () => {
   // We should make sure we always use electron.net module since it deals with all possible
