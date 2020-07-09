@@ -20,4 +20,6 @@ app.on('ready', () => {
       slashes: true,
     }),
   );
+  // We are quitting because we are only intesterst in startup
+  setTimeout(() => app.quit(), 100);
 });
