@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.3.2
+
+- fix: Create error object in case we cant detect it (#240)
+
 ## v1.3.1
 
 - fix: Add test for electron.net module (#235)
