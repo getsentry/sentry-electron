@@ -2,8 +2,7 @@ import { BaseClient, Scope } from '@sentry/core';
 import { Event, EventHint } from '@sentry/types';
 import { logger, SyncPromise } from '@sentry/utils';
 
-import { CommonClient, ElectronOptions } from '../common';
-import { SDK_NAME } from '../sdk';
+import { ElectronClient, ElectronOptions, SDK_NAME } from '../common';
 
 import { MainBackend } from './backend';
 import { addEventDefaults } from './context';
@@ -14,7 +13,7 @@ import { normalizeEvent } from './normalize';
 export const SDK_VERSION: string = require('../../package.json').version;
 
 /** Frontend implementation for Electron renderer backends. */
-export class MainClient extends BaseClient<MainBackend, ElectronOptions> implements CommonClient {
+export class MainClient extends BaseClient<MainBackend, ElectronOptions> implements ElectronClient {
   /**
    * Creates a new Electron SDK instance.
    * @param options Configuration options for this SDK.

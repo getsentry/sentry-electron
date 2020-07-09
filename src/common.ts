@@ -12,6 +12,8 @@ export const IPC_EVENT = 'sentry-electron.event';
 /** IPC to capture a scope globally. */
 export const IPC_SCOPE = 'sentry-electron.scope';
 
+export const SDK_NAME = 'sentry.javascript.electron';
+
 /**
  * Configuration options for {@link ElectronOptions}.
  *
@@ -62,7 +64,7 @@ export interface ElectronOptions extends Options, BrowserOptions, NodeOptions {
 }
 
 /** Common interface for Electron clients. */
-export interface CommonClient extends Client<ElectronOptions> {
+export interface ElectronClient extends Client<ElectronOptions> {
   /**
    * Uploads a native crash dump (Minidump) to Sentry.
    *
