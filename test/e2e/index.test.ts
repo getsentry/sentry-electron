@@ -201,6 +201,30 @@ describe('E2E Tests', () => {
         expect(breadcrumbs.length, 'filtered breadcrumbs').to.equal(1);
       });
 
+      it('Captures Scope data correctly from renderer', async () => {
+        await context.start('sentry-basic', 'scope-data-renderer');
+        await context.waitForEvents(testServer, 1);
+        const event = testServer.events[0];
+
+        expect(event.data.extra!.a).to.equal(2);
+        expect(event.data.user!.id).to.equal('1');
+        expect(event.data.tags!.a).to.equal('b');
+        expect(event.data.contexts!.server).to.include({ id: '2' });
+        expect(event.data.fingerprint!).to.include('abcd');
+      });
+
+      it('Captures Scope data correctly from main', async () => {
+        await context.start('sentry-basic', 'scope-data-main');
+        await context.waitForEvents(testServer, 1);
+        const event = testServer.events[0];
+
+        expect(event.data.extra!.a).to.equal(2);
+        expect(event.data.user!.id).to.equal('1');
+        expect(event.data.tags!.a).to.equal('b');
+        expect(event.data.contexts!.server).to.include({ id: '2' });
+        expect(event.data.fingerprint!).to.include('abcd');
+      });
+
       it('Loaded via preload script with nodeIntegration disabled', async () => {
         const electronPath = await downloadElectron(version, arch);
         context = new TestContext(electronPath, join(__dirname, 'preload-app'));
