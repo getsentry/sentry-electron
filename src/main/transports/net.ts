@@ -1,7 +1,7 @@
 import { eventToSentryRequest } from '@sentry/core';
 import { Transports } from '@sentry/node';
 import { Event, Response, Status, TransportOptions } from '@sentry/types';
-import { PromiseBuffer, SentryError } from '@sentry/utils';
+import { logger, parseRetryAfterHeader, PromiseBuffer, SentryError } from '@sentry/utils';
 import { net } from 'electron';
 import * as url from 'url';
 
@@ -12,6 +12,9 @@ export class NetTransport extends Transports.BaseTransport {
   /** A simple buffer holding all requests. */
   protected readonly _buffer: PromiseBuffer<Response> = new PromiseBuffer(30);
 
+  /** Locks transport after receiving 429 response */
+  private _netDisabledUntil: Date = new Date(Date.now());
+
   /** Create a new instance and set this.agent */
   public constructor(public options: TransportOptions) {
     super(options);
@@ -21,6 +24,12 @@ export class NetTransport extends Transports.BaseTransport {
    * @inheritDoc
    */
   public async sendEvent(event: Event): Promise<Response> {
+    // tslint:disable-next-line
+    if (new Date(Date.now()) < this._netDisabledUntil) {
+      return Promise.reject(
+        new SentryError(`Transport locked till ${this._netDisabledUntil.toString()} due to too many requests.`),
+      );
+    }
     if (!this._buffer.isReady()) {
       return Promise.reject(new SentryError('Not adding Promise due to buffer limit reached.'));
     }
@@ -38,6 +47,14 @@ export class NetTransport extends Transports.BaseTransport {
               status: Status.fromHttpCode(res.statusCode),
             });
           } else {
+            if (status === Status.RateLimit) {
+              const now = Date.now();
+              let header = res.headers ? res.headers['Retry-After'] : '';
+              header = Array.isArray(header) ? header[0] : header;
+              this._netDisabledUntil = new Date(now + parseRetryAfterHeader(now, header));
+              logger.warn(`Too many requests, backing off till: ${this._netDisabledUntil.toString()}`);
+            }
+
             // tslint:disable:no-unsafe-any
             if (res.headers && res.headers['x-sentry-error']) {
               let reason: string | string[] = res.headers['x-sentry-error'];
