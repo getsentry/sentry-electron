@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.4.0
+
+- feat: Add rate limiting to net transport (#245)
+- fix: Expose `browser` & `module` field in `package.json` for bundlers (#241)
+- feat: Bump `@sentry/*` `~5.19.1`
+- fix: Don't persist scope data across starts (#242)
+- feat: New options `useCrashpadMinidumpUploader` and `useSentryMinidumpUploader` (#244)
+
 ## v1.4.0-beta.0
 
 - fix: Expose `browser` & `module` field in `package.json` for bundlers (#241)
