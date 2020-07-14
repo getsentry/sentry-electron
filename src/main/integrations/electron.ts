@@ -7,7 +7,7 @@ import {
   // tslint:disable-next-line:no-implicit-dependencies
 } from 'electron';
 
-import { ElectronClient } from '../../dispatch';
+import { ElectronClient } from '../../common';
 
 /** Electron integration that cleans up the event. */
 export class Electron implements Integration {

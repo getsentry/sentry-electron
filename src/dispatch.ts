@@ -2,16 +2,16 @@ import { ClientClass, Scope } from '@sentry/core';
 import { Dsn, Event, EventHint, Integration, IntegrationClass, Severity } from '@sentry/types';
 import { dynamicRequire } from '@sentry/utils';
 
-import { CommonClient, ElectronOptions } from './common';
+import { ElectronClient as ElectronClientInterface, ElectronOptions } from './common';
 
 /**
  * The Sentry Electron SDK Frontend.
  *
  * @see ElectronOptions for documentation on configuration options.
  */
-export class ElectronClient implements CommonClient {
+export class ElectronClient implements ElectronClientInterface {
   /** Actual frontend implementation for the main or renderer process. */
-  private readonly _inner: CommonClient;
+  private readonly _inner: ElectronClientInterface;
 
   /**
    * Creates a new Electron SDK instance.
@@ -33,7 +33,7 @@ export class ElectronClient implements CommonClient {
     // this would be running `@sentry/electron` in a bare node process, which is
     // acceptable.
     // tslint:disable:no-unsafe-any
-    const clientClass: ClientClass<CommonClient, ElectronOptions> =
+    const clientClass: ClientClass<ElectronClientInterface, ElectronOptions> =
       process.type === 'browser' ? dynamicRequire(module, './main').MainClient : require('./renderer').RendererClient;
     // tslint:enable:no-unsafe-any
     this._inner = new clientClass(options);
