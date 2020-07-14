@@ -5,14 +5,14 @@ import { join } from 'path';
 import { TestContext } from './context';
 import { downloadElectron } from './download';
 import { TestServer } from './server';
-import { delay, getLastFrame, getTests } from './utils';
+import { getLastFrame, getTests } from './utils';
 
 const SENTRY_KEY = '37f8a2ee37c0409d8970bc7559c7c7e4';
 
 should();
 use(chaiAsPromised);
 
-const tests = getTests('1.7.16', '1.8.8', '2.0.18', '3.1.13', '4.2.12', '5.0.13', '6.1.7', '7.1.11', '8.3.0', '9.0.5');
+const tests = getTests('1.8.8', '2.0.18', '3.1.13', '4.2.12', '5.0.13', '6.1.7', '7.1.11', '8.3.0', '9.0.5');
 
 describe('E2E Tests', () => {
   let testServer: TestServer;
