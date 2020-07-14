@@ -268,22 +268,6 @@ describe('E2E Tests', () => {
         expect(breadcrumbs.length).to.greaterThan(4);
       });
 
-      it('Scope is persisted between app restarts', async () => {
-        await context.start('sentry-basic');
-        await delay(5000);
-        // We restart the app and keep the context
-        await context.stop(false);
-
-        await context.start('sentry-basic', 'javascript-renderer');
-
-        await context.waitForEvents(testServer, 1);
-        const event = testServer.events[0];
-        const breadcrumbs = event.data.breadcrumbs || [];
-        const appReadyBreadCrumbs = breadcrumbs.filter(b => b.message && b.message.includes('app.ready'));
-
-        expect(appReadyBreadCrumbs.length).to.equal(2);
-      });
-
       it('Custom named renderer process', async () => {
         await context.start('sentry-custom-renderer-name', 'javascript-renderer');
         await context.waitForEvents(testServer, 1);
