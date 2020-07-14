@@ -24,6 +24,12 @@ export class NetTransport extends Transports.BaseTransport {
    * @inheritDoc
    */
   public async sendEvent(event: Event): Promise<Response> {
+    // tslint:disable-next-line
+    if (new Date(Date.now()) < this._netDisabledUntil) {
+      return Promise.reject(
+        new SentryError(`Transport locked till ${this._netDisabledUntil.toString()} due to too many requests.`),
+      );
+    }
     if (!this._buffer.isReady()) {
       return Promise.reject(new SentryError('Not adding Promise due to buffer limit reached.'));
     }
