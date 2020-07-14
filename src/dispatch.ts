@@ -109,6 +109,13 @@ export class ElectronClient implements ElectronClientInterface {
   public getIntegration<T extends Integration>(integration: IntegrationClass<T>): T | null {
     return this._inner.getIntegration(integration);
   }
+
+  /**
+   * @inheritDoc
+   */
+  public setupIntegrations(): void {
+    this._inner.setupIntegrations();
+  }
 }
 
 /**

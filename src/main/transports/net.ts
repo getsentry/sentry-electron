@@ -1,7 +1,9 @@
+import { eventToSentryRequest } from '@sentry/core';
 import { Transports } from '@sentry/node';
 import { Event, Response, Status, TransportOptions } from '@sentry/types';
 import { PromiseBuffer, SentryError } from '@sentry/utils';
 import { net } from 'electron';
+import * as url from 'url';
 
 import { isAppReady } from '../backend';
 
@@ -25,7 +27,10 @@ export class NetTransport extends Transports.BaseTransport {
     await isAppReady();
     return this._buffer.add(
       new Promise<Response>((resolve, reject) => {
-        const req = net.request(this._getRequestOptions() as Electron.ClientRequestConstructorOptions);
+        const sentryReq = eventToSentryRequest(event, this._api);
+        const options = this._getRequestOptions(new url.URL(sentryReq.url));
+
+        const req = net.request(options as Electron.ClientRequestConstructorOptions);
         req.on('error', reject);
         req.on('response', (res: Electron.IncomingMessage) => {
           if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {

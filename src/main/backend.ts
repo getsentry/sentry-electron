@@ -110,6 +110,18 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   }
 
   /**
+   * @inheritDoc
+   */
+  public sendEvent(event: Event): void {
+    if ((event as any).__INTERNAL_MINIDUMP) {
+      // logger.log('Setting internal event on `crashReporter`', JSON.stringify(event).length);
+      crashReporter.addExtraParameter('sentry', JSON.stringify(event));
+    } else {
+      this._inner.sendEvent(event);
+    }
+  }
+
+  /**
    * Uploads the given minidump and attaches event information.
    *
    * @param path A relative or absolute path to the minidump file.
@@ -131,6 +143,11 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
         const cloned = Scope.clone(updatedScope);
         (cloned as any)._eventProcessors = [];
         (cloned as any)._scopeListeners = [];
+        // if we use the crashpad minidump uploader we have to set extra whenever the scope updates
+        if (this._options.useCrashpadMinidumpUploader !== false) {
+          // @ts-ignore
+          captureEvent({ __INTERNAL_MINIDUMP: true });
+        }
         this._scopeStore.set(cloned);
       });
     }
@@ -168,22 +185,24 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       ignoreSystemCrashHandler: true,
       productName: this._options.appName || getNameFallback(),
       submitURL: MinidumpUploader.minidumpUrlFromDsn(dsn),
-      uploadToServer: false,
+      uploadToServer: this._options.useCrashpadMinidumpUploader || false,
     });
 
-    // The crashReporter has a method to retrieve the directory
-    // it uses to store minidumps in. The structure in this directory depends
-    // on the crash library being used (Crashpad or Breakpad).
-    const crashesDirectory = crashReporter.getCrashesDirectory();
+    if (this._options.useSentryMinidumpUploader !== false) {
+      // The crashReporter has a method to retrieve the directory
+      // it uses to store minidumps in. The structure in this directory depends
+      // on the crash library being used (Crashpad or Breakpad).
+      const crashesDirectory = crashReporter.getCrashesDirectory();
 
-    this._uploader = new MinidumpUploader(dsn, crashesDirectory, getCachePath());
+      this._uploader = new MinidumpUploader(dsn, crashesDirectory, getCachePath());
 
-    // Flush already cached minidumps from the queue.
-    forget(this._uploader.flushQueue());
+      // Flush already cached minidumps from the queue.
+      forget(this._uploader.flushQueue());
 
-    // Start to submit recent minidump crashes. This will load breadcrumbs and
-    // context information that was cached on disk prior to the crash.
-    forget(this._sendNativeCrashes({}));
+      // Start to submit recent minidump crashes. This will load breadcrumbs and
+      // context information that was cached on disk prior to the crash.
+      forget(this._sendNativeCrashes({}));
+    }
 
     // Every time a subprocess or renderer crashes, start sending minidumps
     // right away.
