@@ -1,8 +1,10 @@
 {
   "name": "@sentry/electron",
   "description": "Offical Sentry SDK for Electron",
-  "version": "1.3.2",
+  "version": "1.4.0-beta.0",
   "main": "./dist/index.js",
+  "module": "./dist/main/index.js",
+  "browser": "./dist/renderer/index.js",
   "repository": "https://github.com/getsentry/sentry-electron.git",
   "author": "Sentry",
   "contributors": [
@@ -26,7 +28,7 @@
     "fix:prettier": "prettier --write \"{src,test}/**/*.ts\"",
     "fix:tslint": "tslint --fix -t stylish -p .",
     "pretest": "[ \"${CI+1}\" ] || run-s clean build",
-    "test": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe electron-mocha --require ts-node/register/transpile-only --timeout 3000 ./test/unit/**/*.ts",
+    "test": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe electron-mocha --require ts-node/register/transpile-only --timeout 120000 ./test/unit/**/*.ts",
     "pree2e": "[ \"${CI+1}\" ] || run-s clean build",
     "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only --timeout 30000 --retries 5 ./test/e2e/**/*.ts"
   },

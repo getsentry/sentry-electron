@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.4.0-beta.0
+
+- fix: Expose `browser` & `module` field in `package.json` for bundlers (#241)
+
 ## v1.3.2
 
 - fix: Create error object in case we cant detect it (#240)

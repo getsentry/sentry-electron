@@ -14,8 +14,8 @@ import { app, crashReporter, ipcMain } from 'electron';
 import { join } from 'path';
 
 import { CommonBackend, ElectronOptions, getNameFallback, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
-import { captureMinidump } from '../sdk';
 
+import { captureMinidump } from './index';
 import { normalizeUrl } from './normalize';
 import { Store } from './store';
 import { NetTransport } from './transports/net';

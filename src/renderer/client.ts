@@ -3,12 +3,12 @@ import { BaseClient, getCurrentHub, Scope } from '@sentry/core';
 import { Event, EventHint } from '@sentry/types';
 import { logger } from '@sentry/utils';
 
-import { CommonClient, ElectronOptions } from '../common';
+import { ElectronClient, ElectronOptions } from '../common';
 
 import { RendererBackend } from './backend';
 
 /** Frontend implementation for Electron renderer backends. */
-export class RendererClient extends BaseClient<RendererBackend, ElectronOptions> implements CommonClient {
+export class RendererClient extends BaseClient<RendererBackend, ElectronOptions> implements ElectronClient {
   /**
    * Internal used browser client
    */

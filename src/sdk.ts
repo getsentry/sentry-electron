@@ -1,13 +1,10 @@
-export const SDK_NAME = 'sentry.javascript.electron';
-// Version will be taken directly from package.json in sdkinformation.ts integration
-
 import { ReportDialogOptions } from '@sentry/browser';
 import { getCurrentHub } from '@sentry/core';
 import { _callOnClient } from '@sentry/minimal';
 import { Event } from '@sentry/types';
 
-import { ElectronOptions } from './common';
-import { ElectronClient, specificInit } from './dispatch';
+import { ElectronClient, ElectronOptions } from './common';
+import { specificInit } from './dispatch';
 
 /**
  * The Sentry Electron SDK Client.
