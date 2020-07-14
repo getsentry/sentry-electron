@@ -114,7 +114,6 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
    */
   public sendEvent(event: Event): void {
     if ((event as any).__INTERNAL_MINIDUMP) {
-      // logger.log('Setting internal event on `crashReporter`', JSON.stringify(event).length);
       crashReporter.addExtraParameter('sentry', JSON.stringify(event));
     } else {
       this._inner.sendEvent(event);
@@ -144,7 +143,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
         (cloned as any)._eventProcessors = [];
         (cloned as any)._scopeListeners = [];
         // if we use the crashpad minidump uploader we have to set extra whenever the scope updates
-        if (this._options.useCrashpadMinidumpUploader !== false) {
+        if (this._options.useCrashpadMinidumpUploader === true) {
           // @ts-ignore
           captureEvent({ __INTERNAL_MINIDUMP: true });
         }
