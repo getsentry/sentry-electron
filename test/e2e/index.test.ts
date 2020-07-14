@@ -165,6 +165,15 @@ describe('E2E Tests', () => {
         expect(breadcrumbs.length).to.greaterThan(4);
       });
 
+      it('JavaScript exception in main process with user data', async () => {
+        await context.start('sentry-scope-user-data', 'javascript-main');
+        await context.waitForEvents(testServer, 1);
+        const event = testServer.events[0];
+        const user = event.data.user || {};
+
+        expect(user.id).to.equal('johndoe');
+      });
+
       it('Native crash in main process', async () => {
         await context.start('sentry-basic', 'native-main');
 
@@ -199,6 +208,30 @@ describe('E2E Tests', () => {
         expect(testServer.events.length).to.equal(1);
         expect(event.dump_file).to.equal(undefined);
         expect(breadcrumbs.length, 'filtered breadcrumbs').to.equal(1);
+      });
+
+      it('Captures Scope data correctly from renderer', async () => {
+        await context.start('sentry-basic', 'scope-data-renderer');
+        await context.waitForEvents(testServer, 1);
+        const event = testServer.events[0];
+
+        expect(event.data.extra!.a).to.equal(2);
+        expect(event.data.user!.id).to.equal('1');
+        expect(event.data.tags!.a).to.equal('b');
+        expect(event.data.contexts!.server).to.include({ id: '2' });
+        expect(event.data.fingerprint!).to.include('abcd');
+      });
+
+      it('Captures Scope data correctly from main', async () => {
+        await context.start('sentry-basic', 'scope-data-main');
+        await context.waitForEvents(testServer, 1);
+        const event = testServer.events[0];
+
+        expect(event.data.extra!.a).to.equal(2);
+        expect(event.data.user!.id).to.equal('1');
+        expect(event.data.tags!.a).to.equal('b');
+        expect(event.data.contexts!.server).to.include({ id: '2' });
+        expect(event.data.fingerprint!).to.include('abcd');
       });
 
       it('Loaded via preload script with nodeIntegration disabled', async () => {
@@ -242,22 +275,6 @@ describe('E2E Tests', () => {
         expect(event.dump_file).to.be.instanceOf(Buffer);
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(breadcrumbs.length).to.greaterThan(4);
-      });
-
-      it('Scope is persisted between app restarts', async () => {
-        await context.start('sentry-basic');
-        await delay(5000);
-        // We restart the app and keep the context
-        await context.stop(false);
-
-        await context.start('sentry-basic', 'javascript-renderer');
-
-        await context.waitForEvents(testServer, 1);
-        const event = testServer.events[0];
-        const breadcrumbs = event.data.breadcrumbs || [];
-        const appReadyBreadCrumbs = breadcrumbs.filter(b => b.message && b.message.includes('app.ready'));
-
-        expect(appReadyBreadCrumbs.length).to.equal(2);
       });
 
       it('Custom named renderer process', async () => {
