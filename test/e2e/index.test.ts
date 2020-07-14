@@ -165,6 +165,15 @@ describe('E2E Tests', () => {
         expect(breadcrumbs.length).to.greaterThan(4);
       });
 
+      it('JavaScript exception in main process with user data', async () => {
+        await context.start('sentry-scope-user-data', 'javascript-main');
+        await context.waitForEvents(testServer, 1);
+        const event = testServer.events[0];
+        const user = event.data.user || {};
+
+        expect(user.id).to.equal('johndoe');
+      });
+
       it('Native crash in main process', async () => {
         await context.start('sentry-basic', 'native-main');
 
