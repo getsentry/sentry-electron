@@ -50,6 +50,20 @@ export interface ElectronOptions extends Options, BrowserOptions, NodeOptions {
   enableNative?: boolean;
 
   /**
+   * Enables the Sentry internal uploader for minidumps.
+   * Defaults to `true`.
+   */
+  useSentryMinidumpUploader?: boolean;
+
+  /**
+   * This sets `uploadToServer` of the crashReporter to `true`. The SDK also tries to set data (Sentry Event)
+   * with `crashReporter.addExtraParameter` to provide more context. Keep in mind, you should set
+   * `useSentryMinidumpUploader` to `false` otherwise you recieve the crash report twice.
+   * Defaults to `false`.
+   */
+  useCrashpadMinidumpUploader?: boolean;
+
+  /**
    * Enables event reporting for BrowserWindow 'unresponsive' events
    * Defaults to `true`.
    */
