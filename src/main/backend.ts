@@ -204,38 +204,34 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       forget(this._sendNativeCrashes({}));
     }
 
+    /**
+     * Helper function for sending renderer crashes
+     */
+    const sendRendererCrash = async (contents: Electron.WebContents, details?: Electron.Details) => {
+      try {
+        await this._sendNativeCrashes(this._getRendererElectronContext(contents, details));
+      } catch (e) {
+        console.error(e);
+      }
+
+      addBreadcrumb({
+        category: 'exception',
+        level: Severity.Critical,
+        message: 'Renderer Crashed',
+      });
+    };
+
     // Every time a subprocess or renderer crashes, start sending minidumps
     // right away.
     app.on('web-contents-created', (_, contents) => {
-      if (getElectronVersion().major > 8 || (getElectronVersion().major === 8 && getElectronVersion().minor >= 4)) {
+      // We need to update this once this lands in 9.x
+      if (getElectronVersion().major === 8 && getElectronVersion().minor >= 4) {
         contents.on('render-process-gone', async (_event, details) => {
-          try {
-            await this._sendNativeCrashes(this._getRendererElectronContext(contents, details));
-          } catch (e) {
-            console.error(e);
-          }
-
-          addBreadcrumb({
-            category: 'exception',
-            level: Severity.Critical,
-            message: 'Renderer Crashed',
-            timestamp: new Date().getTime() / 1000,
-          });
+          await sendRendererCrash(contents, details);
         });
       } else {
         contents.on('crashed', async () => {
-          try {
-            await this._sendNativeCrashes(this._getRendererElectronContext(contents));
-          } catch (e) {
-            console.error(e);
-          }
-
-          addBreadcrumb({
-            category: 'exception',
-            level: Severity.Critical,
-            message: 'Renderer Crashed',
-            timestamp: new Date().getTime() / 1000,
-          });
+          await sendRendererCrash(contents);
         });
       }
 
