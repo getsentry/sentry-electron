@@ -209,7 +209,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
      */
     const sendRendererCrash = async (contents: Electron.WebContents, details?: Electron.Details) => {
       try {
-        await this._sendNativeCrashes(this._getRendererElectronContext(contents, details));
+        await this._sendNativeCrashes(this._getNewEventWithElectronContext(contents, details));
       } catch (e) {
         console.error(e);
       }
@@ -224,8 +224,11 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     // Every time a subprocess or renderer crashes, start sending minidumps
     // right away.
     app.on('web-contents-created', (_, contents) => {
-      // We need to update this once this lands in 9.x
-      if (getElectronVersion().major === 8 && getElectronVersion().minor >= 4) {
+      if (
+        (getElectronVersion().major === 8 && getElectronVersion().minor >= 4) ||
+        (getElectronVersion().major === 9 && getElectronVersion().minor >= 2) ||
+        getElectronVersion().major >= 10
+      ) {
         contents.on('render-process-gone', async (_event, details) => {
           await sendRendererCrash(contents, details);
         });
@@ -261,7 +264,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       }
 
       event.contexts = {
-        ...this._getRendererElectronContext(ipc.sender).contexts,
+        ...this._getNewEventWithElectronContext(ipc.sender).contexts,
         ...event.contexts,
       };
 
@@ -335,9 +338,9 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   }
 
   /** Returns extra information from a renderer's web contents. */
-  private _getRendererElectronContext(contents: Electron.WebContents, details?: Electron.Details): Event {
+  private _getNewEventWithElectronContext(contents: Electron.WebContents, details?: Electron.Details): Event {
     const customName = this._options.getRendererName && this._options.getRendererName(contents);
-    const electronContext: { [key: string]: any } = {
+    const electronContext: Record<string, any> = {
       crashed_process: customName || `renderer[${contents.id}]`,
       crashed_url: normalizeUrl(contents.getURL()),
     };

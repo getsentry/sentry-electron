@@ -2,10 +2,10 @@
  * Returns the major version of electron
  */
 export function getElectronVersion(): { major: number; minor: number; patch: number } {
-  const versions = process.versions.electron.split('.').map(val => parseInt(val, 10));
+  const { groups } = /(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)/.exec(process.versions.electron) || { groups: {} };
   return {
-    major: versions[0],
-    minor: versions[1],
-    patch: versions[2],
+    major: parseInt(groups ? groups.major : '', 10),
+    minor: parseInt(groups ? groups.minor : '', 10),
+    patch: parseInt(groups ? groups.patch : '', 10),
   };
 }
