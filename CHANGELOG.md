@@ -1,5 +1,7 @@
 # Changelog
 
+- fix: Add `tslib` dependency
+
 ## v1.4.0
 
 - feat: Add rate limiting to net transport (#245)

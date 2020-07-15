@@ -41,7 +41,8 @@
     "@sentry/utils": "~5.19.1",
     "electron-fetch": "^1.4.0",
     "form-data": "2.5.1",
-    "util.promisify": "1.0.1"
+    "util.promisify": "1.0.1",
+    "tslib": "^1.9.3"
   },
   "devDependencies": {
     "@sentry/typescript": "^5.19.1",
