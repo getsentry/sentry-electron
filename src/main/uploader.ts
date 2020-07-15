@@ -8,6 +8,7 @@ import { promisify } from 'util';
 
 import { mkdirp } from './fs';
 import { Store } from './store';
+import { getElectronVersion } from './utils';
 
 const readdir = promisify(fs.readdir);
 const rename = promisify(fs.rename);
@@ -73,7 +74,7 @@ export class MinidumpUploader {
    * @param cacheDirectory A persistent directory to cache minidumps.
    */
   public constructor(dsn: Dsn, crashesDirectory: string, cacheDirectory: string) {
-    const crashpadWindows = process.platform === 'win32' && parseInt(process.versions.electron.split('.')[0], 10) >= 6;
+    const crashpadWindows = process.platform === 'win32' && getElectronVersion().major >= 6;
     this._type = process.platform === 'darwin' || crashpadWindows ? 'crashpad' : 'breakpad';
     this._crashpadSubDirectory = process.platform === 'darwin' ? 'completed' : 'reports';
     this._knownPaths = [];

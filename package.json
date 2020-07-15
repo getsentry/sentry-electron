@@ -60,7 +60,7 @@
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "cross-env": "^5.2.0",
-    "electron": "8.3.0",
+    "electron": "8.4.0",
     "electron-download": "^4.1.1",
     "electron-mocha": "^6.0.4",
     "express": "^4.16.2",
