@@ -283,7 +283,7 @@ describe('E2E Tests', () => {
         const event = testServer.events[0];
 
         expect(testServer.events.length).to.equal(1);
-        expect(event.data.extra && event.data.extra.crashed_process).to.equal('renderer');
+        expect(event.data.contexts && (event.data.contexts.electron as any).crashed_process).to.equal('renderer');
       });
     });
   });

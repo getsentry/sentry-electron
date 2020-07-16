@@ -226,7 +226,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       const version = parseSemver(process.versions.electron);
       const major = version.major || 0;
       const minor = version.minor || 0;
-      if ((major === 8 && minor >= 4) || (major === 9 && minor >= 1) || major || 0 >= 10) {
+      if ((major === 8 && minor >= 4) || (major === 9 && minor >= 1) || major >= 10) {
         contents.on('render-process-gone', async (_event, details) => {
           await sendRendererCrash(contents, details);
         });
