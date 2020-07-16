@@ -60,10 +60,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
 
     let success = true;
 
-    // The setImmediate is important here since the client has to be on the hub already that configureScope works
-    setImmediate(() => {
-      this._setupScopeListener();
-    });
+    this._setupScopeListener();
 
     if (this._isNativeEnabled()) {
       success = this._installNativeHandler() && success;

@@ -228,7 +228,7 @@ describe('E2E Tests', () => {
         const event = testServer.events[0];
 
         expect(event.data.extra!.a).to.equal(2);
-        expect(event.data.user!.id).to.equal('1');
+        expect(event.data.user!.id).to.equal('2');
         expect(event.data.tags!.a).to.equal('b');
         expect(event.data.contexts!.server).to.include({ id: '2' });
         expect(event.data.fingerprint!).to.include('abcd');
