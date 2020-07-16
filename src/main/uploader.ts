@@ -1,7 +1,7 @@
 import { Event } from '@sentry/types';
 import { Dsn, logger } from '@sentry/utils';
 import fetch from 'electron-fetch';
-import FormData = require('form-data');
+import * as FormData from 'form-data';
 import * as fs from 'fs';
 import { basename, join } from 'path';
 import { promisify } from 'util';

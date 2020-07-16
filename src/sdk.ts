@@ -1,4 +1,4 @@
-import { ReportDialogOptions } from '@sentry/browser';
+import { ReportDialogOptions } from '@sentry/browser/esm/helpers';
 import { getCurrentHub } from '@sentry/core';
 import { _callOnClient } from '@sentry/minimal';
 import { Event } from '@sentry/types';

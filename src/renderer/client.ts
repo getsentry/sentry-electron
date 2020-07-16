@@ -1,4 +1,5 @@
-import { BrowserClient, ReportDialogOptions } from '@sentry/browser';
+import { injectReportDialog, ReportDialogOptions } from '@sentry/browser/esm/helpers';
+import { SDK_NAME, SDK_VERSION } from '@sentry/browser/esm/version';
 import { BaseClient, getCurrentHub, Scope } from '@sentry/core';
 import { Event, EventHint } from '@sentry/types';
 import { logger } from '@sentry/utils';
@@ -10,17 +11,11 @@ import { RendererBackend } from './backend';
 /** Frontend implementation for Electron renderer backends. */
 export class RendererClient extends BaseClient<RendererBackend, ElectronOptions> implements ElectronClient {
   /**
-   * Internal used browser client
-   */
-  private readonly _inner: BrowserClient;
-
-  /**
    * Creates a new Electron SDK instance.
    * @param options Configuration options for this SDK.
    */
   public constructor(options: ElectronOptions) {
     super(RendererBackend, options);
-    this._inner = new BrowserClient({ ...options, defaultIntegrations: false, integrations: [] });
   }
 
   /**
@@ -28,6 +23,18 @@ export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
    */
   protected _prepareEvent(event: Event, scope?: Scope, hint?: EventHint): PromiseLike<Event | null> {
     event.platform = event.platform || 'javascript';
+    event.sdk = {
+      ...event.sdk,
+      name: SDK_NAME,
+      packages: [
+        ...((event.sdk && event.sdk.packages) || []),
+        {
+          name: 'npm:@sentry/browser',
+          version: SDK_VERSION,
+        },
+      ],
+      version: SDK_VERSION,
+    };
     return super._prepareEvent(event, scope, hint);
   }
 
@@ -51,6 +58,6 @@ export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
     if (!options.eventId) {
       options.eventId = getCurrentHub().lastEventId();
     }
-    this._inner.showReportDialog(options);
+    injectReportDialog(options);
   }
 }

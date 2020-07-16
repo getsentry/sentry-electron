@@ -1,7 +1,8 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
+stats.json
 dist/
+esm/
 coverage
 node_modules/

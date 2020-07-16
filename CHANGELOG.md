@@ -1,6 +1,7 @@
 # Changelog
 
 - fix: Add `tslib` dependency
+- feat: Provide esm build for smaller bundle size
 
 ## v1.4.0
 
