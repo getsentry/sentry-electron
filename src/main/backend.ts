@@ -20,6 +20,7 @@ import { normalizeUrl } from './normalize';
 import { Store } from './store';
 import { NetTransport } from './transports/net';
 import { MinidumpUploader } from './uploader';
+import { getElectronVersion } from './utils';
 
 /** Gets the path to the Sentry cache directory. */
 function getCachePath(): string {
@@ -203,23 +204,39 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       forget(this._sendNativeCrashes({}));
     }
 
+    /**
+     * Helper function for sending renderer crashes
+     */
+    const sendRendererCrash = async (contents: Electron.WebContents, details?: Electron.Details) => {
+      try {
+        await this._sendNativeCrashes(this._getNewEventWithElectronContext(contents, details));
+      } catch (e) {
+        console.error(e);
+      }
+
+      addBreadcrumb({
+        category: 'exception',
+        level: Severity.Critical,
+        message: 'Renderer Crashed',
+      });
+    };
+
     // Every time a subprocess or renderer crashes, start sending minidumps
     // right away.
     app.on('web-contents-created', (_, contents) => {
-      contents.on('crashed', async () => {
-        try {
-          await this._sendNativeCrashes(this._getRendererExtra(contents));
-        } catch (e) {
-          console.error(e);
-        }
-
-        addBreadcrumb({
-          category: 'exception',
-          level: Severity.Critical,
-          message: 'Renderer Crashed',
-          timestamp: new Date().getTime() / 1000,
+      if (
+        (getElectronVersion().major === 8 && getElectronVersion().minor >= 4) ||
+        (getElectronVersion().major === 9 && getElectronVersion().minor >= 2) ||
+        getElectronVersion().major >= 10
+      ) {
+        contents.on('render-process-gone', async (_event, details) => {
+          await sendRendererCrash(contents, details);
         });
-      });
+      } else {
+        contents.on('crashed', async () => {
+          await sendRendererCrash(contents);
+        });
+      }
 
       if (this._options.enableUnresponsive !== false) {
         contents.on('unresponsive', () => {
@@ -246,9 +263,9 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
         return;
       }
 
-      event.extra = {
-        ...this._getRendererExtra(ipc.sender),
-        ...event.extra,
+      event.contexts = {
+        ...this._getNewEventWithElectronContext(ipc.sender).contexts,
+        ...event.contexts,
       };
 
       captureEvent(event);
@@ -279,7 +296,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   }
 
   /** Loads new native crashes from disk and sends them to Sentry. */
-  private async _sendNativeCrashes(extra: object): Promise<void> {
+  private async _sendNativeCrashes(event: Event): Promise<void> {
     // Whenever we are called, assume that the crashes we are going to load down
     // below have occurred recently. This means, we can use the same event data
     // for all minidumps that we load now. There are two conditions:
@@ -292,6 +309,11 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     //     about it. Just use the breadcrumbs and context information we have
     //     right now and hope that the delay was not too long.
 
+    if (this._options.useSentryMinidumpUploader === false) {
+      // In case we are not using the Sentry Minidump uploader we don't want to throw an error
+      return;
+    }
+
     const uploader = this._uploader;
     if (uploader === undefined) {
       throw new SentryError('Invariant violation: Native crashes not enabled');
@@ -301,7 +323,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     const fetchedScope = this._scopeStore.get();
     try {
       const storedScope = Scope.clone(fetchedScope);
-      let newEvent = await storedScope.applyToEvent({ extra });
+      let newEvent = await storedScope.applyToEvent(event);
 
       if (newEvent) {
         newEvent = await currentCloned.applyToEvent(newEvent);
@@ -316,12 +338,20 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   }
 
   /** Returns extra information from a renderer's web contents. */
-  private _getRendererExtra(contents: Electron.WebContents): { [key: string]: any } {
+  private _getNewEventWithElectronContext(contents: Electron.WebContents, details?: Electron.Details): Event {
     const customName = this._options.getRendererName && this._options.getRendererName(contents);
-
-    return {
+    const electronContext: Record<string, any> = {
       crashed_process: customName || `renderer[${contents.id}]`,
       crashed_url: normalizeUrl(contents.getURL()),
+    };
+    if (details) {
+      // We need to do it like this, otherwise we normalize undefined to "[undefined]" in the UI
+      electronContext.details = details;
+    }
+    return {
+      contexts: {
+        electron: electronContext,
+      },
     };
   }
 }
