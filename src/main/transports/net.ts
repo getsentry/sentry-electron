@@ -1,5 +1,5 @@
 import { eventToSentryRequest } from '@sentry/core';
-import { BaseTransport } from '@sentry/node/esm/transports';
+import { Transports } from '@sentry/node';
 import { Event, Response, Status, TransportOptions } from '@sentry/types';
 import { logger, parseRetryAfterHeader, PromiseBuffer, SentryError } from '@sentry/utils';
 import { net } from 'electron';
@@ -8,7 +8,7 @@ import * as url from 'url';
 import { isAppReady } from '../backend';
 
 /** Using net module of electron */
-export class NetTransport extends BaseTransport {
+export class NetTransport extends Transports.BaseTransport {
   /** A simple buffer holding all requests. */
   protected readonly _buffer: PromiseBuffer<Response> = new PromiseBuffer(30);
 

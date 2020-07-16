@@ -33,10 +33,8 @@ export {
   withScope,
 } from '@sentry/core';
 
-import { ReportDialogOptions } from '@sentry/browser/esm/helpers';
-import * as defaultIntegrations from '@sentry/browser/esm/integrations';
+import { defaultIntegrations, ReportDialogOptions } from '@sentry/browser';
 import { getCurrentHub, initAndBind } from '@sentry/core';
-import * as coreDefaultIntegrations from '@sentry/core/esm/integrations';
 import { _callOnClient } from '@sentry/minimal';
 import { Event } from '@sentry/types';
 
@@ -52,15 +50,7 @@ export { RendererClient } from './client';
  */
 export function init(options: ElectronOptions): void {
   if (options.defaultIntegrations === undefined) {
-    options.defaultIntegrations = [
-      new coreDefaultIntegrations.InboundFilters(),
-      new coreDefaultIntegrations.FunctionToString(),
-      new defaultIntegrations.TryCatch(),
-      new defaultIntegrations.Breadcrumbs(),
-      new defaultIntegrations.GlobalHandlers(),
-      new defaultIntegrations.LinkedErrors(),
-      new defaultIntegrations.UserAgent(),
-    ];
+    options.defaultIntegrations = defaultIntegrations;
   }
   initAndBind(RendererClient, options);
 }

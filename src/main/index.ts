@@ -36,9 +36,8 @@ export {
 } from '@sentry/core';
 
 import { initAndBind } from '@sentry/core';
-import * as coreDefaultIntegrations from '@sentry/core/esm/integrations';
 import { _callOnClient } from '@sentry/minimal';
-import * as nodeDefaultIntegrations from '@sentry/node/esm/integrations';
+import { defaultIntegrations } from '@sentry/node';
 import { Event } from '@sentry/types';
 
 import { ElectronOptions } from '../common';
@@ -49,20 +48,6 @@ import { NetTransport } from './transports/net';
 export { MainClient } from './client';
 export { MainBackend } from './backend';
 export { Integrations as NodeIntegrations } from '@sentry/node';
-
-const defaultIntegrations = [
-  // Common
-  new coreDefaultIntegrations.InboundFilters(),
-  new coreDefaultIntegrations.FunctionToString(),
-  // Native Wrappers
-  new nodeDefaultIntegrations.Console(),
-  new nodeDefaultIntegrations.Http(),
-  // Global Handlers
-  new nodeDefaultIntegrations.OnUncaughtException(),
-  new nodeDefaultIntegrations.OnUnhandledRejection(),
-  // Misc
-  new nodeDefaultIntegrations.LinkedErrors(),
-];
 
 // tslint:disable-next-line:variable-name
 export const ElectronIntegrations = { Electron, OnUncaughtException };

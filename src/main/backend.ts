@@ -7,7 +7,7 @@ import {
   getCurrentHub,
   Scope,
 } from '@sentry/core';
-import { NodeBackend } from '@sentry/node/esm/backend';
+import { NodeBackend } from '@sentry/node';
 import { Event, EventHint, Severity, Transport, TransportOptions } from '@sentry/types';
 import { Dsn, forget, logger, parseSemver, SentryError } from '@sentry/utils';
 import { app, crashReporter, ipcMain } from 'electron';

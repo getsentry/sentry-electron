@@ -1,7 +1,6 @@
-import { BrowserOptions } from '@sentry/browser/esm/backend';
-import { ReportDialogOptions } from '@sentry/browser/esm/helpers';
+import { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
 import { BaseBackend } from '@sentry/core';
-import { NodeOptions } from '@sentry/node/esm/backend';
+import { NodeOptions } from '@sentry/node';
 import { Client, Event, Options, Scope } from '@sentry/types';
 import { SentryError } from '@sentry/utils';
 import { App } from 'electron';

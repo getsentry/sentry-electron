@@ -1,4 +1,4 @@
-import { eventFromException, eventFromMessage } from '@sentry/browser/esm/eventbuilder';
+import { eventFromException, eventFromMessage } from '@sentry/browser';
 import { BaseBackend, getCurrentHub } from '@sentry/core';
 import { Event, EventHint, Severity } from '@sentry/types';
 import { crashReporter, ipcRenderer } from 'electron';

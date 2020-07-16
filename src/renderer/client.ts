@@ -1,5 +1,4 @@
-import { injectReportDialog, ReportDialogOptions } from '@sentry/browser/esm/helpers';
-import { SDK_NAME, SDK_VERSION } from '@sentry/browser/esm/version';
+import { injectReportDialog, ReportDialogOptions, SDK_NAME, SDK_VERSION } from '@sentry/browser';
 import { BaseClient, getCurrentHub, Scope } from '@sentry/core';
 import { Event, EventHint } from '@sentry/types';
 import { logger } from '@sentry/utils';
