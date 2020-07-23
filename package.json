@@ -3,8 +3,8 @@
   "description": "Offical Sentry SDK for Electron",
   "version": "1.4.0",
   "main": "./dist/index.js",
-  "module": "./dist/main/index.js",
-  "browser": "./dist/renderer/index.js",
+  "module": "./esm/main/index.js",
+  "browser": "./esm/renderer/index.js",
   "repository": "https://github.com/getsentry/sentry-electron.git",
   "author": "Sentry",
   "contributors": [
@@ -16,8 +16,12 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "build:watch": "tsc -p tsconfig.build.json  -w --preserveWatchOutput",
+    "build": "run-p build:es6 build:esm",
+    "build:es6": "tsc -p tsconfig.build.json",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:watch": "run-p build:watch:es6 build:watch:esm",
+    "build:watch:es6": "tsc -p tsconfig.build.json -w --preserveWatchOutput",
+    "build:watch:esm": "tsc -p tsconfig.esm.json -w --preserveWatchOutput",
     "clean": "rimraf dist coverage",
     "preexample": "run-s clean build",
     "example": "electron example",
@@ -27,25 +31,25 @@
     "fix": "run-s fix:tslint fix:prettier",
     "fix:prettier": "prettier --write \"{src,test}/**/*.ts\"",
     "fix:tslint": "tslint --fix -t stylish -p .",
-    "pretest": "[ \"${CI+1}\" ] || run-s clean build",
+    "pretest": "run-s clean build",
     "test": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe electron-mocha --require ts-node/register/transpile-only --timeout 120000 ./test/unit/**/*.ts",
-    "pree2e": "[ \"${CI+1}\" ] || run-s clean build",
+    "pree2e": "run-s clean build",
     "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only --timeout 30000 --retries 5 ./test/e2e/**/*.ts"
   },
   "dependencies": {
-    "@sentry/browser": "~5.19.1",
-    "@sentry/core": "~5.19.1",
-    "@sentry/minimal": "~5.19.1",
-    "@sentry/node": "~5.19.1",
-    "@sentry/types": "~5.19.1",
-    "@sentry/utils": "~5.19.1",
+    "@sentry/browser": "~5.20.0",
+    "@sentry/core": "~5.20.0",
+    "@sentry/minimal": "~5.20.0",
+    "@sentry/node": "~5.20.0",
+    "@sentry/types": "~5.20.0",
+    "@sentry/utils": "~5.20.0",
     "electron-fetch": "^1.4.0",
     "form-data": "2.5.1",
     "util.promisify": "1.0.1",
     "tslib": "^1.9.3"
   },
   "devDependencies": {
-    "@sentry/typescript": "^5.19.1",
+    "@sentry/typescript": "^5.20.0",
     "@types/body-parser": "^1.17.0",
     "@types/chai": "^4.2.10",
     "@types/chai-as-promised": "^7.1.0",
@@ -81,5 +85,6 @@
     "typescript": "^3.7.4",
     "typescript-tslint-plugin": "^0.5.5",
     "xvfb-maybe": "^0.2.1"
-  }
+  },
+  "sideEffects": false
 }

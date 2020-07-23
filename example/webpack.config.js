@@ -3,6 +3,8 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   devtool: 'source-map',
+  mode: 'production',
+  stats: 'verbose',
   entry: ['./app/index.js'],
   externals: {
     electron: 'commonjs electron',

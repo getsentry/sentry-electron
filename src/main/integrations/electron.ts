@@ -1,4 +1,4 @@
-import { getCurrentHub } from '@sentry/node';
+import { getCurrentHub } from '@sentry/core';
 import { Integration } from '@sentry/types';
 import {
   app,
