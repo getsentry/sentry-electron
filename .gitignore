@@ -3,5 +3,7 @@ yarn-debug.log*
 yarn-error.log*
 
 dist/
+esm/
 coverage
 node_modules/
+stats.json

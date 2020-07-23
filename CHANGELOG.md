@@ -1,6 +1,10 @@
 # Changelog
 
+## v1.5.0
+
 - fix: Add `tslib` dependency
+- feat: Bump `@sentry/*` `~5.19.1`
+- feat: Provide `esm` build for better treeshakeability
 
 ## v1.4.0
 
