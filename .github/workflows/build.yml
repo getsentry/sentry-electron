@@ -24,12 +24,12 @@ jobs:
       - name: Build
         run: yarn build
       - name: Archive production artifacts
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: build
           path: |
-            dist
-            esm
+            ${{ github.workspace }}/dist
+            ${{ github.workspace }}/esm
 
   job_2:
     name: Lint
@@ -71,8 +71,8 @@ jobs:
         with:
           name: build
           path: |
-            dist
-            esm
+            ${{ github.workspace }}/dist
+            ${{ github.workspace }}/esm
       - name: Run Unit Tests
         run: yarn test
 
@@ -100,8 +100,8 @@ jobs:
         with:
           name: build
           path: |
-            dist
-            esm
+            ${{ github.workspace }}/dist
+            ${{ github.workspace }}/esm
       - name: Run E2E Tests
         run: yarn e2e
 
@@ -117,8 +117,8 @@ jobs:
         with:
           name: build
           path: |
-            dist
-            esm
+            ${{ github.workspace }}/dist
+            ${{ github.workspace }}/esm
       - name: Pack
         run: yarn pack
       - name: Install Zeus
