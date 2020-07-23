@@ -23,13 +23,6 @@ jobs:
         run: yarn install
       - name: Build
         run: yarn build
-      - name: Archive production artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: build
-          path: |
-            ${{ github.workspace }}/dist
-            ${{ github.workspace }}/esm
 
   job_2:
     name: Lint
@@ -98,13 +91,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
-      - name: Download Artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: build
-          path: |
-            ${{ github.workspace }}/dist
-            ${{ github.workspace }}/esm
+      - name: Install
+        run: yarn install
+      - name: Build
+        run: yarn build
       - name: Pack
         run: yarn pack
       - name: Install Zeus
