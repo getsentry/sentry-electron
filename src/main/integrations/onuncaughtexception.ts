@@ -1,4 +1,5 @@
-import { getCurrentHub, NodeClient } from '@sentry/node';
+import { getCurrentHub } from '@sentry/core';
+import { NodeClient } from '@sentry/node';
 import { Event, Integration, Severity } from '@sentry/types';
 import { isError } from '@sentry/utils';
 import { dialog } from 'electron';

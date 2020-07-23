@@ -1,19 +1,17 @@
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const ReplacePlugin = require('webpack-plugin-replace');
+// const ReplacePlugin = require('webpack-plugin-replace');
 
 module.exports = [
   {
     mode: 'production',
+    devtool: 'source-map',
     // stats: 'errors-warnings',
     entry: './src/main.js',
     target: 'electron-main',
     output: {
       libraryTarget: 'commonjs2',
       filename: 'main.js',
-    },
-    optimization: {
-      minimize: false,
     },
     plugins: [
       new HtmlWebpackPlugin(),
@@ -26,6 +24,7 @@ module.exports = [
   },
   {
     mode: 'production',
+    devtool: 'source-map',
     // stats: 'errors-warnings',
     entry: './src/renderer.js',
     target: 'electron-renderer',

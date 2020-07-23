@@ -1,14 +1,13 @@
 import { Event } from '@sentry/types';
-import { Dsn, logger } from '@sentry/utils';
+import { Dsn, logger, parseSemver } from '@sentry/utils';
 import fetch from 'electron-fetch';
-import FormData = require('form-data');
+import * as FormData from 'form-data';
 import * as fs from 'fs';
 import { basename, join } from 'path';
 import { promisify } from 'util';
 
 import { mkdirp } from './fs';
 import { Store } from './store';
-import { getElectronVersion } from './utils';
 
 const readdir = promisify(fs.readdir);
 const rename = promisify(fs.rename);
@@ -74,7 +73,7 @@ export class MinidumpUploader {
    * @param cacheDirectory A persistent directory to cache minidumps.
    */
   public constructor(dsn: Dsn, crashesDirectory: string, cacheDirectory: string) {
-    const crashpadWindows = process.platform === 'win32' && getElectronVersion().major >= 6;
+    const crashpadWindows = process.platform === 'win32' && (parseSemver(process.versions.electron).major || 0) >= 6;
     this._type = process.platform === 'darwin' || crashpadWindows ? 'crashpad' : 'breakpad';
     this._crashpadSubDirectory = process.platform === 'darwin' ? 'completed' : 'reports';
     this._knownPaths = [];

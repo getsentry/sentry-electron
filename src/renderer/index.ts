@@ -33,8 +33,8 @@ export {
   withScope,
 } from '@sentry/core';
 
-import { defaultIntegrations, getCurrentHub, ReportDialogOptions } from '@sentry/browser';
-import { initAndBind } from '@sentry/core';
+import { defaultIntegrations, ReportDialogOptions } from '@sentry/browser';
+import { getCurrentHub, initAndBind } from '@sentry/core';
 import { _callOnClient } from '@sentry/minimal';
 import { Event } from '@sentry/types';
 

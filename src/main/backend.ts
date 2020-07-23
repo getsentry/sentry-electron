@@ -7,9 +7,9 @@ import {
   getCurrentHub,
   Scope,
 } from '@sentry/core';
-import { NodeBackend } from '@sentry/node/dist/backend';
+import { NodeBackend } from '@sentry/node';
 import { Event, EventHint, Severity, Transport, TransportOptions } from '@sentry/types';
-import { Dsn, forget, logger, SentryError } from '@sentry/utils';
+import { Dsn, forget, logger, parseSemver, SentryError } from '@sentry/utils';
 import { app, crashReporter, ipcMain } from 'electron';
 import { join } from 'path';
 
@@ -20,7 +20,6 @@ import { normalizeUrl } from './normalize';
 import { Store } from './store';
 import { NetTransport } from './transports/net';
 import { MinidumpUploader } from './uploader';
-import { getElectronVersion } from './utils';
 
 /** Gets the path to the Sentry cache directory. */
 function getCachePath(): string {
@@ -61,10 +60,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
 
     let success = true;
 
-    // The setImmediate is important here since the client has to be on the hub already that configureScope works
-    setImmediate(() => {
-      this._setupScopeListener();
-    });
+    this._setupScopeListener();
 
     if (this._isNativeEnabled()) {
       success = this._installNativeHandler() && success;
@@ -224,11 +220,10 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     // Every time a subprocess or renderer crashes, start sending minidumps
     // right away.
     app.on('web-contents-created', (_, contents) => {
-      if (
-        (getElectronVersion().major === 8 && getElectronVersion().minor >= 4) ||
-        (getElectronVersion().major === 9 && getElectronVersion().minor >= 2) ||
-        getElectronVersion().major >= 10
-      ) {
+      const version = parseSemver(process.versions.electron);
+      const major = version.major || 0;
+      const minor = version.minor || 0;
+      if ((major === 8 && minor >= 4) || (major === 9 && minor >= 1) || major >= 10) {
         contents.on('render-process-gone', async (_event, details) => {
           await sendRendererCrash(contents, details);
         });

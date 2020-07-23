@@ -1,4 +1,4 @@
-import { BrowserBackend } from '@sentry/browser/dist/backend';
+import { eventFromException, eventFromMessage } from '@sentry/browser';
 import { BaseBackend, getCurrentHub } from '@sentry/core';
 import { Event, EventHint, Severity } from '@sentry/types';
 import { crashReporter, ipcRenderer } from 'electron';
@@ -10,21 +10,16 @@ const PING_TIMEOUT = 500;
 
 /** Backend implementation for Electron renderer backends. */
 export class RendererBackend extends BaseBackend<ElectronOptions> implements CommonBackend<ElectronOptions> {
-  /** The inner SDK used to record JavaScript events. */
-  private readonly _inner: BrowserBackend;
-
   /** Creates a new Electron backend instance. */
   public constructor(options: ElectronOptions) {
+    if (options.enableJavaScript === false) {
+      options.enabled = false;
+    }
     super(options);
 
     if (this._isNativeEnabled()) {
       this._installNativeHandler();
     }
-
-    this._inner = new BrowserBackend({
-      enabled: this._isJavaScriptEnabled(),
-      ...options,
-    });
 
     this._pingMainProcess();
     this._setupScopeListener();
@@ -34,14 +29,14 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
    * @inheritDoc
    */
   public eventFromException(exception: any, hint?: EventHint): PromiseLike<Event> {
-    return this._inner.eventFromException(exception, hint);
+    return eventFromException(this._options, exception, hint);
   }
 
   /**
    * @inheritDoc
    */
   public eventFromMessage(message: string, level?: Severity, hint?: EventHint): PromiseLike<Event> {
-    return this._inner.eventFromMessage(message, level, hint);
+    return eventFromMessage(this._options, message, level, hint);
   }
 
   /**
@@ -66,11 +61,6 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
         scope.clearBreadcrumbs();
       });
     }
-  }
-
-  /** Returns whether JS is enabled. */
-  private _isJavaScriptEnabled(): boolean {
-    return this._options.enableJavaScript !== false;
   }
 
   /** Returns whether native reports are enabled. */

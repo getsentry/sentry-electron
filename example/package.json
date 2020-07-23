@@ -5,7 +5,8 @@
   "description": "A minimal Electron application",
   "main": "main.js",
   "scripts": {
-    "build": "webpack -p",
+    "build": "webpack",
+    "build:stats": "webpack -p --json > stats.json",
     "start": "electron ."
   },
   "dependencies": {
