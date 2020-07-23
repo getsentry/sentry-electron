@@ -6,6 +6,9 @@ on:
       - release/**
   pull_request:
 
+env:
+  CI: true
+
 jobs:
   job_1:
     name: Build
