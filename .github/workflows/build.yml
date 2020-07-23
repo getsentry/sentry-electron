@@ -66,13 +66,6 @@ jobs:
             **/node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
       - run: yarn install
-      - name: Download Artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: build
-          path: |
-            ${{ github.workspace }}/dist
-            ${{ github.workspace }}/esm
       - name: Run Unit Tests
         run: yarn test
 
@@ -95,13 +88,6 @@ jobs:
             **/node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
       - run: yarn install
-      - name: Download Artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: build
-          path: |
-            ${{ github.workspace }}/dist
-            ${{ github.workspace }}/esm
       - name: Run E2E Tests
         run: yarn e2e
 
