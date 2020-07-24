@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.5.1
+
+- fix: Rate limit status check (#251)
+
 ## v1.5.0
 
 - fix: Add `tslib` dependency
