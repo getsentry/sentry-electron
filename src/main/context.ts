@@ -1,11 +1,12 @@
 import { Event } from '@sentry/types';
 import * as child from 'child_process';
 import { app } from 'electron';
-import * as fs from 'fs';
 import { platform, release } from 'os';
 import { join } from 'path';
 
 import { getNameFallback } from '../common';
+
+import { readDirAsync, readFileAsync } from './fs';
 
 /** Operating system context information. */
 interface OsContext {
@@ -109,7 +110,16 @@ async function getDarwinInfo(): Promise<OsContext> {
     // We try to load the actual macOS version by executing the `sw_vers` tool.
     // This tool should be available on every standard macOS installation. In
     // case this fails, we stick with the values computed above.
-    const output = child.execFileSync('/usr/bin/sw_vers').toString();
+
+    const output = await new Promise<string>((resolve, reject) => {
+      child.execFile('/usr/bin/sw_vers', (error: Error | null, stdout: string) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(stdout);
+      });
+    });
     darwinInfo.name = matchFirst(/^ProductName:\s+(.*)$/m, output);
     darwinInfo.version = matchFirst(/^ProductVersion:\s+(.*)$/m, output);
     darwinInfo.build = matchFirst(/^BuildVersion:\s+(.*)$/m, output);
@@ -142,7 +152,7 @@ async function getLinuxInfo(): Promise<OsContext> {
     // for exactly one known file defined in `LINUX_DISTROS` and exit if none
     // are found. In case there are more than one file, we just stick with the
     // first one.
-    const etcFiles = fs.readdirSync('/etc');
+    const etcFiles = await readDirAsync('/etc');
     const distroFile = LINUX_DISTROS.find(file => etcFiles.includes(file.name));
     if (!distroFile) {
       return linuxInfo;
@@ -153,7 +163,7 @@ async function getLinuxInfo(): Promise<OsContext> {
     // usually quite small, this should not allocate too much memory and we only
     // hold on to it for a very short amount of time.
     const distroPath = join('/etc', distroFile.name);
-    const contents = fs.readFileSync(distroPath, 'utf-8').toLowerCase();
+    const contents = ((await readFileAsync(distroPath, { encoding: 'utf-8' })) as string).toLowerCase();
 
     // Some Linux distributions store their release information in the same file
     // (e.g. RHEL and Centos). In those cases, we scan the file for an

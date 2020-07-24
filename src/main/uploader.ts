@@ -101,7 +101,7 @@ export class MinidumpUploader {
       length: stat.size,
       type: 'attachment',
     });
-    const minidumpContent = await readFileAsync(minidumpPath);
+    const minidumpContent = (await readFileAsync(minidumpPath)) as Buffer;
 
     const eventPayload = JSON.stringify(event);
     const bodyBuffer = Buffer.from(`${envelopeHeaders}\n${itemHeaders}\n${eventPayload}\n${minidumpHeader}\n`);

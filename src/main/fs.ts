@@ -9,10 +9,13 @@ const _0777 = parseInt('0777', 8);
  * @param path A relative or absolute path to the file
  * @returns A Promise that resolves when the file has been read.
  */
-export async function readFileAsync(path: string, options?: { encoding?: null; flag?: string }): Promise<Buffer> {
+export async function readFileAsync(
+  path: string,
+  options?: { encoding?: string; flag?: string },
+): Promise<string | Buffer> {
   // We cannot use util.promisify here because that was only introduced in Node
   // 8 and we need to support older Node versions.
-  return new Promise<Buffer>((res, reject) => {
+  return new Promise<string | Buffer>((res, reject) => {
     readFile(path, options, (err, data) => {
       if (err) {
         reject(err);
