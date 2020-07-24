@@ -1,13 +1,12 @@
-import { Event } from '@sentry/types';
-import { Dsn, logger, parseSemver } from '@sentry/utils';
+import { API, SentryRequest } from '@sentry/core';
+import { Event, Status, Transport } from '@sentry/types';
+import { Dsn, logger, parseSemver, timestampWithMs } from '@sentry/utils';
 import * as fs from 'fs';
 import { basename, join } from 'path';
 
 import { mkdirp } from './fs';
 import { Store } from './store';
-
-/** Status code returned by Sentry to retry event submission later. */
-const CODE_RETRY = 429;
+import { NetTransport } from './transports/net';
 
 /** Maximum number of days to keep a minidump before deleting it. */
 const MAX_AGE = 30;
@@ -33,9 +32,6 @@ export interface MinidumpRequest {
  * A service that discovers Minidump crash reports and uploads them to Sentry.
  */
 export class MinidumpUploader {
-  /** The minidump ingestion endpoint URL. */
-  private readonly _url: string;
-
   /** The type of the Electron CrashReporter used to search for Minidumps. */
   private readonly _type: CrashReporterType;
 
@@ -45,17 +41,14 @@ export class MinidumpUploader {
   /** List of minidumps that have been found already. */
   private readonly _knownPaths: string[];
 
-  /** The directory Electron stores crashes in. */
-  private readonly _crashesDirectory: string;
-
-  /** A persistent directory to cache minidumps. */
-  private readonly _cacheDirectory: string;
-
   /**
    * Store to persist queued Minidumps beyond application crashes or lost
    * internet connection.
    */
   private readonly _queue: Store<MinidumpRequest[]>;
+
+  /** API object */
+  private readonly _api: API;
 
   /**
    * Creates a new uploader instance.
@@ -64,15 +57,18 @@ export class MinidumpUploader {
    * @param crashesDirectory The directory Electron stores crashes in.
    * @param cacheDirectory A persistent directory to cache minidumps.
    */
-  public constructor(dsn: Dsn, crashesDirectory: string, cacheDirectory: string) {
+  public constructor(
+    dsn: Dsn,
+    private readonly _crashesDirectory: string,
+    private readonly _cacheDirectory: string,
+    private readonly _transport: Transport,
+  ) {
     const crashpadWindows = process.platform === 'win32' && (parseSemver(process.versions.electron).major || 0) >= 6;
     this._type = process.platform === 'darwin' || crashpadWindows ? 'crashpad' : 'breakpad';
     this._crashpadSubDirectory = process.platform === 'darwin' ? 'completed' : 'reports';
     this._knownPaths = [];
 
-    this._url = MinidumpUploader.minidumpUrlFromDsn(dsn);
-    this._crashesDirectory = crashesDirectory;
-    this._cacheDirectory = cacheDirectory;
+    this._api = new API(dsn);
     this._queue = new Store(this._cacheDirectory, 'queue', []);
   }
 
@@ -88,6 +84,36 @@ export class MinidumpUploader {
   }
 
   /**
+   * Create minidump request to dispatch to the transpoirt
+   */
+  private async _toMinidumpRequest(event: Event, minidumpPath: string): Promise<SentryRequest> {
+    const envelopeHeaders = JSON.stringify({
+      event_id: event.event_id,
+      sent_at: new Date(timestampWithMs() * 1000).toISOString(),
+    });
+    const itemHeaders = JSON.stringify({
+      content_type: 'application/json',
+      type: 'event',
+    });
+
+    const stat = fs.statSync(minidumpPath);
+    const minidumpHeader = JSON.stringify({
+      attachment_type: 'event.minidump',
+      length: stat.size,
+      type: 'attachment',
+    });
+    const minidumpContent = fs.readFileSync(minidumpPath);
+
+    const eventPayload = JSON.stringify(event);
+    const bodyBuffer = Buffer.from(`${envelopeHeaders}\n${itemHeaders}\n${eventPayload}\n${minidumpHeader}\n`);
+
+    return {
+      // @ts-ignore
+      body: Buffer.concat([bodyBuffer, minidumpContent]),
+      url: this._api.getEnvelopeEndpointWithUrlEncodedAuth(),
+    };
+  }
+  /**
    * Uploads a minidump file to Sentry.
    *
    * @param path Absolute path to the minidump file.
@@ -95,18 +121,20 @@ export class MinidumpUploader {
    * @returns A promise that resolves when the upload is complete.
    */
   public async uploadMinidump(request: MinidumpRequest): Promise<void> {
-    logger.log('Uploading minidump', request.path);
+    if (typeof (this._transport as any).sendRequest !== 'function') {
+      logger.warn("Your transport doesn't implement sendRequest");
+      logger.warn('Skipping sending minidump');
+      return;
+    }
+    logger.log('Sending minidump', request.path);
 
+    const transport = this._transport as NetTransport;
     try {
-      // const body = new FormData();
-      // body.append('upload_file_minidump', fs.createReadStream(request.path));
-      // body.append('sentry', JSON.stringify(request.event));
-      // TODO: body
-      const body = 'asd';
-      const response = await fetch(this._url, { method: 'POST', body });
+      const requestForTransport = await this._toMinidumpRequest(request.event, request.path);
+      const response = await transport.sendRequest(requestForTransport);
 
       // Too many requests, so we queue the event and send it later
-      if (response.status === CODE_RETRY) {
+      if (response.status === Status.RateLimit) {
         await this._queueMinidump(request);
       }
 
@@ -124,7 +152,7 @@ export class MinidumpUploader {
       this._knownPaths.splice(this._knownPaths.indexOf(request.path), 1);
 
       // If we were successful, we can try to flush the remaining queue
-      if (response.ok) {
+      if (response.status === Status.Success) {
         await this.flushQueue();
       }
     } catch (err) {

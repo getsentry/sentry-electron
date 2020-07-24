@@ -1,4 +1,4 @@
-import { eventToSentryRequest } from '@sentry/core';
+import { eventToSentryRequest, SentryRequest } from '@sentry/core';
 import { Transports } from '@sentry/node';
 import { Event, Response, Status, TransportOptions } from '@sentry/types';
 import { logger, parseRetryAfterHeader, PromiseBuffer, SentryError } from '@sentry/utils';
@@ -24,6 +24,14 @@ export class NetTransport extends Transports.BaseTransport {
    * @inheritDoc
    */
   public async sendEvent(event: Event): Promise<Response> {
+    const sentryReq = eventToSentryRequest(event, this._api);
+    return this.sendRequest(sentryReq);
+  }
+
+  /**
+   * Dispatches a Request to Sentry. Only handles SentryRequest
+   */
+  public async sendRequest(request: SentryRequest): Promise<Response> {
     // tslint:disable-next-line
     if (new Date(Date.now()) < this._netDisabledUntil) {
       return Promise.reject(
@@ -36,8 +44,7 @@ export class NetTransport extends Transports.BaseTransport {
     await isAppReady();
     return this._buffer.add(
       new Promise<Response>((resolve, reject) => {
-        const sentryReq = eventToSentryRequest(event, this._api);
-        const options = this._getRequestOptions(new url.URL(sentryReq.url));
+        const options = this._getRequestOptions(new url.URL(request.url));
 
         const req = net.request(options as Electron.ClientRequestConstructorOptions);
         req.on('error', reject);
@@ -67,14 +74,15 @@ export class NetTransport extends Transports.BaseTransport {
             }
           }
           // force the socket to drain
-          res.on('data', () => {
+          res.on('data', (chuck: any) => {
             // Drain
+            console.log(chuck.toString());
           });
           res.on('end', () => {
             // Drain
           });
         });
-        req.write(JSON.stringify(event));
+        req.write(request.body);
         req.end();
       }),
     );
