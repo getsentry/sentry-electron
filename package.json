@@ -43,9 +43,6 @@
     "@sentry/node": "~5.20.0",
     "@sentry/types": "~5.20.0",
     "@sentry/utils": "~5.20.0",
-    "electron-fetch": "^1.4.0",
-    "form-data": "2.5.1",
-    "util.promisify": "1.0.1",
     "tslib": "^1.9.3"
   },
   "devDependencies": {
@@ -84,6 +81,7 @@
     "tslint-eslint-rules": "^5.4.0",
     "typescript": "^3.7.4",
     "typescript-tslint-plugin": "^0.5.5",
+    "util.promisify": "1.0.1",
     "xvfb-maybe": "^0.2.1"
   },
   "sideEffects": false

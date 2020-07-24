@@ -1,18 +1,10 @@
 import { Event } from '@sentry/types';
 import { Dsn, logger, parseSemver } from '@sentry/utils';
-import fetch from 'electron-fetch';
-import * as FormData from 'form-data';
 import * as fs from 'fs';
 import { basename, join } from 'path';
-import { promisify } from 'util';
 
 import { mkdirp } from './fs';
 import { Store } from './store';
-
-const readdir = promisify(fs.readdir);
-const rename = promisify(fs.rename);
-const stat = promisify(fs.stat);
-const unlink = promisify(fs.unlink);
 
 /** Status code returned by Sentry to retry event submission later. */
 const CODE_RETRY = 429;
@@ -106,9 +98,11 @@ export class MinidumpUploader {
     logger.log('Uploading minidump', request.path);
 
     try {
-      const body = new FormData();
-      body.append('upload_file_minidump', fs.createReadStream(request.path));
-      body.append('sentry', JSON.stringify(request.event));
+      // const body = new FormData();
+      // body.append('upload_file_minidump', fs.createReadStream(request.path));
+      // body.append('sentry', JSON.stringify(request.event));
+      // TODO: body
+      const body = 'asd';
       const response = await fetch(this._url, { method: 'POST', body });
 
       // Too many requests, so we queue the event and send it later
@@ -119,7 +113,7 @@ export class MinidumpUploader {
       // We either succeeded or something went horribly wrong. Either way, we
       // can remove the minidump file.
       try {
-        await unlink(request.path);
+        fs.unlinkSync(request.path);
       } catch (e) {
         logger.warn('Could not delete', request.path);
       }
@@ -182,10 +176,10 @@ export class MinidumpUploader {
 
       // We do not want to upload minidumps that have been generated before a
       // certain threshold. Those old files can be deleted immediately.
-      const stats = await stat(path);
+      const stats = fs.statSync(path);
       if (stats.birthtimeMs < oldestMs) {
         try {
-          await unlink(path);
+          fs.unlinkSync(path);
         } catch (e) {
           logger.warn('Could not delete', path);
         }
@@ -207,7 +201,7 @@ export class MinidumpUploader {
     // Crashpad moves minidump files directly into the 'completed' or 'reports' folder. We can
     // load them from there, upload to the server, and then delete it.
     const dumpDirectory = join(this._crashesDirectory, this._crashpadSubDirectory);
-    const files = await readdir(dumpDirectory);
+    const files = fs.readdirSync(dumpDirectory);
     return files.filter(file => file.endsWith('.dmp')).map(file => join(dumpDirectory, file));
   }
 
@@ -215,17 +209,17 @@ export class MinidumpUploader {
   private async _scanBreakpadFolder(): Promise<string[]> {
     // Breakpad stores all minidump files along with a metadata file directly in
     // the crashes directory.
-    const files = await readdir(this._crashesDirectory);
+    const files = fs.readdirSync(this._crashesDirectory);
 
     // Remove all metadata files and forget about them.
     // tslint:disable-next-line: no-floating-promises
     Promise.all(
       files
         .filter(file => file.endsWith('.txt') && !file.endsWith('log.txt'))
-        .map(async file => {
+        .map(file => {
           const path = join(this._crashesDirectory, file);
           try {
-            await unlink(path);
+            fs.unlinkSync(path);
           } catch (e) {
             logger.warn('Could not delete', path);
           }
@@ -254,7 +248,7 @@ export class MinidumpUploader {
     // this will allow us to retry uploading the file later.
     const queuePath = join(this._cacheDirectory, filename);
     await mkdirp(this._cacheDirectory);
-    await rename(request.path, queuePath);
+    fs.renameSync(request.path, queuePath);
 
     // Remove stale minidumps in case we go over limit. Note that we have to
     // re-fetch the queue as it might have changed in the meanwhile. It is
@@ -265,9 +259,9 @@ export class MinidumpUploader {
     this._queue.set(requests);
 
     await Promise.all(
-      stale.map(async req => {
+      stale.map(req => {
         try {
-          await unlink(req.path);
+          fs.unlinkSync(req.path);
         } catch (e) {
           logger.warn('Could not delete', req.path);
         }
