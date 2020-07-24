@@ -7,6 +7,13 @@ import * as url from 'url';
 
 import { isAppReady } from '../backend';
 
+/**
+ * SentryElectronRequest
+ */
+export interface SentryElectronRequest extends Omit<SentryRequest, 'body'> {
+  body: string | Buffer;
+}
+
 /** Using net module of electron */
 export class NetTransport extends Transports.BaseTransport {
   /** A simple buffer holding all requests. */
@@ -31,7 +38,7 @@ export class NetTransport extends Transports.BaseTransport {
   /**
    * Dispatches a Request to Sentry. Only handles SentryRequest
    */
-  public async sendRequest(request: SentryRequest): Promise<Response> {
+  public async sendRequest(request: SentryElectronRequest): Promise<Response> {
     // tslint:disable-next-line
     if (new Date(Date.now()) < this._netDisabledUntil) {
       return Promise.reject(

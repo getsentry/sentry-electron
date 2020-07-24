@@ -1,11 +1,11 @@
-import { API, SentryRequest } from '@sentry/core';
+import { API } from '@sentry/core';
 import { Event, Status, Transport } from '@sentry/types';
 import { Dsn, logger, parseSemver, timestampWithMs } from '@sentry/utils';
 import { basename, join } from 'path';
 
 import { mkdirp, readDirAsync, readFileAsync, renameAsync, statAsync, unlinkAsync } from './fs';
 import { Store } from './store';
-import { NetTransport } from './transports/net';
+import { NetTransport, SentryElectronRequest } from './transports/net';
 
 /** Maximum number of days to keep a minidump before deleting it. */
 const MAX_AGE = 30;
@@ -85,7 +85,7 @@ export class MinidumpUploader {
   /**
    * Create minidump request to dispatch to the transpoirt
    */
-  private async _toMinidumpRequest(event: Event, minidumpPath: string): Promise<SentryRequest> {
+  private async _toMinidumpRequest(event: Event, minidumpPath: string): Promise<SentryElectronRequest> {
     const envelopeHeaders = JSON.stringify({
       event_id: event.event_id,
       sent_at: new Date(timestampWithMs() * 1000).toISOString(),

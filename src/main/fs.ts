@@ -1,4 +1,4 @@
-import { mkdir, mkdirSync, readFile, stat, Stats, statSync, readdir, rename, unlink } from 'fs';
+import { mkdir, mkdirSync, readdir, readFile, rename, stat, Stats, statSync, unlink } from 'fs';
 import { dirname, resolve } from 'path';
 
 const _0777 = parseInt('0777', 8);
