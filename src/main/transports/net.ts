@@ -96,9 +96,8 @@ export class NetTransport extends Transports.BaseTransport {
             }
           }
           // force the socket to drain
-          res.on('data', data => {
+          res.on('data', () => {
             // Drain
-            console.log(data.toString());
           });
           res.on('end', () => {
             // Drain
