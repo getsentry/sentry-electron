@@ -62,7 +62,7 @@ describe('E2E Tests', () => {
         expect(testServer.events.length).to.equal(1);
         expect(lastFrame.filename).to.equal('app:///fixtures/javascript-renderer.js');
 
-        expect(event.dump_file).to.equal(undefined);
+        expect(event.dump_file).to.be.false;
         expect(event.data.platform).to.equal('javascript');
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(breadcrumbs.length).to.greaterThan(4);
@@ -77,7 +77,7 @@ describe('E2E Tests', () => {
 
         expect(testServer.events.length).to.equal(1);
         expect(lastFrame.filename).to.equal('app:///fixtures/javascript-unhandledrejection.js');
-        expect(event.dump_file).to.equal(undefined);
+        expect(event.dump_file).to.be.false;
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(event.data.sdk!.name).to.equal('sentry.javascript.electron');
         expect(breadcrumbs.length).to.greaterThan(4);
@@ -92,7 +92,7 @@ describe('E2E Tests', () => {
 
         expect(testServer.events.length).to.equal(1);
         expect(lastFrame.filename).to.equal('app:///fixtures/javascript-main.js');
-        expect(event.dump_file).to.equal(undefined);
+        expect(event.dump_file).to.be.false;
         expect(event.data.platform).to.equal('node');
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(event.data.sdk!.name).to.equal('sentry.javascript.electron');
@@ -108,7 +108,7 @@ describe('E2E Tests', () => {
 
         expect(testServer.events.length).to.equal(1);
         expect(lastFrame.filename).to.equal('app:///fixtures/javascript main with spaces.js');
-        expect(event.dump_file).to.equal(undefined);
+        expect(event.dump_file).to.be.false;
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(breadcrumbs.length).to.greaterThan(4);
       });
@@ -122,7 +122,7 @@ describe('E2E Tests', () => {
 
         expect(testServer.events.length).to.equal(1);
         expect(lastFrame.filename).to.equal('app:///fixtures/javascript main with (parens).js');
-        expect(event.dump_file).to.equal(undefined);
+        expect(event.dump_file).to.be.false;
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(breadcrumbs.length).to.greaterThan(4);
       });
@@ -142,7 +142,7 @@ describe('E2E Tests', () => {
 
         expect(testServer.events.length).to.equal(1);
         expect(lastFrame.filename).to.equal('app:///fixtures/javascript-main.js');
-        expect(event.dump_file).to.equal(undefined);
+        expect(event.dump_file).to.be.false;
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(breadcrumbs.length).to.greaterThan(4);
 
@@ -160,7 +160,7 @@ describe('E2E Tests', () => {
         const breadcrumbs = event.data.breadcrumbs || [];
 
         expect(testServer.events.length).to.equal(1);
-        expect(event.dump_file).to.be.instanceOf(Buffer);
+        expect(event.dump_file).to.be.true;
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(breadcrumbs.length).to.greaterThan(4);
       });
@@ -192,7 +192,7 @@ describe('E2E Tests', () => {
         const breadcrumbs = event.data.breadcrumbs || [];
 
         expect(testServer.events.length).to.equal(1);
-        expect(event.dump_file).to.be.instanceOf(Buffer);
+        expect(event.dump_file).to.be.true;
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(breadcrumbs.length).to.greaterThan(4);
       });
@@ -206,7 +206,7 @@ describe('E2E Tests', () => {
         breadcrumbs = breadcrumbs.filter(crumb => crumb.message === 'Something insightful!');
 
         expect(testServer.events.length).to.equal(1);
-        expect(event.dump_file).to.equal(undefined);
+        expect(event.dump_file).to.be.false;
         expect(breadcrumbs.length, 'filtered breadcrumbs').to.equal(1);
       });
 
@@ -242,7 +242,7 @@ describe('E2E Tests', () => {
         const event = testServer.events[0];
 
         expect(testServer.events.length).to.equal(1);
-        expect(event.dump_file).to.equal(undefined);
+        expect(event.dump_file).to.be.false;
       });
 
       it('Custom release string for JavaScript error', async () => {
@@ -257,7 +257,7 @@ describe('E2E Tests', () => {
         expect(testServer.events.length).to.equal(1);
         expect(lastFrame.filename).to.equal('app:///fixtures/javascript-renderer.js');
 
-        expect(event.dump_file).to.equal(undefined);
+        expect(event.dump_file).to.be.false;
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(breadcrumbs.length).to.greaterThan(4);
       });
@@ -272,7 +272,7 @@ describe('E2E Tests', () => {
         expect(event.data.release).to.equal('some-custom-release');
 
         expect(testServer.events.length).to.equal(1);
-        expect(event.dump_file).to.be.instanceOf(Buffer);
+        expect(event.dump_file).to.be.true;
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(breadcrumbs.length).to.greaterThan(4);
       });

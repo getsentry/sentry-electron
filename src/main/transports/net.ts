@@ -37,7 +37,7 @@ export class NetTransport extends Transports.BaseTransport {
     });
     const itemHeaders = JSON.stringify({
       content_type: 'application/json',
-      type: 'event',
+      type: event.type ?? 'event',
     });
     const eventPayload = JSON.stringify(event);
     const bodyBuffer = Buffer.from(`${envelopeHeaders}\n${itemHeaders}\n${eventPayload}\n`);
@@ -64,7 +64,10 @@ export class NetTransport extends Transports.BaseTransport {
     return this._buffer.add(
       new Promise<Response>((resolve, reject) => {
         const options = this._getRequestOptions(new url.URL(request.url));
-
+        options.headers = {
+          ...options.headers,
+          'Content-Type': 'application/x-sentry-envelope',
+        };
         const req = net.request(options as Electron.ClientRequestConstructorOptions);
         req.on('error', reject);
         req.on('response', (res: Electron.IncomingMessage) => {
@@ -93,8 +96,9 @@ export class NetTransport extends Transports.BaseTransport {
             }
           }
           // force the socket to drain
-          res.on('data', () => {
+          res.on('data', data => {
             // Drain
+            console.log(data.toString());
           });
           res.on('end', () => {
             // Drain
