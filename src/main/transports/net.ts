@@ -1,11 +1,18 @@
-import { eventToSentryRequest } from '@sentry/core';
+import { SentryRequest } from '@sentry/core';
 import { Transports } from '@sentry/node';
 import { Event, Response, Status, TransportOptions } from '@sentry/types';
-import { logger, parseRetryAfterHeader, PromiseBuffer, SentryError } from '@sentry/utils';
+import { logger, parseRetryAfterHeader, PromiseBuffer, SentryError, timestampWithMs } from '@sentry/utils';
 import { net } from 'electron';
 import * as url from 'url';
 
 import { isAppReady } from '../backend';
+
+/**
+ * SentryElectronRequest
+ */
+export interface SentryElectronRequest extends Omit<SentryRequest, 'body'> {
+  body: string | Buffer;
+}
 
 /** Using net module of electron */
 export class NetTransport extends Transports.BaseTransport {
@@ -24,6 +31,26 @@ export class NetTransport extends Transports.BaseTransport {
    * @inheritDoc
    */
   public async sendEvent(event: Event): Promise<Response> {
+    const envelopeHeaders = JSON.stringify({
+      event_id: event.event_id,
+      sent_at: new Date(timestampWithMs() * 1000).toISOString(),
+    });
+    const itemHeaders = JSON.stringify({
+      content_type: 'application/json',
+      type: 'event',
+    });
+    const eventPayload = JSON.stringify(event);
+    const bodyBuffer = Buffer.from(`${envelopeHeaders}\n${itemHeaders}\n${eventPayload}\n`);
+    return this.sendRequest({
+      body: bodyBuffer,
+      url: this._api.getEnvelopeEndpointWithUrlEncodedAuth(),
+    });
+  }
+
+  /**
+   * Dispatches a Request to Sentry. Only handles SentryRequest
+   */
+  public async sendRequest(request: SentryElectronRequest): Promise<Response> {
     // tslint:disable-next-line
     if (new Date(Date.now()) < this._netDisabledUntil) {
       return Promise.reject(
@@ -36,8 +63,7 @@ export class NetTransport extends Transports.BaseTransport {
     await isAppReady();
     return this._buffer.add(
       new Promise<Response>((resolve, reject) => {
-        const sentryReq = eventToSentryRequest(event, this._api);
-        const options = this._getRequestOptions(new url.URL(sentryReq.url));
+        const options = this._getRequestOptions(new url.URL(request.url));
 
         const req = net.request(options as Electron.ClientRequestConstructorOptions);
         req.on('error', reject);
@@ -74,7 +100,7 @@ export class NetTransport extends Transports.BaseTransport {
             // Drain
           });
         });
-        req.write(JSON.stringify(event));
+        req.write(request.body);
         req.end();
       }),
     );

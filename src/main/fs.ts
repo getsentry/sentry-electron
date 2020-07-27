@@ -1,4 +1,4 @@
-import { mkdir, mkdirSync, readFile, statSync } from 'fs';
+import { mkdir, mkdirSync, readdir, readFile, rename, stat, Stats, statSync, unlink } from 'fs';
 import { dirname, resolve } from 'path';
 
 const _0777 = parseInt('0777', 8);
@@ -9,11 +9,14 @@ const _0777 = parseInt('0777', 8);
  * @param path A relative or absolute path to the file
  * @returns A Promise that resolves when the file has been read.
  */
-export async function readFileAsync(path: string): Promise<string> {
+export async function readFileAsync(
+  path: string,
+  options?: { encoding?: string; flag?: string },
+): Promise<string | Buffer> {
   // We cannot use util.promisify here because that was only introduced in Node
   // 8 and we need to support older Node versions.
-  return new Promise<string>((res, reject) => {
-    readFile(path, 'utf8', (err, data) => {
+  return new Promise<string | Buffer>((res, reject) => {
+    readFile(path, options, (err, data) => {
       if (err) {
         reject(err);
       } else {
@@ -101,4 +104,64 @@ export function mkdirpSync(path: string): void {
       }
     }
   }
+}
+
+/**
+ * Read stats async
+ */
+export function statAsync(path: string): Promise<Stats> {
+  return new Promise<Stats>((res, reject) => {
+    stat(path, (err, stats) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      res(stats);
+    });
+  });
+}
+
+/**
+ * unlink async
+ */
+export function unlinkAsync(path: string): Promise<void> {
+  return new Promise<void>((res, reject) => {
+    unlink(path, err => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      res();
+    });
+  });
+}
+
+/**
+ * readdir async
+ */
+export function readDirAsync(path: string): Promise<string[]> {
+  return new Promise<string[]>((res, reject) => {
+    readdir(path, (err, files) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      res(files);
+    });
+  });
+}
+
+/**
+ * rename async
+ */
+export function renameAsync(oldPath: string, newPath: string): Promise<void> {
+  return new Promise<void>((res, reject) => {
+    rename(oldPath, newPath, err => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      res();
+    });
+  });
 }

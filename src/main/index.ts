@@ -1,5 +1,3 @@
-// tslint:disable-next-line
-require('util.promisify/shim')();
 export {
   Breadcrumb,
   Request,
