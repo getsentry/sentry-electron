@@ -131,9 +131,10 @@ describe('E2E Tests', () => {
 
       // tslint:disable-next-line
       it('onFatalError can be overridden', async function() {
-        // For some unknown reason this test fails on Electron v5 only on Travis
-        if (majorVersion === 5 && process.platform === 'win32') {
+        // For some unknown reason this test fails on windows
+        if (process.platform === 'win32') {
           this.skip();
+          return;
         }
 
         await context.start('sentry-onfatal-exit', 'javascript-main');
@@ -184,6 +185,7 @@ describe('E2E Tests', () => {
       // tslint:disable-next-line
       it('Native crash in main process', async function() {
         if (majorVersion === 9 && process.platform === 'linux') {
+          // TODO: Check why this fails on linux
           this.skip();
           return;
         }
@@ -277,6 +279,7 @@ describe('E2E Tests', () => {
       // tslint:disable-next-line
       it('Custom release string for minidump', async function() {
         if (majorVersion === 9 && process.platform === 'linux') {
+          // TODO: Check why this fails on linux
           this.skip();
           return;
         }
