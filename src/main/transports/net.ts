@@ -1,7 +1,7 @@
-import { eventToSentryRequest, SentryRequest } from '@sentry/core';
+import { SentryRequest } from '@sentry/core';
 import { Transports } from '@sentry/node';
 import { Event, Response, Status, TransportOptions } from '@sentry/types';
-import { logger, parseRetryAfterHeader, PromiseBuffer, SentryError } from '@sentry/utils';
+import { logger, parseRetryAfterHeader, PromiseBuffer, SentryError, timestampWithMs } from '@sentry/utils';
 import { net } from 'electron';
 import * as url from 'url';
 
@@ -31,8 +31,20 @@ export class NetTransport extends Transports.BaseTransport {
    * @inheritDoc
    */
   public async sendEvent(event: Event): Promise<Response> {
-    const sentryReq = eventToSentryRequest(event, this._api);
-    return this.sendRequest(sentryReq);
+    const envelopeHeaders = JSON.stringify({
+      event_id: event.event_id,
+      sent_at: new Date(timestampWithMs() * 1000).toISOString(),
+    });
+    const itemHeaders = JSON.stringify({
+      content_type: 'application/json',
+      type: 'event',
+    });
+    const eventPayload = JSON.stringify(event);
+    const bodyBuffer = Buffer.from(`${envelopeHeaders}\n${itemHeaders}\n${eventPayload}\n`);
+    return this.sendRequest({
+      body: bodyBuffer,
+      url: this._api.getEnvelopeEndpointWithUrlEncodedAuth(),
+    });
   }
 
   /**
