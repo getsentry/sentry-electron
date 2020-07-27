@@ -49,7 +49,9 @@ describe('E2E Tests', () => {
       });
 
       afterEach(async () => {
-        await context.stop();
+        if (context.isStarted()) {
+          await context.stop();
+        }
       });
 
       it('JavaScript exception in renderer process', async () => {
@@ -152,7 +154,12 @@ describe('E2E Tests', () => {
         );
       });
 
-      it('Native crash in renderer process', async () => {
+      // tslint:disable-next-line
+      it('Native crash in renderer process', async function() {
+        if (majorVersion === 9 && process.platform === 'linux') {
+          this.skip();
+          return;
+        }
         await context.start('sentry-basic', 'native-renderer');
         // It can take rather a long time to get the event on Mac
         await context.waitForEvents(testServer, 1, 20000);
@@ -174,7 +181,12 @@ describe('E2E Tests', () => {
         expect(user.id).to.equal('johndoe');
       });
 
-      it('Native crash in main process', async () => {
+      // tslint:disable-next-line
+      it('Native crash in main process', async function() {
+        if (majorVersion === 9 && process.platform === 'linux') {
+          this.skip();
+          return;
+        }
         await context.start('sentry-basic', 'native-main');
 
         // wait for the main process to die
@@ -262,7 +274,12 @@ describe('E2E Tests', () => {
         expect(breadcrumbs.length).to.greaterThan(4);
       });
 
-      it('Custom release string for minidump', async () => {
+      // tslint:disable-next-line
+      it('Custom release string for minidump', async function() {
+        if (majorVersion === 9 && process.platform === 'linux') {
+          this.skip();
+          return;
+        }
         await context.start('sentry-custom-release', 'native-renderer');
         // It can take rather a long time to get the event on Mac
         await context.waitForEvents(testServer, 1, 20000);

@@ -46,6 +46,8 @@ export class TestContext {
   /** Temporary directory that hosts the app's User Data. */
   private tempDir?: TempDirectory;
 
+  private started: boolean = false;
+
   /**
    * Creates an instance of TestContext.
    * Pass `undefined` to `testServer` to disable the test server.
@@ -99,6 +101,8 @@ export class TestContext {
       async () => (this.mainProcess ? this.mainProcess.isRunning() : false),
       'Timeout: Waiting for app to start',
     );
+
+    this.started = true;
   }
 
   /** Stops the app and cleans up. */
@@ -149,5 +153,9 @@ export class TestContext {
    */
   public async waitForEvents(testServer: TestServer, count: number, timeout: number = 15000): Promise<void> {
     await this.waitForTrue(() => testServer.events.length >= count, 'Timeout: Waiting for events', timeout);
+  }
+
+  public isStarted(): boolean {
+    return this.started;
   }
 }
