@@ -6,6 +6,9 @@ on:
       - release/**
   pull_request:
 
+env:
+  ELECTRON_CACHE_DIR: ${{ github.workspace }}
+
 jobs:
   job_1:
     name: Build
@@ -16,9 +19,9 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: |
-            ~/.cache/**
+            .cache/**
             **/node_modules
-          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Install
         run: yarn install
       - name: Build
@@ -33,9 +36,9 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: |
-            ~/.cache/**
+            .cache/**
             **/node_modules
-          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - run: yarn install
       - name: Run Linter
         run: yarn lint
@@ -55,9 +58,9 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: |
-            ~/.cache/**
+            .cache/**
             **/node_modules
-          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - run: yarn install
       - name: Run Unit Tests
         run: yarn test
@@ -77,9 +80,9 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: |
-            ~/.cache/**
+            .cache/**
             **/node_modules
-          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - run: yarn install
       - name: Run E2E Tests
         run: yarn e2e
