@@ -88,6 +88,7 @@ export class MinidumpUploader {
   private async _toMinidumpRequest(event: Event, minidumpPath: string): Promise<SentryElectronRequest> {
     const envelopeHeaders = JSON.stringify({
       event_id: event.event_id,
+      // Internal helper that uses `perf_hooks` to get clock reading
       sent_at: new Date(timestampWithMs() * 1000).toISOString(),
     });
     const itemHeaders = JSON.stringify({
@@ -95,13 +96,12 @@ export class MinidumpUploader {
       type: 'event',
     });
 
-    const stat = await statAsync(minidumpPath);
+    const minidumpContent = (await readFileAsync(minidumpPath)) as Buffer;
     const minidumpHeader = JSON.stringify({
       attachment_type: 'event.minidump',
-      length: stat.size,
+      length: minidumpContent.length,
       type: 'attachment',
     });
-    const minidumpContent = (await readFileAsync(minidumpPath)) as Buffer;
 
     const eventPayload = JSON.stringify(event);
     const bodyBuffer = Buffer.from(`${envelopeHeaders}\n${itemHeaders}\n${eventPayload}\n${minidumpHeader}\n`);
@@ -131,11 +131,6 @@ export class MinidumpUploader {
       const requestForTransport = await this._toMinidumpRequest(request.event, request.path);
       const response = await transport.sendRequest(requestForTransport);
 
-      // Too many requests, so we queue the event and send it later
-      if (response.status === Status.RateLimit) {
-        await this._queueMinidump(request);
-      }
-
       // We either succeeded or something went horribly wrong. Either way, we
       // can remove the minidump file.
       try {
@@ -154,6 +149,7 @@ export class MinidumpUploader {
         await this.flushQueue();
       }
     } catch (err) {
+      // TODO: Test this
       logger.warn('Failed to upload minidump', err);
 
       // User's internet connection was down so we queue it as well

@@ -33,11 +33,13 @@ export class NetTransport extends Transports.BaseTransport {
   public async sendEvent(event: Event): Promise<Response> {
     const envelopeHeaders = JSON.stringify({
       event_id: event.event_id,
+      // Internal helper that uses `perf_hooks` to get clock reading
       sent_at: new Date(timestampWithMs() * 1000).toISOString(),
     });
     const itemHeaders = JSON.stringify({
       content_type: 'application/json',
-      type: event.type ?? 'event',
+      // Internal helper that uses `perf_hooks` to get clock reading
+      type: event.type === 'transaction' ? 'transaction' : 'event',
     });
     const eventPayload = JSON.stringify(event);
     const bodyBuffer = Buffer.from(`${envelopeHeaders}\n${itemHeaders}\n${eventPayload}\n`);
