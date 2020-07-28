@@ -1,6 +1,7 @@
 import { eventFromException, eventFromMessage } from '@sentry/browser';
 import { BaseBackend, getCurrentHub } from '@sentry/core';
 import { Event, EventHint, Severity } from '@sentry/types';
+import { walk } from '@sentry/utils';
 import { crashReporter, ipcRenderer } from 'electron';
 
 import { CommonBackend, ElectronOptions, getNameFallback, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
@@ -44,8 +45,8 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
    */
   public sendEvent(event: Event): void {
     // We pass through JSON because in Electron >= 8, IPC uses v8's structured clone algorithm and throws errors if
-    // objects have functions
-    ipcRenderer.send(IPC_EVENT, JSON.stringify(event));
+    // objects have functions. Calling walk makes sure to break circular references.
+    ipcRenderer.send(IPC_EVENT, JSON.stringify(event, walk));
   }
 
   /**
@@ -56,8 +57,8 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
     if (scope) {
       scope.addScopeListener(updatedScope => {
         // We pass through JSON because in Electron >= 8, IPC uses v8's structured clone algorithm and throws errors if
-        // objects have functions
-        ipcRenderer.send(IPC_SCOPE, JSON.stringify(updatedScope));
+        // objects have functions. Calling walk makes sure to break circular references.
+        ipcRenderer.send(IPC_SCOPE, JSON.stringify(updatedScope, walk));
         scope.clearBreadcrumbs();
       });
     }
