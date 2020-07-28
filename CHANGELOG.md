@@ -9,6 +9,10 @@ using an on-premise installation it requires Sentry version `>= v20.6.0` to work
 - ref: Decrease bundle size by removing dependencies (#252)
 - ref: Use envelope endpoint (#252)
 
+## v1.5.2
+
+- fix: Cirular refs (#253)
+
 ## v1.5.1
 
 - fix: Rate limit status check (#251)
