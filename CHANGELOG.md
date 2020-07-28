@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.5.2
+
+- fix: Cirular refs (#253)
+
 ## v1.5.1
 
 - fix: Rate limit status check (#251)
