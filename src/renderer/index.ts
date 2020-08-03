@@ -73,3 +73,31 @@ export function showReportDialog(options: ReportDialogOptions = {}): void {
 export function captureMinidump(path: string, event: Event = {}): void {
   _callOnClient('captureMinidump', path, event);
 }
+
+/**
+ * A promise that resolves when all current events have been sent.
+ * If you provide a timeout and the queue takes longer to drain the promise returns false.
+ *
+ * @param timeout Maximum time in ms the client should wait.
+ */
+export async function flush(timeout?: number): Promise<boolean> {
+  const client = getCurrentHub().getClient<ElectronClient>();
+  if (client) {
+    return client.flush(timeout);
+  }
+  return Promise.reject(false);
+}
+
+/**
+ * A promise that resolves when all current events have been sent.
+ * If you provide a timeout and the queue takes longer to drain the promise returns false.
+ *
+ * @param timeout Maximum time in ms the client should wait.
+ */
+export async function close(timeout?: number): Promise<boolean> {
+  const client = getCurrentHub().getClient<ElectronClient>();
+  if (client) {
+    return client.close(timeout);
+  }
+  return Promise.reject(false);
+}

@@ -8,6 +8,8 @@ using an on-premise installation it requires Sentry version `>= v20.6.0` to work
 
 - ref: Decrease bundle size by removing dependencies (#252)
 - ref: Use envelope endpoint (#252)
+- feat: Export NetTransport (#252)
+- feat: Export `flush` & `close` (#252)
 
 ## v1.5.2
 
