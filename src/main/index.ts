@@ -45,6 +45,7 @@ import { Electron, OnUncaughtException } from './integrations';
 import { NetTransport } from './transports/net';
 export { MainClient } from './client';
 export { MainBackend } from './backend';
+export { NetTransport } from './transports/net';
 export { Integrations as NodeIntegrations } from '@sentry/node';
 
 // tslint:disable-next-line:variable-name
