@@ -1,11 +1,18 @@
-import { eventToSentryRequest } from '@sentry/core';
+import { SentryRequest } from '@sentry/core';
 import { Transports } from '@sentry/node';
 import { Event, Response, Status, TransportOptions } from '@sentry/types';
-import { logger, parseRetryAfterHeader, PromiseBuffer, SentryError } from '@sentry/utils';
+import { logger, parseRetryAfterHeader, PromiseBuffer, SentryError, timestampWithMs } from '@sentry/utils';
 import { net } from 'electron';
 import * as url from 'url';
 
 import { isAppReady } from '../backend';
+
+/**
+ * SentryElectronRequest
+ */
+export interface SentryElectronRequest extends Omit<SentryRequest, 'body'> {
+  body: string | Buffer;
+}
 
 /** Using net module of electron */
 export class NetTransport extends Transports.BaseTransport {
@@ -24,6 +31,28 @@ export class NetTransport extends Transports.BaseTransport {
    * @inheritDoc
    */
   public async sendEvent(event: Event): Promise<Response> {
+    const envelopeHeaders = JSON.stringify({
+      event_id: event.event_id,
+      // Internal helper that uses `perf_hooks` to get clock reading
+      sent_at: new Date(timestampWithMs() * 1000).toISOString(),
+    });
+    const itemHeaders = JSON.stringify({
+      content_type: 'application/json',
+      // Internal helper that uses `perf_hooks` to get clock reading
+      type: event.type === 'transaction' ? 'transaction' : 'event',
+    });
+    const eventPayload = JSON.stringify(event);
+    const bodyBuffer = Buffer.from(`${envelopeHeaders}\n${itemHeaders}\n${eventPayload}\n`);
+    return this.sendRequest({
+      body: bodyBuffer,
+      url: this._api.getEnvelopeEndpointWithUrlEncodedAuth(),
+    });
+  }
+
+  /**
+   * Dispatches a Request to Sentry. Only handles SentryRequest
+   */
+  public async sendRequest(request: SentryElectronRequest): Promise<Response> {
     // tslint:disable-next-line
     if (new Date(Date.now()) < this._netDisabledUntil) {
       return Promise.reject(
@@ -36,9 +65,11 @@ export class NetTransport extends Transports.BaseTransport {
     await isAppReady();
     return this._buffer.add(
       new Promise<Response>((resolve, reject) => {
-        const sentryReq = eventToSentryRequest(event, this._api);
-        const options = this._getRequestOptions(new url.URL(sentryReq.url));
-
+        const options = this._getRequestOptions(new url.URL(request.url));
+        options.headers = {
+          ...options.headers,
+          'Content-Type': 'application/x-sentry-envelope',
+        };
         const req = net.request(options as Electron.ClientRequestConstructorOptions);
         req.on('error', reject);
         req.on('response', (res: Electron.IncomingMessage) => {
@@ -48,9 +79,13 @@ export class NetTransport extends Transports.BaseTransport {
           } else {
             if (status === Status.RateLimit) {
               const now = Date.now();
-              let header = res.headers ? res.headers['Retry-After'] : '';
-              header = Array.isArray(header) ? header[0] : header;
-              this._netDisabledUntil = new Date(now + parseRetryAfterHeader(now, header));
+              /**
+               * "Key-value pairs of header names and values. Header names are lower-cased."
+               * https://nodejs.org/api/http.html#http_message_headers
+               */
+              let retryAfterHeader = res.headers ? res.headers['retry-after'] : '';
+              retryAfterHeader = Array.isArray(retryAfterHeader) ? retryAfterHeader[0] : retryAfterHeader;
+              this._netDisabledUntil = new Date(now + parseRetryAfterHeader(now, retryAfterHeader));
               logger.warn(`Too many requests, backing off till: ${this._netDisabledUntil.toString()}`);
             }
 
@@ -74,7 +109,7 @@ export class NetTransport extends Transports.BaseTransport {
             // Drain
           });
         });
-        req.write(JSON.stringify(event));
+        req.write(request.body);
         req.end();
       }),
     );

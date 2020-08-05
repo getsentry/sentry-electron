@@ -1,21 +1,11 @@
-import { Event } from '@sentry/types';
-import { Dsn, logger, parseSemver } from '@sentry/utils';
-import fetch from 'electron-fetch';
-import * as FormData from 'form-data';
-import * as fs from 'fs';
+import { API } from '@sentry/core';
+import { Event, Status, Transport } from '@sentry/types';
+import { Dsn, logger, parseSemver, timestampWithMs } from '@sentry/utils';
 import { basename, join } from 'path';
-import { promisify } from 'util';
 
-import { mkdirp } from './fs';
+import { mkdirp, readDirAsync, readFileAsync, renameAsync, statAsync, unlinkAsync } from './fs';
 import { Store } from './store';
-
-const readdir = promisify(fs.readdir);
-const rename = promisify(fs.rename);
-const stat = promisify(fs.stat);
-const unlink = promisify(fs.unlink);
-
-/** Status code returned by Sentry to retry event submission later. */
-const CODE_RETRY = 429;
+import { NetTransport, SentryElectronRequest } from './transports/net';
 
 /** Maximum number of days to keep a minidump before deleting it. */
 const MAX_AGE = 30;
@@ -41,9 +31,6 @@ export interface MinidumpRequest {
  * A service that discovers Minidump crash reports and uploads them to Sentry.
  */
 export class MinidumpUploader {
-  /** The minidump ingestion endpoint URL. */
-  private readonly _url: string;
-
   /** The type of the Electron CrashReporter used to search for Minidumps. */
   private readonly _type: CrashReporterType;
 
@@ -53,17 +40,14 @@ export class MinidumpUploader {
   /** List of minidumps that have been found already. */
   private readonly _knownPaths: string[];
 
-  /** The directory Electron stores crashes in. */
-  private readonly _crashesDirectory: string;
-
-  /** A persistent directory to cache minidumps. */
-  private readonly _cacheDirectory: string;
-
   /**
    * Store to persist queued Minidumps beyond application crashes or lost
    * internet connection.
    */
   private readonly _queue: Store<MinidumpRequest[]>;
+
+  /** API object */
+  private readonly _api: API;
 
   /**
    * Creates a new uploader instance.
@@ -72,15 +56,18 @@ export class MinidumpUploader {
    * @param crashesDirectory The directory Electron stores crashes in.
    * @param cacheDirectory A persistent directory to cache minidumps.
    */
-  public constructor(dsn: Dsn, crashesDirectory: string, cacheDirectory: string) {
+  public constructor(
+    dsn: Dsn,
+    private readonly _crashesDirectory: string,
+    private readonly _cacheDirectory: string,
+    private readonly _transport: Transport,
+  ) {
     const crashpadWindows = process.platform === 'win32' && (parseSemver(process.versions.electron).major || 0) >= 6;
     this._type = process.platform === 'darwin' || crashpadWindows ? 'crashpad' : 'breakpad';
     this._crashpadSubDirectory = process.platform === 'darwin' ? 'completed' : 'reports';
     this._knownPaths = [];
 
-    this._url = MinidumpUploader.minidumpUrlFromDsn(dsn);
-    this._crashesDirectory = crashesDirectory;
-    this._cacheDirectory = cacheDirectory;
+    this._api = new API(dsn);
     this._queue = new Store(this._cacheDirectory, 'queue', []);
   }
 
@@ -96,6 +83,35 @@ export class MinidumpUploader {
   }
 
   /**
+   * Create minidump request to dispatch to the transpoirt
+   */
+  private async _toMinidumpRequest(event: Event, minidumpPath: string): Promise<SentryElectronRequest> {
+    const envelopeHeaders = JSON.stringify({
+      event_id: event.event_id,
+      // Internal helper that uses `perf_hooks` to get clock reading
+      sent_at: new Date(timestampWithMs() * 1000).toISOString(),
+    });
+    const itemHeaders = JSON.stringify({
+      content_type: 'application/json',
+      type: 'event',
+    });
+
+    const minidumpContent = (await readFileAsync(minidumpPath)) as Buffer;
+    const minidumpHeader = JSON.stringify({
+      attachment_type: 'event.minidump',
+      length: minidumpContent.length,
+      type: 'attachment',
+    });
+
+    const eventPayload = JSON.stringify(event);
+    const bodyBuffer = Buffer.from(`${envelopeHeaders}\n${itemHeaders}\n${eventPayload}\n${minidumpHeader}\n`);
+
+    return {
+      body: Buffer.concat([bodyBuffer, minidumpContent]),
+      url: this._api.getEnvelopeEndpointWithUrlEncodedAuth(),
+    };
+  }
+  /**
    * Uploads a minidump file to Sentry.
    *
    * @param path Absolute path to the minidump file.
@@ -103,23 +119,22 @@ export class MinidumpUploader {
    * @returns A promise that resolves when the upload is complete.
    */
   public async uploadMinidump(request: MinidumpRequest): Promise<void> {
-    logger.log('Uploading minidump', request.path);
+    if (typeof (this._transport as any).sendRequest !== 'function') {
+      logger.warn("Your transport doesn't implement sendRequest");
+      logger.warn('Skipping sending minidump');
+      return;
+    }
+    logger.log('Sending minidump', request.path);
 
+    const transport = this._transport as NetTransport;
     try {
-      const body = new FormData();
-      body.append('upload_file_minidump', fs.createReadStream(request.path));
-      body.append('sentry', JSON.stringify(request.event));
-      const response = await fetch(this._url, { method: 'POST', body });
-
-      // Too many requests, so we queue the event and send it later
-      if (response.status === CODE_RETRY) {
-        await this._queueMinidump(request);
-      }
+      const requestForTransport = await this._toMinidumpRequest(request.event, request.path);
+      const response = await transport.sendRequest(requestForTransport);
 
       // We either succeeded or something went horribly wrong. Either way, we
       // can remove the minidump file.
       try {
-        await unlink(request.path);
+        await unlinkAsync(request.path);
       } catch (e) {
         logger.warn('Could not delete', request.path);
       }
@@ -130,10 +145,11 @@ export class MinidumpUploader {
       this._knownPaths.splice(this._knownPaths.indexOf(request.path), 1);
 
       // If we were successful, we can try to flush the remaining queue
-      if (response.ok) {
+      if (response.status === Status.Success) {
         await this.flushQueue();
       }
     } catch (err) {
+      // TODO: Test this
       logger.warn('Failed to upload minidump', err);
 
       // User's internet connection was down so we queue it as well
@@ -182,10 +198,10 @@ export class MinidumpUploader {
 
       // We do not want to upload minidumps that have been generated before a
       // certain threshold. Those old files can be deleted immediately.
-      const stats = await stat(path);
+      const stats = await statAsync(path);
       if (stats.birthtimeMs < oldestMs) {
         try {
-          await unlink(path);
+          await unlinkAsync(path);
         } catch (e) {
           logger.warn('Could not delete', path);
         }
@@ -207,7 +223,7 @@ export class MinidumpUploader {
     // Crashpad moves minidump files directly into the 'completed' or 'reports' folder. We can
     // load them from there, upload to the server, and then delete it.
     const dumpDirectory = join(this._crashesDirectory, this._crashpadSubDirectory);
-    const files = await readdir(dumpDirectory);
+    const files = await readDirAsync(dumpDirectory);
     return files.filter(file => file.endsWith('.dmp')).map(file => join(dumpDirectory, file));
   }
 
@@ -215,7 +231,7 @@ export class MinidumpUploader {
   private async _scanBreakpadFolder(): Promise<string[]> {
     // Breakpad stores all minidump files along with a metadata file directly in
     // the crashes directory.
-    const files = await readdir(this._crashesDirectory);
+    const files = await readDirAsync(this._crashesDirectory);
 
     // Remove all metadata files and forget about them.
     // tslint:disable-next-line: no-floating-promises
@@ -225,7 +241,7 @@ export class MinidumpUploader {
         .map(async file => {
           const path = join(this._crashesDirectory, file);
           try {
-            await unlink(path);
+            await unlinkAsync(path);
           } catch (e) {
             logger.warn('Could not delete', path);
           }
@@ -254,7 +270,7 @@ export class MinidumpUploader {
     // this will allow us to retry uploading the file later.
     const queuePath = join(this._cacheDirectory, filename);
     await mkdirp(this._cacheDirectory);
-    await rename(request.path, queuePath);
+    await renameAsync(request.path, queuePath);
 
     // Remove stale minidumps in case we go over limit. Note that we have to
     // re-fetch the queue as it might have changed in the meanwhile. It is
@@ -267,7 +283,7 @@ export class MinidumpUploader {
     await Promise.all(
       stale.map(async req => {
         try {
-          await unlink(req.path);
+          await unlinkAsync(req.path);
         } catch (e) {
           logger.warn('Could not delete', req.path);
         }
