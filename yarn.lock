@@ -167,6 +167,13 @@
   dependencies:
     "@types/chai" "*"
 
+"@types/chai-datetime@^0.0.33":
+  version "0.0.33"
+  resolved "https://registry.yarnpkg.com/@types/chai-datetime/-/chai-datetime-0.0.33.tgz#26205ded289944aa2e44f5ad3e14d3d93446233c"
+  integrity sha512-WRo2HJtCBCNQYWNPOLgzikBjiHy4BKl2z8TIYLPjFoWvkiTasVMhmu2cDqocxaLTowNSaJ1khKvmJPDhOWU5cQ==
+  dependencies:
+    "@types/chai" "*"
+
 "@types/chai@*":
   version "4.2.5"
   resolved "https://registry.yarnpkg.com/@types/chai/-/chai-4.2.5.tgz#f8da153ebbe30babb0adc9a528b9ad32be3175a2"
@@ -482,7 +489,14 @@ chai-as-promised@^7.1.1:
   dependencies:
     check-error "^1.0.2"
 
-chai@^4.1.2:
+chai-datetime@^1.7.0:
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/chai-datetime/-/chai-datetime-1.7.0.tgz#686d1ddd0456923eab7a406090dad32957ba3eea"
+  integrity sha512-4kPT3R1tr0ujZ+xRTOzvGiZOzC30URFT+28/gd/vusOhumSH/o6TVI4yZMsQTwc+UUGpvIdx1wChQQVZkTbq/g==
+  dependencies:
+    chai ">1.9.0"
+
+chai@>1.9.0, chai@^4.1.2:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/chai/-/chai-4.2.0.tgz#760aa72cf20e3795e84b12877ce0e83737aa29e5"
   integrity sha512-XQU3bhBukrOsQCuwZndwGcCVQHyZi53fQ6Ys1Fym7E4olpIqqZZhhoFJoaKVvV17lWQoXYwgWN2nF5crA8J2jw==

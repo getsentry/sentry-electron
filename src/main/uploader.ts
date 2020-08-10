@@ -85,29 +85,45 @@ export class MinidumpUploader {
   /**
    * Create minidump request to dispatch to the transpoirt
    */
-  private async _toMinidumpRequest(event: Event, minidumpPath: string): Promise<SentryElectronRequest> {
+  private async _toMinidumpRequest(
+    transport: NetTransport,
+    event: Event,
+    minidumpPath: string,
+  ): Promise<SentryElectronRequest> {
     const envelopeHeaders = JSON.stringify({
       event_id: event.event_id,
       // Internal helper that uses `perf_hooks` to get clock reading
       sent_at: new Date(timestampWithMs() * 1000).toISOString(),
     });
+
+    // If attachments are ratelimited we add this hint so users know
+    if (transport.isRateLimited('attachment')) {
+      event.message = 'Ratelimited - Minidump Event';
+    }
+
     const itemHeaders = JSON.stringify({
       content_type: 'application/json',
       type: 'event',
     });
 
-    const minidumpContent = (await readFileAsync(minidumpPath)) as Buffer;
-    const minidumpHeader = JSON.stringify({
-      attachment_type: 'event.minidump',
-      length: minidumpContent.length,
-      type: 'attachment',
-    });
-
     const eventPayload = JSON.stringify(event);
-    const bodyBuffer = Buffer.from(`${envelopeHeaders}\n${itemHeaders}\n${eventPayload}\n${minidumpHeader}\n`);
+    let bodyBuffer = Buffer.from(`${envelopeHeaders}\n${itemHeaders}\n${eventPayload}\n`);
+
+    // Only add attachment if they are not rate limited
+    if (!transport.isRateLimited('attachment')) {
+      const minidumpContent = (await readFileAsync(minidumpPath)) as Buffer;
+      const minidumpHeader = JSON.stringify({
+        attachment_type: 'event.minidump',
+        length: minidumpContent.length,
+        type: 'attachment',
+      });
+      bodyBuffer = Buffer.concat([bodyBuffer, Buffer.from(`${minidumpHeader}\n`), minidumpContent, Buffer.from('\n')]);
+    } else {
+      logger.warn('Will not add minidump to request since they are rate limited.');
+    }
 
     return {
-      body: Buffer.concat([bodyBuffer, minidumpContent]),
+      body: bodyBuffer,
       url: this._api.getEnvelopeEndpointWithUrlEncodedAuth(),
     };
   }
@@ -128,8 +144,11 @@ export class MinidumpUploader {
 
     const transport = this._transport as NetTransport;
     try {
-      const requestForTransport = await this._toMinidumpRequest(request.event, request.path);
-      const response = await transport.sendRequest(requestForTransport);
+      let response;
+      if (!transport.isRateLimited('event')) {
+        const requestForTransport = await this._toMinidumpRequest(transport, request.event, request.path);
+        response = await transport.sendRequest(requestForTransport);
+      }
 
       // We either succeeded or something went horribly wrong. Either way, we
       // can remove the minidump file.
@@ -145,7 +164,7 @@ export class MinidumpUploader {
       this._knownPaths.splice(this._knownPaths.indexOf(request.path), 1);
 
       // If we were successful, we can try to flush the remaining queue
-      if (response.status === Status.Success) {
+      if (response && response.status === Status.Success) {
         await this.flushQueue();
       }
     } catch (err) {
