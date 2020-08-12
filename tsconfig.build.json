@@ -1,5 +1,5 @@
 {
-  "extends": "./node_modules/@sentry/typescript/tsconfig.json",
+  "extends": "./node_modules/@sentry-internal/typescript/tsconfig.json",
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"],
   "compilerOptions": {
