@@ -75,7 +75,7 @@
   dependencies:
     requireindex "~1.1.0"
 
-"@sentry-internal/typescript@5.21.0":
+"@sentry-internal/typescript@5.21.0", "@sentry-internal/typescript@^5.21.0":
   version "5.21.0"
   resolved "https://registry.yarnpkg.com/@sentry-internal/typescript/-/typescript-5.21.0.tgz#16f64bece69704f855762c6b401246ad3f7f28f4"
   integrity sha512-bQwdppOtR1gCoSH4+wJ1XckYaZzUXIv4BqSbMIqwSJ5504YL9FCMBEXD6rA2jdKs9LPKX9MKpZMk3bOS+AMeqw==
@@ -153,14 +153,6 @@
   version "5.20.0"
   resolved "https://registry.yarnpkg.com/@sentry/types/-/types-5.20.0.tgz#0bccbc96ce6fabd115545ec4e70c78ba6c506644"
   integrity sha512-/9tiGiXBRsOKM66HeCpt0iSF0vnAIqHzXgC97icNQIstx/ZA8tcLs9540cHDeaN0cyZUyZF1o8ECqcLXGNODWQ==
-
-"@sentry/typescript@^5.20.0":
-  version "5.20.0"
-  resolved "https://registry.yarnpkg.com/@sentry/typescript/-/typescript-5.20.0.tgz#3201bec5f95c01a305932f8c0d2dfd583a2b5c03"
-  integrity sha512-xiqE9Y8va5djgjyPf36amUYT+Ew1pe05XH4bpUmQM1IL4e6BKi6rdLWhDfwcJmglizTkUxiE6c9Vq0dYcINslg==
-  dependencies:
-    tslint-config-prettier "^1.18.0"
-    tslint-consistent-codestyle "^1.15.1"
 
 "@sentry/utils@5.20.0", "@sentry/utils@~5.20.0":
   version "5.20.0"
