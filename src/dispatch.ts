@@ -32,10 +32,9 @@ export class ElectronClient implements ElectronClientInterface {
     // implementation, which should be fine for most cases. False positives of
     // this would be running `@sentry/electron` in a bare node process, which is
     // acceptable.
-    // tslint:disable:no-unsafe-any
     const clientClass: ClientClass<ElectronClientInterface, ElectronOptions> =
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       process.type === 'browser' ? dynamicRequire(module, './main').MainClient : require('./renderer').RendererClient;
-    // tslint:enable:no-unsafe-any
     this._inner = new clientClass(options);
   }
 
@@ -49,6 +48,7 @@ export class ElectronClient implements ElectronClientInterface {
   /**
    * @inheritDoc
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   public captureException(exception: any, hint?: EventHint, scope?: Scope): string | undefined {
     return this._inner.captureException(exception, hint, scope);
   }
@@ -98,8 +98,8 @@ export class ElectronClient implements ElectronClientInterface {
   /**
    * @inheritDoc
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   public showReportDialog(options: any): void {
-    // tslint:disable-next-line
     this._inner.showReportDialog(options);
   }
 
@@ -125,7 +125,7 @@ export class ElectronClient implements ElectronClientInterface {
  * @param options Options
  */
 export function specificInit(options: ElectronOptions): void {
-  // tslint:disable-next-line
+  // eslint-disable-next-line @typescript-eslint/no-unused-expressions, @typescript-eslint/no-unsafe-member-access
   process.type === 'browser' ? dynamicRequire(module, './main').init(options) : require('./renderer').init(options);
 }
 
@@ -135,12 +135,12 @@ export interface Integrations {
 }
 /** Return all integrations depending if running in browser or renderer. */
 export function getIntegrations(): { node: Integrations; electron: Integrations } | { browser: Integrations } {
-  // tslint:disable:no-unsafe-any
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
   return process.type === 'browser'
     ? {
         electron: dynamicRequire(module, './main').ElectronIntegrations,
         node: dynamicRequire(module, './main').NodeIntegrations,
       }
     : { browser: require('./renderer').BrowserIntegrations };
-  // tslint:enable:no-unsafe-any
+  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 }

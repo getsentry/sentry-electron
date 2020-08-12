@@ -8,7 +8,6 @@
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
   "typescript.tsdk": "./node_modules/typescript/lib",
-  "tslint.enable": false,
   "[json]": {
     "editor.formatOnType": false,
     "editor.formatOnPaste": false,

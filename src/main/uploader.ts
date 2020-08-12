@@ -145,23 +145,6 @@ export class MinidumpUploader {
   }
 
   /**
-   * Helper to filter an array with asynchronous callbacks.
-   *
-   * @param array An array containing items to filter.
-   * @param predicate An async predicate evaluated on every item.
-   * @param thisArg Optional value passed as "this" into the callback.
-   * @returns An array containing only values where the callback returned true.
-   */
-  private async _filterAsync<T>(
-    array: T[],
-    predicate: (item: T) => Promise<boolean> | boolean,
-    thisArg?: any,
-  ): Promise<T[]> {
-    const verdicts = await Promise.all(array.map(predicate, thisArg));
-    return array.filter((_, index) => verdicts[index]);
-  }
-
-  /**
    * Searches for new, unknown minidump files in the crash directory.
    * @returns A promise that resolves to absolute paths of those dumps.
    */
@@ -202,6 +185,23 @@ export class MinidumpUploader {
     await Promise.all(this._queue.get().map(async request => this.uploadMinidump(request)));
   }
 
+  /**
+   * Helper to filter an array with asynchronous callbacks.
+   *
+   * @param array An array containing items to filter.
+   * @param predicate An async predicate evaluated on every item.
+   * @param thisArg Optional value passed as "this" into the callback.
+   * @returns An array containing only values where the callback returned true.
+   */
+  private async _filterAsync<T>(
+    array: T[],
+    predicate: (item: T) => Promise<boolean> | boolean,
+    thisArg?: any,
+  ): Promise<T[]> {
+    const verdicts = await Promise.all(array.map(predicate, thisArg));
+    return array.filter((_, index) => verdicts[index]);
+  }
+
   /** Scans the Crashpad directory structure for minidump files. */
   private async _scanCrashpadFolder(): Promise<string[]> {
     // Crashpad moves minidump files directly into the 'completed' or 'reports' folder. We can
@@ -218,7 +218,7 @@ export class MinidumpUploader {
     const files = await readdir(this._crashesDirectory);
 
     // Remove all metadata files and forget about them.
-    // tslint:disable-next-line: no-floating-promises
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     Promise.all(
       files
         .filter(file => file.endsWith('.txt') && !file.endsWith('log.txt'))

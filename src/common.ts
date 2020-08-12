@@ -97,14 +97,6 @@ export interface ElectronClient extends Client<ElectronOptions> {
 /** Name retrieval references for both Electron <v5 and v7< */
 declare interface CrossApp extends App {
   /**
-   * Usually the name field of package.json is a short lowercased name, according to
-   * the npm modules spec. You should usually also specify a productName field, which
-   * is your application's full capitalized name, and which will be preferred over
-   * name by Electron.
-   */
-  getName(): string;
-
-  /**
    * A `String` property that indicates the current application's name, which is the
    * name in the application's `package.json` file.
    *
@@ -114,6 +106,14 @@ declare interface CrossApp extends App {
    * over `name` by Electron.
    */
   name: string;
+
+  /**
+   * Usually the name field of package.json is a short lowercased name, according to
+   * the npm modules spec. You should usually also specify a productName field, which
+   * is your application's full capitalized name, and which will be preferred over
+   * name by Electron.
+   */
+  getName(): string;
 }
 
 /** Get the name of an electron app for <v5 and v7< */

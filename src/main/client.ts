@@ -3,13 +3,12 @@ import { Event, EventHint } from '@sentry/types';
 import { logger, SyncPromise } from '@sentry/utils';
 
 import { ElectronClient, ElectronOptions, SDK_NAME } from '../common';
-
 import { MainBackend } from './backend';
 import { addEventDefaults } from './context';
 import { normalizeEvent } from './normalize';
 
 /** SDK version used in every event. */
-// tslint:disable-next-line
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 export const SDK_VERSION: string = require('../../package.json').version;
 
 /** Frontend implementation for Electron renderer backends. */
@@ -20,35 +19,6 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
    */
   public constructor(options: ElectronOptions) {
     super(MainBackend, options);
-  }
-
-  /**
-   * @inheritDoc
-   */
-  protected _prepareEvent(event: Event, scope?: Scope, hint?: EventHint): PromiseLike<Event | null> {
-    event.platform = event.platform || 'node';
-    event.sdk = {
-      ...event.sdk,
-      name: SDK_NAME,
-      packages: [
-        ...((event.sdk && event.sdk.packages) || []),
-        {
-          name: 'npm:@sentry/electron',
-          version: SDK_VERSION,
-        },
-      ],
-      version: SDK_VERSION,
-    };
-
-    return super._prepareEvent(event, scope, hint).then((filledEvent: Event | null) =>
-      new SyncPromise<Event>(async resolve => {
-        if (filledEvent) {
-          resolve(normalizeEvent(await addEventDefaults(this._options.appName, filledEvent)));
-        } else {
-          resolve(filledEvent);
-        }
-      }).then((e: Event | null) => e),
-    );
   }
 
   /**
@@ -94,7 +64,36 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
   /**
    * Does nothing in main/node
    */
-  public showReportDialog(_: any): void {
+  public showReportDialog(_: unknown): void {
     // noop
+  }
+
+  /**
+   * @inheritDoc
+   */
+  protected _prepareEvent(event: Event, scope?: Scope, hint?: EventHint): PromiseLike<Event | null> {
+    event.platform = event.platform || 'node';
+    event.sdk = {
+      ...event.sdk,
+      name: SDK_NAME,
+      packages: [
+        ...((event.sdk && event.sdk.packages) || []),
+        {
+          name: 'npm:@sentry/electron',
+          version: SDK_VERSION,
+        },
+      ],
+      version: SDK_VERSION,
+    };
+
+    return super._prepareEvent(event, scope, hint).then((filledEvent: Event | null) =>
+      new SyncPromise<Event>(async resolve => {
+        if (filledEvent) {
+          resolve(normalizeEvent(await addEventDefaults(this._options.appName, filledEvent)));
+        } else {
+          resolve(filledEvent);
+        }
+      }).then((e: Event | null) => e),
+    );
   }
 }

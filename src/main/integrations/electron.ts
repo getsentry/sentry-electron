@@ -14,12 +14,12 @@ export class Electron implements Integration {
   /**
    * @inheritDoc
    */
-  public name: string = Electron.id;
+  public static id: string = 'Electron';
 
   /**
    * @inheritDoc
    */
-  public static id: string = 'Electron';
+  public name: string = Electron.id;
 
   /**
    * @inheritDoc
@@ -58,7 +58,7 @@ export class Electron implements Integration {
    * specified events.
    */
   private _instrumentBreadcrumbs(category: string, emitter: NodeJS.EventEmitter, events: string[] = []): void {
-    type Emit = (event: string, ...args: any[]) => boolean;
+    type Emit = (event: string, ...args: unknown[]) => boolean;
     const emit = emitter.emit.bind(emitter) as Emit;
 
     emitter.emit = (event: string, ...args) => {

@@ -25,7 +25,7 @@ export function normalizeUrl(url: string, base: string = APP_PATH): string {
   return newUrl
     .replace(/\\/g, '/')
     .replace(/webpack:\/?/g, '') // Remove intermediate base path
-    .replace(new RegExp(`(file:\/\/)?\/*${escapedBase}\/*`, 'ig'), 'app:///');
+    .replace(new RegExp(`(file://)?/*${escapedBase}/*`, 'ig'), 'app:///');
 }
 
 /**
@@ -42,10 +42,10 @@ function getStacktrace(event: Event): Stacktrace | undefined {
 
   if (exception) {
     // Raven Node adheres to the Event interface
-    // @ts-ignore
+    // @ts-ignore: need to be able to index exception
     if (exception[0]) {
-      // @ts-ignore
-      // tslint:disable-next-line:no-unsafe-any
+      // @ts-ignore: need to be able to index exception
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       return exception[0].stacktrace;
     }
 

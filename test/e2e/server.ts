@@ -29,7 +29,7 @@ export class TestServer {
   /** All events received by this server instance. */
   public events: TestServerEvent[] = [];
   /** The internal HTTP server. */
-  private server?: Server;
+  private _server?: Server;
 
   /** Starts accepting requests. */
   public start(): void {
@@ -72,12 +72,12 @@ export class TestServer {
       });
     });
 
-    this.server = createServer((req, res) => {
+    this._server = createServer((req, res) => {
       app(req as any, res as any, finalhandler(req, res));
     });
 
     // Changed to port to 8123 because sentry uses 8000 if run locally
-    this.server.listen(8123);
+    this._server.listen(8123);
   }
 
   public clearEvents(): void {
@@ -87,8 +87,8 @@ export class TestServer {
   /** Stops accepting requests and closes the server. */
   public async stop(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      if (this.server) {
-        this.server.close(e => {
+      if (this._server) {
+        this._server.close(e => {
           if (e) {
             reject(e);
           } else {

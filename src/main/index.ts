@@ -41,7 +41,6 @@ import { defaultIntegrations } from '@sentry/node';
 import { Event } from '@sentry/types';
 
 import { ElectronOptions } from '../common';
-
 import { MainClient } from './client';
 import { Electron, OnUncaughtException } from './integrations';
 import { NetTransport } from './transports/net';
@@ -61,7 +60,7 @@ export function init(options: ElectronOptions): void {
   if (options.defaultIntegrations === undefined) {
     options.defaultIntegrations = [
       ...electronIntegrations,
-      // tslint:disable-next-line:no-unbound-method
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       new OnUncaughtException({ onFatalError: options.onFatalError }),
       new Electron(),
     ];
