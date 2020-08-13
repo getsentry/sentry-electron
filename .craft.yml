@@ -14,4 +14,3 @@ targets:
     config:
       canonical: 'npm:@sentry/electron'
   - name: github
-    tagPrefix: v

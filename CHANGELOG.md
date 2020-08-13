@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.0.0
 
 **Breaking Change**: This version uses the [envelope endpoint](https://develop.sentry.dev/sdk/envelopes/). If you are
 using an on-premise installation it requires Sentry version `>= v20.6.0` to work. If you are using
@@ -10,6 +10,8 @@ using an on-premise installation it requires Sentry version `>= v20.6.0` to work
 - ref: Use envelope endpoint (#252)
 - feat: Export NetTransport (#252)
 - feat: Export `flush` & `close` (#252)
+- feat: Bump `@sentry/*` `~5.21.1`
+- feat: Bump `typescript` `3.9.7`
 
 ## v1.5.2
 
