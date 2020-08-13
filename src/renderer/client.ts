@@ -4,7 +4,6 @@ import { Event, EventHint } from '@sentry/types';
 import { logger } from '@sentry/utils';
 
 import { ElectronClient, ElectronOptions } from '../common';
-
 import { RendererBackend } from './backend';
 
 /** Frontend implementation for Electron renderer backends. */
@@ -15,26 +14,6 @@ export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
    */
   public constructor(options: ElectronOptions) {
     super(RendererBackend, options);
-  }
-
-  /**
-   * @inheritDoc
-   */
-  protected _prepareEvent(event: Event, scope?: Scope, hint?: EventHint): PromiseLike<Event | null> {
-    event.platform = event.platform || 'javascript';
-    event.sdk = {
-      ...event.sdk,
-      name: SDK_NAME,
-      packages: [
-        ...((event.sdk && event.sdk.packages) || []),
-        {
-          name: 'npm:@sentry/browser',
-          version: SDK_VERSION,
-        },
-      ],
-      version: SDK_VERSION,
-    };
-    return super._prepareEvent(event, scope, hint);
   }
 
   /**
@@ -58,5 +37,25 @@ export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
       options.eventId = getCurrentHub().lastEventId();
     }
     injectReportDialog(options);
+  }
+
+  /**
+   * @inheritDoc
+   */
+  protected _prepareEvent(event: Event, scope?: Scope, hint?: EventHint): PromiseLike<Event | null> {
+    event.platform = event.platform || 'javascript';
+    event.sdk = {
+      ...event.sdk,
+      name: SDK_NAME,
+      packages: [
+        ...((event.sdk && event.sdk.packages) || []),
+        {
+          name: 'npm:@sentry/browser',
+          version: SDK_VERSION,
+        },
+      ],
+      version: SDK_VERSION,
+    };
+    return super._prepareEvent(event, scope, hint);
   }
 }

@@ -7,3 +7,6 @@ esm/
 coverage
 node_modules/
 stats.json
+
+# Eslint
+.eslintcache

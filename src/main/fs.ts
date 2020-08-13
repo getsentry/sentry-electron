@@ -51,7 +51,7 @@ async function mkdirAsync(path: string, mode: number): Promise<void> {
  * @returns A Promise that resolves when the path has been created.
  */
 export async function mkdirp(path: string): Promise<void> {
-  // tslint:disable-next-line:no-bitwise
+  // eslint-disable-next-line no-bitwise
   const mode = _0777 & ~process.umask();
   const realPath = resolve(path);
 
@@ -80,7 +80,7 @@ export async function mkdirp(path: string): Promise<void> {
  * @param path A relative or absolute path to create.
  */
 export function mkdirpSync(path: string): void {
-  // tslint:disable-next-line:no-bitwise
+  // eslint-disable-next-line no-bitwise
   const mode = _0777 & ~process.umask();
   const realPath = resolve(path);
 
