@@ -44,7 +44,7 @@ export class Electron implements Integration {
         const options = (getCurrentHub().getClient() as ElectronClient).getOptions();
         const customName = options.getRendererName && options.getRendererName(contents);
 
-        this._instrumentBreadcrumbs(customName || `WebContents[${contents.id}]`, contents, [
+        this._instrumentBreadcrumbs(customName || `WebContents[${contents.id}]`, contents as any, [
           'dom-ready',
           'load-url',
           'destroyed',

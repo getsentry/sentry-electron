@@ -118,7 +118,6 @@ declare interface CrossApp extends App {
 
 /** Get the name of an electron app for <v5 and v7< */
 export function getNameFallback(): string {
-  // tslint:disable-next-line: strict-type-predicates
   if (!require) {
     throw new SentryError(
       'Could not require("electron") to get appName. Please ensure you pass `appName` to Sentry options',
@@ -128,12 +127,15 @@ export function getNameFallback(): string {
   const electron = require('electron');
 
   // if we're in the main process
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   if (electron && electron.app) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const appMain = electron.app as CrossApp;
     return appMain.name || appMain.getName();
   }
 
   // We're in the renderer process but the remote module is not available
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   if (!electron || !electron.remote) {
     throw new SentryError(
       'The Electron `remote` module was not available to get appName. Please ensure you pass `appName` to Sentry options',
@@ -141,6 +143,7 @@ export function getNameFallback(): string {
   }
 
   // Remote is available so get the app name
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   const a = electron.remote.app as CrossApp;
   return a.name || a.getName();
 }

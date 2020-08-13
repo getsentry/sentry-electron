@@ -4,9 +4,7 @@ import { Event } from '@sentry/types';
 import bodyParser = require('body-parser');
 import express = require('express');
 import finalhandler = require('finalhandler');
-import { readFileSync } from 'fs';
 import { createServer, Server } from 'http';
-import { Form } from 'multiparty';
 
 /** Event payload that has been submitted to the test server. */
 export interface TestServerEvent {
@@ -17,7 +15,7 @@ export interface TestServerEvent {
   /** Sentry Event data (should conform to the SentryEvent interface). */
   data: Event;
   /** An optional minidump file, if included in the event. */
-  dump_file?: Buffer;
+  dump_file?: boolean;
 }
 
 /**
@@ -34,10 +32,17 @@ export class TestServer {
   /** Starts accepting requests. */
   public start(): void {
     const app = express();
-    app.use(bodyParser.json());
+    app.use(
+      // eslint-disable-next-line deprecation/deprecation
+      bodyParser.raw({
+        inflate: true,
+        limit: '200mb',
+        type: 'application/x-sentry-envelope',
+      }),
+    );
 
-    // Handles the Sentry store endpoint
-    app.post('/api/:id/store', (req, res) => {
+    // Handles the Sentry envelope endpoint
+    app.post('/api/:id/envelope', (req, res) => {
       const auth = (req.headers['x-sentry-auth'] as string) || '';
       const keyMatch = auth.match(/sentry_key=([a-f0-9]*)/);
       if (!keyMatch) {
@@ -46,30 +51,17 @@ export class TestServer {
         return;
       }
 
+      const envelope = req.body.toString().split('\n');
+
       this.events.push({
-        data: req.body as Event,
+        data: JSON.parse(envelope[2]) as Event,
+        dump_file: envelope[4] !== undefined,
         id: req.params.id,
         sentry_key: keyMatch[1],
       });
 
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
       res.end('Success');
-    });
-
-    // Handles the Sentry minidump endpoint
-    app.post('/api/:id/minidump', (req, res) => {
-      const form = new Form();
-      form.parse(req, (_, fields, files) => {
-        this.events.push({
-          data: JSON.parse(fields.sentry[0]) as Event,
-          dump_file: readFileSync(files.upload_file_minidump[0].path),
-          id: req.params.id,
-          sentry_key: req.originalUrl.replace(/.*sentry_key=/, ''),
-        });
-
-        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-        res.end('Success');
-      });
     });
 
     this._server = createServer((req, res) => {

@@ -32,7 +32,6 @@ function getCachePath(): string {
 export async function isAppReady(): Promise<boolean> {
   return (
     app.isReady() ||
-    // tslint:disable-next-line: no-promise-as-boolean
     new Promise<boolean>(resolve => {
       app.once('ready', () => {
         resolve(true);
@@ -195,7 +194,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       // on the crash library being used (Crashpad or Breakpad).
       const crashesDirectory = crashReporter.getCrashesDirectory();
 
-      this._uploader = new MinidumpUploader(dsn, crashesDirectory, getCachePath());
+      this._uploader = new MinidumpUploader(dsn, crashesDirectory, getCachePath(), this.getTransport());
 
       // Flush already cached minidumps from the queue.
       forget(this._uploader.flushQueue());
