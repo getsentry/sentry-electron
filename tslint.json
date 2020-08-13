@@ -1,7 +1,0 @@
-{
-  "extends": "@sentry/typescript/tslint",
-  "rules": {
-    // electron is not installed as a dependency
-    "no-implicit-dependencies": [true, ["electron"]]
-  }
-}

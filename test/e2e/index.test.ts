@@ -81,7 +81,7 @@ describe('E2E Tests', () => {
         expect(lastFrame.filename).to.equal('app:///fixtures/javascript-unhandledrejection.js');
         expect(event.dump_file).to.be.false;
         expect(event.sentry_key).to.equal(SENTRY_KEY);
-        expect(event.data.sdk!.name).to.equal('sentry.javascript.electron');
+        expect(event.data.sdk?.name).to.equal('sentry.javascript.electron');
         expect(breadcrumbs.length).to.greaterThan(4);
       });
 
@@ -97,7 +97,7 @@ describe('E2E Tests', () => {
         expect(event.dump_file).to.be.false;
         expect(event.data.platform).to.equal('node');
         expect(event.sentry_key).to.equal(SENTRY_KEY);
-        expect(event.data.sdk!.name).to.equal('sentry.javascript.electron');
+        expect(event.data.sdk?.name).to.equal('sentry.javascript.electron');
         expect(breadcrumbs.length).to.greaterThan(4);
       });
 
@@ -229,11 +229,11 @@ describe('E2E Tests', () => {
         await context.waitForEvents(testServer, 1);
         const event = testServer.events[0];
 
-        expect(event.data.extra!.a).to.equal(2);
-        expect(event.data.user!.id).to.equal('1');
-        expect(event.data.tags!.a).to.equal('b');
-        expect(event.data.contexts!.server).to.include({ id: '2' });
-        expect(event.data.fingerprint!).to.include('abcd');
+        expect(event.data.extra?.a).to.equal(2);
+        expect(event.data.user?.id).to.equal('1');
+        expect(event.data.tags?.a).to.equal('b');
+        expect(event.data.contexts?.server).to.include({ id: '2' });
+        expect(event.data.fingerprint).to.include('abcd');
       });
 
       it('Captures Scope data correctly from main', async () => {
@@ -241,11 +241,11 @@ describe('E2E Tests', () => {
         await context.waitForEvents(testServer, 1);
         const event = testServer.events[0];
 
-        expect(event.data.extra!.a).to.equal(2);
-        expect(event.data.user!.id).to.equal('2');
-        expect(event.data.tags!.a).to.equal('b');
-        expect(event.data.contexts!.server).to.include({ id: '2' });
-        expect(event.data.fingerprint!).to.include('abcd');
+        expect(event.data.extra?.a).to.equal(2);
+        expect(event.data.user?.id).to.equal('2');
+        expect(event.data.tags?.a).to.equal('b');
+        expect(event.data.contexts?.server).to.include({ id: '2' });
+        expect(event.data.fingerprint).to.include('abcd');
       });
 
       it('Loaded via preload script with nodeIntegration disabled', async () => {

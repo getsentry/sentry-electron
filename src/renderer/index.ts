@@ -39,7 +39,6 @@ import { _callOnClient } from '@sentry/minimal';
 import { Event } from '@sentry/types';
 
 import { ElectronClient, ElectronOptions } from '../common';
-
 import { RendererClient } from './client';
 export { RendererBackend } from './backend';
 export { RendererClient } from './client';

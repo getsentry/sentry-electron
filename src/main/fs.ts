@@ -1,8 +1,6 @@
 import { mkdir, mkdirSync, readdir, readFile, rename, stat, Stats, statSync, unlink } from 'fs';
 import { dirname, resolve } from 'path';
 
-const _0777 = parseInt('0777', 8);
-
 /**
  * Asynchronously reads given files content.
  *
@@ -16,7 +14,7 @@ export async function readFileAsync(
   // We cannot use util.promisify here because that was only introduced in Node
   // 8 and we need to support older Node versions.
   return new Promise<string | Buffer>((res, reject) => {
-    readFile(path, options, (err, data) => {
+    readFile(path, options as any, (err: any, data: any) => {
       if (err) {
         reject(err);
       } else {
@@ -54,17 +52,16 @@ async function mkdirAsync(path: string, mode: number): Promise<void> {
  * @returns A Promise that resolves when the path has been created.
  */
 export async function mkdirp(path: string): Promise<void> {
-  // tslint:disable-next-line:no-bitwise
-  const mode = _0777 & ~process.umask();
+  // eslint-disable-next-line no-bitwise
   const realPath = resolve(path);
 
   try {
-    return mkdirAsync(realPath, mode);
+    return mkdirAsync(realPath, 0o777);
   } catch (err) {
     const error = err as { code: string };
     if (error && error.code === 'ENOENT') {
       await mkdirp(dirname(realPath));
-      return mkdirAsync(realPath, mode);
+      return mkdirAsync(realPath, 0o777);
     }
 
     try {
@@ -83,17 +80,15 @@ export async function mkdirp(path: string): Promise<void> {
  * @param path A relative or absolute path to create.
  */
 export function mkdirpSync(path: string): void {
-  // tslint:disable-next-line:no-bitwise
-  const mode = _0777 & ~process.umask();
   const realPath = resolve(path);
 
   try {
-    mkdirSync(realPath, mode);
+    mkdirSync(realPath, 0o777);
   } catch (err) {
     const error = err as { code: string };
     if (error && error.code === 'ENOENT') {
       mkdirpSync(dirname(realPath));
-      mkdirSync(realPath, mode);
+      mkdirSync(realPath, 0o777);
     } else {
       try {
         if (!statSync(realPath).isDirectory()) {

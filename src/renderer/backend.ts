@@ -29,6 +29,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
   /**
    * @inheritDoc
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   public eventFromException(exception: any, hint?: EventHint): PromiseLike<Event> {
     return eventFromException(this._options, exception, hint);
   }
@@ -109,6 +110,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
       ipcRenderer.send(IPC_PING);
 
       const timeout = setTimeout(() => {
+        // eslint-disable-next-line no-console
         console.warn('Could not connect to Sentry main process. Did you call init?');
       }, PING_TIMEOUT);
 

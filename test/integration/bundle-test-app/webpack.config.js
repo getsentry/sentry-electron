@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 // const ReplacePlugin = require('webpack-plugin-replace');

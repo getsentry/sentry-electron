@@ -39,14 +39,17 @@ if (!process.env.DEBUG) {
 
 /** A class to start and stop Electron apps for E2E tests. */
 export class TestContext {
-  /** Unique app name. */
-  private readonly appName: string = `test-app-${++appInstanceCount}`;
   /** Can check if the main process is running and kill it */
   public mainProcess?: ProcessStatus;
-  /** Temporary directory that hosts the app's User Data. */
-  private tempDir?: TempDirectory;
 
-  private started: boolean = false;
+  /** Unique app name. */
+  // eslint-disable-next-line no-plusplus
+  private readonly _appName: string = `test-app-${++appInstanceCount}`;
+
+  /** Temporary directory that hosts the app's User Data. */
+  private _tempDir?: TempDirectory;
+
+  private _started: boolean = false;
 
   /**
    * Creates an instance of TestContext.
@@ -56,25 +59,25 @@ export class TestContext {
    * @param testServer A test server instance.
    */
   public constructor(
-    private readonly electronPath: string,
-    private readonly appPath: string = join(__dirname, 'test-app'),
+    private readonly _electronPath: string,
+    private readonly _appPath: string = join(__dirname, 'test-app'),
   ) {}
 
   /** Starts the app. */
   public async start(sentryConfig?: string, fixture?: string): Promise<void> {
     // Only setup the tempDir if this the first start of the context
     // Subsequent starts will use the same path
-    if (!this.tempDir) {
+    if (!this._tempDir) {
       // Get a temp directory for this app to use as userData
-      this.tempDir = await getTempDir();
+      this._tempDir = await getTempDir();
     }
 
     const env: { [key: string]: string | undefined } = {
       ...process.env,
       DSN: 'http://37f8a2ee37c0409d8970bc7559c7c7e4@localhost:8123/277345',
-      E2E_APP_NAME: this.appName,
+      E2E_APP_NAME: this._appName,
       E2E_TEST_SENTRY: sentryConfig,
-      E2E_USERDATA_DIRECTORY: this.tempDir.path,
+      E2E_USERDATA_DIRECTORY: this._tempDir.path,
       ELECTRON_ENABLE_LOGGING: process.env.DEBUG,
     };
 
@@ -82,13 +85,14 @@ export class TestContext {
       env.E2E_TEST_FIXTURE = fixture;
     }
 
-    const childProcess = spawn(this.electronPath, [this.appPath], { env });
+    const childProcess = spawn(this._electronPath, [this._appPath], { env });
 
+    // eslint-disable-next-line no-extra-boolean-cast
     if (!!process.env.DEBUG) {
       childProcess.stdout.pipe(process.stdout);
       childProcess.stderr.on('data', data => {
         const str = data.toString();
-        if (str.match(/^\[\d+\:\d+/)) {
+        if (str.match(/^\[\d+:\d+/)) {
           return;
         }
         process.stderr.write(data);
@@ -102,7 +106,7 @@ export class TestContext {
       'Timeout: Waiting for app to start',
     );
 
-    this.started = true;
+    this._started = true;
   }
 
   /** Stops the app and cleans up. */
@@ -113,8 +117,8 @@ export class TestContext {
 
     await this.mainProcess.kill();
 
-    if (this.tempDir && clearData) {
-      this.tempDir.cleanup();
+    if (this._tempDir && clearData) {
+      this._tempDir.cleanup();
     }
   }
 
@@ -156,6 +160,6 @@ export class TestContext {
   }
 
   public isStarted(): boolean {
-    return this.started;
+    return this._started;
   }
 }

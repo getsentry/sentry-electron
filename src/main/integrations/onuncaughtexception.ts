@@ -9,12 +9,12 @@ export class OnUncaughtException implements Integration {
   /**
    * @inheritDoc
    */
-  public name: string = OnUncaughtException.id;
+  public static id: string = 'OnUncaughtException';
 
   /**
    * @inheritDoc
    */
-  public static id: string = 'OnUncaughtException';
+  public name: string = OnUncaughtException.id;
 
   /**
    * @inheritDoc
@@ -56,7 +56,9 @@ export class OnUncaughtException implements Integration {
           } else if (global.process.listenerCount('uncaughtException') <= 2) {
             // In addition to this handler there is always one in Electron
             // The dialog is only shown if there are no other handlers
+            // eslint-disable-next-line no-console
             console.error('Uncaught Exception:');
+            // eslint-disable-next-line no-console
             console.error(error);
             const ref = error.stack;
             const stack = ref !== undefined ? ref : `${error.name}: ${error.message}`;

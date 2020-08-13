@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   addBreadcrumb,
   BaseBackend,
@@ -14,7 +15,6 @@ import { app, crashReporter, ipcMain } from 'electron';
 import { join } from 'path';
 
 import { CommonBackend, ElectronOptions, getNameFallback, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
-
 import { captureMinidump } from './index';
 import { normalizeUrl } from './normalize';
 import { Store } from './store';
@@ -32,7 +32,6 @@ function getCachePath(): string {
 export async function isAppReady(): Promise<boolean> {
   return (
     app.isReady() ||
-    // tslint:disable-next-line: no-promise-as-boolean
     new Promise<boolean>(resolve => {
       app.once('ready', () => {
         resolve(true);
@@ -63,10 +62,50 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     this._setupScopeListener();
 
     if (this._isNativeEnabled()) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       success = this._installNativeHandler() && success;
     }
 
     this._installIPC();
+  }
+
+  /**
+   * @inheritDoc
+   */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  public eventFromException(exception: any, hint?: EventHint): PromiseLike<Event> {
+    return this._inner.eventFromException(exception, hint);
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public eventFromMessage(message: string, level: Severity = Severity.Info, hint?: EventHint): PromiseLike<Event> {
+    return this._inner.eventFromMessage(message, level, hint);
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public sendEvent(event: Event): void {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if ((event as any).__INTERNAL_MINIDUMP) {
+      crashReporter.addExtraParameter('sentry', JSON.stringify(event));
+    } else {
+      this._inner.sendEvent(event);
+    }
+  }
+
+  /**
+   * Uploads the given minidump and attaches event information.
+   *
+   * @param path A relative or absolute path to the minidump file.
+   * @param event Optional event information to add to the minidump request.
+   */
+  public uploadMinidump(path: string, event: Event = {}): void {
+    if (this._uploader) {
+      forget(this._uploader.uploadMinidump({ path, event }));
+    }
   }
 
   /**
@@ -93,43 +132,6 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   }
 
   /**
-   * @inheritDoc
-   */
-  public eventFromException(exception: any, hint?: EventHint): PromiseLike<Event> {
-    return this._inner.eventFromException(exception, hint);
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public eventFromMessage(message: string, level: Severity = Severity.Info, hint?: EventHint): PromiseLike<Event> {
-    return this._inner.eventFromMessage(message, level, hint);
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public sendEvent(event: Event): void {
-    if ((event as any).__INTERNAL_MINIDUMP) {
-      crashReporter.addExtraParameter('sentry', JSON.stringify(event));
-    } else {
-      this._inner.sendEvent(event);
-    }
-  }
-
-  /**
-   * Uploads the given minidump and attaches event information.
-   *
-   * @param path A relative or absolute path to the minidump file.
-   * @param event Optional event information to add to the minidump request.
-   */
-  public uploadMinidump(path: string, event: Event = {}): void {
-    if (this._uploader) {
-      forget(this._uploader.uploadMinidump({ path, event }));
-    }
-  }
-
-  /**
    * Adds a scope listener to persist changes to disk.
    */
   private _setupScopeListener(): void {
@@ -137,11 +139,13 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     if (hubScope) {
       hubScope.addScopeListener(updatedScope => {
         const cloned = Scope.clone(updatedScope);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         (cloned as any)._eventProcessors = [];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         (cloned as any)._scopeListeners = [];
         // if we use the crashpad minidump uploader we have to set extra whenever the scope updates
         if (this._options.useCrashpadMinidumpUploader === true) {
-          // @ts-ignore
+          // @ts-ignore __INTERNAL_MINIDUMP is not assignable to event
           captureEvent({ __INTERNAL_MINIDUMP: true });
         }
         this._scopeStore.set(cloned);
@@ -203,10 +207,11 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     /**
      * Helper function for sending renderer crashes
      */
-    const sendRendererCrash = async (contents: Electron.WebContents, details?: Electron.Details) => {
+    const sendRendererCrash = async (contents: Electron.WebContents, details?: Electron.Details): Promise<void> => {
       try {
         await this._sendNativeCrashes(this._getNewEventWithElectronContext(contents, details));
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error(e);
       }
 
@@ -254,6 +259,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       try {
         event = JSON.parse(jsonEvent) as Event;
       } catch {
+        // eslint-disable-next-line no-console
         console.warn('sentry-electron received an invalid IPC_EVENT message');
         return;
       }
@@ -271,11 +277,12 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       try {
         rendererScope = JSON.parse(jsonRendererScope) as Scope;
       } catch {
+        // eslint-disable-next-line no-console
         console.warn('sentry-electron received an invalid IPC_SCOPE message');
         return;
       }
-      // tslint:disable:no-unsafe-any
       const sentScope = Scope.clone(rendererScope) as any;
+      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
       configureScope(scope => {
         if (sentScope._user) {
           scope.setUser(sentScope._user);
@@ -286,7 +293,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
         // we just add the last added breadcrumb on scope updates
         scope.addBreadcrumb(sentScope._breadcrumbs.pop());
       });
-      // tslint:enable:no-unsafe-any
+      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
     });
   }
 

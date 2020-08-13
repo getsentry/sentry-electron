@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { API } from '@sentry/core';
 import { Event, Status, Transport } from '@sentry/types';
 import { Dsn, logger, parseSemver, timestampWithMs } from '@sentry/utils';
@@ -83,51 +84,6 @@ export class MinidumpUploader {
   }
 
   /**
-   * Create minidump request to dispatch to the transpoirt
-   */
-  private async _toMinidumpRequest(
-    transport: NetTransport,
-    event: Event,
-    minidumpPath: string,
-  ): Promise<SentryElectronRequest> {
-    const envelopeHeaders = JSON.stringify({
-      event_id: event.event_id,
-      // Internal helper that uses `perf_hooks` to get clock reading
-      sent_at: new Date(timestampWithMs() * 1000).toISOString(),
-    });
-
-    // If attachments are ratelimited we add this hint so users know
-    if (transport.isRateLimited('attachment')) {
-      event.message = 'Ratelimited - Minidump Event';
-    }
-
-    const itemHeaders = JSON.stringify({
-      content_type: 'application/json',
-      type: 'event',
-    });
-
-    const eventPayload = JSON.stringify(event);
-    let bodyBuffer = Buffer.from(`${envelopeHeaders}\n${itemHeaders}\n${eventPayload}\n`);
-
-    // Only add attachment if they are not rate limited
-    if (!transport.isRateLimited('attachment')) {
-      const minidumpContent = (await readFileAsync(minidumpPath)) as Buffer;
-      const minidumpHeader = JSON.stringify({
-        attachment_type: 'event.minidump',
-        length: minidumpContent.length,
-        type: 'attachment',
-      });
-      bodyBuffer = Buffer.concat([bodyBuffer, Buffer.from(`${minidumpHeader}\n`), minidumpContent, Buffer.from('\n')]);
-    } else {
-      logger.warn('Will not add minidump to request since they are rate limited.');
-    }
-
-    return {
-      body: bodyBuffer,
-      url: this._api.getEnvelopeEndpointWithUrlEncodedAuth(),
-    };
-  }
-  /**
    * Uploads a minidump file to Sentry.
    *
    * @param path Absolute path to the minidump file.
@@ -135,6 +91,7 @@ export class MinidumpUploader {
    * @returns A promise that resolves when the upload is complete.
    */
   public async uploadMinidump(request: MinidumpRequest): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (typeof (this._transport as any).sendRequest !== 'function') {
       logger.warn("Your transport doesn't implement sendRequest");
       logger.warn('Skipping sending minidump');
@@ -180,23 +137,6 @@ export class MinidumpUploader {
   }
 
   /**
-   * Helper to filter an array with asynchronous callbacks.
-   *
-   * @param array An array containing items to filter.
-   * @param predicate An async predicate evaluated on every item.
-   * @param thisArg Optional value passed as "this" into the callback.
-   * @returns An array containing only values where the callback returned true.
-   */
-  private async _filterAsync<T>(
-    array: T[],
-    predicate: (item: T) => Promise<boolean> | boolean,
-    thisArg?: any,
-  ): Promise<T[]> {
-    const verdicts = await Promise.all(array.map(predicate, thisArg));
-    return array.filter((_, index) => verdicts[index]);
-  }
-
-  /**
    * Searches for new, unknown minidump files in the crash directory.
    * @returns A promise that resolves to absolute paths of those dumps.
    */
@@ -237,6 +177,23 @@ export class MinidumpUploader {
     await Promise.all(this._queue.get().map(async request => this.uploadMinidump(request)));
   }
 
+  /**
+   * Helper to filter an array with asynchronous callbacks.
+   *
+   * @param array An array containing items to filter.
+   * @param predicate An async predicate evaluated on every item.
+   * @param thisArg Optional value passed as "this" into the callback.
+   * @returns An array containing only values where the callback returned true.
+   */
+  private async _filterAsync<T>(
+    array: T[],
+    predicate: (item: T) => Promise<boolean> | boolean,
+    thisArg?: any,
+  ): Promise<T[]> {
+    const verdicts = await Promise.all(array.map(predicate, thisArg));
+    return array.filter((_, index) => verdicts[index]);
+  }
+
   /** Scans the Crashpad directory structure for minidump files. */
   private async _scanCrashpadFolder(): Promise<string[]> {
     // Crashpad moves minidump files directly into the 'completed' or 'reports' folder. We can
@@ -253,7 +210,7 @@ export class MinidumpUploader {
     const files = await readDirAsync(this._crashesDirectory);
 
     // Remove all metadata files and forget about them.
-    // tslint:disable-next-line: no-floating-promises
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     Promise.all(
       files
         .filter(file => file.endsWith('.txt') && !file.endsWith('log.txt'))
@@ -308,5 +265,52 @@ export class MinidumpUploader {
         }
       }),
     );
+  }
+
+  /**
+   * Create minidump request to dispatch to the transpoirt
+   */
+  private async _toMinidumpRequest(
+    transport: NetTransport,
+    event: Event,
+    minidumpPath: string,
+  ): Promise<SentryElectronRequest> {
+    const envelopeHeaders = JSON.stringify({
+      event_id: event.event_id,
+      // Internal helper that uses `perf_hooks` to get clock reading
+      sent_at: new Date(timestampWithMs() * 1000).toISOString(),
+    });
+
+    // If attachments are ratelimited we add this hint so users know
+    if (transport.isRateLimited('attachment')) {
+      event.message = 'Ratelimited - Minidump Event';
+    }
+
+    const itemHeaders = JSON.stringify({
+      content_type: 'application/json',
+      type: 'event',
+    });
+
+    const eventPayload = JSON.stringify(event);
+    let bodyBuffer = Buffer.from(`${envelopeHeaders}\n${itemHeaders}\n${eventPayload}\n`);
+
+    // Only add attachment if they are not rate limited
+    if (!transport.isRateLimited('attachment')) {
+      const minidumpContent = (await readFileAsync(minidumpPath)) as Buffer;
+      const minidumpHeader = JSON.stringify({
+        attachment_type: 'event.minidump',
+        length: minidumpContent.length,
+        type: 'attachment',
+      });
+
+      bodyBuffer = Buffer.concat([bodyBuffer, Buffer.from(`${minidumpHeader}\n`), minidumpContent, Buffer.from('\n')]);
+    } else {
+      logger.warn('Will not add minidump to request since they are rate limited.');
+    }
+
+    return {
+      body: bodyBuffer,
+      url: this._api.getEnvelopeEndpointWithUrlEncodedAuth(),
+    };
   }
 }

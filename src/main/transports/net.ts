@@ -71,48 +71,6 @@ export class NetTransport extends Transports.BaseTransport {
   }
 
   /**
-   * Sets internal _rateLimits from incoming headers
-   */
-  private _handleRateLimit(headers: Record<string, string[] | string>): void {
-    this._rateLimits = {};
-    const now = Date.now();
-    if (headers['x-sentry-rate-limits']) {
-      let rateLimitHeader = Array.isArray(headers['x-sentry-rate-limits'])
-        ? headers['x-sentry-rate-limits'][0]
-        : headers['x-sentry-rate-limits'];
-      rateLimitHeader = rateLimitHeader.trim();
-      const quotas = rateLimitHeader.split(',');
-      const preRateLimits: Record<string, number> = {};
-      for (const quota of quotas) {
-        const parameters = quota.split(':');
-        const headerDelay = parseInt(`${parameters[0]}`, 10);
-        let delay = 60 * 1000; // 60secs default
-        if (!isNaN(headerDelay)) {
-          // so it is a number ^^
-          delay = headerDelay * 1000; // to have time in secs
-        }
-        const categories = parameters[1].split(';');
-        if (categories.length === 1 && categories[0] === '') {
-          preRateLimits.all = delay;
-        } else {
-          for (const category of categories) {
-            preRateLimits[category] = Math.max(preRateLimits[category] || 0, delay);
-          }
-        }
-      }
-      for (const key of Object.keys(preRateLimits)) {
-        this._rateLimits[key] = new Date(now + preRateLimits[key]);
-      }
-    } else if (headers['retry-after']) {
-      const retryAfterHeader = Array.isArray(headers['retry-after'])
-        ? headers['retry-after'][0]
-        : headers['retry-after'];
-
-      this._rateLimits.all = new Date(now + parseRetryAfterHeader(now, retryAfterHeader));
-    }
-  }
-
-  /**
    * Dispatches a Request to Sentry. Only handles SentryRequest
    */
   public async sendRequest(request: SentryElectronRequest): Promise<Response> {
@@ -162,5 +120,47 @@ export class NetTransport extends Transports.BaseTransport {
         req.end();
       }),
     );
+  }
+
+  /**
+   * Sets internal _rateLimits from incoming headers
+   */
+  private _handleRateLimit(headers: Record<string, string[] | string>): void {
+    this._rateLimits = {};
+    const now = Date.now();
+    if (headers['x-sentry-rate-limits']) {
+      let rateLimitHeader = Array.isArray(headers['x-sentry-rate-limits'])
+        ? headers['x-sentry-rate-limits'][0]
+        : headers['x-sentry-rate-limits'];
+      rateLimitHeader = rateLimitHeader.trim();
+      const quotas = rateLimitHeader.split(',');
+      const preRateLimits: Record<string, number> = {};
+      for (const quota of quotas) {
+        const parameters = quota.split(':');
+        const headerDelay = parseInt(`${parameters[0]}`, 10);
+        let delay = 60 * 1000; // 60secs default
+        if (!isNaN(headerDelay)) {
+          // so it is a number ^^
+          delay = headerDelay * 1000; // to have time in secs
+        }
+        const categories = parameters[1].split(';');
+        if (categories.length === 1 && categories[0] === '') {
+          preRateLimits.all = delay;
+        } else {
+          for (const category of categories) {
+            preRateLimits[category] = Math.max(preRateLimits[category] || 0, delay);
+          }
+        }
+      }
+      for (const key of Object.keys(preRateLimits)) {
+        this._rateLimits[key] = new Date(now + preRateLimits[key]);
+      }
+    } else if (headers['retry-after']) {
+      const retryAfterHeader = Array.isArray(headers['retry-after'])
+        ? headers['retry-after'][0]
+        : headers['retry-after'];
+
+      this._rateLimits.all = new Date(now + parseRetryAfterHeader(now, retryAfterHeader));
+    }
   }
 }

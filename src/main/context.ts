@@ -5,7 +5,6 @@ import { platform, release } from 'os';
 import { join } from 'path';
 
 import { getNameFallback } from '../common';
-
 import { readDirAsync, readFileAsync } from './fs';
 
 /** Operating system context information. */
@@ -266,7 +265,6 @@ export async function addEventDefaults(appName: string | undefined, event: Event
   // The event defaults are cached as long as the app is running. We create the
   // promise here synchronously to avoid multiple events computing them at the
   // same time.
-  // tslint:disable-next-line: no-promise-as-boolean
   if (!defaultsPromise) {
     defaultsPromise = getEventDefaults(appName);
   }
