@@ -57,13 +57,11 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     this._inner = new NodeBackend(options);
     this._scopeStore = new Store<Scope>(getCachePath(), 'scope_v2', new Scope());
 
-    let success = true;
-
     this._setupScopeListener();
 
     if (this._isNativeEnabled()) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      success = this._installNativeHandler() && success;
+      forget(this._installNativeHandler());
     }
 
     this._installIPC();
@@ -90,6 +88,9 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   public sendEvent(event: Event): void {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if ((event as any).__INTERNAL_MINIDUMP) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      delete (event as any).__INTERNAL_MINIDUMP;
+      delete event.event_id;
       crashReporter.addExtraParameter('sentry', JSON.stringify(event));
     } else {
       this._inner.sendEvent(event);
@@ -166,7 +167,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   }
 
   /** Activates the Electron CrashReporter. */
-  private _installNativeHandler(): boolean {
+  private async _installNativeHandler(): Promise<void> {
     // We are only called by the frontend if the SDK is enabled and a valid DSN
     // has been configured. If no DSN is present, this indicates a programming
     // error.
@@ -186,6 +187,8 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       productName: this._options.appName || getNameFallback(),
       submitURL: MinidumpUploader.minidumpUrlFromDsn(dsn),
       uploadToServer: this._options.useCrashpadMinidumpUploader || false,
+      // @ts-ignore
+      compress: true,
     });
 
     if (this._options.useSentryMinidumpUploader !== false) {
@@ -193,7 +196,6 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       // it uses to store minidumps in. The structure in this directory depends
       // on the crash library being used (Crashpad or Breakpad).
       const crashesDirectory = crashReporter.getCrashesDirectory();
-
       this._uploader = new MinidumpUploader(dsn, crashesDirectory, getCachePath(), this.getTransport());
 
       // Flush already cached minidumps from the queue.
@@ -244,8 +246,6 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
         });
       }
     });
-
-    return true;
   }
 
   /** Installs IPC handlers to receive events and metadata from renderers. */
@@ -321,9 +321,10 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       throw new SentryError('Invariant violation: Native crashes not enabled');
     }
 
-    const currentCloned = Scope.clone(getCurrentHub().getScope());
-    const fetchedScope = this._scopeStore.get();
     try {
+      const currentCloned = Scope.clone(getCurrentHub().getScope());
+      const fetchedScope = this._scopeStore.get();
+
       const storedScope = Scope.clone(fetchedScope);
       let newEvent = await storedScope.applyToEvent(event);
 

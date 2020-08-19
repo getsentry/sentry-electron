@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- fix: The default version is now correctly sent with an `@` seperator e.g: `name@version`
+
 ## 2.0.0
 
 **Breaking Change**: This version uses the [envelope endpoint](https://develop.sentry.dev/sdk/envelopes/). If you are
