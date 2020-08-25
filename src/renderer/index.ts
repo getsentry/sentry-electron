@@ -36,6 +36,7 @@ export {
 import { defaultIntegrations, ReportDialogOptions } from '@sentry/browser';
 import { getCurrentHub, initAndBind } from '@sentry/core';
 import { _callOnClient } from '@sentry/minimal';
+import { addExtensionMethods } from '@sentry/tracing';
 import { Event } from '@sentry/types';
 
 import { ElectronClient, ElectronOptions } from '../common';
@@ -50,6 +51,9 @@ export { RendererClient } from './client';
 export function init(options: ElectronOptions): void {
   if (options.defaultIntegrations === undefined) {
     options.defaultIntegrations = defaultIntegrations;
+  }
+  if (options.tracesSampleRate) {
+    addExtensionMethods();
   }
   initAndBind(RendererClient, options);
 }

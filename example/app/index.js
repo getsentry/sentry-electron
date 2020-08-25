@@ -1,6 +1,6 @@
 // Activate the Sentry Electron SDK as early as possible in every process.
 // The SDK must be installed in the main process for this to work.
-require('../sentry');
+require('../sentry-renderer');
 
 const { ipcRenderer } = require('electron');
 const { crash } = global.process || {};

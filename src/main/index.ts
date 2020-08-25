@@ -36,6 +36,7 @@ export {
 import { getCurrentHub, initAndBind } from '@sentry/core';
 import { _callOnClient } from '@sentry/minimal';
 import { defaultIntegrations } from '@sentry/node';
+import { addExtensionMethods } from '@sentry/tracing';
 import { Event } from '@sentry/types';
 
 import { ElectronOptions } from '../common';
@@ -54,6 +55,9 @@ export const ElectronIntegrations = { Electron, OnUncaughtException };
  * @param options ElectronOptions
  */
 export function init(options: ElectronOptions): void {
+  if (options.tracesSampleRate) {
+    addExtensionMethods();
+  }
   const electronIntegrations = defaultIntegrations.filter(integration => integration.name !== 'OnUncaughtException');
   if (options.defaultIntegrations === undefined) {
     options.defaultIntegrations = [
