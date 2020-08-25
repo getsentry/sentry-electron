@@ -116,7 +116,6 @@ export class MinidumpUploader {
       }
 
       // Forget this minidump in all caches
-      // tslint:disable-next-line: strict-comparisons
       this._queue.update(queued => queued.filter(stored => stored !== request));
       this._knownPaths.splice(this._knownPaths.indexOf(request.path), 1);
 

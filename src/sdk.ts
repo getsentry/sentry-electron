@@ -1,6 +1,7 @@
 import { ReportDialogOptions } from '@sentry/browser';
 import { getCurrentHub } from '@sentry/core';
 import { _callOnClient } from '@sentry/minimal';
+import { addExtensionMethods } from '@sentry/tracing';
 import { Event } from '@sentry/types';
 
 import { ElectronClient, ElectronOptions } from './common';
@@ -51,6 +52,9 @@ import { specificInit } from './dispatch';
  * @see ElectronOptions for documentation on configuration options.
  */
 export function init(options: ElectronOptions): void {
+  if (options.tracesSampleRate) {
+    addExtensionMethods();
+  }
   specificInit(options);
 }
 

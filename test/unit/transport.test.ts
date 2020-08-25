@@ -1,4 +1,3 @@
-// tslint:disable: no-unsafe-any
 import { expect, use } from 'chai';
 import chaiDateTime = require('chai-datetime');
 

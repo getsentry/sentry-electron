@@ -29,6 +29,7 @@ export {
   setExtras,
   setTag,
   setTags,
+  startTransaction,
   setUser,
   withScope,
 } from '@sentry/core';

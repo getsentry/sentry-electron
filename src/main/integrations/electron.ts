@@ -1,11 +1,6 @@
 import { getCurrentHub } from '@sentry/core';
 import { Integration } from '@sentry/types';
-import {
-  app,
-  powerMonitor,
-  screen,
-  // tslint:disable-next-line:no-implicit-dependencies
-} from 'electron';
+import { app, powerMonitor, screen } from 'electron';
 
 import { ElectronClient } from '../../common';
 

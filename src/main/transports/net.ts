@@ -63,7 +63,6 @@ export class NetTransport extends Transports.BaseTransport {
    */
   public isRateLimited(category: string): boolean {
     const disabledUntil = this._rateLimits[category] || this._rateLimits.all;
-    // tslint:disable-next-line
     if (new Date(Date.now()) < disabledUntil) {
       return true;
     }
@@ -96,13 +95,11 @@ export class NetTransport extends Transports.BaseTransport {
               this._handleRateLimit(res.headers);
             }
 
-            // tslint:disable:no-unsafe-any
             if (res.headers && res.headers['x-sentry-error']) {
               let reason: string | string[] = res.headers['x-sentry-error'];
               if (Array.isArray(reason)) {
                 reason = reason.join(', ');
               }
-              // tslint:enable:no-unsafe-any
               reject(new SentryError(`HTTP Error (${res.statusCode}): ${reason}`));
             } else {
               reject(new SentryError(`HTTP Error (${res.statusCode})`));

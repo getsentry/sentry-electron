@@ -33,7 +33,6 @@ async function getTempDir(): Promise<TempDirectory> {
 }
 
 if (!process.env.DEBUG) {
-  // tslint:disable-next-line
   console.log('You can enable DEBUG=true to get verbose output.');
 }
 

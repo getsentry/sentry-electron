@@ -129,7 +129,6 @@ describe('E2E Tests', () => {
         expect(breadcrumbs.length).to.greaterThan(4);
       });
 
-      // tslint:disable-next-line
       it('onFatalError can be overridden', async function() {
         // For some unknown reason this test fails on windows
         if (process.platform === 'win32') {
@@ -155,7 +154,6 @@ describe('E2E Tests', () => {
         );
       });
 
-      // tslint:disable-next-line
       it('Native crash in renderer process', async function() {
         if (majorVersion === 9 && process.platform === 'linux') {
           this.skip();
@@ -182,7 +180,6 @@ describe('E2E Tests', () => {
         expect(user.id).to.equal('johndoe');
       });
 
-      // tslint:disable-next-line
       it('Native crash in main process', async function() {
         if (majorVersion === 9 && process.platform === 'linux') {
           // TODO: Check why this fails on linux
@@ -276,7 +273,6 @@ describe('E2E Tests', () => {
         expect(breadcrumbs.length).to.greaterThan(4);
       });
 
-      // tslint:disable-next-line
       it('Custom release string for minidump', async function() {
         if (majorVersion === 9 && process.platform === 'linux') {
           // TODO: Check why this fails on linux

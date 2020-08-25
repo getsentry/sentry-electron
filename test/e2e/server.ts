@@ -1,5 +1,3 @@
-// tslint:disable:no-unsafe-any
-
 import { Event } from '@sentry/types';
 import bodyParser = require('body-parser');
 import express = require('express');
