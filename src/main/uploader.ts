@@ -212,14 +212,16 @@ export class MinidumpUploader {
     // Remove all metadata files and forget about them.
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     Promise.all(
-      files.filter(file => file.endsWith('.txt') && !file.endsWith('log.txt')).map(async file => {
-        const path = join(this._crashesDirectory, file);
-        try {
-          await unlinkAsync(path);
-        } catch (e) {
-          logger.warn('Could not delete', path);
-        }
-      }),
+      files
+        .filter(file => file.endsWith('.txt') && !file.endsWith('log.txt'))
+        .map(async file => {
+          const path = join(this._crashesDirectory, file);
+          try {
+            await unlinkAsync(path);
+          } catch (e) {
+            logger.warn('Could not delete', path);
+          }
+        }),
     );
 
     return files.filter(file => file.endsWith('.dmp')).map(file => join(this._crashesDirectory, file));
