@@ -301,6 +301,7 @@ export class MinidumpUploader {
         attachment_type: 'event.minidump',
         length: minidumpContent.length,
         type: 'attachment',
+        filename: basename(minidumpPath),
       });
 
       bodyBuffer = Buffer.concat([bodyBuffer, Buffer.from(`${minidumpHeader}\n`), minidumpContent, Buffer.from('\n')]);
