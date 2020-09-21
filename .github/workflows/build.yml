@@ -21,7 +21,7 @@ jobs:
           path: |
             .cache/**
             **/node_modules
-          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-${{ github.sha }}
       - name: Install
         run: yarn install
       - name: Build
@@ -38,7 +38,7 @@ jobs:
           path: |
             .cache/**
             **/node_modules
-          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-${{ github.sha }}
       - run: yarn install
       - name: Run Linter
         run: yarn lint
@@ -60,7 +60,7 @@ jobs:
           path: |
             .cache/**
             **/node_modules
-          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-${{ github.sha }}
       - run: yarn install
       - name: Run Unit Tests
         run: yarn test
@@ -82,7 +82,7 @@ jobs:
           path: |
             .cache/**
             **/node_modules
-          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-${{ github.sha }}
       - run: yarn install
       - name: Run E2E Tests
         run: yarn e2e

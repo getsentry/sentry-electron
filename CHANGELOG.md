@@ -2,7 +2,10 @@
 
 ## Unreleased
 
-- fix: The default version is now correctly sent with an `@` seperator e.g: `name@version`
+## 2.0.1
+
+- fix: The default version is now correctly sent with an `@` seperator e.g: `name@version` (#260)
+- fix: Set `compress: true` for crash reporter (#260)
 
 ## 2.0.0
 
