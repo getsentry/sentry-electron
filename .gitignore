@@ -10,3 +10,4 @@ stats.json
 
 # Eslint
 .eslintcache
+.vagrant

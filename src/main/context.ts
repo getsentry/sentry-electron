@@ -255,7 +255,7 @@ async function getEventDefaults(appName: string | undefined): Promise<Event> {
     },
     environment: process.defaultApp ? 'development' : 'production',
     extra: { crashed_process: 'browser' },
-    release: `${name.replace(/\W/g, '-')}${app.getVersion()}`,
+    release: `${name.replace(/\W/g, '-')}@${app.getVersion()}`,
     user: { ip_address: '{{auto}}' },
   };
 }

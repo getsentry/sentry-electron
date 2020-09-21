@@ -1,23 +1,19 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const url = require('url');
 
-const DIST_PATH = path.join(__dirname, 'dist');
-
-// Activate the Sentry Electron SDK as early as possible in every process.
-// To support errors in renderer processes on Linux and Windows, make sure
-// to include this line in those files as well.
 require('./sentry');
+
+const { app, BrowserWindow, ipcMain } = require('electron');
+
+const DIST_PATH = path.join(__dirname, 'dist');
 
 app.on('ready', () => {
   const window = new BrowserWindow({
     width: 800,
     height: 600,
     titleBarStyle: 'hidden',
-    webPreferences: {
-      preload: path.join(DIST_PATH, 'bundle.js'),
-      sandbox: false,
-    },
+    // show: false,
+    webPreferences: { nodeIntegration: true, contextIsolation: false },
   });
   window.webContents.openDevTools();
   window.loadURL(
