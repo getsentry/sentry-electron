@@ -80,7 +80,7 @@ export class MinidumpUploader {
     const { host, path, projectId, port, protocol, user } = dsn;
     return `${protocol}://${host}${port !== '' ? `:${port}` : ''}${
       path !== '' ? `/${path}` : ''
-    }/api/${projectId}/minidump?sentry_key=${user}`;
+    }/api/${projectId}/minidump/?sentry_key=${user}`;
   }
 
   /**
