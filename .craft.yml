@@ -1,11 +1,13 @@
 ---
-minVersion: '0.9.1'
+minVersion: '0.13.2'
 github:
   owner: getsentry
   repo: sentry-electron
 changelogPolicy: simple
 preReleaseCommand: bash scripts/craft-pre-release.sh
 statusProvider:
+  name: github
+artifactProvider:
   name: github
 targets:
   - name: npm

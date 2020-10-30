@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.0.2
+
+- fix: Add guard for phantom event (#271)
+
 ## 2.0.1
 
 - fix: The default version is now correctly sent with an `@` seperator e.g: `name@version` (#260)

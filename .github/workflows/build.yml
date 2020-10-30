@@ -26,6 +26,14 @@ jobs:
         run: yarn install
       - name: Build
         run: yarn build
+      - name: Pack
+        run: yarn pack
+      - name: Archive Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.sha }}
+          path: |
+            ${{ github.workspace }}/*.tgz
 
   job_2:
     name: Lint
@@ -86,29 +94,3 @@ jobs:
       - run: yarn install
       - name: Run E2E Tests
         run: yarn e2e
-
-  job_5:
-    name: Zeus
-    needs: job_1
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-      - name: Install
-        run: yarn install
-      - name: Build
-        run: yarn build
-      - name: Pack
-        run: yarn pack
-      - name: Install Zeus
-        run: |
-          yarn global add @zeus-ci/cli
-          echo "::add-path::$(yarn global bin)"
-      - name: Upload to Zeus
-        env:
-          ZEUS_API_TOKEN: ${{ secrets.ZEUS_API_TOKEN }}
-          ZEUS_HOOK_BASE: ${{ secrets.ZEUS_HOOK_BASE }}
-        run: |
-          zeus job update -b $GITHUB_RUN_ID -j $GITHUB_RUN_NUMBER -r $GITHUB_SHA
-          zeus upload -b $GITHUB_RUN_ID -j $GITHUB_RUN_NUMBER -t "application/tar+npm" *.tgz
-          zeus job update --status=passed -b $GITHUB_RUN_ID -j $GITHUB_RUN_NUMBER -r $GITHUB_SHA
