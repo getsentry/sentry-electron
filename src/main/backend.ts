@@ -87,6 +87,13 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
    */
   public sendEvent(event: Event): void {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if ((event as any).event && (event as any).event.__INTERNAL_MINIDUMP) {
+      // We are not 100% sure when such an event is happening, regardless we def don't want to send it
+      // It looks like this: { exceptionStack: false, event: ...}
+      return;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if ((event as any).__INTERNAL_MINIDUMP) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       delete (event as any).__INTERNAL_MINIDUMP;
@@ -95,6 +102,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     } else {
       this._inner.sendEvent(event);
     }
+    // eslint-enable @typescript-eslint/no-unsafe-member-access
   }
 
   /**
