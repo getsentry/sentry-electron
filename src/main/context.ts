@@ -222,7 +222,7 @@ async function getOsContext(): Promise<OsContext> {
  */
 async function getEventDefaults(appName: string | undefined): Promise<Event> {
   const name = appName || getNameFallback();
-
+  const os = await getOsContext();
   return {
     contexts: {
       app: {
@@ -247,7 +247,12 @@ async function getEventDefaults(appName: string | undefined): Promise<Event> {
         type: 'runtime',
         version: process.versions.node,
       },
-      os: await getOsContext(),
+      os: {
+        build: os.build,
+        name: os.name,
+        version: os.version,
+        kernel_version: os.kernel_version,
+      },
       runtime: {
         name: 'Electron',
         version: process.versions.electron,

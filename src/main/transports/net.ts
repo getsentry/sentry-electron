@@ -1,6 +1,5 @@
-import { SentryRequest } from '@sentry/core';
 import { Transports } from '@sentry/node';
-import { Event, Response, Status, TransportOptions } from '@sentry/types';
+import { Event, Response, SentryRequest, Status, TransportOptions } from '@sentry/types';
 import { parseRetryAfterHeader, PromiseBuffer, SentryError, timestampWithMs } from '@sentry/utils';
 import { net } from 'electron';
 import * as url from 'url';
@@ -55,6 +54,7 @@ export class NetTransport extends Transports.BaseTransport {
     return this.sendRequest({
       body: bodyBuffer,
       url: this._api.getEnvelopeEndpointWithUrlEncodedAuth(),
+      type,
     });
   }
 
