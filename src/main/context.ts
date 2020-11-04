@@ -247,7 +247,7 @@ async function getEventDefaults(appName: string | undefined): Promise<Event> {
         type: 'runtime',
         version: process.versions.node,
       },
-      os: await getOsContext(),
+      os: (await getOsContext()) as Record<string, string>,
       runtime: {
         name: 'Electron',
         version: process.versions.electron,

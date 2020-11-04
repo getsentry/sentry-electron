@@ -312,6 +312,7 @@ export class MinidumpUploader {
     return {
       body: bodyBuffer,
       url: this._api.getEnvelopeEndpointWithUrlEncodedAuth(),
+      type: 'event',
     };
   }
 }
