@@ -65,7 +65,7 @@
     "chai-datetime": "^1.7.0",
     "cross-env": "^5.2.0",
     "eslint": "7.6.0",
-    "electron": "8.4.0",
+    "electron": "8.5.2",
     "electron-download": "^4.1.1",
     "electron-mocha": "^6.0.4",
     "express": "^4.16.2",
