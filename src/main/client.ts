@@ -31,7 +31,7 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
   public captureMinidump(path: string, event: Event = {}, scope?: Scope): string | undefined {
     let eventId: string | undefined;
 
-    this._processing = true;
+    this._processing += 1;
 
     event.tags = { event_type: 'native', ...event.tags };
 
@@ -42,11 +42,11 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
           eventId = finalEvent && finalEvent.event_id;
           this._getBackend().uploadMinidump(path, finalEvent);
         }
-        this._processing = false;
+        this._processing -= 1;
       },
       reason => {
         logger.error(reason);
-        this._processing = false;
+        this._processing -= 1;
       },
     );
 
