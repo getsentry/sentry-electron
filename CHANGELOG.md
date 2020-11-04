@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.0.3
+
+- ref: Don't call beforeSend for internal minidump (#273)
+
 ## 2.0.2
 
 - fix: Add guard for phantom event (#271)
