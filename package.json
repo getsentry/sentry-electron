@@ -37,17 +37,17 @@
     "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only --timeout 30000 --retries 5 ./test/e2e/**/*.ts"
   },
   "dependencies": {
-    "@sentry/browser": "5.27.5",
-    "@sentry/core": "5.27.5",
-    "@sentry/minimal": "5.27.5",
-    "@sentry/node": "5.27.5",
-    "@sentry/types": "5.27.5",
-    "@sentry/utils": "5.27.5",
+    "@sentry/browser": "5.27.6",
+    "@sentry/core": "5.27.6",
+    "@sentry/minimal": "5.27.6",
+    "@sentry/node": "5.27.6",
+    "@sentry/types": "5.27.6",
+    "@sentry/utils": "5.27.6",
     "tslib": "^1.9.3"
   },
   "devDependencies": {
-    "@sentry-internal/eslint-config-sdk": "5.27.5",
-    "@sentry-internal/typescript": "5.27.5",
+    "@sentry-internal/eslint-config-sdk": "5.27.6",
+    "@sentry-internal/typescript": "5.27.6",
     "@types/body-parser": "^1.17.0",
     "@types/chai": "^4.2.10",
     "@types/chai-as-promised": "^7.1.0",
