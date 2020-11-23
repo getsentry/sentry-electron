@@ -48,6 +48,9 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   /** Store to persist context information beyond application crashes. */
   private readonly _scopeStore: Store<Scope>;
 
+  /** Temp store for the scope of last run */
+  private _scopeLastRun?: Scope;
+
   /** Uploader for minidump files. */
   private _uploader?: MinidumpUploader;
 
@@ -56,6 +59,8 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     super(options);
     this._inner = new NodeBackend(options);
     this._scopeStore = new Store<Scope>(getCachePath(), 'scope_v2', new Scope());
+    // We need to store the scope in a variable here so it can be attached to minidumps
+    this._scopeLastRun = this._scopeStore.get();
 
     this._setupScopeListener();
 
@@ -332,18 +337,20 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     }
 
     try {
-      const currentCloned = Scope.clone(getCurrentHub().getScope());
-      const fetchedScope = this._scopeStore.get();
-
-      const storedScope = Scope.clone(fetchedScope);
-      let newEvent = await storedScope.applyToEvent(event);
-
-      if (newEvent) {
-        newEvent = await currentCloned.applyToEvent(newEvent);
-        const paths = await uploader.getNewMinidumps();
-        paths.map(path => {
-          captureMinidump(path, { ...newEvent });
-        });
+      const paths = await uploader.getNewMinidumps();
+      // We only want to read the scope from disk in case there was a crash last run
+      if (paths.length > 0) {
+        const currentCloned = Scope.clone(getCurrentHub().getScope());
+        const storedScope = Scope.clone(this._scopeLastRun);
+        let newEvent = await storedScope.applyToEvent(event);
+        if (newEvent) {
+          newEvent = await currentCloned.applyToEvent(newEvent);
+          paths.map(path => {
+            captureMinidump(path, { ...newEvent });
+          });
+        }
+        // Unset to recover memory
+        this._scopeLastRun = undefined;
       }
     } catch (_oO) {
       logger.error('Error while sending native crash.');
