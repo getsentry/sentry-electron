@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.0.4
+
+- fix: Remember stored scope & bump dependencies (#274)
+
 ## 2.0.3
 
 - ref: Don't call beforeSend for internal minidump (#273)
