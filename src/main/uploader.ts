@@ -17,6 +17,9 @@ const MAX_REQUESTS_COUNT = 10;
 /** Supported types of Electron CrashReporters. */
 type CrashReporterType = 'crashpad' | 'breakpad';
 
+/** Regex for multipart/form-data boundary */
+const multipartBoundaryRegex = /^--(-+[a-zA-Z0-9]+)/;
+
 /**
  * Payload for a minidump request comprising a persistent file system path and
  * event metadata.
@@ -275,6 +278,40 @@ export class MinidumpUploader {
     event: Event,
     minidumpPath: string,
   ): Promise<SentryElectronRequest> {
+    let minidumpContent: Buffer | null = null;
+    // We only need to handle multipart/form-data submissions on linux if
+    // attachments aren't ratelimited. We should send a typical sentry envelope
+    // if we're ratelimited.
+    if (process.platform === 'linux' && !transport.isRateLimited('attachment')) {
+      const maybeMinidumpContent = (await readFileAsync(minidumpPath)) as Buffer;
+      // Check to see if the buffer is a multipart/form-data submission
+      // if it is we will add our event as a new part to the submission
+      // and send that request instead of a typical sentry envelope
+      const first256Chars = maybeMinidumpContent.toString('utf8', 0, 256);
+      const multipartBoundaryInfo = multipartBoundaryRegex.exec(first256Chars);
+      if (multipartBoundaryInfo) {
+        const boundary = multipartBoundaryInfo[1];
+        const contentDisposition = 'Content-Disposition: form-data; name="sentry"';
+        const contentType = 'Content-Type: application/json';
+        const payload = JSON.stringify(event);
+        const body = Buffer.concat([
+          Buffer.from(`--${boundary}\r\n${contentDisposition}\r\n${contentType}\r\n\r\n${payload}\r\n`),
+          maybeMinidumpContent,
+        ]);
+
+        return {
+          body,
+          contentType: `multipart/form-data; boundary=${boundary}`,
+          url: MinidumpUploader.minidumpUrlFromDsn(this._api.getDsn()),
+          type: 'event',
+        };
+      } else {
+        // Fall-through to default behavior if the content is not a multipart/form-data
+        // submission.
+        minidumpContent = maybeMinidumpContent;
+      }
+    }
+
     const envelopeHeaders = JSON.stringify({
       event_id: event.event_id,
       // Internal helper that uses `perf_hooks` to get clock reading
@@ -296,7 +333,10 @@ export class MinidumpUploader {
 
     // Only add attachment if they are not rate limited
     if (!transport.isRateLimited('attachment')) {
-      const minidumpContent = (await readFileAsync(minidumpPath)) as Buffer;
+      if (!minidumpContent) {
+        minidumpContent = (await readFileAsync(minidumpPath)) as Buffer;
+      }
+
       const minidumpHeader = JSON.stringify({
         attachment_type: 'event.minidump',
         length: minidumpContent.length,
@@ -311,6 +351,7 @@ export class MinidumpUploader {
 
     return {
       body: bodyBuffer,
+      contentType: 'application/x-sentry-envelope',
       url: this._api.getEnvelopeEndpointWithUrlEncodedAuth(),
       type: 'event',
     };
