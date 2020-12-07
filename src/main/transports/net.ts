@@ -11,6 +11,7 @@ import { isAppReady } from '../backend';
  */
 export interface SentryElectronRequest extends Omit<SentryRequest, 'body'> {
   body: string | Buffer;
+  contentType: string;
 }
 
 /** Using net module of electron */
@@ -53,6 +54,7 @@ export class NetTransport extends Transports.BaseTransport {
 
     return this.sendRequest({
       body: bodyBuffer,
+      contentType: 'application/x-sentry-envelope',
       url: this._api.getEnvelopeEndpointWithUrlEncodedAuth(),
       type,
     });
@@ -84,7 +86,7 @@ export class NetTransport extends Transports.BaseTransport {
         const options = this._getRequestOptions(new url.URL(request.url));
         options.headers = {
           ...options.headers,
-          'Content-Type': 'application/x-sentry-envelope',
+          'Content-Type': request.contentType,
         };
         const req = net.request(options as Electron.ClientRequestConstructorOptions);
         req.on('error', reject);
