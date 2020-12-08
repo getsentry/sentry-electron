@@ -4,6 +4,7 @@ import { Event } from '@sentry/types';
 import bodyParser = require('body-parser');
 import express = require('express');
 import finalhandler = require('finalhandler');
+import multer = require('multer');
 import { createServer, Server } from 'http';
 
 /** Event payload that has been submitted to the test server. */
@@ -31,6 +32,7 @@ export class TestServer {
 
   /** Starts accepting requests. */
   public start(): void {
+    const upload = multer({ storage: multer.memoryStorage() });
     const app = express();
     app.use(
       // eslint-disable-next-line deprecation/deprecation
@@ -56,6 +58,28 @@ export class TestServer {
       this.events.push({
         data: JSON.parse(envelope[2]) as Event,
         dump_file: envelope[4] !== undefined,
+        id: req.params.id,
+        sentry_key: keyMatch[1],
+      });
+
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.end('Success');
+    });
+
+    app.post('/api/:id/minidump', upload.fields([{ name: 'upload_file_minidump' }]), (req, res) => {
+      const auth = (req.headers['x-sentry-auth'] as string) || '';
+      const keyMatch = auth.match(/sentry_key=([a-f0-9]*)/);
+      if (!keyMatch) {
+        res.status(400);
+        res.end('Missing authentication header');
+        return;
+      }
+
+      const files = req.files as { [fieldName: string]: Express.Multer.File[] };
+
+      this.events.push({
+        data: JSON.parse(req.body.sentry) as Event,
+        dump_file: Boolean(files.upload_file_minidump[0]),
         id: req.params.id,
         sentry_key: keyMatch[1],
       });
