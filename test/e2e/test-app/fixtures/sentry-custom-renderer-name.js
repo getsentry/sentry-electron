@@ -1,6 +1,7 @@
 const { init } = require('../../../../');
 
 init({
+  appName: 'test-app',
   dsn: process.env.DSN,
   debug: true,
   onFatalError: _error => {

@@ -12,8 +12,19 @@ const SENTRY_KEY = '37f8a2ee37c0409d8970bc7559c7c7e4';
 should();
 use(chaiAsPromised);
 
-// const tests = getTests('1.8.8', '2.0.18', '3.1.13', '4.2.12', '5.0.13', '6.1.7', '7.1.11', '8.3.0', '9.0.5');
-const tests = getTests('1.8.8');
+const tests = getTests(
+  '1.8.8',
+  '2.0.18',
+  '3.1.13',
+  '4.2.12',
+  '5.0.13',
+  '6.1.12',
+  '7.3.3',
+  '8.5.5',
+  '9.3.5',
+  '10.1.6',
+  '11.0.4',
+);
 
 describe('E2E Tests', () => {
   let testServer: TestServer;
@@ -157,11 +168,7 @@ describe('E2E Tests', () => {
       });
 
       // tslint:disable-next-line
-      it('Native crash in renderer process', async function() {
-        if (majorVersion === 9 && process.platform === 'linux') {
-          this.skip();
-          return;
-        }
+      it('Native crash in renderer process', async () => {
         await context.start('sentry-basic', 'native-renderer');
         // It can take rather a long time to get the event on Mac
         await context.waitForEvents(testServer, 1, 20000);
@@ -184,12 +191,7 @@ describe('E2E Tests', () => {
       });
 
       // tslint:disable-next-line
-      it('Native crash in main process', async function() {
-        if (majorVersion === 9 && process.platform === 'linux') {
-          // TODO: Check why this fails on linux
-          this.skip();
-          return;
-        }
+      it('Native crash in main process', async () => {
         await context.start('sentry-basic', 'native-main');
 
         // wait for the main process to die
@@ -212,7 +214,7 @@ describe('E2E Tests', () => {
         expect(breadcrumbs.length).to.greaterThan(4);
       });
 
-      it.only('Captures breadcrumbs in renderer process', async () => {
+      it('Captures breadcrumbs in renderer process', async () => {
         await context.start('sentry-basic', 'breadcrumbs-in-renderer');
         await context.waitForEvents(testServer, 1);
         const event = testServer.events[0];
@@ -250,7 +252,12 @@ describe('E2E Tests', () => {
         expect(event.data.fingerprint).to.include('abcd');
       });
 
-      it('Loaded via preload script with nodeIntegration disabled', async () => {
+      it('Loaded via preload script with nodeIntegration disabled', async function() {
+        if (majorVersion < 8) {
+          this.skip();
+          return;
+        }
+
         const electronPath = await downloadElectron(version, arch);
         context = new TestContext(electronPath, join(__dirname, 'preload-app'));
         await context.start();
@@ -278,13 +285,7 @@ describe('E2E Tests', () => {
         expect(breadcrumbs.length).to.greaterThan(4);
       });
 
-      // tslint:disable-next-line
-      it('Custom release string for minidump', async function() {
-        if (majorVersion === 9 && process.platform === 'linux') {
-          // TODO: Check why this fails on linux
-          this.skip();
-          return;
-        }
+      it('Custom release string for minidump', async () => {
         await context.start('sentry-custom-release', 'native-renderer');
         // It can take rather a long time to get the event on Mac
         await context.waitForEvents(testServer, 1, 20000);
