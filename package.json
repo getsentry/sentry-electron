@@ -1,11 +1,11 @@
 {
-  "name": "@sentry/electron",
+  "name": "@axosoft/sentry-electron",
   "description": "Offical Sentry SDK for Electron",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "main": "./dist/index.js",
   "module": "./esm/main/index.js",
   "browser": "./esm/renderer/index.js",
-  "repository": "https://github.com/getsentry/sentry-electron.git",
+  "repository": "https://github.com/axosoft/sentry-electron.git",
   "author": "Sentry",
   "contributors": [
     "Tim Fish"
