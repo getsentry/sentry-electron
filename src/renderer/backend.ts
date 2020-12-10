@@ -108,7 +108,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
 
     // We attempt to use contextBridge if it's available (Electron >= 6)
     if (contextBridge) {
-      // This will fail if contextIsolation is not enabled but we have no way to other way to detect it from the renderer
+      // This will fail if contextIsolation is not enabled but we have no other way to detect this from the renderer
       try {
         contextBridge.exposeInMainWorld('__SENTRY_IPC__', ipcObject);
       } catch (e) {
