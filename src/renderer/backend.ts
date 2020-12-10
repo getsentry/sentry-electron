@@ -1,10 +1,35 @@
 import { eventFromException, eventFromMessage } from '@sentry/browser';
 import { BaseBackend, getCurrentHub } from '@sentry/core';
-import { Event, EventHint, Severity } from '@sentry/types';
+import { Event, EventHint, Scope, Severity } from '@sentry/types';
 import { walk } from '@sentry/utils';
-import { crashReporter, ipcRenderer } from 'electron';
 
 import { CommonBackend, ElectronOptions, getNameFallback, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
+
+/** Requires and returns electron or undefined if it's unavailable  */
+function requireElectron(): Electron.AllElectron | undefined {
+  try {
+    return require('electron');
+  } catch (e) {
+    //
+  }
+
+  return undefined;
+}
+
+/**
+ * We store the IPC interface on window so it's the same for both regular and isolated contexts
+ */
+declare global {
+  interface Window {
+    __SENTRY_IPC__:
+      | {
+          sendScope: (scope: Scope) => void;
+          sendEvent: (event: Event) => void;
+          pingMain: (success: () => void) => void;
+        }
+      | undefined;
+  }
+}
 
 /** Timeout used for registering with the main process. */
 const PING_TIMEOUT = 500;
@@ -18,12 +43,26 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
     }
     super(options);
 
-    if (this._isNativeEnabled()) {
-      this._installNativeHandler();
-    }
+    const electron = requireElectron();
 
-    this._pingMainProcess();
-    this._setupScopeListener();
+    if (electron) {
+      // We are either in a preload script or nodeIntegration is enabled
+      if (this._isNativeEnabled()) {
+        this._installNativeHandler(electron.crashReporter);
+      }
+
+      this._hookIPC(electron.ipcRenderer, electron.contextBridge);
+      this._pingMainProcess();
+      this._setupScopeListener();
+    } else {
+      // We are in a renderer with contextIsolation = true
+      if (window.__SENTRY_IPC__ == undefined) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          'contextIsolation is enabled but IPC has not been exposed. Did you call "init" in the preload script?',
+        );
+      }
+    }
   }
 
   /**
@@ -45,9 +84,37 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
    * @inheritDoc
    */
   public sendEvent(event: Event): void {
-    // We pass through JSON because in Electron >= 8, IPC uses v8's structured clone algorithm and throws errors if
-    // objects have functions. Calling walk makes sure to break circular references.
-    ipcRenderer.send(IPC_EVENT, JSON.stringify(event, walk));
+    window.__SENTRY_IPC__?.sendEvent(event);
+  }
+
+  /**
+   * Attaches IPC methods to window and uses contextBridge when available
+   */
+  private _hookIPC(ipcRenderer: Electron.IpcRenderer, contextBridge: Electron.ContextBridge | undefined): void {
+    const ipcObject = {
+      // We pass through JSON because in Electron >= 8, IPC uses v8's structured clone algorithm and throws errors if
+      // objects have functions. Calling walk makes sure to break circular references.
+      sendScope: (scope: Scope) => ipcRenderer.send(IPC_SCOPE, JSON.stringify(scope, walk)),
+      sendEvent: (event: Event) => ipcRenderer.send(IPC_EVENT, JSON.stringify(event, walk)),
+      pingMain: (success: () => void) => {
+        ipcRenderer.once(IPC_PING, () => {
+          success();
+        });
+        ipcRenderer.send(IPC_PING);
+      },
+    };
+
+    window.__SENTRY_IPC__ = ipcObject;
+
+    // We attempt to use contextBridge if it's available (Electron >= 6)
+    if (contextBridge) {
+      // This will fail if contextIsolation is not enabled but we have no way to other way to detect it from the renderer
+      try {
+        contextBridge.exposeInMainWorld('__SENTRY_IPC__', ipcObject);
+      } catch (e) {
+        //
+      }
+    }
   }
 
   /**
@@ -57,9 +124,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
     const scope = getCurrentHub().getScope();
     if (scope) {
       scope.addScopeListener(updatedScope => {
-        // We pass through JSON because in Electron >= 8, IPC uses v8's structured clone algorithm and throws errors if
-        // objects have functions. Calling walk makes sure to break circular references.
-        ipcRenderer.send(IPC_SCOPE, JSON.stringify(updatedScope, walk));
+        window.__SENTRY_IPC__?.sendScope(updatedScope);
         scope.clearBreadcrumbs();
       });
     }
@@ -87,7 +152,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
   }
 
   /** Activates the Electron CrashReporter. */
-  private _installNativeHandler(): boolean {
+  private _installNativeHandler(crashReporter: Electron.CrashReporter): void {
     // We will manually submit errors, but CrashReporter requires a submitURL in
     // some versions. Also, provide a productName and companyName, which we will
     // add manually to the event's context during submission.
@@ -98,8 +163,6 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
       submitURL: '',
       uploadToServer: false,
     });
-
-    return true;
   }
 
   /** Checks if the main processes is available and logs a warning if not. */
@@ -107,16 +170,12 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
     // For whatever reason we have to wait PING_TIMEOUT until we send the ping
     // to main.
     setTimeout(() => {
-      ipcRenderer.send(IPC_PING);
-
       const timeout = setTimeout(() => {
         // eslint-disable-next-line no-console
         console.warn('Could not connect to Sentry main process. Did you call init?');
       }, PING_TIMEOUT);
 
-      ipcRenderer.on(IPC_PING, () => {
-        clearTimeout(timeout);
-      });
+      window.__SENTRY_IPC__?.pingMain(() => clearTimeout(timeout));
     }, PING_TIMEOUT);
   }
 }
