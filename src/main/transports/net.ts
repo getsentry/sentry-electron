@@ -3,6 +3,7 @@ import { Event, Response, SentryRequest, Status, TransportOptions } from '@sentr
 import { parseRetryAfterHeader, PromiseBuffer, SentryError, timestampWithMs } from '@sentry/utils';
 import { net } from 'electron';
 import * as url from 'url';
+import { gzip } from 'zlib';
 
 import { isAppReady } from '../backend';
 
@@ -84,6 +85,7 @@ export class NetTransport extends Transports.BaseTransport {
         const options = this._getRequestOptions(new url.URL(request.url));
         options.headers = {
           ...options.headers,
+          'Content-Encoding': 'gzip',
           'Content-Type': 'application/x-sentry-envelope',
         };
         const req = net.request(options as Electron.ClientRequestConstructorOptions);
@@ -117,8 +119,11 @@ export class NetTransport extends Transports.BaseTransport {
             // Drain
           });
         });
-        req.write(request.body);
-        req.end();
+
+        gzip(request.body, (_, compressedBody) => {
+          req.write(compressedBody);
+          req.end();
+        });
       }),
     );
   }
