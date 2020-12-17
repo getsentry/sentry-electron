@@ -8,6 +8,7 @@ import { createGzip } from 'zlib';
 
 import { isAppReady } from '../backend';
 
+// Estimated maximum size for reasonable standalone event
 const GZIP_THRESHOLD = 1024 * 32;
 
 /**
