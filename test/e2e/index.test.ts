@@ -241,11 +241,6 @@ describe('E2E Tests', () => {
       });
 
       it('Loaded via preload script with nodeIntegration disabled', async function() {
-        if (majorVersion < 8) {
-          this.skip();
-          return;
-        }
-
         const electronPath = await downloadElectron(version, arch);
         context = new TestContext(electronPath, join(__dirname, 'preload-app'));
         await context.start();

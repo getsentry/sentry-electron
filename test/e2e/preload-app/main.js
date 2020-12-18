@@ -4,8 +4,6 @@ const fs = require('fs');
 
 const { app, BrowserWindow } = require('electron');
 
-fs.rmdirSync(path.join(app.getPath('userData'), 'sentry'), { recursive: true });
-
 require('../test-app/setup-env');
 
 const sentryPath = path.join(__dirname, '../test-app/fixtures/sentry-basic');
