@@ -1,10 +1,7 @@
 const path = require('path');
 const url = require('url');
-const fs = require('fs');
 
 const { app, BrowserWindow } = require('electron');
-
-fs.rmdirSync(path.join(app.getPath('userData'), 'sentry'), { recursive: true });
 
 require('../test-app/setup-env');
 
