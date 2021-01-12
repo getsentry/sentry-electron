@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.1.0
+
+- feat: Compress minidump uploads (#286)
+
 ## 2.0.4
 
 - fix: Remember stored scope & bump dependencies (#274)
