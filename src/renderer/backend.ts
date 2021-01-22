@@ -89,8 +89,8 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
   /** Activates the Electron CrashReporter. */
   private _installNativeHandler(): void {
     // this is only necessary for electron versions before 8
-    const majorVersion = parseInt(process.versions.electron.match(/^(\d+)\./)[1], 10);
-    if (majorVersion >= 8) {
+    const versionMatch = process.versions.electron.match(/^(\d+)\./);
+    if (versionMatch && parseInt(versionMatch[1], 10) >= 8) {
       return;
     }
 
