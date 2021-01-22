@@ -2,9 +2,9 @@ import { eventFromException, eventFromMessage } from '@sentry/browser';
 import { BaseBackend, getCurrentHub } from '@sentry/core';
 import { Event, EventHint, Severity } from '@sentry/types';
 import { walk } from '@sentry/utils';
-import { ipcRenderer } from 'electron';
+import { crashReporter, ipcRenderer } from 'electron';
 
-import { CommonBackend, ElectronOptions, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
+import { CommonBackend, ElectronOptions, getNameFallback, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
 
 /** Timeout used for registering with the main process. */
 const PING_TIMEOUT = 500;
@@ -17,6 +17,10 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
       options.enabled = false;
     }
     super(options);
+
+    if (this._isNativeEnabled()) {
+      this._installNativeHandler();
+    }
 
     this._pingMainProcess();
     this._setupScopeListener();
@@ -59,6 +63,49 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
         scope.clearBreadcrumbs();
       });
     }
+  }
+
+  /** Returns whether native reports are enabled. */
+  private _isNativeEnabled(): boolean {
+    // On macOS, we should start the Electron CrashReporter only in the main
+    // process. It uses Crashpad internally, which will catch errors from all
+    // sub processes thanks to out-of-processes crash handling. On other
+    // platforms we need to start the CrashReporter in every sub process. For
+    // more information see: https://goo.gl/nhqqwD
+    if (process.platform === 'darwin') {
+      return false;
+    }
+
+    // Mac AppStore builds cannot run the crash reporter due to the sandboxing
+    // requirements. In this case, we prevent enabling native crashes entirely.
+    // https://electronjs.org/docs/tutorial/mac-app-store-submission-guide#limitations-of-mas-build
+    if (process.mas) {
+      return false;
+    }
+
+    return this._options.enableNative !== false;
+  }
+
+  /** Activates the Electron CrashReporter. */
+  private _installNativeHandler(): boolean {
+    // this is only necessary for electron versions before 8
+    const majorVersion = parseInt(process.versions.electron.match(/^(\d+)\./)[1], 10);
+    if (majorVersion >= 8) {
+      return;
+    }
+
+    // We will manually submit errors, but CrashReporter requires a submitURL in
+    // some versions. Also, provide a productName and companyName, which we will
+    // add manually to the event's context during submission.
+    crashReporter.start({
+      companyName: '',
+      ignoreSystemCrashHandler: true,
+      productName: this._options.appName || getNameFallback(),
+      submitURL: '',
+      uploadToServer: false,
+    });
+
+    return true;
   }
 
   /** Checks if the main processes is available and logs a warning if not. */
