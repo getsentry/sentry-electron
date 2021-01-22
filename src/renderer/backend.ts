@@ -61,27 +61,6 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
     }
   }
 
-  /** Returns whether native reports are enabled. */
-  private _isNativeEnabled(): boolean {
-    // On macOS, we should start the Electron CrashReporter only in the main
-    // process. It uses Crashpad internally, which will catch errors from all
-    // sub processes thanks to out-of-processes crash handling. On other
-    // platforms we need to start the CrashReporter in every sub process. For
-    // more information see: https://goo.gl/nhqqwD
-    if (process.platform === 'darwin') {
-      return false;
-    }
-
-    // Mac AppStore builds cannot run the crash reporter due to the sandboxing
-    // requirements. In this case, we prevent enabling native crashes entirely.
-    // https://electronjs.org/docs/tutorial/mac-app-store-submission-guide#limitations-of-mas-build
-    if (process.mas) {
-      return false;
-    }
-
-    return this._options.enableNative !== false;
-  }
-
   /** Checks if the main processes is available and logs a warning if not. */
   private _pingMainProcess(): void {
     // For whatever reason we have to wait PING_TIMEOUT until we send the ping
