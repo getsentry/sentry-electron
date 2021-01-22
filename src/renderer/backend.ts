@@ -90,7 +90,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
   private _installNativeHandler(): void {
     // this is only necessary for electron versions before 8
     const versionMatch = process.versions.electron.match(/^(\d+)\./);
-    if (versionMatch && parseInt(versionMatch[1], 10) >= 8) {
+    if (versionMatch && parseInt(versionMatch[1], 10) > 8) {
       return;
     }
 
