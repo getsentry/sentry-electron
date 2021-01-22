@@ -52,7 +52,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
   private _setupScopeListener(): void {
     const scope = getCurrentHub().getScope();
     if (scope) {
-      scope.addScopeListener((updatedScope) => {
+      scope.addScopeListener(updatedScope => {
         // We pass through JSON because in Electron >= 8, IPC uses v8's structured clone algorithm and throws errors if
         // objects have functions. Calling walk makes sure to break circular references.
         ipcRenderer.send(IPC_SCOPE, JSON.stringify(updatedScope, walk));
