@@ -2,9 +2,9 @@ import { eventFromException, eventFromMessage } from '@sentry/browser';
 import { BaseBackend, getCurrentHub } from '@sentry/core';
 import { Event, EventHint, Severity } from '@sentry/types';
 import { walk } from '@sentry/utils';
-import { crashReporter, ipcRenderer } from 'electron';
+import { ipcRenderer } from 'electron';
 
-import { CommonBackend, ElectronOptions, getNameFallback, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
+import { CommonBackend, ElectronOptions, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
 
 /** Timeout used for registering with the main process. */
 const PING_TIMEOUT = 500;
@@ -17,10 +17,6 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
       options.enabled = false;
     }
     super(options);
-
-    if (this._isNativeEnabled()) {
-      this._installNativeHandler();
-    }
 
     this._pingMainProcess();
     this._setupScopeListener();
@@ -56,7 +52,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
   private _setupScopeListener(): void {
     const scope = getCurrentHub().getScope();
     if (scope) {
-      scope.addScopeListener(updatedScope => {
+      scope.addScopeListener((updatedScope) => {
         // We pass through JSON because in Electron >= 8, IPC uses v8's structured clone algorithm and throws errors if
         // objects have functions. Calling walk makes sure to break circular references.
         ipcRenderer.send(IPC_SCOPE, JSON.stringify(updatedScope, walk));
@@ -84,22 +80,6 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
     }
 
     return this._options.enableNative !== false;
-  }
-
-  /** Activates the Electron CrashReporter. */
-  private _installNativeHandler(): boolean {
-    // We will manually submit errors, but CrashReporter requires a submitURL in
-    // some versions. Also, provide a productName and companyName, which we will
-    // add manually to the event's context during submission.
-    crashReporter.start({
-      companyName: '',
-      ignoreSystemCrashHandler: true,
-      productName: this._options.appName || getNameFallback(),
-      submitURL: '',
-      uploadToServer: false,
-    });
-
-    return true;
   }
 
   /** Checks if the main processes is available and logs a warning if not. */
