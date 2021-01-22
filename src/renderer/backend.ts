@@ -87,7 +87,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
   }
 
   /** Activates the Electron CrashReporter. */
-  private _installNativeHandler(): boolean {
+  private _installNativeHandler(): void {
     // this is only necessary for electron versions before 8
     const majorVersion = parseInt(process.versions.electron.match(/^(\d+)\./)[1], 10);
     if (majorVersion >= 8) {
@@ -104,8 +104,6 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
       submitURL: '',
       uploadToServer: false,
     });
-
-    return true;
   }
 
   /** Checks if the main processes is available and logs a warning if not. */
