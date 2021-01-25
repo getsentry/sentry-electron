@@ -248,6 +248,7 @@ describe('E2E Tests', () => {
         await context.start('sentry-basic', 'scope-data-renderer');
         await context.waitForEvents(testServer, 1);
         const event = testServer.events[0];
+
         expect(event.data.extra?.a).to.equal(2);
         expect(event.data.user?.id).to.equal('1');
         expect(event.data.tags?.a).to.equal('b');

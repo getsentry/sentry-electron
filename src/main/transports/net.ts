@@ -2,15 +2,33 @@ import { Transports } from '@sentry/node';
 import { Event, Response, SentryRequest, Status, TransportOptions } from '@sentry/types';
 import { parseRetryAfterHeader, PromiseBuffer, SentryError, timestampWithMs } from '@sentry/utils';
 import { net } from 'electron';
+import { Readable, Writable } from 'stream';
 import * as url from 'url';
+import { createGzip } from 'zlib';
 
 import { isAppReady } from '../backend';
+
+// Estimated maximum size for reasonable standalone event
+const GZIP_THRESHOLD = 1024 * 32;
 
 /**
  * SentryElectronRequest
  */
 export interface SentryElectronRequest extends Omit<SentryRequest, 'body'> {
   body: string | Buffer;
+}
+
+/**
+ * Gets a stream from a Buffer or string
+ * We don't have Readable.from in earlier versions of node
+ */
+function streamFromBody(body: Buffer | string): Readable {
+  return new Readable({
+    read() {
+      this.push(body);
+      this.push(null);
+    },
+  });
 }
 
 /** Using net module of electron */
@@ -79,13 +97,22 @@ export class NetTransport extends Transports.BaseTransport {
     }
 
     await isAppReady();
+
+    const options = this._getRequestOptions(new url.URL(request.url));
+    options.headers = {
+      ...options.headers,
+      'Content-Type': 'application/x-sentry-envelope',
+    };
+
+    let bodyStream = streamFromBody(request.body);
+
+    if (request.body.length > GZIP_THRESHOLD) {
+      options.headers['Content-Encoding'] = 'gzip';
+      bodyStream = bodyStream.pipe(createGzip());
+    }
+
     return this._buffer.add(
       new Promise<Response>((resolve, reject) => {
-        const options = this._getRequestOptions(new url.URL(request.url));
-        options.headers = {
-          ...options.headers,
-          'Content-Type': 'application/x-sentry-envelope',
-        };
         const req = net.request(options as Electron.ClientRequestConstructorOptions);
         req.on('error', reject);
         req.on('response', (res: Electron.IncomingMessage) => {
@@ -117,8 +144,9 @@ export class NetTransport extends Transports.BaseTransport {
             // Drain
           });
         });
-        req.write(request.body);
-        req.end();
+
+        // The docs say that ClientRequest is Writable but the types don't match exactly
+        bodyStream.pipe((req as any) as Writable);
       }),
     );
   }
