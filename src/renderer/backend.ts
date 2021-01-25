@@ -87,7 +87,13 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
   }
 
   /** Activates the Electron CrashReporter. */
-  private _installNativeHandler(): boolean {
+  private _installNativeHandler(): void {
+    // this is only necessary for electron versions before 8
+    const versionMatch = process.versions.electron.match(/^(\d+)\./);
+    if (versionMatch && parseInt(versionMatch[1], 10) > 8) {
+      return;
+    }
+
     // We will manually submit errors, but CrashReporter requires a submitURL in
     // some versions. Also, provide a productName and companyName, which we will
     // add manually to the event's context during submission.
@@ -98,8 +104,6 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
       submitURL: '',
       uploadToServer: false,
     });
-
-    return true;
   }
 
   /** Checks if the main processes is available and logs a warning if not. */
