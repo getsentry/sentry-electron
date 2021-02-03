@@ -4,7 +4,7 @@ import { Event, EventHint, Scope, Severity } from '@sentry/types';
 import { walk } from '@sentry/utils';
 
 import { CommonBackend, ElectronOptions, getNameFallback, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
-import { requiresNativeHandlerRenderer, supportsContextIsolation } from '../electron-version';
+import { requiresNativeHandlerRenderer } from '../electron-version';
 
 /** Requires and returns electron or undefined if it's unavailable  */
 function requireElectron(): Electron.AllElectron | undefined {
