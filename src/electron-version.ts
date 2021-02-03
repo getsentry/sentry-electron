@@ -20,7 +20,7 @@ export function requiresNativeHandlerRenderer(): boolean {
 }
 
 /**
- * Electron >= 6 uses crashpad
+ * Electron >= 6 uses crashpad on Windows
  */
 export function supportsCrashpadOnWindows(): boolean {
   return major >= 6;
