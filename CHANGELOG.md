@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.2.0
+
+- feat: Do not start crash reporter in renderer (#290)
+
 ## 2.1.0
 
 - feat: Compress minidump uploads (#286)
