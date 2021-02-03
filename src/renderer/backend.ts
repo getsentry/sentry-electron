@@ -4,6 +4,7 @@ import { Event, EventHint, Scope, Severity } from '@sentry/types';
 import { walk } from '@sentry/utils';
 
 import { CommonBackend, ElectronOptions, getNameFallback, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
+import { requiresNativeHandlerRenderer, supportsContextIsolation } from '../electron-version';
 
 /** Requires and returns electron or undefined if it's unavailable  */
 function requireElectron(): Electron.AllElectron | undefined {
@@ -107,7 +108,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
     window.__SENTRY_IPC__ = ipcObject;
 
     // We attempt to use contextBridge if it's available (Electron >= 6)
-    if (contextBridge) {
+    if (supportsContextIsolation() && contextBridge) {
       // This will fail if contextIsolation is not enabled but we have no other way to detect this from the renderer
       try {
         contextBridge.exposeInMainWorld('__SENTRY_IPC__', ipcObject);
@@ -154,8 +155,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
   /** Activates the Electron CrashReporter. */
   private _installNativeHandler(crashReporter: Electron.CrashReporter): void {
     // this is only necessary for electron versions before 8
-    const versionMatch = process.versions.electron.match(/^(\d+)\./);
-    if (versionMatch && parseInt(versionMatch[1], 10) > 8) {
+    if (!requiresNativeHandlerRenderer()) {
       return;
     }
 
