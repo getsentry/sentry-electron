@@ -188,7 +188,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     // error.
     const dsnString = this._options.dsn;
     if (!dsnString) {
-      throw new SentryError('Invariant exception: install() must not be called when disabled');
+      throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
     }
 
     const dsn = new Dsn(dsnString);

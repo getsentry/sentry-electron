@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 2.2.0
+
+- feat: Do not start crash reporter in renderer (#290)
+
+## 2.1.0
+
+- feat: Compress minidump uploads (#286)
+
 ## 2.0.4
 
 - fix: Remember stored scope & bump dependencies (#274)

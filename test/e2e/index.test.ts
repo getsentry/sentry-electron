@@ -1,5 +1,6 @@
 import { expect, should, use } from 'chai';
 import chaiAsPromised = require('chai-as-promised');
+import { spawnSync } from 'child_process';
 import { join } from 'path';
 
 import { TestContext } from './context';
@@ -12,7 +13,26 @@ const SENTRY_KEY = '37f8a2ee37c0409d8970bc7559c7c7e4';
 should();
 use(chaiAsPromised);
 
-const tests = getTests('4.2.12', '5.0.13', '6.1.12', '7.3.3', '8.5.5', '9.3.5', '10.1.6', '11.0.4');
+const tests = getTests(
+  '1.8.8',
+  '2.0.18',
+  '3.1.13',
+  '4.2.12',
+  '5.0.13',
+  '6.1.12',
+  '7.3.3',
+  '8.5.5',
+  '9.3.5',
+  '10.1.7',
+  '11.0.4',
+);
+
+describe('Bundle Tests', () => {
+  it('Webpack contextIsolation app', async () => {
+    const result = spawnSync('yarn && yarn build', { shell: true, cwd: join(__dirname, 'isolated-app') });
+    expect(result.status).to.equal(0);
+  });
+});
 
 describe('E2E Tests', () => {
   let testServer: TestServer;
@@ -212,7 +232,6 @@ describe('E2E Tests', () => {
 
         expect(testServer.events.length).to.equal(1);
         expect(event.dump_file).to.be.false;
-        console.log(breadcrumbs);
         expect(breadcrumbs.length, 'filtered breadcrumbs').to.equal(1);
       });
 
@@ -220,7 +239,7 @@ describe('E2E Tests', () => {
         await context.start('sentry-basic', 'scope-data-renderer');
         await context.waitForEvents(testServer, 1);
         const event = testServer.events[0];
-        // console.log(JSON.stringify(event.data.breadcrumbs));
+
         expect(event.data.extra?.a).to.equal(2);
         expect(event.data.user?.id).to.equal('1');
         expect(event.data.tags?.a).to.equal('b');
@@ -290,6 +309,23 @@ describe('E2E Tests', () => {
 
         expect(testServer.events.length).to.equal(1);
         expect(event.data.contexts && (event.data.contexts.electron as any).crashed_process).to.equal('renderer');
+      });
+
+      it('JavaScript exception in contextIsolation renderer process', async function() {
+        // contextIsolation only added >= 6
+        if (majorVersion < 6) {
+          this.skip();
+          return;
+        }
+
+        const electronPath = await downloadElectron(version, arch);
+        context = new TestContext(electronPath, join(__dirname, 'isolated-app'));
+        await context.start();
+        await context.waitForEvents(testServer, 1);
+        const event = testServer.events[0];
+
+        expect(testServer.events.length).to.equal(1);
+        expect(event.dump_file).to.be.false;
       });
     });
   });

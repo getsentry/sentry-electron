@@ -3,10 +3,7 @@ const url = require('url');
 
 const { app, BrowserWindow } = require('electron');
 
-require('../test-app/setup-env');
-
-const sentryPath = path.join(__dirname, '../test-app/fixtures/sentry-basic');
-require(sentryPath);
+require('./sentry');
 
 app.on('ready', () => {
   const window = new BrowserWindow({
@@ -15,7 +12,8 @@ app.on('ready', () => {
     titleBarStyle: 'hidden',
     show: false,
     webPreferences: {
-      preload: sentryPath,
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
     },
   });
 
