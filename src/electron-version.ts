@@ -25,10 +25,3 @@ export function requiresNativeHandlerRenderer(): boolean {
 export function supportsCrashpadOnWindows(): boolean {
   return major >= 6;
 }
-
-/**
- * Electron >= 6 has context isolation
- */
-export function supportsContextIsolation(): boolean {
-  return major >= 6;
-}
