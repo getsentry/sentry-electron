@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.3.0
+
+- feat: Support for contextIsolation (#280)
+
 ## 2.2.0
 
 - feat: Do not start crash reporter in renderer (#290)
