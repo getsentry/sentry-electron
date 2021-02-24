@@ -5,7 +5,7 @@ import { join } from 'path';
 
 import { TestContext } from './context';
 import { downloadElectron } from './download';
-import { TestServer } from './server';
+import { TestServer, TestServerEvent } from './server';
 import { getLastFrame, getTests } from './utils';
 
 const SENTRY_KEY = '37f8a2ee37c0409d8970bc7559c7c7e4';
@@ -26,6 +26,12 @@ const tests = getTests(
   '10.1.7',
   '11.0.4',
 );
+
+function checkContext(event: TestServerEvent) {
+  expect(event.data.contexts?.runtime.name).to.equal('Electron');
+  expect(event.data.contexts?.browser.name).to.equal('Chrome');
+  expect(event.data.contexts?.node.name).to.equal('Node');
+}
 
 describe('Bundle Tests', () => {
   it('Webpack contextIsolation app', async () => {
@@ -78,8 +84,11 @@ describe('E2E Tests', () => {
         await context.start('sentry-basic', 'javascript-renderer');
         await context.waitForEvents(testServer, 1);
         const event = testServer.events[0];
+
         const breadcrumbs = event.data.breadcrumbs || [];
         const lastFrame = getLastFrame(event.data);
+
+        checkContext(event);
 
         expect(testServer.events.length).to.equal(1);
         expect(lastFrame.filename).to.equal('app:///fixtures/javascript-renderer.js');
@@ -97,6 +106,8 @@ describe('E2E Tests', () => {
         const breadcrumbs = event.data.breadcrumbs || [];
         const lastFrame = getLastFrame(event.data);
 
+        checkContext(event);
+
         expect(testServer.events.length).to.equal(1);
         expect(lastFrame.filename).to.equal('app:///fixtures/javascript-unhandledrejection.js');
         expect(event.dump_file).to.be.false;
@@ -111,6 +122,8 @@ describe('E2E Tests', () => {
         const event = testServer.events[0];
         const breadcrumbs = event.data.breadcrumbs || [];
         const lastFrame = getLastFrame(event.data);
+
+        checkContext(event);
 
         expect(testServer.events.length).to.equal(1);
         expect(lastFrame.filename).to.equal('app:///fixtures/javascript-main.js');
@@ -128,6 +141,8 @@ describe('E2E Tests', () => {
         const breadcrumbs = event.data.breadcrumbs || [];
         const lastFrame = getLastFrame(event.data);
 
+        checkContext(event);
+
         expect(testServer.events.length).to.equal(1);
         expect(lastFrame.filename).to.equal('app:///fixtures/javascript main with spaces.js');
         expect(event.dump_file).to.be.false;
@@ -141,6 +156,8 @@ describe('E2E Tests', () => {
         const event = testServer.events[0];
         const breadcrumbs = event.data.breadcrumbs || [];
         const lastFrame = getLastFrame(event.data);
+
+        checkContext(event);
 
         expect(testServer.events.length).to.equal(1);
         expect(lastFrame.filename).to.equal('app:///fixtures/javascript main with (parens).js');
@@ -187,6 +204,8 @@ describe('E2E Tests', () => {
         const event = testServer.events[0];
         const breadcrumbs = event.data.breadcrumbs || [];
 
+        checkContext(event);
+
         expect(testServer.events.length).to.equal(1);
         expect(event.dump_file).to.be.true;
         expect(event.sentry_key).to.equal(SENTRY_KEY);
@@ -224,6 +243,8 @@ describe('E2E Tests', () => {
         await context.waitForEvents(testServer, 1);
         const event = testServer.events[0];
         const breadcrumbs = event.data.breadcrumbs || [];
+
+        checkContext(event);
 
         expect(testServer.events.length).to.equal(1);
         expect(event.dump_file).to.be.true;
@@ -338,6 +359,8 @@ describe('E2E Tests', () => {
         await context.start();
         await context.waitForEvents(testServer, 1);
         const event = testServer.events[0];
+
+        checkContext(event);
 
         expect(testServer.events.length).to.equal(1);
         expect(event.dump_file).to.be.false;
