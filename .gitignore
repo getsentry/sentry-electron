@@ -11,3 +11,4 @@ stats.json
 # Eslint
 .eslintcache
 .vagrant
+.dumps

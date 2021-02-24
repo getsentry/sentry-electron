@@ -212,6 +212,22 @@ describe('E2E Tests', () => {
         expect(breadcrumbs.length).to.greaterThan(4);
       });
 
+      // tslint:disable-next-line
+      it.only('Native crash in renderer process with Electron uploader', async function() {
+        if (majorVersion === 9 && process.platform === 'linux') {
+          this.skip();
+          return;
+        }
+        await context.start('sentry-electron-uploader', 'native-renderer');
+        // It can take rather a long time to get the event on Mac
+        await context.waitForEvents(testServer, 1, 20000);
+        const event = testServer.events[0];
+
+        expect(testServer.events.length).to.equal(1);
+        // expect(event.dump_file).to.be.true;
+        expect(event.sentry_key).to.equal(SENTRY_KEY);
+      });
+
       it('JavaScript exception in main process with user data', async () => {
         await context.start('sentry-scope-user-data', 'javascript-main');
         await context.waitForEvents(testServer, 1);

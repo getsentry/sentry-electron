@@ -5,6 +5,8 @@ import bodyParser = require('body-parser');
 import express = require('express');
 import finalhandler = require('finalhandler');
 import { createServer, Server } from 'http';
+import * as multer from 'multer';
+import { join } from 'path';
 
 /** Event payload that has been submitted to the test server. */
 export interface TestServerEvent {
@@ -32,6 +34,7 @@ export class TestServer {
   /** Starts accepting requests. */
   public start(): void {
     const app = express();
+
     app.use(
       // eslint-disable-next-line deprecation/deprecation
       bodyParser.raw({
@@ -58,6 +61,25 @@ export class TestServer {
         dump_file: envelope[4] !== undefined,
         id: req.params.id,
         sentry_key: keyMatch[1],
+      });
+
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.end('Success');
+    });
+
+    const upload = multer({
+      dest: join(__dirname, '.dumps'),
+    }).single('upload_file_minidump');
+
+    // Handles the Sentry minidump endpoint
+    app.post('/api/:id/minidump', upload, (req, res) => {
+      const key = req.originalUrl.match(/sentry_key=([a-f0-9]*)/);
+
+      this.events.push({
+        data: {},
+        dump_file: !!req.file?.filename,
+        id: req.params.id,
+        sentry_key: key ? key[1] : '',
       });
 
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
