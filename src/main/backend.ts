@@ -96,7 +96,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       delete (event as any).__INTERNAL_MINIDUMP;
       delete event.event_id;
-      crashReporter.addExtraParameter('sentry', JSON.stringify(event));
+      crashReporter.addExtraParameter('sentry', JSON.stringify({ user: event.user }));
     } else {
       this._inner.sendEvent(event);
     }

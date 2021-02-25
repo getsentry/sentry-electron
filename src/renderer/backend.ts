@@ -51,7 +51,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
         this._installNativeHandler(electron.crashReporter);
       }
 
-      this._hookIPC(electron.ipcRenderer, electron.contextBridge);
+      this._hookIPC(electron.ipcRenderer, electron.crashReporter, electron.contextBridge);
       this._pingMainProcess();
       this._setupScopeListener();
     } else {
@@ -90,11 +90,19 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
   /**
    * Attaches IPC methods to window and uses contextBridge when available
    */
-  private _hookIPC(ipcRenderer: Electron.IpcRenderer, contextBridge: Electron.ContextBridge | undefined): void {
+  private _hookIPC(
+    ipcRenderer: Electron.IpcRenderer,
+    crashReporter: Electron.CrashReporter,
+    contextBridge: Electron.ContextBridge | undefined,
+  ): void {
     const ipcObject = {
       // We pass through JSON because in Electron >= 8, IPC uses v8's structured clone algorithm and throws errors if
       // objects have functions. Calling walk makes sure to break circular references.
-      sendScope: (scope: Scope) => ipcRenderer.send(IPC_SCOPE, JSON.stringify(scope, walk)),
+      sendScope: (scope: Scope) => {
+        const user = scope.getUser();
+        crashReporter.addExtraParameter('sentry', JSON.stringify({ user }));
+        ipcRenderer.send(IPC_SCOPE, JSON.stringify(scope, walk));
+      },
       sendEvent: (event: Event) => ipcRenderer.send(IPC_EVENT, JSON.stringify(event, walk)),
       pingMain: (success: () => void) => {
         ipcRenderer.once(IPC_PING, () => {
