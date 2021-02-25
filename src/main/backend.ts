@@ -10,11 +10,12 @@ import {
 } from '@sentry/core';
 import { NodeBackend } from '@sentry/node';
 import { Event, EventHint, Severity, Transport, TransportOptions } from '@sentry/types';
-import { Dsn, forget, logger, parseSemver, SentryError } from '@sentry/utils';
+import { Dsn, forget, logger, SentryError } from '@sentry/utils';
 import { app, crashReporter, ipcMain } from 'electron';
 import { join } from 'path';
 
 import { CommonBackend, ElectronOptions, getNameFallback, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
+import { supportsRenderProcessGone } from '../electron-version';
 import { captureMinidump } from './index';
 import { normalizeUrl } from './normalize';
 import { Store } from './store';
@@ -242,10 +243,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     // Every time a subprocess or renderer crashes, start sending minidumps
     // right away.
     app.on('web-contents-created', (_, contents) => {
-      const version = parseSemver(process.versions.electron);
-      const major = version.major || 0;
-      const minor = version.minor || 0;
-      if ((major === 8 && minor >= 4) || (major === 9 && minor >= 1) || major >= 10) {
+      if (supportsRenderProcessGone()) {
         contents.on('render-process-gone', async (_event, details) => {
           await sendRendererCrash(contents, details);
         });
