@@ -1,9 +1,10 @@
 /* eslint-disable max-lines */
 import { API } from '@sentry/core';
 import { Event, Status, Transport } from '@sentry/types';
-import { Dsn, logger, parseSemver, timestampWithMs } from '@sentry/utils';
+import { Dsn, logger, timestampWithMs } from '@sentry/utils';
 import { basename, join } from 'path';
 
+import { supportsCrashpadOnWindows } from '../electron-version';
 import { mkdirp, readDirAsync, readFileAsync, renameAsync, statAsync, unlinkAsync } from './fs';
 import { Store } from './store';
 import { NetTransport, SentryElectronRequest } from './transports/net';
@@ -63,7 +64,7 @@ export class MinidumpUploader {
     private readonly _cacheDirectory: string,
     private readonly _transport: Transport,
   ) {
-    const crashpadWindows = process.platform === 'win32' && (parseSemver(process.versions.electron).major || 0) >= 6;
+    const crashpadWindows = process.platform === 'win32' && supportsCrashpadOnWindows();
     this._type = process.platform === 'darwin' || crashpadWindows ? 'crashpad' : 'breakpad';
     this._crashpadSubDirectory = process.platform === 'darwin' ? 'completed' : 'reports';
     this._knownPaths = [];

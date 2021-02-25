@@ -22,9 +22,9 @@ const tests = getTests(
   '6.1.12',
   '7.3.3',
   '8.5.5',
-  '9.3.5',
-  '10.1.7',
-  '11.0.4',
+  '9.4.2',
+  '10.3.1',
+  '11.2.2',
 );
 
 function checkContext(event: TestServerEvent) {
@@ -59,8 +59,8 @@ describe('E2E Tests', () => {
       return;
     }
 
-    if (majorVersion === 4 && process.platform === 'win32') {
-      // We skip electron version 4 on Windows as it wont pass on Travis
+    if ((majorVersion === 4 || majorVersion === 3) && process.platform === 'win32') {
+      // We skip electron version 3-4 on Windows as these versions don't exit correctly and stay open consuming CPU
       return;
     }
 
