@@ -211,7 +211,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       // The crashReporter has a method to retrieve the directory
       // it uses to store minidumps in. The structure in this directory depends
       // on the crash library being used (Crashpad or Breakpad).
-      const crashesDirectory = crashReporter.getCrashesDirectory();
+      const crashesDirectory = app.getPath('crashDumps');
       this._uploader = new MinidumpUploader(dsn, crashesDirectory, getCachePath(), this.getTransport());
 
       // Flush already cached minidumps from the queue.
