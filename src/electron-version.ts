@@ -34,10 +34,10 @@ export function supportsCrashpadOnWindows(): boolean {
 }
 
 /**
- * Electron >= 10 supports `app.getPath('crashDumps')` rather than
+ * Electron >= 9 supports `app.getPath('crashDumps')` rather than
  * `crashReporter.getCrashesDirectory()`
  */
 export function supportsGetPathCrashDumps(): boolean {
   const { major } = version();
-  return major > 9;
+  return major >= 9;
 }
