@@ -212,7 +212,9 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       // on the crash library being used (Crashpad or Breakpad).
       const crashesDirectory = supportsGetPathCrashDumps()
         ? app.getPath('crashDumps')
-        : crashReporter.getCrashesDirectory();
+        : // unsafe member access required because of older versions of Electron
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          (crashReporter as any).getCrashesDirectory();
 
       this._uploader = new MinidumpUploader(dsn, crashesDirectory, getCachePath(), this.getTransport());
 
@@ -253,7 +255,9 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
           await sendRendererCrash(contents, details);
         });
       } else {
-        contents.on('crashed', async () => {
+        // unsafe member access required because of older versions of Electron
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        (contents as any).on('crashed', async () => {
           await sendRendererCrash(contents);
         });
       }
