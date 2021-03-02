@@ -15,7 +15,7 @@ import { app, crashReporter, ipcMain } from 'electron';
 import { join } from 'path';
 
 import { CommonBackend, ElectronOptions, getNameFallback, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
-import { supportsRenderProcessGone } from '../electron-version';
+import { supportsGetPathCrashDumps, supportsRenderProcessGone } from '../electron-version';
 import { captureMinidump } from './index';
 import { normalizeUrl } from './normalize';
 import { Store } from './store';
@@ -203,7 +203,6 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       productName: this._options.appName || getNameFallback(),
       submitURL: MinidumpUploader.minidumpUrlFromDsn(dsn),
       uploadToServer: this._options.useCrashpadMinidumpUploader || false,
-      // @ts-ignore
       compress: true,
     });
 
@@ -211,7 +210,12 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       // The crashReporter has a method to retrieve the directory
       // it uses to store minidumps in. The structure in this directory depends
       // on the crash library being used (Crashpad or Breakpad).
-      const crashesDirectory = crashReporter.getCrashesDirectory();
+      const crashesDirectory = supportsGetPathCrashDumps()
+        ? app.getPath('crashDumps')
+        : // unsafe member access required because of older versions of Electron
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          (crashReporter as any).getCrashesDirectory();
+
       this._uploader = new MinidumpUploader(dsn, crashesDirectory, getCachePath(), this.getTransport());
 
       // Flush already cached minidumps from the queue.
@@ -225,7 +229,10 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     /**
      * Helper function for sending renderer crashes
      */
-    const sendRendererCrash = async (contents: Electron.WebContents, details?: Electron.Details): Promise<void> => {
+    const sendRendererCrash = async (
+      contents: Electron.WebContents,
+      details?: Electron.RenderProcessGoneDetails,
+    ): Promise<void> => {
       try {
         await this._sendNativeCrashes(this._getNewEventWithElectronContext(contents, details));
       } catch (e) {
@@ -248,7 +255,9 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
           await sendRendererCrash(contents, details);
         });
       } else {
-        contents.on('crashed', async () => {
+        // unsafe member access required because of older versions of Electron
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        (contents as any).on('crashed', async () => {
           await sendRendererCrash(contents);
         });
       }
@@ -356,7 +365,10 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   }
 
   /** Returns extra information from a renderer's web contents. */
-  private _getNewEventWithElectronContext(contents: Electron.WebContents, details?: Electron.Details): Event {
+  private _getNewEventWithElectronContext(
+    contents: Electron.WebContents,
+    details?: Electron.RenderProcessGoneDetails,
+  ): Event {
     const customName = this._options.getRendererName && this._options.getRendererName(contents);
     const electronContext: Record<string, any> = {
       crashed_process: customName || `renderer[${contents.id}]`,

@@ -32,3 +32,12 @@ export function supportsCrashpadOnWindows(): boolean {
   const { major } = version();
   return major >= 6;
 }
+
+/**
+ * Electron >= 9 supports `app.getPath('crashDumps')` rather than
+ * `crashReporter.getCrashesDirectory()`
+ */
+export function supportsGetPathCrashDumps(): boolean {
+  const { major } = version();
+  return major >= 9;
+}

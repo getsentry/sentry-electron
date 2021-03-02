@@ -6,8 +6,14 @@ import { walk } from '@sentry/utils';
 import { CommonBackend, ElectronOptions, getNameFallback, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
 import { requiresNativeHandlerRenderer } from '../electron-version';
 
+interface AllElectron {
+  crashReporter: Electron.CrashReporter;
+  contextBridge: Electron.ContextBridge;
+  ipcRenderer: Electron.IpcRenderer;
+}
+
 /** Requires and returns electron or undefined if it's unavailable  */
-function requireElectron(): Electron.AllElectron | undefined {
+function requireElectron(): AllElectron | undefined {
   try {
     return require('electron');
   } catch (e) {
