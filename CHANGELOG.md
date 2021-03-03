@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.4.0
+
+- feat: Add support for Electron 12
+
 ## 2.3.0
 
 - feat: Support for contextIsolation (#280)
