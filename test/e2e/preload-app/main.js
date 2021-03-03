@@ -16,6 +16,7 @@ app.on('ready', () => {
     show: false,
     webPreferences: {
       preload: sentryPath,
+      contextIsolation: false,
     },
   });
 

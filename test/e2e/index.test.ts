@@ -25,6 +25,7 @@ const tests = getTests(
   '9.4.2',
   '10.3.1',
   '11.2.2',
+  '12.0.0',
 );
 
 describe('Bundle Tests', () => {
