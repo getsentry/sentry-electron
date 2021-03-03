@@ -1,10 +1,11 @@
 // tslint:disable:no-unsafe-any
 
 import { Event } from '@sentry/types';
-import bodyParser = require('body-parser');
-import express = require('express');
-import finalhandler = require('finalhandler');
-import { createServer, Server } from 'http';
+import { Server } from 'http';
+import Koa = require('koa');
+import Router = require('koa-tree-router');
+import bodyParser = require('koa-bodyparser');
+import Busboy = require('busboy');
 
 /** Event payload that has been submitted to the test server. */
 export interface TestServerEvent {
@@ -16,6 +17,40 @@ export interface TestServerEvent {
   data: Event;
   /** An optional minidump file, if included in the event. */
   dump_file?: boolean;
+  /** API method used for submission */
+  method: 'envelope' | 'minidump';
+}
+
+interface MultipartResult {
+  fields: { [key: string]: any };
+  files: { [key: string]: number };
+}
+
+function parse_multipart(
+  ctx: Koa.ParameterizedContext<any, Router.IRouterParamContext<any, any>, any>,
+): Promise<MultipartResult> {
+  return new Promise(resolve => {
+    const busboy = new Busboy({ headers: ctx.headers });
+    const output: MultipartResult = { fields: {}, files: {} };
+
+    busboy.on('file', (fieldName, file) => {
+      let size = 0;
+      file.on('data', data => {
+        size += data.length;
+      });
+      file.on('end', () => {
+        output.files[fieldName] = size;
+      });
+    });
+    busboy.on('field', (fieldName, val) => {
+      output.fields[fieldName] = val;
+    });
+    busboy.on('finish', function() {
+      resolve(output);
+    });
+
+    ctx.req.pipe(busboy);
+  });
 }
 
 /**
@@ -31,45 +66,78 @@ export class TestServer {
 
   /** Starts accepting requests. */
   public start(): void {
-    const app = express();
+    const app = new Koa();
+
     app.use(
-      // eslint-disable-next-line deprecation/deprecation
-      bodyParser.raw({
-        inflate: true,
-        limit: '200mb',
-        type: 'application/x-sentry-envelope',
+      bodyParser({
+        enableTypes: ['text'],
+        extendTypes: {
+          text: ['application/x-sentry-envelope'],
+        },
       }),
     );
 
+    const router = new Router();
+
     // Handles the Sentry envelope endpoint
-    app.post('/api/:id/envelope', (req, res) => {
-      const auth = (req.headers['x-sentry-auth'] as string) || '';
+    router.post('/api/:id/envelope/', async ctx => {
+      const auth = (ctx.headers['x-sentry-auth'] as string) || '';
       const keyMatch = auth.match(/sentry_key=([a-f0-9]*)/);
       if (!keyMatch) {
-        res.status(400);
-        res.end('Missing authentication header');
+        ctx.status = 403;
+        ctx.body = 'Missing authentication header';
         return;
       }
 
-      const envelope = req.body.toString().split('\n');
+      const envelope = ctx.request.body.toString().split('\n');
 
       this.events.push({
         data: JSON.parse(envelope[2]) as Event,
         dump_file: envelope[4] !== undefined,
-        id: req.params.id,
+        id: ctx.params.id,
         sentry_key: keyMatch[1],
+        method: 'envelope',
       });
 
-      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      res.end('Success');
+      ctx.status = 200;
+      ctx.body = 'Success';
     });
 
-    this._server = createServer((req, res) => {
-      app(req as any, res as any, finalhandler(req, res));
+    // Handles the Sentry minidump endpoint
+    router.post('/api/:id/minidump/', async ctx => {
+      if (ctx.request.is('multipart/*')) {
+        const keyMatch = ctx.originalUrl.match(/sentry_key=([a-f0-9]*)/);
+        if (!keyMatch) {
+          ctx.status = 403;
+          ctx.body = 'Missing authentication header';
+          return;
+        }
+
+        const result = await parse_multipart(ctx);
+
+        this.events.push({
+          data: {},
+          dump_file: result.files.upload_file_minidump != undefined && result.files.upload_file_minidump > 1024,
+          id: ctx.params.id,
+          sentry_key: keyMatch[1],
+          method: 'minidump',
+        });
+
+        ctx.status = 200;
+        ctx.body = 'Success';
+        return;
+      }
     });
 
-    // Changed to port to 8123 because sentry uses 8000 if run locally
-    this._server.listen(8123);
+    app.use(router.routes());
+
+    if (process.env.DEBUG) {
+      app.on('error', (err: Error, _ctx: Koa.Context) => {
+        console.error(err);
+      });
+    }
+
+    this._server = app.listen(8123);
   }
 
   public clearEvents(): void {
