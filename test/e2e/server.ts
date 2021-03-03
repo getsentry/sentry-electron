@@ -5,7 +5,7 @@ import { Server } from 'http';
 import Koa = require('koa');
 import Router = require('koa-tree-router');
 import bodyParser = require('koa-bodyparser');
-import Busboy = require('busboy');
+import { parse_multipart } from './multi-part';
 
 /** Event payload that has been submitted to the test server. */
 export interface TestServerEvent {
@@ -19,38 +19,6 @@ export interface TestServerEvent {
   dump_file?: boolean;
   /** API method used for submission */
   method: 'envelope' | 'minidump';
-}
-
-interface MultipartResult {
-  fields: { [key: string]: any };
-  files: { [key: string]: number };
-}
-
-function parse_multipart(
-  ctx: Koa.ParameterizedContext<any, Router.IRouterParamContext<any, any>, any>,
-): Promise<MultipartResult> {
-  return new Promise(resolve => {
-    const busboy = new Busboy({ headers: ctx.headers });
-    const output: MultipartResult = { fields: {}, files: {} };
-
-    busboy.on('file', (fieldName, file) => {
-      let size = 0;
-      file.on('data', data => {
-        size += data.length;
-      });
-      file.on('end', () => {
-        output.files[fieldName] = size;
-      });
-    });
-    busboy.on('field', (fieldName, val) => {
-      output.fields[fieldName] = val;
-    });
-    busboy.on('finish', function() {
-      resolve(output);
-    });
-
-    ctx.req.pipe(busboy);
-  });
 }
 
 /**
