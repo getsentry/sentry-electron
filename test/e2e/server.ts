@@ -1,10 +1,9 @@
-// tslint:disable:no-unsafe-any
-
 import { Event } from '@sentry/types';
 import { Server } from 'http';
-import Koa = require('koa');
-import Router = require('koa-tree-router');
-import bodyParser = require('koa-bodyparser');
+import * as Koa from 'koa';
+import * as bodyParser from 'koa-bodyparser';
+import * as Router from 'koa-tree-router';
+
 import { parse_multipart } from './multi-part';
 
 /** Event payload that has been submitted to the test server. */

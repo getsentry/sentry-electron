@@ -121,21 +121,7 @@ describe('E2E Tests', () => {
         expect(breadcrumbs.length).to.greaterThan(4);
       });
 
-      it('JavaScript exception in main process with space in path', async () => {
-        await context.start('sentry-basic', 'javascript main with spaces');
-        await context.waitForEvents(testServer, 1);
-        const event = testServer.events[0];
-        const breadcrumbs = event.data.breadcrumbs || [];
-        const lastFrame = getLastFrame(event.data);
-
-        expect(testServer.events.length).to.equal(1);
-        expect(lastFrame.filename).to.equal('app:///fixtures/javascript main with spaces.js');
-        expect(event.dump_file).to.be.false;
-        expect(event.sentry_key).to.equal(SENTRY_KEY);
-        expect(breadcrumbs.length).to.greaterThan(4);
-      });
-
-      it('JavaScript exception in main process with parentheses in path', async () => {
+      it('JavaScript exception in main process with spaces and parentheses in path', async () => {
         await context.start('sentry-basic', 'javascript main with (parens)');
         await context.waitForEvents(testServer, 1);
         const event = testServer.events[0];
@@ -147,32 +133,6 @@ describe('E2E Tests', () => {
         expect(event.dump_file).to.be.false;
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(breadcrumbs.length).to.greaterThan(4);
-      });
-
-      // tslint:disable-next-line
-      it('onFatalError can be overridden', async function() {
-        // For some unknown reason this test fails on windows
-        if (process.platform === 'win32') {
-          this.skip();
-          return;
-        }
-
-        await context.start('sentry-onfatal-exit', 'javascript-main');
-        await context.waitForEvents(testServer, 1);
-        const event = testServer.events[0];
-        const breadcrumbs = event.data.breadcrumbs || [];
-        const lastFrame = getLastFrame(event.data);
-
-        expect(testServer.events.length).to.equal(1);
-        expect(lastFrame.filename).to.equal('app:///fixtures/javascript-main.js');
-        expect(event.dump_file).to.be.false;
-        expect(event.sentry_key).to.equal(SENTRY_KEY);
-        expect(breadcrumbs.length).to.greaterThan(4);
-
-        await context.waitForTrue(
-          async () => (context.mainProcess ? !(await context.mainProcess.isRunning()) : false),
-          'Timeout: Waiting for app to die',
-        );
       });
 
       // tslint:disable-next-line
