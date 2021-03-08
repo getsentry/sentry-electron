@@ -1,6 +1,6 @@
-import Koa = require('koa');
-import Router = require('koa-tree-router');
-import Busboy = require('busboy');
+import * as Busboy from 'busboy';
+import * as Koa from 'koa';
+import * as Router from 'koa-tree-router';
 
 export interface MultipartResult {
   fields: { [key: string]: any };

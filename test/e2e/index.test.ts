@@ -1,5 +1,5 @@
 import { expect, should, use } from 'chai';
-import chaiAsPromised = require('chai-as-promised');
+import * as chaiAsPromised from 'chai-as-promised';
 import { spawnSync } from 'child_process';
 import { join } from 'path';
 
