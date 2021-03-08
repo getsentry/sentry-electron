@@ -155,7 +155,7 @@ describe('E2E Tests', () => {
 
       // tslint:disable-next-line
       it('Native crash in main process with Electron uploader', async function() {
-        if (majorVersion === 9 && process.platform === 'linux') {
+        if (majorVersion < 9 && process.platform === 'linux') {
           this.skip();
           return;
         }
