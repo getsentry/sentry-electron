@@ -253,7 +253,7 @@ describe('E2E Tests', () => {
         expect(breadcrumbs.length, 'filtered breadcrumbs').to.equal(1);
       });
 
-      it('Captures Scope data correctly from renderer', async () => {
+      it('Captures Scope from renderer', async () => {
         await context.start('sentry-basic', 'scope-data-renderer');
         await context.waitForEvents(testServer, 1);
         const event = testServer.events[0];
@@ -265,13 +265,26 @@ describe('E2E Tests', () => {
         expect(event.data.fingerprint).to.include('abcd');
       });
 
-      it('Captures Scope data correctly from main', async () => {
+      it('Captures Scope from main', async () => {
         await context.start('sentry-basic', 'scope-data-main');
         await context.waitForEvents(testServer, 1);
         const event = testServer.events[0];
 
         expect(event.data.extra?.a).to.equal(2);
         expect(event.data.user?.id).to.equal('2');
+        expect(event.data.tags?.a).to.equal('b');
+        expect(event.data.contexts?.server).to.include({ id: '2' });
+        expect(event.data.fingerprint).to.include('abcd');
+      });
+
+      it('Main scope not clobbered by scope from renderer', async () => {
+        await context.start('sentry-basic', 'scope-data-merged');
+        await context.waitForEvents(testServer, 1);
+        const event = testServer.events[0];
+
+        expect(event.data.extra?.a).to.equal(2);
+        expect(event.data.user?.id).to.equal('5');
+        expect(event.data.user?.email).to.equal('none@test.org');
         expect(event.data.tags?.a).to.equal('b');
         expect(event.data.contexts?.server).to.include({ id: '2' });
         expect(event.data.fingerprint).to.include('abcd');

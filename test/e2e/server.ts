@@ -84,7 +84,7 @@ export class TestServer {
         const result = await parse_multipart(ctx);
 
         this.events.push({
-          data: {},
+          data: result.fields.sentry ? JSON.parse(result.fields.sentry) : {},
           dump_file: result.files.upload_file_minidump != undefined && result.files.upload_file_minidump > 1024,
           id: ctx.params.id,
           sentry_key: keyMatch[1],
