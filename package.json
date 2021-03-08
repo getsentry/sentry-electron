@@ -43,7 +43,7 @@
     "@sentry/node": "5.27.6",
     "@sentry/types": "5.27.6",
     "@sentry/utils": "5.27.6",
-    "tslib": "^1.9.3"
+    "tslib": "^2.1.0"
   },
   "devDependencies": {
     "@sentry-internal/eslint-config-sdk": "5.27.6",
