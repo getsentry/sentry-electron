@@ -3,15 +3,7 @@ import { BaseBackend, getCurrentHub } from '@sentry/core';
 import { Event, EventHint, Scope, Severity } from '@sentry/types';
 import { walk } from '@sentry/utils';
 
-import {
-  CommonBackend,
-  ElectronOptions,
-  getNameFallback,
-  IPC_EVENT,
-  IPC_EXTRA_PARAM,
-  IPC_PING,
-  IPC_SCOPE,
-} from '../common';
+import { CommonBackend, ElectronOptions, getNameFallback, IPC } from '../common';
 import { requiresNativeHandlerRenderer } from '../electron-version';
 
 interface AllElectron {
@@ -110,20 +102,20 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
     crashReporter: Electron.CrashReporter,
     contextBridge: Electron.ContextBridge | undefined,
   ): void {
-    ipcRenderer.on(IPC_EXTRA_PARAM, (_, param) => {
+    ipcRenderer.on(IPC.EXTRA_PARAM, (_, param) => {
       crashReporter.addExtraParameter('sentry', param);
     });
 
     const ipcObject = {
       // We pass through JSON because in Electron >= 8, IPC uses v8's structured clone algorithm and throws errors if
       // objects have functions. Calling walk makes sure to break circular references.
-      sendScope: (scope: Scope) => ipcRenderer.send(IPC_SCOPE, JSON.stringify(scope, walk)),
-      sendEvent: (event: Event) => ipcRenderer.send(IPC_EVENT, JSON.stringify(event, walk)),
+      sendScope: (scope: Scope) => ipcRenderer.send(IPC.SCOPE, JSON.stringify(scope, walk)),
+      sendEvent: (event: Event) => ipcRenderer.send(IPC.EVENT, JSON.stringify(event, walk)),
       pingMain: (success: () => void) => {
-        ipcRenderer.once(IPC_PING, () => {
+        ipcRenderer.once(IPC.PING, () => {
           success();
         });
-        ipcRenderer.send(IPC_PING);
+        ipcRenderer.send(IPC.PING);
       },
     };
 

@@ -14,15 +14,7 @@ import { Dsn, forget, logger, SentryError } from '@sentry/utils';
 import { app, BrowserWindow, crashReporter, ipcMain } from 'electron';
 import { join } from 'path';
 
-import {
-  CommonBackend,
-  ElectronOptions,
-  getNameFallback,
-  IPC_EVENT,
-  IPC_EXTRA_PARAM,
-  IPC_PING,
-  IPC_SCOPE,
-} from '../common';
+import { CommonBackend, ElectronOptions, getNameFallback, IPC } from '../common';
 import { supportsGetPathCrashDumps, supportsRenderProcessGone } from '../electron-version';
 import { captureMinidump } from './index';
 import { normalizeUrl } from './normalize';
@@ -160,7 +152,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
 
             // Set in the renderer processes too
             for (const window of BrowserWindow.getAllWindows()) {
-              window.webContents.send(IPC_EXTRA_PARAM, param);
+              window.webContents.send(IPC.EXTRA_PARAM, param);
             }
           }
         }
@@ -289,17 +281,17 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
 
   /** Installs IPC handlers to receive events and metadata from renderers. */
   private _installIPC(): void {
-    ipcMain.on(IPC_PING, (event: Electron.IpcMainEvent) => {
-      event.sender.send(IPC_PING);
+    ipcMain.on(IPC.PING, (event: Electron.IpcMainEvent) => {
+      event.sender.send(IPC.PING);
 
       // Immediately set the extra parameter context in the renderer if required
       if (this._options.useCrashpadMinidumpUploader) {
         const param = this._getExtraParameter(getCurrentHub().getScope());
-        event.sender.send(IPC_EXTRA_PARAM, param);
+        event.sender.send(IPC.EXTRA_PARAM, param);
       }
     });
 
-    ipcMain.on(IPC_EVENT, (ipc: Electron.IpcMainEvent, jsonEvent: string) => {
+    ipcMain.on(IPC.EVENT, (ipc: Electron.IpcMainEvent, jsonEvent: string) => {
       let event: Event;
       try {
         event = JSON.parse(jsonEvent) as Event;
@@ -317,7 +309,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       captureEvent(event);
     });
 
-    ipcMain.on(IPC_SCOPE, (_: any, jsonRendererScope: string) => {
+    ipcMain.on(IPC.SCOPE, (_: any, jsonRendererScope: string) => {
       let rendererScope: Scope;
       try {
         rendererScope = JSON.parse(jsonRendererScope) as Scope;
