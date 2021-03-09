@@ -292,7 +292,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     ipcMain.on(IPC_PING, (event: Electron.IpcMainEvent) => {
       event.sender.send(IPC_PING);
 
-      // Immediately set the extra parameter context in teh renderer if required
+      // Immediately set the extra parameter context in the renderer if required
       if (this._options.useCrashpadMinidumpUploader) {
         const param = this._getExtraParameter(getCurrentHub().getScope());
         event.sender.send(IPC_EXTRA_PARAM, param);
