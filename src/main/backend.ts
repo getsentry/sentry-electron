@@ -325,19 +325,15 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       const sentScope = Scope.clone(rendererScope) as any;
       /* eslint-disable @typescript-eslint/no-unsafe-member-access */
       configureScope(scope => {
-        const isDefinedAndHasKeys = (obj: any): boolean => {
-          return obj != undefined && Object.keys(obj).length > 0;
-        };
-
-        if (isDefinedAndHasKeys(sentScope._user)) {
+        if (Object.keys(sentScope._user || {}).length) {
           scope.setUser(sentScope._user);
         }
 
-        if (isDefinedAndHasKeys(sentScope._tags)) {
+        if (Object.keys(sentScope._tags || {}).length) {
           scope.setTags(sentScope._tags);
         }
 
-        if (isDefinedAndHasKeys(sentScope._extra)) {
+        if (Object.keys(sentScope._extra || {}).length) {
           scope.setExtras(sentScope._extra);
         }
 
