@@ -3,7 +3,15 @@ import { BaseBackend, getCurrentHub } from '@sentry/core';
 import { Event, EventHint, Scope, Severity } from '@sentry/types';
 import { walk } from '@sentry/utils';
 
-import { CommonBackend, ElectronOptions, getNameFallback, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
+import {
+  CommonBackend,
+  ElectronOptions,
+  getNameFallback,
+  IPC_EVENT,
+  IPC_EXTRA_PARAM,
+  IPC_PING,
+  IPC_SCOPE,
+} from '../common';
 import { requiresNativeHandlerRenderer } from '../electron-version';
 
 interface AllElectron {
@@ -58,7 +66,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
         this._installNativeHandler(electron.crashReporter);
       }
 
-      this._hookIPC(electron.ipcRenderer, electron.contextBridge);
+      this._hookIPC(electron.ipcRenderer, electron.crashReporter, electron.contextBridge);
       this._pingMainProcess();
       this._setupScopeListener();
     } else {
@@ -97,7 +105,15 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
   /**
    * Attaches IPC methods to window and uses contextBridge when available
    */
-  private _hookIPC(ipcRenderer: Electron.IpcRenderer, contextBridge: Electron.ContextBridge | undefined): void {
+  private _hookIPC(
+    ipcRenderer: Electron.IpcRenderer,
+    crashReporter: Electron.CrashReporter,
+    contextBridge: Electron.ContextBridge | undefined,
+  ): void {
+    ipcRenderer.on(IPC_EXTRA_PARAM, (_, param) => {
+      crashReporter.addExtraParameter('sentry', param);
+    });
+
     const ipcObject = {
       // We pass through JSON because in Electron >= 8, IPC uses v8's structured clone algorithm and throws errors if
       // objects have functions. Calling walk makes sure to break circular references.

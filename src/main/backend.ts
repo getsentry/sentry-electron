@@ -11,10 +11,18 @@ import {
 import { NodeBackend } from '@sentry/node';
 import { Event, EventHint, Severity, Transport, TransportOptions } from '@sentry/types';
 import { Dsn, forget, logger, SentryError } from '@sentry/utils';
-import { app, crashReporter, ipcMain } from 'electron';
+import { app, BrowserWindow, crashReporter, ipcMain } from 'electron';
 import { join } from 'path';
 
-import { CommonBackend, ElectronOptions, getNameFallback, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
+import {
+  CommonBackend,
+  ElectronOptions,
+  getNameFallback,
+  IPC_EVENT,
+  IPC_EXTRA_PARAM,
+  IPC_PING,
+  IPC_SCOPE,
+} from '../common';
 import { supportsGetPathCrashDumps, supportsRenderProcessGone } from '../electron-version';
 import { captureMinidump } from './index';
 import { normalizeUrl } from './normalize';
@@ -92,16 +100,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
    * @inheritDoc
    */
   public sendEvent(event: Event): void {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    if ((event as any).__INTERNAL_MINIDUMP) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      delete (event as any).__INTERNAL_MINIDUMP;
-      delete event.event_id;
-      crashReporter.addExtraParameter('sentry', JSON.stringify(event));
-    } else {
-      this._inner.sendEvent(event);
-    }
-    // eslint-enable @typescript-eslint/no-unsafe-member-access
+    this._inner.sendEvent(event);
   }
 
   /**
@@ -151,20 +150,21 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
         (cloned as any)._eventProcessors = [];
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         (cloned as any)._scopeListeners = [];
-        // if we use the crashpad minidump uploader we have to set extra whenever the scope updates
-        if (this._options.useCrashpadMinidumpUploader === true) {
-          getCurrentHub().captureEvent(
-            {
-              // @ts-ignore __INTERNAL_MINIDUMP is not assignable to event
-              __INTERNAL_MINIDUMP: true,
-            },
-            {
-              data: {
-                __sentry__: true,
-              },
-            },
-          );
+
+        // if we use the crashpad minidump uploader we have to set extra parameter whenever the scope updates
+        if (this._options.useCrashpadMinidumpUploader) {
+          const param = this._getExtraParameter(cloned);
+          if (param) {
+            // Set in the main process
+            crashReporter.addExtraParameter('sentry', param);
+
+            // Set in the renderer processes too
+            for (const window of BrowserWindow.getAllWindows()) {
+              window.webContents.send(IPC_EXTRA_PARAM, param);
+            }
+          }
         }
+
         this._scopeStore.set(cloned);
       });
     }
@@ -202,7 +202,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       ignoreSystemCrashHandler: true,
       productName: this._options.appName || getNameFallback(),
       submitURL: MinidumpUploader.minidumpUrlFromDsn(dsn),
-      uploadToServer: this._options.useCrashpadMinidumpUploader || false,
+      uploadToServer: !!this._options.useCrashpadMinidumpUploader || false,
       compress: true,
     });
 
@@ -270,9 +270,28 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     });
   }
 
+  /**
+   * Gets extra parameter to pass to native Electron minidump uploader
+   */
+  private _getExtraParameter(scope: Scope | undefined): string | undefined {
+    if (scope == undefined) {
+      return undefined;
+    }
+
+    // If a scope transform function has been supplied, use it to transform the scope before adding to the crashreporter
+    // extra parameter.
+    return JSON.stringify(
+      typeof this._options.useCrashpadMinidumpUploader === 'function'
+        ? this._options.useCrashpadMinidumpUploader(scope)
+        : scope,
+    );
+  }
+
   /** Installs IPC handlers to receive events and metadata from renderers. */
   private _installIPC(): void {
     ipcMain.on(IPC_PING, (event: Electron.IpcMainEvent) => {
+      const scope = getCurrentHub().getScope();
+      this._getExtraParameter(scope);
       event.sender.send(IPC_PING);
     });
 

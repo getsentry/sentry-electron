@@ -11,6 +11,8 @@ export const IPC_PING = 'sentry-electron.ping';
 export const IPC_EVENT = 'sentry-electron.event';
 /** IPC to capture a scope globally. */
 export const IPC_SCOPE = 'sentry-electron.scope';
+/** IPC to send extra param to renderer */
+export const IPC_EXTRA_PARAM = 'sentry-electron.extra-param';
 
 export const SDK_NAME = 'sentry.javascript.electron';
 
@@ -56,12 +58,17 @@ export interface ElectronOptions extends Options, BrowserOptions, NodeOptions {
   useSentryMinidumpUploader?: boolean;
 
   /**
-   * This sets `uploadToServer` of the crashReporter to `true`. The SDK also tries to set data (Sentry Event)
-   * with `crashReporter.addExtraParameter` to provide more context. Keep in mind, you should set
-   * `useSentryMinidumpUploader` to `false` otherwise you recieve the crash report twice.
+   * This sets `uploadToServer` of the crashReporter to `true`. The SDK also tries to set data
+   * with `crashReporter.addExtraParameter` to provide more context. If you pass a function, this will be used to
+   * transform the `Scope` before setting the parameter which is useful to slim down the object to be under the 127 byte
+   * limit on Windows.
+   *
+   * Keep in mind, you should set `useSentryMinidumpUploader` to `false` otherwise you receive
+   * the crash report twice.
+   *
    * Defaults to `false`.
    */
-  useCrashpadMinidumpUploader?: boolean;
+  useCrashpadMinidumpUploader?: boolean | ((scope: Scope) => any);
 
   /**
    * Enables event reporting for BrowserWindow 'unresponsive' events
