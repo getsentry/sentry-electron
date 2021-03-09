@@ -290,9 +290,13 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   /** Installs IPC handlers to receive events and metadata from renderers. */
   private _installIPC(): void {
     ipcMain.on(IPC_PING, (event: Electron.IpcMainEvent) => {
-      const scope = getCurrentHub().getScope();
-      this._getExtraParameter(scope);
       event.sender.send(IPC_PING);
+
+      // Immediately set the extra parameter context in teh renderer if required
+      if (this._options.useCrashpadMinidumpUploader) {
+        const param = this._getExtraParameter(getCurrentHub().getScope());
+        event.sender.send(IPC_EXTRA_PARAM, param);
+      }
     });
 
     ipcMain.on(IPC_EVENT, (ipc: Electron.IpcMainEvent, jsonEvent: string) => {
