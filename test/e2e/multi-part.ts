@@ -1,6 +1,7 @@
 import * as Busboy from 'busboy';
 import * as Koa from 'koa';
 import * as Router from 'koa-tree-router';
+import { createGunzip } from 'zlib';
 
 export interface MultipartResult {
   fields: { [key: string]: any };
@@ -30,6 +31,10 @@ export function parse_multipart(
       resolve(output);
     });
 
-    ctx.req.pipe(busboy);
+    if (ctx.request.headers['content-encoding'] === 'gzip') {
+      ctx.req.pipe(createGunzip()).pipe(busboy);
+    } else {
+      ctx.req.pipe(busboy);
+    }
   });
 }

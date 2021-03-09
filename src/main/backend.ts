@@ -306,11 +306,22 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       const sentScope = Scope.clone(rendererScope) as any;
       /* eslint-disable @typescript-eslint/no-unsafe-member-access */
       configureScope(scope => {
-        if (sentScope._user) {
+        const isDefinedAndHasKeys = (obj: any): boolean => {
+          return obj != undefined && Object.keys(obj).length > 0;
+        };
+
+        if (isDefinedAndHasKeys(sentScope._user)) {
           scope.setUser(sentScope._user);
         }
-        scope.setTags(sentScope._tags);
-        scope.setExtras(sentScope._extra);
+
+        if (isDefinedAndHasKeys(sentScope._tags)) {
+          scope.setTags(sentScope._tags);
+        }
+
+        if (isDefinedAndHasKeys(sentScope._extra)) {
+          scope.setExtras(sentScope._extra);
+        }
+
         // Since we do not have updates for individual breadcrumbs anymore and only for the whole scope
         // we just add the last added breadcrumb on scope updates
         scope.addBreadcrumb(sentScope._breadcrumbs.pop());
