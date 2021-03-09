@@ -167,7 +167,7 @@ describe('E2E Tests', () => {
           return;
         }
 
-        await context.start('sentry-electron-uploader', 'native-main');
+        await context.start('sentry-electron-uploader-main', 'native-main');
         // It can take rather a long time to get the event on Mac
         await context.waitForEvents(testServer, 1, 20000);
 
@@ -176,6 +176,7 @@ describe('E2E Tests', () => {
 
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(event.method).to.equal('minidump');
+        expect(event.data.user?.id).to.equal('main-abc123');
       });
 
       // tslint:disable-next-line
@@ -191,7 +192,7 @@ describe('E2E Tests', () => {
           return;
         }
 
-        await context.start('sentry-electron-uploader', 'native-renderer');
+        await context.start('sentry-electron-uploader-renderer', 'native-renderer');
         // It can take rather a long time to get the event on Mac
         await context.waitForEvents(testServer, 1, 20000);
 
@@ -200,6 +201,7 @@ describe('E2E Tests', () => {
 
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(event.method).to.equal('minidump');
+        expect(event.data.user?.id).to.equal('renderer-abc123');
       });
 
       it('JavaScript exception in main process with user data', async () => {
