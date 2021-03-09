@@ -181,13 +181,7 @@ describe('E2E Tests', () => {
 
       // tslint:disable-next-line
       it('Native crash in renderer process with Electron uploader', async function() {
-        if (majorVersion < 9 && process.platform === 'linux') {
-          this.skip();
-          return;
-        }
-
-        // No crashpad uploader on Windows < v6
-        if (majorVersion < 6 && process.platform === 'win32') {
+        if (majorVersion < 9) {
           this.skip();
           return;
         }
