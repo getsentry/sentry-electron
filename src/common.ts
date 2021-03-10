@@ -5,14 +5,16 @@ import { Client, Event, Options, Scope } from '@sentry/types';
 import { SentryError } from '@sentry/utils';
 import { App } from 'electron';
 
-/** IPC to ping the main process when initializing in the renderer. */
-export const IPC_PING = 'sentry-electron.ping';
-/** IPC to send a captured event (exception or message) to Sentry. */
-export const IPC_EVENT = 'sentry-electron.event';
-/** IPC to capture a scope globally. */
-export const IPC_SCOPE = 'sentry-electron.scope';
-
-export const SDK_NAME = 'sentry.javascript.electron';
+export const IPC = {
+  /** IPC to ping the main process when initializing in the renderer. */
+  PING: 'sentry-electron.ping',
+  /** IPC to send a captured event (exception or message) to Sentry. */
+  EVENT: 'sentry-electron.event',
+  /** IPC to capture a scope globally. */
+  SCOPE: 'sentry-electron.scope',
+  /** IPC for sending native crash params to the renderers  */
+  EXTRA_PARAMS: 'sentry-electron.extra-params',
+};
 
 /**
  * Configuration options for {@link ElectronOptions}.

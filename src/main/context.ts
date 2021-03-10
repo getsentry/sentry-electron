@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { Event } from '@sentry/types';
 import * as child from 'child_process';
 import { app } from 'electron';
@@ -6,6 +7,12 @@ import { join } from 'path';
 
 import { getNameFallback } from '../common';
 import { readDirAsync, readFileAsync } from './fs';
+
+/** SDK version used in every event. */
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+export const SDK_VERSION: string = require('../../package.json').version;
+
+export const SDK_NAME = 'sentry.javascript.electron';
 
 /** Operating system context information. */
 interface OsContext {
@@ -277,6 +284,16 @@ export async function addEventDefaults(appName: string | undefined, event: Event
   return {
     ...defaults,
     ...event,
+    sdk: {
+      name: SDK_NAME,
+      packages: [
+        {
+          name: 'npm:@sentry/electron',
+          version: SDK_VERSION,
+        },
+      ],
+      version: SDK_VERSION,
+    },
     contexts: {
       ...defaultContexts,
       ...contexts,

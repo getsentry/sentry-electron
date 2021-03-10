@@ -2,14 +2,10 @@ import { BaseClient, Scope } from '@sentry/core';
 import { Event, EventHint } from '@sentry/types';
 import { logger, SyncPromise } from '@sentry/utils';
 
-import { ElectronClient, ElectronOptions, SDK_NAME } from '../common';
+import { ElectronClient, ElectronOptions } from '../common';
 import { MainBackend } from './backend';
 import { addEventDefaults } from './context';
 import { normalizeEvent } from './normalize';
-
-/** SDK version used in every event. */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-export const SDK_VERSION: string = require('../../package.json').version;
 
 /** Frontend implementation for Electron renderer backends. */
 export class MainClient extends BaseClient<MainBackend, ElectronOptions> implements ElectronClient {
@@ -73,18 +69,6 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
    */
   protected _prepareEvent(event: Event, scope?: Scope, hint?: EventHint): PromiseLike<Event | null> {
     event.platform = event.platform || 'node';
-    event.sdk = {
-      ...event.sdk,
-      name: SDK_NAME,
-      packages: [
-        ...((event.sdk && event.sdk.packages) || []),
-        {
-          name: 'npm:@sentry/electron',
-          version: SDK_VERSION,
-        },
-      ],
-      version: SDK_VERSION,
-    };
 
     return super._prepareEvent(event, scope, hint).then((filledEvent: Event | null) =>
       new SyncPromise<Event>(async resolve => {

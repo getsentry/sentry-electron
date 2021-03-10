@@ -38,3 +38,29 @@ export function parse_multipart(
     }
   });
 }
+
+export function sentryEventFromFormFields(result: MultipartResult): any {
+  if ('sentry' in result.fields) {
+    try {
+      return JSON.parse(result.fields.sentry);
+    } catch (e) {
+      //
+    }
+  }
+
+  let count = 1;
+  let json = '';
+
+  while (`sentry__${count}` in result.fields) {
+    json += result.fields[`sentry__${count}`];
+    count += 1;
+  }
+
+  try {
+    return JSON.parse(json);
+  } catch (e) {
+    //
+  }
+
+  return {};
+}

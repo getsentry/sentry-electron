@@ -4,7 +4,7 @@ import * as Koa from 'koa';
 import * as bodyParser from 'koa-bodyparser';
 import * as Router from 'koa-tree-router';
 
-import { parse_multipart } from './multi-part';
+import { parse_multipart, sentryEventFromFormFields } from './multi-part';
 
 /** Event payload that has been submitted to the test server. */
 export interface TestServerEvent {
@@ -82,18 +82,12 @@ export class TestServer {
         }
 
         const result = await parse_multipart(ctx);
-
-        const getSentryData = (value: string): any => {
-          try {
-            return JSON.parse(value);
-          } catch (e) {
-            return {};
-          }
-        };
+        const data = sentryEventFromFormFields(result);
+        const dump_file = result.files.upload_file_minidump != undefined && result.files.upload_file_minidump > 1024;
 
         this.events.push({
-          data: getSentryData(result.fields.sentry),
-          dump_file: result.files.upload_file_minidump != undefined && result.files.upload_file_minidump > 1024,
+          data,
+          dump_file,
           id: ctx.params.id,
           sentry_key: keyMatch[1],
           method: 'minidump',

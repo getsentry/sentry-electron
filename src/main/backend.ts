@@ -11,13 +11,14 @@ import {
 import { NodeBackend } from '@sentry/node';
 import { Event, EventHint, Severity, Transport, TransportOptions } from '@sentry/types';
 import { Dsn, forget, logger, SentryError } from '@sentry/utils';
-import { app, crashReporter, ipcMain } from 'electron';
+import { app, BrowserWindow, crashReporter, ipcMain } from 'electron';
 import { join } from 'path';
 
-import { CommonBackend, ElectronOptions, getNameFallback, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
+import { CommonBackend, ElectronOptions, getNameFallback, IPC } from '../common';
 import { supportsGetPathCrashDumps, supportsRenderProcessGone } from '../electron-version';
+import { addEventDefaults } from './context';
 import { captureMinidump } from './index';
-import { normalizeUrl } from './normalize';
+import { normalizeEvent, normalizeUrl } from './normalize';
 import { Store } from './store';
 import { NetTransport } from './transports/net';
 import { MinidumpUploader } from './uploader';
@@ -92,16 +93,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
    * @inheritDoc
    */
   public sendEvent(event: Event): void {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    if ((event as any).__INTERNAL_MINIDUMP) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      delete (event as any).__INTERNAL_MINIDUMP;
-      delete event.event_id;
-      crashReporter.addExtraParameter('sentry', JSON.stringify(event));
-    } else {
-      this._inner.sendEvent(event);
-    }
-    // eslint-enable @typescript-eslint/no-unsafe-member-access
+    this._inner.sendEvent(event);
   }
 
   /**
@@ -146,28 +138,88 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     const hubScope = getCurrentHub().getScope();
     if (hubScope) {
       hubScope.addScopeListener(updatedScope => {
-        const cloned = Scope.clone(updatedScope);
+        const scope = Scope.clone(updatedScope);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        (cloned as any)._eventProcessors = [];
+        (scope as any)._eventProcessors = [];
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        (cloned as any)._scopeListeners = [];
+        (scope as any)._scopeListeners = [];
+
         // if we use the crashpad minidump uploader we have to set extra whenever the scope updates
         if (this._options.useCrashpadMinidumpUploader === true) {
-          getCurrentHub().captureEvent(
-            {
-              // @ts-ignore __INTERNAL_MINIDUMP is not assignable to event
-              __INTERNAL_MINIDUMP: true,
-            },
-            {
-              data: {
-                __sentry__: true,
-              },
-            },
+          forget(
+            this._getNativeUploaderEvent(scope).then(event => {
+              // Update the extra parameters in the main process
+              const mainParams = this._getNativeUploaderExtraParams(event);
+              for (const key of Object.keys(mainParams)) {
+                crashReporter.addExtraParameter(key, mainParams[key]);
+              }
+
+              // Modify the event to point to renderer crash
+              event.extra = { ...event.extra, crashed_process: 'renderer' };
+              // Update the extra parameters in every renderer process
+              const rendererParams = this._getNativeUploaderExtraParams(event);
+              for (const window of BrowserWindow.getAllWindows()) {
+                if (!window.webContents.isDestroyed()) {
+                  window.webContents.send(IPC.EXTRA_PARAMS, rendererParams);
+                }
+              }
+            }),
           );
         }
-        this._scopeStore.set(cloned);
+
+        this._scopeStore.set(scope);
       });
     }
+  }
+
+  /** Builds up an event to send with the native Electron uploader */
+  private async _getNativeUploaderEvent(scope: Scope): Promise<Event> {
+    // Basic SDK info
+    let event: Event = {
+      tags: { event_type: 'native' },
+    };
+
+    // Apply the scope to the event
+    await scope.applyToEvent(event);
+    // Add all the extra context
+    event = await addEventDefaults(this._options.appName, event);
+    return normalizeEvent(event);
+  }
+
+  /** Chunks up event JSON into 1 or more parameters for use with the native Electron uploader
+   *
+   * Returns chunks with keys and values:
+   * {
+   *    sentry__1: '{ json...',
+   *    sentry__2: 'more json...',
+   *    sentry__x: 'end json }',
+   * }
+   */
+  private _getNativeUploaderExtraParams(event: Event): { [key: string]: string } {
+    // We chunk on Linux too because the built in chunking is limited to 160 * 127 byte parameters
+    const maxBytes = process.platform === 'darwin' ? 20300 : 120;
+
+    /** Max chunk sizes are in bytes so we can't chunk by characters or UTF8 could bite us.
+     *
+     * We attempt to split by space (32) and double quote characters (34) as there are plenty in JSON
+     * and they are guaranteed to not be the first byte of a multi-byte UTF8 character.
+     */
+    let buf = Buffer.from(JSON.stringify(event));
+    const chunks = [];
+    while (buf.length) {
+      let i = buf.lastIndexOf(34, maxBytes + 1);
+      if (i < 0) i = buf.lastIndexOf(32, maxBytes + 1);
+      if (i < 0) i = buf.indexOf(34, maxBytes);
+      if (i < 0) i = buf.indexOf(32, maxBytes);
+      if (i < 0) i = buf.length;
+      chunks.push(buf.slice(0, i + 1).toString());
+      buf = buf.slice(i + 1);
+    }
+
+    return chunks.reduce((acc, cur, i) => {
+      acc[`sentry__${i + 1}`] = cur;
+      return acc;
+    }, {} as { [key: string]: string });
   }
 
   /** Returns whether native reports are enabled. */
@@ -233,11 +285,13 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       contents: Electron.WebContents,
       details?: Electron.RenderProcessGoneDetails,
     ): Promise<void> => {
-      try {
-        await this._sendNativeCrashes(this._getNewEventWithElectronContext(contents, details));
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error(e);
+      if (this._options.useSentryMinidumpUploader !== false) {
+        try {
+          await this._sendNativeCrashes(this._getNewEventWithElectronContext(contents, details));
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.error(e);
+        }
       }
 
       addBreadcrumb({
@@ -272,11 +326,11 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
 
   /** Installs IPC handlers to receive events and metadata from renderers. */
   private _installIPC(): void {
-    ipcMain.on(IPC_PING, (event: Electron.IpcMainEvent) => {
-      event.sender.send(IPC_PING);
+    ipcMain.on(IPC.PING, (event: Electron.IpcMainEvent) => {
+      event.sender.send(IPC.PING);
     });
 
-    ipcMain.on(IPC_EVENT, (ipc: Electron.IpcMainEvent, jsonEvent: string) => {
+    ipcMain.on(IPC.EVENT, (ipc: Electron.IpcMainEvent, jsonEvent: string) => {
       let event: Event;
       try {
         event = JSON.parse(jsonEvent) as Event;
@@ -294,7 +348,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       captureEvent(event);
     });
 
-    ipcMain.on(IPC_SCOPE, (_: any, jsonRendererScope: string) => {
+    ipcMain.on(IPC.SCOPE, (_: any, jsonRendererScope: string) => {
       let rendererScope: Scope;
       try {
         rendererScope = JSON.parse(jsonRendererScope) as Scope;

@@ -3,7 +3,7 @@ import { BaseBackend, getCurrentHub } from '@sentry/core';
 import { Event, EventHint, Scope, Severity } from '@sentry/types';
 import { walk } from '@sentry/utils';
 
-import { CommonBackend, ElectronOptions, getNameFallback, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
+import { CommonBackend, ElectronOptions, getNameFallback, IPC } from '../common';
 import { requiresNativeHandlerRenderer } from '../electron-version';
 
 interface AllElectron {
@@ -58,7 +58,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
         this._installNativeHandler(electron.crashReporter);
       }
 
-      this._hookIPC(electron.ipcRenderer, electron.contextBridge);
+      this._hookIPC(electron.ipcRenderer, electron.crashReporter, electron.contextBridge);
       this._pingMainProcess();
       this._setupScopeListener();
     } else {
@@ -97,17 +97,27 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
   /**
    * Attaches IPC methods to window and uses contextBridge when available
    */
-  private _hookIPC(ipcRenderer: Electron.IpcRenderer, contextBridge: Electron.ContextBridge | undefined): void {
+  private _hookIPC(
+    ipcRenderer: Electron.IpcRenderer,
+    crashReporter: Electron.CrashReporter,
+    contextBridge: Electron.ContextBridge | undefined,
+  ): void {
+    ipcRenderer.on(IPC.EXTRA_PARAMS, (_, params: { [key: string]: string }) => {
+      for (const key of Object.keys(params)) {
+        crashReporter.addExtraParameter(key, params[key]);
+      }
+    });
+
     const ipcObject = {
       // We pass through JSON because in Electron >= 8, IPC uses v8's structured clone algorithm and throws errors if
       // objects have functions. Calling walk makes sure to break circular references.
-      sendScope: (scope: Scope) => ipcRenderer.send(IPC_SCOPE, JSON.stringify(scope, walk)),
-      sendEvent: (event: Event) => ipcRenderer.send(IPC_EVENT, JSON.stringify(event, walk)),
+      sendScope: (scope: Scope) => ipcRenderer.send(IPC.SCOPE, JSON.stringify(scope, walk)),
+      sendEvent: (event: Event) => ipcRenderer.send(IPC.EVENT, JSON.stringify(event, walk)),
       pingMain: (success: () => void) => {
-        ipcRenderer.once(IPC_PING, () => {
+        ipcRenderer.once(IPC.PING, () => {
           success();
         });
-        ipcRenderer.send(IPC_PING);
+        ipcRenderer.send(IPC.PING);
       },
     };
 

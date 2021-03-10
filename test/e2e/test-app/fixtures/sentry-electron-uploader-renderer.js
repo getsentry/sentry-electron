@@ -11,4 +11,6 @@ init({
   },
 });
 
-configureScope(scope => scope.setUser({ id: 'ABCDEF1234567890' }));
+if (process.type == 'renderer') {
+  configureScope(scope => scope.setUser({ id: 'ABCDEF1234567890' }));
+}
