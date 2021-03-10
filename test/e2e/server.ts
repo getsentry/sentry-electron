@@ -41,7 +41,7 @@ export class TestServer {
         extendTypes: {
           text: ['application/x-sentry-envelope'],
         },
-        textLimit: '200mb',
+        textLimit: '100mb',
       }),
     );
 
