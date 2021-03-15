@@ -207,11 +207,16 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     let buf = Buffer.from(JSON.stringify(event));
     const chunks = [];
     while (buf.length) {
+      // Find last '"'
       let i = buf.lastIndexOf(34, maxBytes + 1);
+      // Or find last ' '
       if (i < 0) i = buf.lastIndexOf(32, maxBytes + 1);
+      // Or find first '"'
       if (i < 0) i = buf.indexOf(34, maxBytes);
+      // Or find first ' '
       if (i < 0) i = buf.indexOf(32, maxBytes);
-      if (i < 0) i = buf.length;
+      // We couldn't find any space or quote chars so split at maxBytes and hope for the best
+      if (i < 0) i = maxBytes;
       chunks.push(buf.slice(0, i + 1).toString());
       buf = buf.slice(i + 1);
     }
