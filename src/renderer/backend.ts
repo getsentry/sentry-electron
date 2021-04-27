@@ -1,10 +1,15 @@
 import { eventFromException, eventFromMessage } from '@sentry/browser';
 import { BaseBackend, getCurrentHub } from '@sentry/core';
 import { Event, EventHint, Scope, Severity } from '@sentry/types';
-import { walk } from '@sentry/utils';
+import { walk as walkUtil } from '@sentry/utils';
 
 import { CommonBackend, ElectronOptions, getNameFallback, IPC_EVENT, IPC_PING, IPC_SCOPE } from '../common';
 import { requiresNativeHandlerRenderer } from '../electron-version';
+
+/** Walks an object to perform a normalization on it with a maximum depth of 50 */
+function walk(key: string, value: any): any {
+  return walkUtil(key, value, 50);
+}
 
 interface AllElectron {
   crashReporter: Electron.CrashReporter;
@@ -60,7 +65,6 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
 
       this._hookIPC(electron.ipcRenderer, electron.contextBridge);
       this._pingMainProcess();
-      this._setupScopeListener();
     } else {
       // We are in a renderer with contextIsolation = true
       if (window.__SENTRY_IPC__ == undefined) {
@@ -70,6 +74,8 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
         );
       }
     }
+
+    this._setupScopeListener();
   }
 
   /**

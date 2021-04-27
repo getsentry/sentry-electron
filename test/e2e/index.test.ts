@@ -363,6 +363,7 @@ describe('E2E Tests', () => {
 
         expect(testServer.events.length).to.equal(1);
         expect(event.dump_file).to.be.false;
+        expect(event.data.user?.id).to.equal('abc-123');
       });
     });
   });
