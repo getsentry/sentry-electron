@@ -97,6 +97,8 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
    * @inheritDoc
    */
   public sendEvent(event: Event): void {
+    // Ensure breadcrumbs is not `undefined` as `walk` translates it into a string
+    event.breadcrumbs = event.breadcrumbs || [];
     window.__SENTRY_IPC__?.sendEvent(event);
   }
 
