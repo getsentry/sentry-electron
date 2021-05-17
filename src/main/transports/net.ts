@@ -1,6 +1,6 @@
 import { Transports } from '@sentry/node';
 import { Event, Response, SentryRequest, Status, TransportOptions } from '@sentry/types';
-import { logger, PromiseBuffer, SentryError, timestampWithMs } from '@sentry/utils';
+import { logger, parseRetryAfterHeader, PromiseBuffer, SentryError, timestampWithMs } from '@sentry/utils';
 import { net } from 'electron';
 import { Readable, Writable } from 'stream';
 import * as url from 'url';
@@ -77,7 +77,7 @@ export class NetTransport extends Transports.BaseTransport {
   }
 
   /**
-   * Checks if a category is ratelimited
+   * Checks if a category is rate-limited
    */
   public isRateLimited(category: string): boolean {
     const disabledUntil = this._rateLimits[category] || this._rateLimits.all;
@@ -161,5 +161,46 @@ export class NetTransport extends Transports.BaseTransport {
         bodyStream.pipe((req as any) as Writable);
       }),
     );
+  }
+
+  /**
+   * Sets internal _rateLimits from incoming headers
+   */
+  protected _handleRateLimit(headers: Record<string, string | null>): boolean {
+    this._rateLimits = {};
+    const now = Date.now();
+
+    const rlHeader = headers['x-sentry-rate-limits'];
+    const raHeader = headers['retry-after'];
+
+    if (rlHeader) {
+      const preRateLimits: Record<string, number> = {};
+      for (const quota of rlHeader.trim().split(',')) {
+        const parameters = quota.split(':');
+        const headerDelay = parseInt(`${parameters[0]}`, 10);
+        let delay = 60 * 1000; // 60secs default
+        if (!isNaN(headerDelay)) {
+          // so it is a number ^^
+          delay = headerDelay * 1000; // to have time in secs
+        }
+        const categories = parameters[1].split(';');
+        if (categories.length === 1 && categories[0] === '') {
+          preRateLimits.all = delay;
+        } else {
+          for (const category of categories) {
+            preRateLimits[category] = Math.max(preRateLimits[category] || 0, delay);
+          }
+        }
+      }
+      for (const key of Object.keys(preRateLimits)) {
+        this._rateLimits[key] = new Date(now + preRateLimits[key]);
+      }
+      return true;
+    } else if (raHeader) {
+      this._rateLimits.all = new Date(now + parseRetryAfterHeader(now, raHeader));
+      return true;
+    }
+
+    return false;
   }
 }
