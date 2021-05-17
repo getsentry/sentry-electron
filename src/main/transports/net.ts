@@ -1,6 +1,6 @@
 import { Transports } from '@sentry/node';
 import { Event, Response, SentryRequest, Status, TransportOptions } from '@sentry/types';
-import { parseRetryAfterHeader, PromiseBuffer, SentryError, timestampWithMs } from '@sentry/utils';
+import { logger, PromiseBuffer, SentryError, timestampWithMs } from '@sentry/utils';
 import { net } from 'electron';
 import { Readable, Writable } from 'stream';
 import * as url from 'url';
@@ -37,7 +37,7 @@ export class NetTransport extends Transports.BaseTransport {
   protected readonly _buffer: PromiseBuffer<Response> = new PromiseBuffer(30);
 
   /** Locks transport after receiving 429 response */
-  private _rateLimits: Record<string, Date> = {};
+  protected _rateLimits: Record<string, Date> = {};
 
   /** Create a new instance and set this.agent */
   public constructor(public options: TransportOptions) {
@@ -60,7 +60,7 @@ export class NetTransport extends Transports.BaseTransport {
       type: event.type === 'transaction' ? 'transaction' : 'event',
     });
 
-    if (this.isRateLimited(type)) {
+    if (this._isRateLimited(type)) {
       return Promise.reject(
         new SentryError(`Transport locked till ${JSON.stringify(this._rateLimits, null, 2)} due to too many requests.`),
       );
@@ -121,7 +121,19 @@ export class NetTransport extends Transports.BaseTransport {
             resolve({ status });
           } else {
             if (status === Status.RateLimit) {
-              this._handleRateLimit(res.headers);
+              let retryAfterHeader = res.headers ? res.headers['retry-after'] : '';
+              retryAfterHeader = (Array.isArray(retryAfterHeader) ? retryAfterHeader[0] : retryAfterHeader) as string;
+
+              let rlHeader = res.headers ? res.headers['x-sentry-rate-limits'] : '';
+              rlHeader = (Array.isArray(rlHeader) ? rlHeader[0] : rlHeader) as string;
+
+              const headers = {
+                'x-sentry-rate-limits': rlHeader,
+                'retry-after': retryAfterHeader,
+              };
+
+              const limited = this._handleRateLimit(headers);
+              if (limited) logger.warn(`Too many requests, backing off until: ${this._disabledUntil(request.type)}`);
             }
 
             // tslint:disable:no-unsafe-any
@@ -149,47 +161,5 @@ export class NetTransport extends Transports.BaseTransport {
         bodyStream.pipe((req as any) as Writable);
       }),
     );
-  }
-
-  /**
-   * Sets internal _rateLimits from incoming headers
-   */
-  private _handleRateLimit(headers: Record<string, string[] | string>): void {
-    this._rateLimits = {};
-    const now = Date.now();
-    if (headers['x-sentry-rate-limits']) {
-      let rateLimitHeader = Array.isArray(headers['x-sentry-rate-limits'])
-        ? headers['x-sentry-rate-limits'][0]
-        : headers['x-sentry-rate-limits'];
-      rateLimitHeader = rateLimitHeader.trim();
-      const quotas = rateLimitHeader.split(',');
-      const preRateLimits: Record<string, number> = {};
-      for (const quota of quotas) {
-        const parameters = quota.split(':');
-        const headerDelay = parseInt(`${parameters[0]}`, 10);
-        let delay = 60 * 1000; // 60secs default
-        if (!isNaN(headerDelay)) {
-          // so it is a number ^^
-          delay = headerDelay * 1000; // to have time in secs
-        }
-        const categories = parameters[1].split(';');
-        if (categories.length === 1 && categories[0] === '') {
-          preRateLimits.all = delay;
-        } else {
-          for (const category of categories) {
-            preRateLimits[category] = Math.max(preRateLimits[category] || 0, delay);
-          }
-        }
-      }
-      for (const key of Object.keys(preRateLimits)) {
-        this._rateLimits[key] = new Date(now + preRateLimits[key]);
-      }
-    } else if (headers['retry-after']) {
-      const retryAfterHeader = Array.isArray(headers['retry-after'])
-        ? headers['retry-after'][0]
-        : headers['retry-after'];
-
-      this._rateLimits.all = new Date(now + parseRetryAfterHeader(now, retryAfterHeader));
-    }
   }
 }

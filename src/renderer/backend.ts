@@ -50,6 +50,9 @@ const PING_TIMEOUT = 500;
 export class RendererBackend extends BaseBackend<ElectronOptions> implements CommonBackend<ElectronOptions> {
   /** Creates a new Electron backend instance. */
   public constructor(options: ElectronOptions) {
+    // Disable session tracking until we've decided how this should work with Electron
+    options.autoSessionTracking = false;
+
     if (options.enableJavaScript === false) {
       options.enabled = false;
     }
