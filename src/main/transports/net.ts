@@ -1,6 +1,6 @@
 import { Transports } from '@sentry/node';
 import { Event, Response, SentryRequest, SentryRequestType, Status, TransportOptions } from '@sentry/types';
-import { logger, parseRetryAfterHeader, PromiseBuffer, SentryError, timestampWithMs } from '@sentry/utils';
+import { logger, PromiseBuffer, SentryError, timestampWithMs } from '@sentry/utils';
 import { net } from 'electron';
 import { Readable, Writable } from 'stream';
 import * as url from 'url';
