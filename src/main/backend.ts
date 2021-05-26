@@ -58,7 +58,11 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
 
   /** Creates a new Electron backend instance. */
   public constructor(options: ElectronOptions) {
+    // Disable session tracking until we've decided how this should work with Electron
+    options.autoSessionTracking = false;
+
     super(options);
+
     this._inner = new NodeBackend(options);
     this._scopeStore = new Store<Scope>(getCachePath(), 'scope_v2', new Scope());
     // We need to store the scope in a variable here so it can be attached to minidumps

@@ -120,7 +120,7 @@ declare interface CrossApp extends App {
 
 /** Get the name of an electron app for <v5 and v7< */
 export function getNameFallback(): string {
-  if (!require) {
+  if (typeof require === 'undefined') {
     throw new SentryError(
       'Could not require("electron") to get appName. Please ensure you pass `appName` to Sentry options',
     );

@@ -1,10 +1,15 @@
 import { eventFromException, eventFromMessage } from '@sentry/browser';
 import { BaseBackend, getCurrentHub } from '@sentry/core';
 import { Event, EventHint, Scope, Severity } from '@sentry/types';
-import { walk } from '@sentry/utils';
+import { walk as walkUtil } from '@sentry/utils';
 
 import { CommonBackend, ElectronOptions, getNameFallback, IPC } from '../common';
 import { requiresNativeHandlerRenderer } from '../electron-version';
+
+/** Walks an object to perform a normalization on it with a maximum depth of 50 */
+function walk(key: string, value: any): any {
+  return walkUtil(key, value, 50);
+}
 
 interface AllElectron {
   crashReporter: Electron.CrashReporter;
@@ -45,6 +50,9 @@ const PING_TIMEOUT = 500;
 export class RendererBackend extends BaseBackend<ElectronOptions> implements CommonBackend<ElectronOptions> {
   /** Creates a new Electron backend instance. */
   public constructor(options: ElectronOptions) {
+    // Disable session tracking until we've decided how this should work with Electron
+    options.autoSessionTracking = false;
+
     if (options.enableJavaScript === false) {
       options.enabled = false;
     }
@@ -60,7 +68,6 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
 
       this._hookIPC(electron.ipcRenderer, electron.crashReporter, electron.contextBridge);
       this._pingMainProcess();
-      this._setupScopeListener();
     } else {
       // We are in a renderer with contextIsolation = true
       if (window.__SENTRY_IPC__ == undefined) {
@@ -70,6 +77,8 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
         );
       }
     }
+
+    this._setupScopeListener();
   }
 
   /**
@@ -91,6 +100,8 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
    * @inheritDoc
    */
   public sendEvent(event: Event): void {
+    // Ensure breadcrumbs is not `undefined` as `walk` translates it into a string
+    event.breadcrumbs = event.breadcrumbs || [];
     window.__SENTRY_IPC__?.sendEvent(event);
   }
 
