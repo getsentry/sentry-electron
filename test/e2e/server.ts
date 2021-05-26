@@ -14,6 +14,8 @@ export interface TestServerEvent {
   sentry_key: string;
   /** Sentry Event data (should conform to the SentryEvent interface). */
   data: Event;
+  /** Extra namespaced form data */
+  namespaced?: { [key: string]: any };
   /** An optional minidump file, if included in the event. */
   dump_file?: boolean;
   /** API method used for submission */
@@ -82,11 +84,12 @@ export class TestServer {
         }
 
         const result = await parse_multipart(ctx);
-        const data = sentryEventFromFormFields(result);
+        const [event, namespaced] = sentryEventFromFormFields(result);
         const dump_file = result.files.upload_file_minidump != undefined && result.files.upload_file_minidump > 1024;
 
         this.events.push({
-          data,
+          data: event,
+          namespaced,
           dump_file,
           id: ctx.params.id,
           sentry_key: keyMatch[1],

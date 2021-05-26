@@ -9,7 +9,7 @@ import {
   Scope,
 } from '@sentry/core';
 import { NodeBackend } from '@sentry/node';
-import { Event, EventHint, Severity, Transport, TransportOptions } from '@sentry/types';
+import { CaptureContext, Event, EventHint, Severity, Transport, TransportOptions } from '@sentry/types';
 import { Dsn, forget, logger, SentryError } from '@sentry/utils';
 import { app, BrowserWindow, crashReporter, ipcMain } from 'electron';
 import { join } from 'path';
@@ -72,7 +72,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
 
     if (this._isNativeEnabled()) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      forget(this._installNativeHandler());
+      forget(this._installNativeHandler(options.initialScope));
     }
 
     this._installIPC();
@@ -244,7 +244,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   }
 
   /** Activates the Electron CrashReporter. */
-  private async _installNativeHandler(): Promise<void> {
+  private async _installNativeHandler(initialScope?: CaptureContext): Promise<void> {
     // We are only called by the frontend if the SDK is enabled and a valid DSN
     // has been configured. If no DSN is present, this indicates a programming
     // error.
@@ -254,6 +254,9 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     }
 
     const dsn = new Dsn(dsnString);
+
+    // Prepare globalExtra form field from any initialScope
+    const globalExtra = initialScope ? { sentry___initialScope: JSON.stringify(initialScope) } : undefined;
 
     // We will manually submit errors, but CrashReporter requires a submitURL in
     // some versions. Also, provide a productName and companyName, which we will
@@ -265,6 +268,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       submitURL: MinidumpUploader.minidumpUrlFromDsn(dsn),
       uploadToServer: this._options.useCrashpadMinidumpUploader || false,
       compress: true,
+      globalExtra,
     });
 
     if (this._options.useSentryMinidumpUploader !== false) {

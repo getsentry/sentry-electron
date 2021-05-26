@@ -172,6 +172,8 @@ describe('E2E Tests', () => {
         expect(event.method).to.equal('minidump');
         expect(event.data.user?.id).to.equal('ABCDEF1234567890');
         expect(event.data?.contexts?.runtime?.name).to.equal('Electron');
+
+        expect(event.namespaced?.initialScope?.user).to.equal('some_user');
       });
 
       // tslint:disable-next-line
@@ -192,6 +194,8 @@ describe('E2E Tests', () => {
         expect(event.method).to.equal('minidump');
         expect(event.data.user?.id).to.equal('ABCDEF1234567890');
         expect(event.data?.contexts?.runtime?.name).to.equal('Electron');
+
+        expect(event.namespaced?.initialScope?.user).to.equal('some_user');
       });
 
       it('JavaScript exception in main process with user data', async () => {

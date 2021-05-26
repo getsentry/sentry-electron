@@ -1,3 +1,4 @@
+import { Event } from '@sentry/types';
 import * as Busboy from 'busboy';
 import * as Koa from 'koa';
 import * as Router from 'koa-tree-router';
@@ -39,10 +40,21 @@ export function parse_multipart(
   });
 }
 
-export function sentryEventFromFormFields(result: MultipartResult): any {
-  if ('sentry' in result.fields) {
+function sentryNamespacedFormFields(form: MultipartResult): { [key: string]: any } {
+  return Object.entries(form.fields)
+    .filter(([key, _]) => key.startsWith('sentry___'))
+    .reduce((acc, [key, value]) => {
+      acc[key.replace('sentry___', '')] = JSON.parse(value);
+      return acc;
+    }, {} as { [key: string]: any });
+}
+
+export function sentryEventFromFormFields(form: MultipartResult): [Event, { [key: string]: any }] {
+  if ('sentry' in form.fields) {
     try {
-      return JSON.parse(result.fields.sentry);
+      const event = JSON.parse(form.fields.sentry);
+      const namespaced = sentryNamespacedFormFields(form);
+      return [event, namespaced];
     } catch (e) {
       //
     }
@@ -51,16 +63,18 @@ export function sentryEventFromFormFields(result: MultipartResult): any {
   let count = 1;
   let json = '';
 
-  while (`sentry__${count}` in result.fields) {
-    json += result.fields[`sentry__${count}`];
+  while (`sentry__${count}` in form.fields) {
+    json += form.fields[`sentry__${count}`];
     count += 1;
   }
 
   try {
-    return JSON.parse(json);
+    const event = JSON.parse(json);
+    const namespaced = sentryNamespacedFormFields(form);
+    return [event, namespaced];
   } catch (e) {
     //
   }
 
-  return {};
+  return [{}, {}];
 }
