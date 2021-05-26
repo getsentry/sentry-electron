@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 2.5.0
+
+- feat: Update to latest Sentry SDKs (6.4.1) (#332)
+- fix: IPC breadcrumb serialization issue (#330)
+
 ## 2.4.1
 
 - fix: Missing scope updates from isolated renderer (#322)
