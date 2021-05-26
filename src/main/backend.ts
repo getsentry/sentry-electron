@@ -219,7 +219,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       if (i < 0) i = buf.indexOf(34, maxBytes);
       // Or find first ' '
       if (i < 0) i = buf.indexOf(32, maxBytes);
-      // We couldn't find any space or quote chars so split at maxBytes and hope for the best
+      // We couldn't find any space or quote chars so split at maxBytes and hope for the best 🤷‍♂️
       if (i < 0) i = maxBytes;
       chunks.push(buf.slice(0, i + 1).toString());
       buf = buf.slice(i + 1);
