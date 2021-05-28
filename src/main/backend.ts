@@ -201,7 +201,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
    */
   private _getNativeUploaderExtraParams(event: Event): { [key: string]: string } {
     // We chunk on Linux too because the built in chunking is limited to 160 * 127 byte parameters
-    const maxBytes = process.platform === 'darwin' ? 20300 : 120;
+    const maxBytes = process.platform === 'linux' ? 120 : 20300;
 
     /** Max chunk sizes are in bytes so we can't chunk by characters or UTF8 could bite us.
      *
