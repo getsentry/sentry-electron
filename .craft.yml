@@ -1,18 +1,10 @@
----
-minVersion: '0.13.2'
-github:
-  owner: getsentry
-  repo: sentry-electron
+minVersion: 0.23.1
 changelogPolicy: simple
 preReleaseCommand: bash scripts/craft-pre-release.sh
-statusProvider:
-  name: github
-artifactProvider:
-  name: github
 targets:
   - name: npm
   - name: registry
-    type: sdk
-    config:
-      canonical: 'npm:@sentry/electron'
+    sdks:
+      npm:@sentry/electron:
+        name: registry
   - name: github
