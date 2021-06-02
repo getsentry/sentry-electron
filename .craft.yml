@@ -6,5 +6,4 @@ targets:
   - name: registry
     sdks:
       npm:@sentry/electron:
-        name: registry
   - name: github
