@@ -350,9 +350,9 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
           scope.setExtras(sentScope._extra);
         }
 
-        // Since we do not have updates for individual breadcrumbs anymore and only for the whole scope
+        // Since we do not have updates for individual breadcrumbs any more and only for the whole scope
         // we just add the last added breadcrumb on scope updates
-        scope.addBreadcrumb(sentScope._breadcrumbs.pop());
+        scope.addBreadcrumb(sentScope._breadcrumbs.pop(), this._options.maxBreadcrumbs);
       });
       /* eslint-enable @typescript-eslint/no-unsafe-member-access */
     });
