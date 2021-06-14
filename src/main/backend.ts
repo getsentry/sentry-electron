@@ -9,7 +9,7 @@ import {
   Scope,
 } from '@sentry/core';
 import { NodeBackend } from '@sentry/node';
-import { Event, EventHint, Severity, Transport, TransportOptions } from '@sentry/types';
+import { Event, EventHint, ScopeContext, Severity, Transport, TransportOptions } from '@sentry/types';
 import { Dsn, forget, logger, SentryError } from '@sentry/utils';
 import { app, crashReporter, ipcMain } from 'electron';
 import { join } from 'path';
@@ -39,6 +39,26 @@ export async function isAppReady(): Promise<boolean> {
       });
     })
   );
+}
+
+/** Gets a Scope object with user, tags and extra */
+function getScope(): Partial<ScopeContext> | undefined {
+  const scope = getCurrentHub().getScope() as any;
+
+  const scopeContext: Partial<ScopeContext> = {};
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+  if (scope?._user && Object.keys(scope?._user).length > 0) {
+    scopeContext.user = scope._user;
+  }
+  if (scope?._tags && Object.keys(scope?._tags).length > 0) {
+    scopeContext.tags = scope._tags;
+  }
+  if (scope?._extra && Object.keys(scope?._extra).length > 0) {
+    scopeContext.extra = scope._extra;
+  }
+  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+
+  return Object.keys(scopeContext).length > 0 ? scopeContext : undefined;
 }
 
 /** Backend implementation for Electron renderer backends. */
@@ -196,6 +216,9 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
     }
 
+    const initialScope = getScope();
+    const globalExtra = initialScope ? { sentry___initialScope: JSON.stringify(initialScope) } : undefined;
+
     const dsn = new Dsn(dsnString);
 
     // We will manually submit errors, but CrashReporter requires a submitURL in
@@ -208,6 +231,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       submitURL: MinidumpUploader.minidumpUrlFromDsn(dsn),
       uploadToServer: this._options.useCrashpadMinidumpUploader || false,
       compress: true,
+      globalExtra,
     });
 
     if (this._options.useSentryMinidumpUploader !== false) {
