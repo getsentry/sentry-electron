@@ -4,7 +4,7 @@
 
 ## 2.5.0
 
-- feat: Update to latest Sentry SDKs (6.4.1) (#332)
+- feat: Update to latest Sentry SDKs (6.7.1) (#332)
 - fix: IPC breadcrumb serialization issue (#330)
 - fix: Improve error text when `init` has not been called in the main process (#222)
 - fix: Ensure `maxBreadcrumbs` is passed to `addBreadcrumb` to ensure number of breadcrumbs is limited
