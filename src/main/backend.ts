@@ -42,23 +42,20 @@ export async function isAppReady(): Promise<boolean> {
 }
 
 /** Gets a Scope object with user, tags and extra */
-function getScope(): Partial<ScopeContext> | undefined {
-  const scope = getCurrentHub().getScope() as any;
+function getScope(): Partial<ScopeContext> {
+  const scope = getCurrentHub().getScope() as any | undefined;
 
-  const scopeContext: Partial<ScopeContext> = {};
-  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-  if (scope?._user && Object.keys(scope?._user).length > 0) {
-    scopeContext.user = scope._user;
+  if (!scope) {
+    return {};
   }
-  if (scope?._tags && Object.keys(scope?._tags).length > 0) {
-    scopeContext.tags = scope._tags;
-  }
-  if (scope?._extra && Object.keys(scope?._extra).length > 0) {
-    scopeContext.extra = scope._extra;
-  }
-  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 
-  return Object.keys(scopeContext).length > 0 ? scopeContext : undefined;
+  return {
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+    ...(scope._user && { user: scope._user }),
+    ...(scope._tags && { tags: scope._tags }),
+    ...(scope._extra && { extra: scope._extra }),
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+  };
 }
 
 /** Backend implementation for Electron renderer backends. */
@@ -116,16 +113,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
    * @inheritDoc
    */
   public sendEvent(event: Event): void {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    if ((event as any).__INTERNAL_MINIDUMP) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      delete (event as any).__INTERNAL_MINIDUMP;
-      delete event.event_id;
-      crashReporter.addExtraParameter('sentry', JSON.stringify(event));
-    } else {
-      this._inner.sendEvent(event);
-    }
-    // eslint-enable @typescript-eslint/no-unsafe-member-access
+    this._inner.sendEvent(event);
   }
 
   /**
@@ -175,20 +163,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
         (cloned as any)._eventProcessors = [];
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         (cloned as any)._scopeListeners = [];
-        // if we use the crashpad minidump uploader we have to set extra whenever the scope updates
-        if (this._options.useCrashpadMinidumpUploader === true) {
-          getCurrentHub().captureEvent(
-            {
-              // @ts-ignore __INTERNAL_MINIDUMP is not assignable to event
-              __INTERNAL_MINIDUMP: true,
-            },
-            {
-              data: {
-                __sentry__: true,
-              },
-            },
-          );
-        }
+
         this._scopeStore.set(cloned);
       });
     }
@@ -216,8 +191,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
     }
 
-    const initialScope = getScope();
-    const globalExtra = initialScope ? { sentry___initialScope: JSON.stringify(initialScope) } : undefined;
+    const globalExtra = { sentry___initialScope: JSON.stringify(getScope()) };
 
     const dsn = new Dsn(dsnString);
 
