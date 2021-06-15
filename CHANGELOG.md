@@ -9,6 +9,7 @@
 - fix: Improve error text when `init` has not been called in the main process (#222)
 - fix: Ensure `maxBreadcrumbs` is passed to `addBreadcrumb` to ensure number of breadcrumbs is limited
 - fix: Stop capturing `app.remote-` events to breadcrumbs because they are too verbose
+- fix: Delete Crashpad metadata file to fix errors (#341)
 
 ## 2.4.1
 
