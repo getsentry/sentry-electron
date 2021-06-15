@@ -25,7 +25,7 @@ export class Electron implements Integration {
    * @inheritDoc
    */
   public setupOnce(): void {
-    this._instrumentBreadcrumbs('app', app);
+    this._instrumentBreadcrumbs('app', app, event => !event.startsWith('remote-'));
 
     app.once('ready', () => {
       // We can't access these until 'ready'
@@ -44,11 +44,9 @@ export class Electron implements Integration {
         const options = (getCurrentHub().getClient() as ElectronClient).getOptions();
         const customName = options.getRendererName && options.getRendererName(contents);
 
-        this._instrumentBreadcrumbs(customName || `WebContents[${contents.id}]`, contents as any, [
-          'dom-ready',
-          'load-url',
-          'destroyed',
-        ]);
+        this._instrumentBreadcrumbs(customName || `WebContents[${contents.id}]`, contents as any, event =>
+          ['dom-ready', 'load-url', 'destroyed'].includes(event),
+        );
       });
     });
   }
@@ -57,12 +55,16 @@ export class Electron implements Integration {
    * Hooks into the Electron EventEmitter to capture breadcrumbs for the
    * specified events.
    */
-  private _instrumentBreadcrumbs(category: string, emitter: NodeJS.EventEmitter, events: string[] = []): void {
+  private _instrumentBreadcrumbs(
+    category: string,
+    emitter: NodeJS.EventEmitter,
+    shouldInclude?: (event: string) => boolean,
+  ): void {
     type Emit = (event: string, ...args: unknown[]) => boolean;
     const emit = emitter.emit.bind(emitter) as Emit;
 
     emitter.emit = (event: string, ...args) => {
-      if (events.length === 0 || events.indexOf(event) > -1) {
+      if (shouldInclude === undefined || shouldInclude(event)) {
         const breadcrumb = {
           category: 'electron',
           message: `${category}.${event}`,
