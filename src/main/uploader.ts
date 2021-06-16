@@ -2,6 +2,8 @@
 import { API } from '@sentry/core';
 import { Event, Status, Transport } from '@sentry/types';
 import { Dsn, forget, logger, timestampWithMs } from '@sentry/utils';
+import * as Busboy from 'busboy';
+import { createReadStream } from 'fs';
 import { basename, join } from 'path';
 
 import { supportsCrashpadOnWindows } from '../electron-version';
@@ -27,6 +29,11 @@ export interface MinidumpRequest {
   path: string;
   /** Associated event data. */
   event: Event;
+}
+
+interface MultipartResult {
+  fields: { [key: string]: any };
+  files: { [key: string]: Buffer };
 }
 
 /**
@@ -250,6 +257,34 @@ export class MinidumpUploader {
     );
 
     return files.filter(file => file.endsWith('.dmp')).map(file => join(this._crashesDirectory, file));
+  }
+
+  /** */
+  private async _parseBreakpadMultipartFile(path: string): Promise<MultipartResult> {
+    const stream = createReadStream(path);
+
+    return new Promise(resolve => {
+      const busboy = new Busboy({});
+      const output: MultipartResult = { fields: {}, files: {} };
+
+      busboy.on('file', (fieldName, file) => {
+        const buffers: Buffer[] = [];
+        file.on('data', data => {
+          buffers.push(data);
+        });
+        file.on('end', () => {
+          output.files[fieldName] = Buffer.concat(buffers);
+        });
+      });
+      busboy.on('field', (fieldName, val) => {
+        output.fields[fieldName] = val;
+      });
+      busboy.on('finish', function() {
+        resolve(output);
+      });
+
+      stream.pipe(busboy);
+    });
   }
 
   /**
