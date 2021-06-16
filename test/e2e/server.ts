@@ -63,7 +63,7 @@ export class TestServer {
 
       this.events.push({
         data: JSON.parse(envelope[2]) as Event,
-        dump_file: envelope[4] !== undefined,
+        dump_file: envelope[4] !== undefined && envelope[4].startsWith('MDMP'),
         id: ctx.params.id,
         sentry_key: keyMatch[1],
         method: 'envelope',

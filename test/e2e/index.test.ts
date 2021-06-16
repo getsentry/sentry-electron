@@ -139,10 +139,6 @@ describe('E2E Tests', () => {
 
       // tslint:disable-next-line
       it('Native crash in renderer process', async function() {
-        if (majorVersion === 9 && process.platform === 'linux') {
-          this.skip();
-          return;
-        }
         await context.start('sentry-basic', 'native-renderer');
         // It can take rather a long time to get the event on Mac
         await context.waitForEvents(testServer, 1, 20000);
@@ -200,7 +196,7 @@ describe('E2E Tests', () => {
       });
 
       it('GPU crash with Electron uploader', async function() {
-        if (majorVersion < 13) {
+        if (majorVersion < 13 || process.platform === 'linux') {
           this.skip();
           return;
         }
@@ -214,9 +210,7 @@ describe('E2E Tests', () => {
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(event.method).to.equal('minidump');
 
-        if (process.platform !== 'linux') {
-          expect(event.namespaced?.initialScope?.user).to.equal('some_user');
-        }
+        expect(event.namespaced?.initialScope?.user).to.equal('some_user');
       });
 
       it('JavaScript exception in main process with user data', async () => {
@@ -230,11 +224,6 @@ describe('E2E Tests', () => {
 
       // tslint:disable-next-line
       it('Native crash in main process', async function() {
-        if (majorVersion === 9 && process.platform === 'linux') {
-          // TODO: Check why this fails on linux
-          this.skip();
-          return;
-        }
         await context.start('sentry-basic', 'native-main');
 
         // wait for the main process to die
@@ -337,11 +326,6 @@ describe('E2E Tests', () => {
 
       // tslint:disable-next-line
       it('Custom release string for minidump', async function() {
-        if (majorVersion === 9 && process.platform === 'linux') {
-          // TODO: Check why this fails on linux
-          this.skip();
-          return;
-        }
         await context.start('sentry-custom-release', 'native-renderer');
         // It can take rather a long time to get the event on Mac
         await context.waitForEvents(testServer, 1, 20000);

@@ -252,6 +252,21 @@ export class MinidumpUploader {
     return files.filter(file => file.endsWith('.dmp')).map(file => join(this._crashesDirectory, file));
   }
 
+  /** Crudely parses the dump file from the Breakpad multipart file */
+  private async _parseBreakpadMultipartFile(file: Buffer): Promise<Buffer | undefined> {
+    const binaryStart = file.lastIndexOf('Content-Type: application/octet-stream');
+    if (binaryStart > 0) {
+      const dumpStart = file.indexOf('MDMP', binaryStart);
+      const dumpEnd = file.lastIndexOf('----------------------------');
+
+      if (dumpStart > 0 && dumpEnd > 0 && dumpEnd > dumpStart) {
+        return file.slice(dumpStart, dumpEnd);
+      }
+    }
+
+    return undefined;
+  }
+
   /**
    * Enqueues a minidump with event information for later upload.
    * @param request The request containing a minidump and event info.
@@ -321,7 +336,16 @@ export class MinidumpUploader {
 
     // Only add attachment if they are not rate limited
     if (!transport.isRateLimited('attachment')) {
-      const minidumpContent = (await readFileAsync(minidumpPath)) as Buffer;
+      let minidumpContent = (await readFileAsync(minidumpPath)) as Buffer;
+
+      // For Breakpad we need to get the dump from a multipart encoded file
+      if (this._type !== 'crashpad') {
+        const dump = await this._parseBreakpadMultipartFile(minidumpContent);
+        if (dump) {
+          minidumpContent = dump;
+        }
+      }
+
       const minidumpHeader = JSON.stringify({
         attachment_type: 'event.minidump',
         length: minidumpContent.length,
