@@ -172,7 +172,9 @@ describe('E2E Tests', () => {
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(event.method).to.equal('minidump');
 
-        expect(event.namespaced?.initialScope?.user).to.equal('some_user');
+        if (process.platform !== 'linux') {
+          expect(event.namespaced?.initialScope?.user).to.equal('some_user');
+        }
       });
 
       // tslint:disable-next-line
@@ -192,7 +194,9 @@ describe('E2E Tests', () => {
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(event.method).to.equal('minidump');
 
-        expect(event.namespaced?.initialScope?.user).to.equal('some_user');
+        if (process.platform !== 'linux') {
+          expect(event.namespaced?.initialScope?.user).to.equal('some_user');
+        }
       });
 
       it('GPU crash with Electron uploader', async function() {
@@ -210,7 +214,9 @@ describe('E2E Tests', () => {
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(event.method).to.equal('minidump');
 
-        expect(event.namespaced?.initialScope?.user).to.equal('some_user');
+        if (process.platform !== 'linux') {
+          expect(event.namespaced?.initialScope?.user).to.equal('some_user');
+        }
       });
 
       it('JavaScript exception in main process with user data', async () => {
