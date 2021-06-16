@@ -254,11 +254,14 @@ export class MinidumpUploader {
 
   /** Crudely parses the dump file from the Breakpad multipart file */
   private async _parseBreakpadMultipartFile(file: Buffer): Promise<Buffer | undefined> {
-    const dumpStart = file.lastIndexOf('\nMDMP');
-    const dumpEnd = file.lastIndexOf('----------------------------');
+    const binaryStart = file.lastIndexOf('Content-Type: application/octet-stream');
+    if (binaryStart > 0) {
+      const dumpStart = file.lastIndexOf('MDMP', binaryStart);
+      const dumpEnd = file.lastIndexOf('----------------------------');
 
-    if (dumpStart > 0 && dumpEnd > 0 && dumpEnd > dumpStart) {
-      return file.slice(dumpStart + 1, dumpEnd);
+      if (dumpStart > 0 && dumpEnd > 0 && dumpEnd > dumpStart) {
+        return file.slice(dumpStart, dumpEnd);
+      }
     }
 
     return undefined;
