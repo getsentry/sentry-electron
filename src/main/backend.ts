@@ -28,7 +28,7 @@ function getCachePath(): string {
 }
 
 /**
- * Retruns a promise that resolves when app is ready.
+ * Returns a promise that resolves when app is ready.
  */
 export async function isAppReady(): Promise<boolean> {
   return (
@@ -41,6 +41,11 @@ export async function isAppReady(): Promise<boolean> {
   );
 }
 
+/** Is object defined and has keys */
+function hasKeys(obj: any): boolean {
+  return obj != undefined && Object.keys(obj).length > 0;
+}
+
 /** Gets a Scope object with user, tags and extra */
 function getScope(): Partial<ScopeContext> {
   const scope = getCurrentHub().getScope() as any | undefined;
@@ -51,9 +56,9 @@ function getScope(): Partial<ScopeContext> {
 
   return {
     /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    ...(scope._user && { user: scope._user }),
-    ...(scope._tags && { tags: scope._tags }),
-    ...(scope._extra && { extra: scope._extra }),
+    ...(hasKeys(scope._user) && { user: scope._user }),
+    ...(hasKeys(scope._tags) && { tags: scope._tags }),
+    ...(hasKeys(scope._extra) && { extra: scope._extra }),
     /* eslint-enable @typescript-eslint/no-unsafe-member-access */
   };
 }
@@ -191,7 +196,10 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
     }
 
-    const globalExtra = { sentry___initialScope: JSON.stringify(getScope()) };
+    // We don't add globalExtra for Linux because Breakpad doesn't support JSON like strings:
+    // https://github.com/electron/electron/issues/29711
+    const globalExtra =
+      process.platform !== 'linux' ? { sentry___initialScope: JSON.stringify(getScope()) } : undefined;
 
     const dsn = new Dsn(dsnString);
 
@@ -308,19 +316,15 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       const sentScope = Scope.clone(rendererScope) as any;
       /* eslint-disable @typescript-eslint/no-unsafe-member-access */
       configureScope(scope => {
-        const isDefinedAndHasKeys = (obj: any): boolean => {
-          return obj != undefined && Object.keys(obj).length > 0;
-        };
-
-        if (isDefinedAndHasKeys(sentScope._user)) {
+        if (hasKeys(sentScope._user)) {
           scope.setUser(sentScope._user);
         }
 
-        if (isDefinedAndHasKeys(sentScope._tags)) {
+        if (hasKeys(sentScope._tags)) {
           scope.setTags(sentScope._tags);
         }
 
-        if (isDefinedAndHasKeys(sentScope._extra)) {
+        if (hasKeys(sentScope._extra)) {
           scope.setExtras(sentScope._extra);
         }
 
