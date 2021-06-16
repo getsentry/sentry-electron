@@ -1,3 +1,4 @@
+import { Event } from '@sentry/types';
 import * as Busboy from 'busboy';
 import * as Koa from 'koa';
 import * as Router from 'koa-tree-router';
@@ -37,4 +38,43 @@ export function parse_multipart(
       ctx.req.pipe(busboy);
     }
   });
+}
+
+function sentryNamespacedFormFields(form: MultipartResult): { [key: string]: any } {
+  return Object.entries(form.fields)
+    .filter(([key, _]) => key.startsWith('sentry___'))
+    .reduce((acc, [key, value]) => {
+      acc[key.replace('sentry___', '')] = JSON.parse(value);
+      return acc;
+    }, {} as { [key: string]: any });
+}
+
+export function sentryEventFromFormFields(form: MultipartResult): [Event, { [key: string]: any }] {
+  if ('sentry' in form.fields) {
+    try {
+      const event = JSON.parse(form.fields.sentry);
+      const namespaced = sentryNamespacedFormFields(form);
+      return [event, namespaced];
+    } catch (e) {
+      //
+    }
+  }
+
+  let count = 1;
+  let json = '';
+
+  while (`sentry__${count}` in form.fields) {
+    json += form.fields[`sentry__${count}`];
+    count += 1;
+  }
+
+  try {
+    const event = json === '' ? {} : JSON.parse(json);
+    const namespaced = sentryNamespacedFormFields(form);
+    return [event, namespaced];
+  } catch (e) {
+    //
+  }
+
+  return [{}, {}];
 }

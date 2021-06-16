@@ -157,13 +157,7 @@ describe('E2E Tests', () => {
 
       // tslint:disable-next-line
       it('Native crash in main process with Electron uploader', async function() {
-        if (majorVersion < 9 && process.platform === 'linux') {
-          this.skip();
-          return;
-        }
-
-        // No crashpad uploader on Windows < v6
-        if (majorVersion < 6 && process.platform === 'win32') {
+        if (majorVersion < 9) {
           this.skip();
           return;
         }
@@ -177,17 +171,15 @@ describe('E2E Tests', () => {
 
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(event.method).to.equal('minidump');
+
+        if (process.platform !== 'linux') {
+          expect(event.namespaced?.initialScope?.user).to.equal('some_user');
+        }
       });
 
       // tslint:disable-next-line
       it('Native crash in renderer process with Electron uploader', async function() {
-        if (majorVersion < 9 && process.platform === 'linux') {
-          this.skip();
-          return;
-        }
-
-        // No crashpad uploader on Windows < v6
-        if (majorVersion < 6 && process.platform === 'win32') {
+        if (majorVersion < 9) {
           this.skip();
           return;
         }
@@ -201,6 +193,30 @@ describe('E2E Tests', () => {
 
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(event.method).to.equal('minidump');
+
+        if (process.platform !== 'linux') {
+          expect(event.namespaced?.initialScope?.user).to.equal('some_user');
+        }
+      });
+
+      it('GPU crash with Electron uploader', async function() {
+        if (majorVersion < 13) {
+          this.skip();
+          return;
+        }
+
+        await context.start('sentry-electron-uploader', 'native-gpu');
+        await context.waitForEvents(testServer, 1, 20000);
+
+        expect(testServer.events.length).to.equal(1);
+        const event = testServer.events[0];
+
+        expect(event.sentry_key).to.equal(SENTRY_KEY);
+        expect(event.method).to.equal('minidump');
+
+        if (process.platform !== 'linux') {
+          expect(event.namespaced?.initialScope?.user).to.equal('some_user');
+        }
       });
 
       it('JavaScript exception in main process with user data', async () => {
