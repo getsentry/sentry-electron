@@ -196,7 +196,7 @@ describe('E2E Tests', () => {
       });
 
       it('GPU crash with Electron uploader', async function() {
-        if (majorVersion < 13 || process.platform !== 'linux') {
+        if (majorVersion < 13 || process.platform === 'linux') {
           this.skip();
           return;
         }
@@ -210,9 +210,7 @@ describe('E2E Tests', () => {
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(event.method).to.equal('minidump');
 
-        if (process.platform !== 'linux') {
-          expect(event.namespaced?.initialScope?.user).to.equal('some_user');
-        }
+        expect(event.namespaced?.initialScope?.user).to.equal('some_user');
       });
 
       it('JavaScript exception in main process with user data', async () => {
