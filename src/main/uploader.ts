@@ -2,7 +2,6 @@
 import { API } from '@sentry/core';
 import { Event, Status, Transport } from '@sentry/types';
 import { Dsn, forget, logger, timestampWithMs } from '@sentry/utils';
-import { writeFileSync } from 'original-fs';
 import { basename, join } from 'path';
 
 import { supportsCrashpadOnWindows } from '../electron-version';
@@ -80,8 +79,9 @@ export class MinidumpUploader {
    */
   public static minidumpUrlFromDsn(dsn: Dsn): string {
     const { host, path, projectId, port, protocol, user } = dsn;
-    return `${protocol}://${host}${port !== '' ? `:${port}` : ''}${path !== '' ? `/${path}` : ''
-      }/api/${projectId}/minidump/?sentry_key=${user}`;
+    return `${protocol}://${host}${port !== '' ? `:${port}` : ''}${
+      path !== '' ? `/${path}` : ''
+    }/api/${projectId}/minidump/?sentry_key=${user}`;
   }
 
   /**
@@ -258,10 +258,10 @@ export class MinidumpUploader {
     const dumpEnd = file.lastIndexOf('----------------------------');
 
     if (dumpStart > 0 && dumpEnd > 0 && dumpEnd > dumpStart) {
-      return file.slice(dumpStart + 1, dumpEnd)
+      return file.slice(dumpStart + 1, dumpEnd);
     }
 
-    return undefined
+    return undefined;
   }
 
   /**
