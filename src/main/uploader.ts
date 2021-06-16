@@ -2,8 +2,7 @@
 import { API } from '@sentry/core';
 import { Event, Status, Transport } from '@sentry/types';
 import { Dsn, forget, logger, timestampWithMs } from '@sentry/utils';
-import * as Busboy from 'busboy';
-import { createReadStream } from 'fs';
+import { writeFileSync } from 'original-fs';
 import { basename, join } from 'path';
 
 import { supportsCrashpadOnWindows } from '../electron-version';
@@ -29,11 +28,6 @@ export interface MinidumpRequest {
   path: string;
   /** Associated event data. */
   event: Event;
-}
-
-interface MultipartResult {
-  fields: { [key: string]: any };
-  files: { [key: string]: Buffer };
 }
 
 /**
@@ -86,9 +80,8 @@ export class MinidumpUploader {
    */
   public static minidumpUrlFromDsn(dsn: Dsn): string {
     const { host, path, projectId, port, protocol, user } = dsn;
-    return `${protocol}://${host}${port !== '' ? `:${port}` : ''}${
-      path !== '' ? `/${path}` : ''
-    }/api/${projectId}/minidump/?sentry_key=${user}`;
+    return `${protocol}://${host}${port !== '' ? `:${port}` : ''}${path !== '' ? `/${path}` : ''
+      }/api/${projectId}/minidump/?sentry_key=${user}`;
   }
 
   /**
@@ -259,32 +252,16 @@ export class MinidumpUploader {
     return files.filter(file => file.endsWith('.dmp')).map(file => join(this._crashesDirectory, file));
   }
 
-  /** */
-  private async _parseBreakpadMultipartFile(path: string): Promise<MultipartResult> {
-    const stream = createReadStream(path);
+  /** Crudely parses the dump file from the Breakpad multipart file */
+  private async _parseBreakpadMultipartFile(file: Buffer): Promise<Buffer | undefined> {
+    const dumpStart = file.lastIndexOf('\nMDMP');
+    const dumpEnd = file.lastIndexOf('----------------------------');
 
-    return new Promise(resolve => {
-      const busboy = new Busboy({});
-      const output: MultipartResult = { fields: {}, files: {} };
+    if (dumpStart > 0 && dumpEnd > 0 && dumpEnd > dumpStart) {
+      return file.slice(dumpStart + 1, dumpEnd)
+    }
 
-      busboy.on('file', (fieldName, file) => {
-        const buffers: Buffer[] = [];
-        file.on('data', data => {
-          buffers.push(data);
-        });
-        file.on('end', () => {
-          output.files[fieldName] = Buffer.concat(buffers);
-        });
-      });
-      busboy.on('field', (fieldName, val) => {
-        output.fields[fieldName] = val;
-      });
-      busboy.on('finish', function() {
-        resolve(output);
-      });
-
-      stream.pipe(busboy);
-    });
+    return undefined
   }
 
   /**
@@ -356,7 +333,16 @@ export class MinidumpUploader {
 
     // Only add attachment if they are not rate limited
     if (!transport.isRateLimited('attachment')) {
-      const minidumpContent = (await readFileAsync(minidumpPath)) as Buffer;
+      let minidumpContent = (await readFileAsync(minidumpPath)) as Buffer;
+
+      // For Breakpad we need to get the dump from a multipart encoded file
+      if (this._type !== 'crashpad') {
+        const dump = await this._parseBreakpadMultipartFile(minidumpContent);
+        if (dump) {
+          minidumpContent = dump;
+        }
+      }
+
       const minidumpHeader = JSON.stringify({
         attachment_type: 'event.minidump',
         length: minidumpContent.length,
