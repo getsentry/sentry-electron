@@ -11,6 +11,7 @@
 - fix: Stop capturing `app.remote-` events to breadcrumbs because they are too verbose
 - fix: Delete Crashpad metadata file to fix errors (#341)
 - feat: Add `initialScope` to `globalExtra` (#340)
+- fix: Correctly handle Breakpad multipart dmp format (#343)
 
 ## 2.4.1
 
