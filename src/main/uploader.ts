@@ -256,7 +256,7 @@ export class MinidumpUploader {
   private async _parseBreakpadMultipartFile(file: Buffer): Promise<Buffer | undefined> {
     const binaryStart = file.lastIndexOf('Content-Type: application/octet-stream');
     if (binaryStart > 0) {
-      const dumpStart = file.lastIndexOf('MDMP', binaryStart);
+      const dumpStart = file.indexOf('MDMP', binaryStart);
       const dumpEnd = file.lastIndexOf('----------------------------');
 
       if (dumpStart > 0 && dumpEnd > 0 && dumpEnd > dumpStart) {
