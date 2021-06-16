@@ -139,10 +139,6 @@ describe('E2E Tests', () => {
 
       // tslint:disable-next-line
       it('Native crash in renderer process', async function() {
-        if (majorVersion === 9 && process.platform === 'linux') {
-          this.skip();
-          return;
-        }
         await context.start('sentry-basic', 'native-renderer');
         // It can take rather a long time to get the event on Mac
         await context.waitForEvents(testServer, 1, 20000);
@@ -157,11 +153,6 @@ describe('E2E Tests', () => {
 
       // tslint:disable-next-line
       it('Native crash in main process with Electron uploader', async function() {
-        if (majorVersion < 9 && process.platform === 'linux') {
-          this.skip();
-          return;
-        }
-
         // No crashpad uploader on Windows < v6
         if (majorVersion < 6 && process.platform === 'win32') {
           this.skip();
@@ -181,11 +172,6 @@ describe('E2E Tests', () => {
 
       // tslint:disable-next-line
       it('Native crash in renderer process with Electron uploader', async function() {
-        if (majorVersion < 9 && process.platform === 'linux') {
-          this.skip();
-          return;
-        }
-
         // No crashpad uploader on Windows < v6
         if (majorVersion < 6 && process.platform === 'win32') {
           this.skip();
@@ -214,11 +200,6 @@ describe('E2E Tests', () => {
 
       // tslint:disable-next-line
       it('Native crash in main process', async function() {
-        if (majorVersion === 9 && process.platform === 'linux') {
-          // TODO: Check why this fails on linux
-          this.skip();
-          return;
-        }
         await context.start('sentry-basic', 'native-main');
 
         // wait for the main process to die
@@ -321,11 +302,6 @@ describe('E2E Tests', () => {
 
       // tslint:disable-next-line
       it('Custom release string for minidump', async function() {
-        if (majorVersion === 9 && process.platform === 'linux') {
-          // TODO: Check why this fails on linux
-          this.skip();
-          return;
-        }
         await context.start('sentry-custom-release', 'native-renderer');
         // It can take rather a long time to get the event on Mac
         await context.waitForEvents(testServer, 1, 20000);
