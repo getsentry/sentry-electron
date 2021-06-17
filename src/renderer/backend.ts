@@ -205,7 +205,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
     setTimeout(() => {
       const timeout = setTimeout(() => {
         // eslint-disable-next-line no-console
-        console.warn('Could not connect to Sentry main process. Did you call init?');
+        console.warn('Could not connect to Sentry main process. Did you call init in the Electron main process?');
       }, PING_TIMEOUT);
 
       window.__SENTRY_IPC__?.pingMain(() => clearTimeout(timeout));

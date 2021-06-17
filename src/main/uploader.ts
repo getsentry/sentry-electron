@@ -1,7 +1,7 @@
 /* eslint-disable max-lines */
 import { API } from '@sentry/core';
 import { Event, Status, Transport } from '@sentry/types';
-import { Dsn, logger, timestampWithMs } from '@sentry/utils';
+import { Dsn, forget, logger, timestampWithMs } from '@sentry/utils';
 import { basename, join } from 'path';
 
 import { supportsCrashpadOnWindows } from '../electron-version';
@@ -197,11 +197,35 @@ export class MinidumpUploader {
 
   /** Scans the Crashpad directory structure for minidump files. */
   private async _scanCrashpadFolder(): Promise<string[]> {
+    forget(this._deleteCrashpadMetadataFile());
+
     // Crashpad moves minidump files directly into the 'completed' or 'reports' folder. We can
     // load them from there, upload to the server, and then delete it.
     const dumpDirectory = join(this._crashesDirectory, this._crashpadSubDirectory);
     const files = await readDirAsync(dumpDirectory);
     return files.filter(file => file.endsWith('.dmp')).map(file => join(dumpDirectory, file));
+  }
+
+  /** Attempts to remove the metadata file so Crashpad doesn't output `failed to stat report` errors to the console */
+  private async _deleteCrashpadMetadataFile(waitMs: number = 100): Promise<void> {
+    if (waitMs > 2000) {
+      return;
+    }
+
+    const metadataPath = join(this._crashesDirectory, 'metadata');
+    try {
+      await unlinkAsync(metadataPath);
+      logger.log('Deleted Crashpad metadata file', metadataPath);
+    } catch (e) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (e.code && e.code == 'EBUSY') {
+        // Since Crashpad probably still has the metadata file open, we make a few attempts to delete it, backing
+        // off and waiting longer each time.
+        setTimeout(async () => {
+          await this._deleteCrashpadMetadataFile(waitMs * 2);
+        }, waitMs);
+      }
+    }
   }
 
   /** Scans the Breakpad directory structure for minidump files. */
@@ -226,6 +250,21 @@ export class MinidumpUploader {
     );
 
     return files.filter(file => file.endsWith('.dmp')).map(file => join(this._crashesDirectory, file));
+  }
+
+  /** Crudely parses the dump file from the Breakpad multipart file */
+  private async _parseBreakpadMultipartFile(file: Buffer): Promise<Buffer | undefined> {
+    const binaryStart = file.lastIndexOf('Content-Type: application/octet-stream');
+    if (binaryStart > 0) {
+      const dumpStart = file.indexOf('MDMP', binaryStart);
+      const dumpEnd = file.lastIndexOf('----------------------------');
+
+      if (dumpStart > 0 && dumpEnd > 0 && dumpEnd > dumpStart) {
+        return file.slice(dumpStart, dumpEnd);
+      }
+    }
+
+    return undefined;
   }
 
   /**
@@ -297,7 +336,16 @@ export class MinidumpUploader {
 
     // Only add attachment if they are not rate limited
     if (!transport.isRateLimited('attachment')) {
-      const minidumpContent = (await readFileAsync(minidumpPath)) as Buffer;
+      let minidumpContent = (await readFileAsync(minidumpPath)) as Buffer;
+
+      // For Breakpad we need to get the dump from a multipart encoded file
+      if (this._type !== 'crashpad') {
+        const dump = await this._parseBreakpadMultipartFile(minidumpContent);
+        if (dump) {
+          minidumpContent = dump;
+        }
+      }
+
       const minidumpHeader = JSON.stringify({
         attachment_type: 'event.minidump',
         length: minidumpContent.length,

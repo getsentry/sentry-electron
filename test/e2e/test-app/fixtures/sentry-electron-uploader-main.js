@@ -1,4 +1,4 @@
-const { init, configureScope } = require('../../../../');
+const { init } = require('../../../../');
 
 init({
   appName: 'test-app',
@@ -6,6 +6,7 @@ init({
   debug: true,
   useCrashpadMinidumpUploader: true,
   useSentryMinidumpUploader: false,
+  initialScope: { user: 'some_user' },
   onFatalError: _error => {
     // We need this here otherwise we will get a dialog and travis will be stuck
   },

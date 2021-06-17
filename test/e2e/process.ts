@@ -1,4 +1,4 @@
-import { ChildProcess } from 'child_process';
+import { ChildProcess, spawnSync } from 'child_process';
 
 /** Handle for a running process. */
 export class ProcessStatus {
@@ -8,6 +8,11 @@ export class ProcessStatus {
   public async kill(): Promise<void> {
     if (await this.isRunning()) {
       this._chProcess.kill();
+    }
+
+    if (process.platform == 'win32') {
+      // The tests sometimes hang in CI on Windows because the Electron processes don't exit
+      spawnSync('taskkill /F /IM electron.exe', { shell: true });
     }
   }
 

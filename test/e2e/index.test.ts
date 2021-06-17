@@ -22,10 +22,11 @@ const tests = getTests(
   '6.1.12',
   '7.3.3',
   '8.5.5',
-  '9.4.2',
-  '10.3.1',
-  '11.2.2',
-  '12.0.0',
+  '9.4.4',
+  '10.4.7',
+  '11.4.8',
+  '12.0.11',
+  '13.1.2',
 );
 
 describe('Bundle Tests', () => {
@@ -138,10 +139,6 @@ describe('E2E Tests', () => {
 
       // tslint:disable-next-line
       it('Native crash in renderer process', async function() {
-        if (majorVersion === 9 && process.platform === 'linux') {
-          this.skip();
-          return;
-        }
         await context.start('sentry-basic', 'native-renderer');
         // It can take rather a long time to get the event on Mac
         await context.waitForEvents(testServer, 1, 20000);
@@ -161,7 +158,7 @@ describe('E2E Tests', () => {
           return;
         }
 
-        await context.start('sentry-electron-uploader-main', 'native-main');
+        await context.start('sentry-electron-uploader', 'native-main');
         // It can take rather a long time to get the event on Mac
         await context.waitForEvents(testServer, 1, 20000);
 
@@ -171,7 +168,10 @@ describe('E2E Tests', () => {
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(event.method).to.equal('minidump');
         expect(event.data.user?.id).to.equal('ABCDEF1234567890');
-        expect(event.data?.contexts?.runtime?.name).to.equal('Electron');
+
+        if (process.platform !== 'linux') {
+          expect(event.namespaced?.initialScope?.user).to.equal('some_user');
+        }
       });
 
       // tslint:disable-next-line
@@ -181,7 +181,7 @@ describe('E2E Tests', () => {
           return;
         }
 
-        await context.start('sentry-electron-uploader-renderer', 'native-renderer');
+        await context.start('sentry-electron-uploader', 'native-renderer');
         // It can take rather a long time to get the event on Mac
         await context.waitForEvents(testServer, 1, 20000);
 
@@ -190,8 +190,29 @@ describe('E2E Tests', () => {
 
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(event.method).to.equal('minidump');
+
+        if (process.platform !== 'linux') {
+          expect(event.namespaced?.initialScope?.user).to.equal('some_user');
+        }
+      });
+
+      it('GPU crash with Electron uploader', async function() {
+        if (majorVersion < 13 || process.platform === 'linux') {
+          this.skip();
+          return;
+        }
+
+        await context.start('sentry-electron-uploader', 'native-gpu');
+        await context.waitForEvents(testServer, 1, 20000);
+
+        expect(testServer.events.length).to.equal(1);
+        const event = testServer.events[0];
+
+        expect(event.sentry_key).to.equal(SENTRY_KEY);
+        expect(event.method).to.equal('minidump');
         expect(event.data.user?.id).to.equal('ABCDEF1234567890');
-        expect(event.data?.contexts?.runtime?.name).to.equal('Electron');
+
+        expect(event.namespaced?.initialScope?.user).to.equal('some_user');
       });
 
       it('JavaScript exception in main process with user data', async () => {
@@ -205,11 +226,6 @@ describe('E2E Tests', () => {
 
       // tslint:disable-next-line
       it('Native crash in main process', async function() {
-        if (majorVersion === 9 && process.platform === 'linux') {
-          // TODO: Check why this fails on linux
-          this.skip();
-          return;
-        }
         await context.start('sentry-basic', 'native-main');
 
         // wait for the main process to die
@@ -312,11 +328,6 @@ describe('E2E Tests', () => {
 
       // tslint:disable-next-line
       it('Custom release string for minidump', async function() {
-        if (majorVersion === 9 && process.platform === 'linux') {
-          // TODO: Check why this fails on linux
-          this.skip();
-          return;
-        }
         await context.start('sentry-custom-release', 'native-renderer');
         // It can take rather a long time to get the event on Mac
         await context.waitForEvents(testServer, 1, 20000);

@@ -4,8 +4,14 @@
 
 ## 2.5.0
 
-- feat: Update to latest Sentry SDKs (6.4.1) (#332)
+- feat: Update to latest Sentry SDKs (6.7.1) (#332 + #342)
 - fix: IPC breadcrumb serialization issue (#330)
+- fix: Improve error text when `init` has not been called in the main process (#222)
+- fix: Ensure `maxBreadcrumbs` is passed to `addBreadcrumb` to ensure number of breadcrumbs is limited
+- fix: Stop capturing `app.remote-` events to breadcrumbs because they are too verbose
+- fix: Delete Crashpad metadata file to fix errors (#341)
+- feat: Add `initialScope` to `globalExtra` (#340)
+- fix: Correctly handle Breakpad multipart dmp format (#343)
 
 ## 2.4.1
 
@@ -19,7 +25,7 @@
 
 ## 2.3.0
 
-- feat: Support for contextIsolation (#280)
+- feat: Support for `contextIsolation` (#280)
 
 ## 2.2.0
 
@@ -35,7 +41,7 @@
 
 ## 2.0.3
 
-- ref: Don't call beforeSend for internal minidump (#273)
+- ref: Don't call `beforeSend` for internal minidump (#273)
 
 ## 2.0.2
 
