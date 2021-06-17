@@ -11,7 +11,7 @@ import {
 import { NodeBackend } from '@sentry/node';
 import { Event, EventHint, ScopeContext, Severity, Transport, TransportOptions } from '@sentry/types';
 import { Dsn, forget, logger, SentryError } from '@sentry/utils';
-import { app, BrowserWindow, crashReporter, ipcMain } from 'electron';
+import { app, crashReporter, ipcMain } from 'electron';
 import { join } from 'path';
 
 import { CommonBackend, ElectronOptions, getNameFallback, IPC } from '../common';
@@ -170,24 +170,16 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         (scope as any)._scopeListeners = [];
 
-        // if we use the crashpad minidump uploader we have to set extra whenever the scope updates
-        if (this._options.useCrashpadMinidumpUploader === true) {
+        // If we use the Crashpad minidump uploader we have to set extra whenever the scope updates
+        //
+        // We do not currently set addExtraParameter on Linux because Breakpad is limited
+        if (this._options.useCrashpadMinidumpUploader === true && process.platform !== 'linux') {
           forget(
             this._getNativeUploaderEvent(scope).then(event => {
               // Update the extra parameters in the main process
               const mainParams = this._getNativeUploaderExtraParams(event);
               for (const key of Object.keys(mainParams)) {
                 crashReporter.addExtraParameter(key, mainParams[key]);
-              }
-
-              // Modify the event to point to renderer crash
-              event.extra = { ...event.extra, crashed_process: 'renderer' };
-              // Update the extra parameters in every renderer process
-              const rendererParams = this._getNativeUploaderExtraParams(event);
-              for (const window of BrowserWindow.getAllWindows()) {
-                if (!window.webContents.isDestroyed()) {
-                  window.webContents.send(IPC.EXTRA_PARAMS, rendererParams);
-                }
               }
             }),
           );
@@ -222,8 +214,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
    * }
    */
   private _getNativeUploaderExtraParams(event: Event): { [key: string]: string } {
-    // We chunk on Linux too because the built in chunking is limited to 160 * 127 byte parameters
-    const maxBytes = process.platform === 'linux' ? 120 : 20300;
+    const maxBytes = 20300;
 
     /** Max chunk sizes are in bytes so we can't chunk by characters or UTF8 could bite us.
      *

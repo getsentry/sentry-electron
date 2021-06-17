@@ -66,7 +66,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
         this._installNativeHandler(electron.crashReporter);
       }
 
-      this._hookIPC(electron.ipcRenderer, electron.crashReporter, electron.contextBridge);
+      this._hookIPC(electron.ipcRenderer, electron.contextBridge);
       this._pingMainProcess();
     } else {
       // We are in a renderer with contextIsolation = true
@@ -108,17 +108,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
   /**
    * Attaches IPC methods to window and uses contextBridge when available
    */
-  private _hookIPC(
-    ipcRenderer: Electron.IpcRenderer,
-    crashReporter: Electron.CrashReporter,
-    contextBridge: Electron.ContextBridge | undefined,
-  ): void {
-    ipcRenderer.on(IPC.EXTRA_PARAMS, (_, params: { [key: string]: string }) => {
-      for (const key of Object.keys(params)) {
-        crashReporter.addExtraParameter(key, params[key]);
-      }
-    });
-
+  private _hookIPC(ipcRenderer: Electron.IpcRenderer, contextBridge: Electron.ContextBridge | undefined): void {
     const ipcObject = {
       // We pass through JSON because in Electron >= 8, IPC uses v8's structured clone algorithm and throws errors if
       // objects have functions. Calling walk makes sure to break circular references.

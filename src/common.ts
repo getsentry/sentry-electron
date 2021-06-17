@@ -12,8 +12,6 @@ export const IPC = {
   EVENT: 'sentry-electron.event',
   /** IPC to capture a scope globally. */
   SCOPE: 'sentry-electron.scope',
-  /** IPC for sending native crash params to the renderers  */
-  EXTRA_PARAMS: 'sentry-electron.extra-params',
 };
 
 /**
