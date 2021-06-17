@@ -158,7 +158,7 @@ describe('E2E Tests', () => {
           return;
         }
 
-        await context.start('sentry-electron-uploader', 'native-main');
+        await context.start('sentry-electron-uploader-main', 'native-main');
         // It can take rather a long time to get the event on Mac
         await context.waitForEvents(testServer, 1, 20000);
 
@@ -167,9 +167,9 @@ describe('E2E Tests', () => {
 
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(event.method).to.equal('minidump');
-        expect(event.data.user?.id).to.equal('ABCDEF1234567890');
 
         if (process.platform !== 'linux') {
+          expect(event.data.user?.id).to.equal('ABCDEF1234567890');
           expect(event.namespaced?.initialScope?.user).to.equal('some_user');
         }
       });
@@ -192,6 +192,7 @@ describe('E2E Tests', () => {
         expect(event.method).to.equal('minidump');
 
         if (process.platform !== 'linux') {
+          expect(event.data.user?.id).to.equal('ABCDEF1234567890');
           expect(event.namespaced?.initialScope?.user).to.equal('some_user');
         }
       });
@@ -210,7 +211,6 @@ describe('E2E Tests', () => {
 
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(event.method).to.equal('minidump');
-        expect(event.data.user?.id).to.equal('ABCDEF1234567890');
 
         expect(event.namespaced?.initialScope?.user).to.equal('some_user');
       });
