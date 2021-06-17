@@ -192,7 +192,6 @@ describe('E2E Tests', () => {
         expect(event.method).to.equal('minidump');
 
         if (process.platform !== 'linux') {
-          expect(event.data.user?.id).to.equal('ABCDEF1234567890');
           expect(event.namespaced?.initialScope?.user).to.equal('some_user');
         }
       });

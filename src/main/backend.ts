@@ -78,6 +78,9 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   /** Uploader for minidump files. */
   private _uploader?: MinidumpUploader;
 
+  /** Flag that is true when extra params are being updated async */
+  private _updatingExtraParams: boolean;
+
   /** Creates a new Electron backend instance. */
   public constructor(options: ElectronOptions) {
     // Disable session tracking until we've decided how this should work with Electron
@@ -89,6 +92,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     this._scopeStore = new Store<Scope>(getCachePath(), 'scope_v2', new Scope());
     // We need to store the scope in a variable here so it can be attached to minidumps
     this._scopeLastRun = this._scopeStore.get();
+    this._updatingExtraParams = false;
 
     this._setupScopeListener();
 
@@ -170,24 +174,40 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         (scope as any)._scopeListeners = [];
 
+        this._scopeStore.set(scope);
+
         // If we use the Crashpad minidump uploader we have to set extra whenever the scope updates
         //
         // We do not currently set addExtraParameter on Linux because Breakpad is limited
         if (this._options.useCrashpadMinidumpUploader === true && process.platform !== 'linux') {
-          forget(
-            this._getNativeUploaderEvent(scope).then(event => {
-              // Update the extra parameters in the main process
-              const mainParams = this._getNativeUploaderExtraParams(event);
-              for (const key of Object.keys(mainParams)) {
-                crashReporter.addExtraParameter(key, mainParams[key]);
-              }
-            }),
-          );
+          this._updateExtraParams(scope);
         }
-
-        this._scopeStore.set(scope);
       });
     }
+  }
+
+  /** Updates Electron uploader extra params */
+  private _updateExtraParams(scope: Scope): void {
+    if (this._updatingExtraParams) {
+      return;
+    }
+
+    this._updatingExtraParams = true;
+
+    forget(
+      (async () => {
+        try {
+          const event = await this._getNativeUploaderEvent(scope);
+          // Update the extra parameters in the main process
+          const mainParams = this._getNativeUploaderExtraParams(event);
+          for (const key of Object.keys(mainParams)) {
+            crashReporter.addExtraParameter(key, mainParams[key]);
+          }
+        } finally {
+          this._updatingExtraParams = false;
+        }
+      })(),
+    );
   }
 
   /** Builds up an event to send with the native Electron uploader */
