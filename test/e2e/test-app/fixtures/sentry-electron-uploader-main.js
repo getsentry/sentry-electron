@@ -1,4 +1,4 @@
-const { init } = require('../../../../');
+const { init, configureScope } = require('../../../../');
 
 init({
   appName: 'test-app',

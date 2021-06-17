@@ -181,7 +181,7 @@ describe('E2E Tests', () => {
           return;
         }
 
-        await context.start('sentry-electron-uploader', 'native-renderer');
+        await context.start('sentry-electron-uploader-renderer', 'native-renderer');
         // It can take rather a long time to get the event on Mac
         await context.waitForEvents(testServer, 1, 20000);
 
@@ -202,7 +202,7 @@ describe('E2E Tests', () => {
           return;
         }
 
-        await context.start('sentry-electron-uploader', 'native-gpu');
+        await context.start('sentry-electron-uploader-main', 'native-gpu');
         await context.waitForEvents(testServer, 1, 20000);
 
         expect(testServer.events.length).to.equal(1);
