@@ -78,8 +78,8 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   /** Uploader for minidump files. */
   private _uploader?: MinidumpUploader;
 
-  /** Flag that is true when extra params are being updated async */
-  private _updatingExtraParams: boolean;
+  /** Counter used to ensure no race condition when updating extra params */
+  private _updateEpoch: number;
 
   /** Creates a new Electron backend instance. */
   public constructor(options: ElectronOptions) {
@@ -92,7 +92,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     this._scopeStore = new Store<Scope>(getCachePath(), 'scope_v2', new Scope());
     // We need to store the scope in a variable here so it can be attached to minidumps
     this._scopeLastRun = this._scopeStore.get();
-    this._updatingExtraParams = false;
+    this._updateEpoch = 0;
 
     this._setupScopeListener();
 
@@ -188,25 +188,19 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
 
   /** Updates Electron uploader extra params */
   private _updateExtraParams(scope: Scope): void {
-    if (this._updatingExtraParams) {
-      return;
-    }
-
-    this._updatingExtraParams = true;
+    this._updateEpoch += 1;
+    const currentEpoch = this._updateEpoch;
 
     forget(
-      (async () => {
-        try {
-          const event = await this._getNativeUploaderEvent(scope);
-          // Update the extra parameters in the main process
-          const mainParams = this._getNativeUploaderExtraParams(event);
-          for (const key of Object.keys(mainParams)) {
-            crashReporter.addExtraParameter(key, mainParams[key]);
-          }
-        } finally {
-          this._updatingExtraParams = false;
+      this._getNativeUploaderEvent(scope).then(event => {
+        if (currentEpoch !== this._updateEpoch) return;
+
+        // Update the extra parameters in the main process
+        const mainParams = this._getNativeUploaderExtraParams(event);
+        for (const key of Object.keys(mainParams)) {
+          crashReporter.addExtraParameter(key, mainParams[key]);
         }
-      })(),
+      }),
     );
   }
 
