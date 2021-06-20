@@ -1,4 +1,4 @@
-const { init } = require('../../../../');
+const { init, configureScope } = require('../../../../');
 
 init({
   appName: 'test-app',
@@ -11,3 +11,7 @@ init({
     // We need this here otherwise we will get a dialog and travis will be stuck
   },
 });
+
+if (process.type == 'browser') {
+  configureScope(scope => scope.setUser({ id: 'ABCDEF1234567890' }));
+}

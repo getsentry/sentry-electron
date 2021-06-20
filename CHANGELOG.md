@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- feat: Context and breadcrumbs sent via Crashpad for native crashes in main process when `useCrashpadMinidumpUploader`
+  enabled
+
 ## 2.5.0
 
 - feat: Update to latest Sentry SDKs (6.7.1) (#332 + #342)
