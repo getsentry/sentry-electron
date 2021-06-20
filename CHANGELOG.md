@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- feat: Scope and breadcrumbs sent via Crashpad for native crashes in main process when `useCrashpadMinidumpUploader`
+- feat: Context and breadcrumbs sent via Crashpad for native crashes in main process when `useCrashpadMinidumpUploader`
   enabled
 
 ## 2.5.0
