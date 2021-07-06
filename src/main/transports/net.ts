@@ -108,6 +108,8 @@ export class NetTransport extends Transports.BaseTransport {
         const req = net.request(options as Electron.ClientRequestConstructorOptions);
         req.on('error', reject);
         req.on('response', (res: Electron.IncomingMessage) => {
+          res.on('error', reject);
+
           const status = Status.fromHttpCode(res.statusCode);
           if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
             resolve({ status });
