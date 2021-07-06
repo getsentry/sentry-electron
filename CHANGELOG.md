@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.5.1
+
 - feat: Context and breadcrumbs sent via Crashpad for native crashes in main process when `useCrashpadMinidumpUploader`
   enabled
 - fix: Handle net response error event
