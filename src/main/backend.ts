@@ -97,8 +97,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     this._setupScopeListener();
 
     if (this._isNativeEnabled()) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      forget(this._installNativeHandler());
+      this._installNativeHandler();
     }
 
     this._installIPC();
@@ -271,7 +270,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   }
 
   /** Activates the Electron CrashReporter. */
-  private async _installNativeHandler(): Promise<void> {
+  private _installNativeHandler(): void {
     // We are only called by the frontend if the SDK is enabled and a valid DSN
     // has been configured. If no DSN is present, this indicates a programming
     // error.
