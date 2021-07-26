@@ -15,7 +15,7 @@ import { app, crashReporter, ipcMain } from 'electron';
 import { join } from 'path';
 
 import { CommonBackend, ElectronOptions, getNameFallback, IPC } from '../common';
-import { supportsGetPathCrashDumps, supportsRenderProcessGone } from '../electron-version';
+import { supportsGetPathCrashDumps, supportsRenderProcessGone, usesCrashpad } from '../electron-version';
 import { addEventDefaults } from './context';
 import { captureMinidump } from './index';
 import { normalizeEvent, normalizeUrl } from './normalize';
@@ -177,9 +177,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
         this._scopeStore.set(scope);
 
         // If we use the Crashpad minidump uploader we have to set extra whenever the scope updates
-        //
-        // We do not currently set addExtraParameter on Linux because Breakpad is limited
-        if (this._options.useCrashpadMinidumpUploader === true && process.platform !== 'linux') {
+        if (this._options.useCrashpadMinidumpUploader === true && usesCrashpad()) {
           this._updateExtraParams(scope);
         }
       });
@@ -280,10 +278,9 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
     }
 
-    // We don't add globalExtra for Linux because Breakpad doesn't support JSON like strings:
+    // We don't add globalExtra for older versions on Linux because Breakpad doesn't support JSON like strings:
     // https://github.com/electron/electron/issues/29711
-    const globalExtra =
-      process.platform !== 'linux' ? { sentry___initialScope: JSON.stringify(getScope()) } : undefined;
+    const globalExtra = usesCrashpad() ? { sentry___initialScope: JSON.stringify(getScope()) } : undefined;
 
     const dsn = new Dsn(dsnString);
 
