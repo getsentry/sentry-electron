@@ -203,7 +203,7 @@ describe('E2E Tests', () => {
       });
 
       it('GPU crash with Electron uploader', async function() {
-        if (majorVersion < 13 || (process.platform === 'linux' && majorVersion >= 15)) {
+        if (majorVersion < 13 || (process.platform === 'linux' && majorVersion < 15)) {
           this.skip();
           return;
         }
