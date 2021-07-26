@@ -36,9 +36,13 @@ function crashpadLinux(): boolean {
     return true;
   }
 
+  if (major < 15) {
+    return false;
+  }
+
   const { app } = require('electron');
 
-  return major >= 15 && app.commandLine.hasSwitch('enable-crashpad');
+  return app.commandLine.hasSwitch('enable-crashpad');
 }
 
 /** Is using Crashpad */
