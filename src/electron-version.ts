@@ -26,15 +26,6 @@ export function requiresNativeHandlerRenderer(): boolean {
 }
 
 /**
- * Electron >= 9 supports `app.getPath('crashDumps')` rather than
- * `crashReporter.getCrashesDirectory()`
- */
-export function supportsGetPathCrashDumps(): boolean {
-  const { major } = version();
-  return major >= 9;
-}
-
-/**
  * Uses Crashpad on Linux
  * https://github.com/electron/electron/issues/27859
  */
@@ -58,4 +49,13 @@ export function usesCrashpad(): boolean {
     (process.platform === 'win32' && major >= 6) ||
     (process.platform === 'linux' && crashpadLinux())
   );
+}
+
+/**
+ * Electron >= 9 supports `app.getPath('crashDumps')` rather than
+ * `crashReporter.getCrashesDirectory()`
+ */
+export function supportsGetPathCrashDumps(): boolean {
+  const { major } = version();
+  return major >= 9;
 }

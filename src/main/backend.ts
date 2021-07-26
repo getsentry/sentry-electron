@@ -176,7 +176,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
 
         this._scopeStore.set(scope);
 
-        // If we use the Crashpad minidump uploader we have to set extra whenever the scope updates
+        // If we use the Crashpad minidump uploader, we set extra whenever the scope updates
         if (this._options.useCrashpadMinidumpUploader === true && usesCrashpad()) {
           this._updateExtraParams(scope);
         }
@@ -278,7 +278,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
     }
 
-    // We don't add globalExtra for older versions on Linux because Breakpad doesn't support JSON like strings:
+    // We don't add globalExtra when Breakpad is in use because it doesn't support JSON like strings:
     // https://github.com/electron/electron/issues/29711
     const globalExtra = usesCrashpad() ? { sentry___initialScope: JSON.stringify(getScope()) } : undefined;
 
