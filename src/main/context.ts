@@ -1,18 +1,13 @@
-/* eslint-disable max-lines */
 import { Event } from '@sentry/types';
 import * as child from 'child_process';
 import { app } from 'electron';
 import { platform, release } from 'os';
 import { join } from 'path';
 
-import { getNameFallback } from '../common';
 import { readDirAsync, readFileAsync } from './fs';
 
-/** SDK version used in every event. */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-export const SDK_VERSION: string = require('../../package.json').version;
-
 export const SDK_NAME = 'sentry.javascript.electron';
+export const SDK_VERSION = '2.5.1';
 
 /** Operating system context information. */
 interface OsContext {
@@ -62,15 +57,15 @@ const LINUX_DISTROS: DistroFile[] = [
 const LINUX_VERSIONS: {
   [identifier: string]: (content: string) => string | undefined;
 } = {
-  alpine: content => content,
-  arch: content => matchFirst(/distrib_release=(.*)/, content),
-  centos: content => matchFirst(/release ([^ ]+)/, content),
-  debian: content => content,
-  fedora: content => matchFirst(/release (..)/, content),
-  mint: content => matchFirst(/distrib_release=(.*)/, content),
-  red: content => matchFirst(/release ([^ ]+)/, content),
-  suse: content => matchFirst(/VERSION = (.*)\n/, content),
-  ubuntu: content => matchFirst(/distrib_release=(.*)/, content),
+  alpine: (content) => content,
+  arch: (content) => matchFirst(/distrib_release=(.*)/, content),
+  centos: (content) => matchFirst(/release ([^ ]+)/, content),
+  debian: (content) => content,
+  fedora: (content) => matchFirst(/release (..)/, content),
+  mint: (content) => matchFirst(/distrib_release=(.*)/, content),
+  red: (content) => matchFirst(/release ([^ ]+)/, content),
+  suse: (content) => matchFirst(/VERSION = (.*)\n/, content),
+  ubuntu: (content) => matchFirst(/distrib_release=(.*)/, content),
 };
 
 /** Cached event prototype with default values. */
@@ -159,7 +154,7 @@ async function getLinuxInfo(): Promise<OsContext> {
     // are found. In case there are more than one file, we just stick with the
     // first one.
     const etcFiles = await readDirAsync('/etc');
-    const distroFile = LINUX_DISTROS.find(file => etcFiles.includes(file.name));
+    const distroFile = LINUX_DISTROS.find((file) => etcFiles.includes(file.name));
     if (!distroFile) {
       return linuxInfo;
     }
@@ -177,7 +172,7 @@ async function getLinuxInfo(): Promise<OsContext> {
     // distribution name (e.g. "red" for Red Hat). In case there is no match, we
     // just assume the first distribution in our list.
     const { distros } = distroFile;
-    linuxInfo.name = distros.find(d => contents.indexOf(getLinuxDistroId(d)) >= 0) || distros[0];
+    linuxInfo.name = distros.find((d) => contents.indexOf(getLinuxDistroId(d)) >= 0) || distros[0];
 
     // Based on the found distribution, we can now compute the actual version
     // number. This is different for every distribution, so several strategies
@@ -227,10 +222,20 @@ async function getOsContext(): Promise<OsContext> {
  * runtimes, limited device information, operating system context and defaults
  * for the release and environment.
  */
-async function getEventDefaults(appName: string | undefined): Promise<Event> {
-  const name = appName || getNameFallback();
+async function _getEventDefaults(release?: string): Promise<Event> {
+  const name = app.name || app.getName();
 
   return {
+    sdk: {
+      name: SDK_NAME,
+      packages: [
+        {
+          name: 'npm:@sentry/electron',
+          version: SDK_VERSION,
+        },
+      ],
+      version: SDK_VERSION,
+    },
     contexts: {
       app: {
         app_name: name,
@@ -259,50 +264,30 @@ async function getEventDefaults(appName: string | undefined): Promise<Event> {
         name: 'Electron',
         version: process.versions.electron,
       },
+      electron: {
+        crashed_process: 'browser',
+      },
     },
     environment: process.defaultApp ? 'development' : 'production',
-    extra: { crashed_process: 'browser' },
-    release: `${name.replace(/\W/g, '-')}@${app.getVersion()}`,
+    release: release || `${name.replace(/\W/g, '-')}@${app.getVersion()}`,
     user: { ip_address: '{{auto}}' },
   };
 }
 
-/** Merges the given event payload with SDK defaults. */
-export async function addEventDefaults(appName: string | undefined, event: Event): Promise<Event> {
+/**
+ * Computes and caches Electron-specific default fields for events.
+ *
+ * The event defaults include contexts for the Electron, Node and Chrome
+ * runtimes, limited device information, operating system context and defaults
+ * for the release and environment.
+ */
+export async function getEventDefaults(release?: string): Promise<Event> {
   // The event defaults are cached as long as the app is running. We create the
   // promise here synchronously to avoid multiple events computing them at the
   // same time.
   if (!defaultsPromise) {
-    defaultsPromise = getEventDefaults(appName);
+    defaultsPromise = _getEventDefaults(release);
   }
 
-  const { contexts = {} } = event;
-  const { contexts: defaultContexts = {}, ...defaults } = await defaultsPromise;
-
-  // Perform a manual deep merge of the defaults with the event data.
-  // TODO: Use a proper deep merge here, instead.
-  return {
-    ...defaults,
-    ...event,
-    sdk: {
-      name: SDK_NAME,
-      packages: [
-        {
-          name: 'npm:@sentry/electron',
-          version: SDK_VERSION,
-        },
-      ],
-      version: SDK_VERSION,
-    },
-    contexts: {
-      ...defaultContexts,
-      ...contexts,
-      app: { ...defaultContexts.app, ...contexts.app },
-      device: { ...defaultContexts.device, ...contexts.device },
-      os: { ...defaultContexts.os, ...contexts.os },
-      runtime: { ...defaultContexts.runtime, ...contexts.runtime },
-    },
-    extra: { ...defaults.extra, ...event.extra },
-    user: { ...defaults.user, ...event.user },
-  };
+  return await defaultsPromise;
 }

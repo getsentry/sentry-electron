@@ -11,3 +11,14 @@ stats.json
 # Eslint
 .eslintcache
 .vagrant
+
+src/main/metadata.ts
+
+
+/preload
+/renderer
+/main
+/common
+/index.*
+/integrations.*
+/ipc.*

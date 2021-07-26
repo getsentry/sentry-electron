@@ -35,7 +35,7 @@ async function mkdirAsync(path: string, mode: number): Promise<void> {
   // We cannot use util.promisify here because that was only introduced in Node
   // 8 and we need to support older Node versions.
   return new Promise<void>((res, reject) => {
-    mkdir(path, mode, err => {
+    mkdir(path, mode, (err) => {
       if (err) {
         reject(err);
       } else {
@@ -121,7 +121,7 @@ export function statAsync(path: string): Promise<Stats> {
  */
 export function unlinkAsync(path: string): Promise<void> {
   return new Promise<void>((res, reject) => {
-    unlink(path, err => {
+    unlink(path, (err) => {
       if (err) {
         reject(err);
         return;
@@ -151,7 +151,7 @@ export function readDirAsync(path: string): Promise<string[]> {
  */
 export function renameAsync(oldPath: string, newPath: string): Promise<void> {
   return new Promise<void>((res, reject) => {
-    rename(oldPath, newPath, err => {
+    rename(oldPath, newPath, (err) => {
       if (err) {
         reject(err);
         return;

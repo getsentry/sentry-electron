@@ -1,0 +1,8 @@
+const { join } = require('path');
+const { readFileSync, writeFileSync } = require('fs');
+
+const version = require('../package.json').version;
+const path = join(__dirname, '../src/main/context.ts');
+const code = readFileSync(path, { encoding: 'utf8' });
+const modified = code.replace(/SDK_VERSION = '[\d\.]*'/, `SDK_VERSION = '${version}'`);
+writeFileSync(path, modified);

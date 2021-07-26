@@ -5,12 +5,6 @@ import tmpdir = require('temporary-directory');
 import { ProcessStatus } from './process';
 import { TestServer } from './server';
 
-/**
- * Counter used to create unique app name so each test uses a unique
- *  'AppName Crashes' directory for native crashes.
- */
-let appInstanceCount = 0;
-
 /** A temporary directory handle. */
 interface TempDirectory {
   /** Absolute path to the directory. */
@@ -42,10 +36,6 @@ export class TestContext {
   /** Can check if the main process is running and kill it */
   public mainProcess?: ProcessStatus;
 
-  /** Unique app name. */
-  // eslint-disable-next-line no-plusplus
-  private readonly _appName: string = `test-app-${++appInstanceCount}`;
-
   /** Temporary directory that hosts the app's User Data. */
   private _tempDir?: TempDirectory;
 
@@ -60,7 +50,7 @@ export class TestContext {
    */
   public constructor(
     private readonly _electronPath: string,
-    private readonly _appPath: string = join(__dirname, 'test-app'),
+    private readonly _appPath: string = join(__dirname, 'test-apps', 'node-integration'),
   ) {}
 
   /** Starts the app. */
@@ -75,7 +65,6 @@ export class TestContext {
     const env: { [key: string]: string | undefined } = {
       ...process.env,
       DSN: 'http://37f8a2ee37c0409d8970bc7559c7c7e4@localhost:8123/277345',
-      E2E_APP_NAME: this._appName,
       E2E_TEST_SENTRY: sentryConfig,
       E2E_USERDATA_DIRECTORY: this._tempDir.path,
       ELECTRON_ENABLE_LOGGING: process.env.DEBUG,
@@ -90,7 +79,7 @@ export class TestContext {
     // eslint-disable-next-line no-extra-boolean-cast
     if (!!process.env.DEBUG) {
       childProcess.stdout.pipe(process.stdout);
-      childProcess.stderr.on('data', data => {
+      childProcess.stderr.on('data', (data) => {
         const str = data.toString();
         if (str.match(/^\[\d+:\d+/)) {
           return;
@@ -141,7 +130,7 @@ export class TestContext {
 
     let remaining = timeout;
     while (isPromise ? !(await method()) : !method()) {
-      await new Promise<void>(resolve => setTimeout(resolve, 100));
+      await new Promise<void>((resolve) => setTimeout(resolve, 100));
       remaining -= 100;
       if (remaining < 0) {
         throw new Error(message);

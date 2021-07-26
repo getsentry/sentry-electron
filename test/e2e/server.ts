@@ -19,7 +19,7 @@ export interface TestServerEvent {
   /** An optional minidump file, if included in the event. */
   dump_file?: boolean;
   /** API method used for submission */
-  method: 'envelope' | 'minidump';
+  method: 'envelope' | 'minidump' | 'store';
 }
 
 /**
@@ -50,7 +50,7 @@ export class TestServer {
     const router = new Router();
 
     // Handles the Sentry envelope endpoint
-    router.post('/api/:id/envelope/', async ctx => {
+    router.post('/api/:id/envelope/', async (ctx) => {
       const auth = (ctx.headers['x-sentry-auth'] as string) || '';
       const keyMatch = auth.match(/sentry_key=([a-f0-9]*)/);
       if (!keyMatch) {
@@ -74,7 +74,7 @@ export class TestServer {
     });
 
     // Handles the Sentry minidump endpoint
-    router.post('/api/:id/minidump/', async ctx => {
+    router.post('/api/:id/minidump/', async (ctx) => {
       if (ctx.request.is('multipart/*')) {
         const keyMatch = ctx.originalUrl.match(/sentry_key=([a-f0-9]*)/);
         if (!keyMatch) {
@@ -102,6 +102,30 @@ export class TestServer {
       }
     });
 
+    // Handles the Sentry store endpoint
+    router.post('/api/:id/store/', async (ctx) => {
+      const keyMatch = ctx.url.match(/sentry_key=([a-f0-9]*)/);
+
+      if (!keyMatch) {
+        ctx.status = 403;
+        ctx.body = 'Missing authentication header';
+        return;
+      }
+
+      const event = JSON.parse(ctx.request.body as string);
+
+      this.events.push({
+        data: event,
+        id: ctx.params.id,
+        sentry_key: keyMatch[1],
+        method: 'store',
+        dump_file: false,
+      });
+
+      ctx.headers['Content-Type'] = 'text/plain; charset=utf-8';
+      ctx.body = 'Success';
+    });
+
     app.use(router.routes());
 
     if (process.env.DEBUG) {
@@ -121,7 +145,7 @@ export class TestServer {
   public async stop(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       if (this._server) {
-        this._server.close(e => {
+        this._server.close((e) => {
           if (e) {
             reject(e);
           } else {
