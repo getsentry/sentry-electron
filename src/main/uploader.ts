@@ -65,7 +65,7 @@ export class MinidumpUploader {
     private readonly _transport: Transport,
   ) {
     this._type = usesCrashpad() ? 'crashpad' : 'breakpad';
-    this._crashpadSubDirectory = process.platform === 'darwin' ? 'completed' : 'reports';
+    this._crashpadSubDirectory = process.platform === 'win32' ? 'reports' : 'completed';
     this._knownPaths = [];
 
     this._api = new API(dsn);
