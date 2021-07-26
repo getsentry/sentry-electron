@@ -3,6 +3,8 @@ const url = require('url');
 
 const { app, BrowserWindow } = require('electron');
 
+app.commandLine.appendSwitch('enable-crashpad');
+
 require('./setup-env');
 require('./load-sentry');
 

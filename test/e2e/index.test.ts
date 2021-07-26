@@ -16,19 +16,21 @@ use(chaiAsPromised);
 const versions = process.env.ELECTRON_VERSION
   ? [process.env.ELECTRON_VERSION]
   : [
-      '1.8.8',
-      '2.0.18',
-      '3.1.13',
-      '4.2.12',
-      '5.0.13',
-      '6.1.12',
-      '7.3.3',
-      '8.5.5',
-      '9.4.4',
-      '10.4.7',
-      '11.4.8',
-      '12.0.11',
-      '13.1.2',
+      // '1.8.8',
+      // '2.0.18',
+      // '3.1.13',
+      // '4.2.12',
+      // '5.0.13',
+      // '6.1.12',
+      // '7.3.3',
+      // '8.5.5',
+      // '9.4.4',
+      // '10.4.7',
+      // '11.4.10',
+      // '12.0.15',
+      // '13.1.7',
+      // '14.0.0-beta.17',
+      '15.0.0-nightly.20210721',
     ];
 
 const tests = getTests(...versions);
@@ -172,7 +174,7 @@ describe('E2E Tests', () => {
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(event.method).to.equal('minidump');
 
-        if (process.platform !== 'linux') {
+        if (majorVersion >= 15 || process.platform !== 'linux') {
           expect(event.data.user?.id).to.equal('ABCDEF1234567890');
           expect(event.namespaced?.initialScope?.user).to.equal('some_user');
         }
@@ -195,7 +197,7 @@ describe('E2E Tests', () => {
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(event.method).to.equal('minidump');
 
-        if (process.platform !== 'linux') {
+        if (majorVersion >= 15 || process.platform !== 'linux') {
           expect(event.namespaced?.initialScope?.user).to.equal('some_user');
         }
       });

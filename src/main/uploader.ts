@@ -4,7 +4,7 @@ import { Event, Status, Transport } from '@sentry/types';
 import { Dsn, forget, logger, timestampWithMs } from '@sentry/utils';
 import { basename, join } from 'path';
 
-import { supportsCrashpadOnWindows } from '../electron-version';
+import { usesCrashpad } from '../electron-version';
 import { mkdirp, readDirAsync, readFileAsync, renameAsync, statAsync, unlinkAsync } from './fs';
 import { Store } from './store';
 import { NetTransport, SentryElectronRequest } from './transports/net';
@@ -64,8 +64,7 @@ export class MinidumpUploader {
     private readonly _cacheDirectory: string,
     private readonly _transport: Transport,
   ) {
-    const crashpadWindows = process.platform === 'win32' && supportsCrashpadOnWindows();
-    this._type = process.platform === 'darwin' || crashpadWindows ? 'crashpad' : 'breakpad';
+    this._type = usesCrashpad() ? 'crashpad' : 'breakpad';
     this._crashpadSubDirectory = process.platform === 'darwin' ? 'completed' : 'reports';
     this._knownPaths = [];
 
