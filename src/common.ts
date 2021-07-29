@@ -2,7 +2,6 @@ import { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
 import { BaseBackend } from '@sentry/core';
 import { NodeOptions } from '@sentry/node';
 import { Client, Event, Options, Scope } from '@sentry/types';
-import { SentryError } from '@sentry/utils';
 import { App } from 'electron';
 
 /**
@@ -23,14 +22,13 @@ import { App } from 'electron';
 export interface ElectronOptions extends Options, BrowserOptions, NodeOptions {
   /**
    * The name of the application. Primarily used for crash directory naming. If this property is not supplied,
-   * it will be retrieved using the Electron `app.getName/name` API. If you disable the Electron `remote` module in
-   * the renderer, this property is required.
+   * it will be retrieved using the Electron `app.getName/name` API.
    */
   appName?: string;
 
   /**
-   * Enables crash reporting for JavaScript errors in this process. Defaults to
-   * `true`.
+   * Enables crash reporting for JavaScript errors in this process.
+   * Defaults to `true`.
    */
   enableJavaScript?: boolean;
 
@@ -114,36 +112,14 @@ declare interface CrossApp extends App {
   getName(): string;
 }
 
-/** Get the name of an electron app for <v5 and v7< */
+/**
+ * Get the name of the app
+ */
 export function getNameFallback(): string {
-  if (typeof require === 'undefined') {
-    throw new SentryError(
-      'Could not require("electron") to get appName. Please ensure you pass `appName` to Sentry options',
-    );
-  }
+  const { app } = require('electron');
 
-  const electron = require('electron');
-
-  // if we're in the main process
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  if (electron && electron.app) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const appMain = electron.app as CrossApp;
-    return appMain.name || appMain.getName();
-  }
-
-  // We're in the renderer process but the remote module is not available
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  if (!electron || !electron.remote) {
-    throw new SentryError(
-      'The Electron `remote` module was not available to get appName. Please ensure you pass `appName` to Sentry options',
-    );
-  }
-
-  // Remote is available so get the app name
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  const a = electron.remote.app as CrossApp;
-  return a.name || a.getName();
+  const appMain = app as CrossApp;
+  return appMain.name || appMain.getName();
 }
 
 /** Common interface for Electron backends. */

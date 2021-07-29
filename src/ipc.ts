@@ -1,6 +1,4 @@
 export const IPC = {
-  /** IPC to ping the main process when initializing in the renderer. */
-  PING: 'sentry-electron.ping',
   /** IPC to send a captured event (exception or message) to Sentry. */
   EVENT: 'sentry-electron.event',
   /** IPC to capture a scope globally. */
@@ -15,7 +13,6 @@ declare global {
     __SENTRY_IPC__?: {
       sendScope: (scope: string) => void;
       sendEvent: (event: string) => void;
-      pingMain: (success: () => void) => void;
     };
   }
 }

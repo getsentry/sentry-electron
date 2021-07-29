@@ -5,9 +5,6 @@ import { walk as walkUtil } from '@sentry/utils';
 
 import { CommonBackend, ElectronOptions } from '../common';
 
-/** Timeout used for registering with the main process. */
-const PING_TIMEOUT = 500;
-
 /** Walks an object to perform a normalization on it with a maximum depth of 50 */
 function walk(key: string, value: any): any {
   return walkUtil(key, value, 50);
@@ -30,13 +27,13 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
       console.warn(
         `IPC communication to the main process has not been exposed.
 
-This is likely due failed preload injection which can be cause by a number of issues:
+This can be caused by failed preload injection which can be due to:
  1 - You have not called 'init' in the main process
  2 - Preload scripts are not being injected into the correct session
  3 - Preload scripts are being overwritten
 
 @sentry/electron automatically injects preload scripts via the Electron session.setPreloads() API
-and does this by default for the defaultSession.
+and does this by default for session.defaultSession.
 https://www.electronjs.org/docs/api/session#sessetpreloadspreloads
 
 If you need preload scripts injected for other sessions, you can pass a function to 'init' in
@@ -63,7 +60,6 @@ session.setPreloads([...sentryPreloads, myPreloadPath]);
     }
 
     this._setupScopeListener();
-    this._pingMainProcess();
   }
 
   /**
@@ -102,23 +98,6 @@ session.setPreloads([...sentryPreloads, myPreloadPath]);
         window.__SENTRY_IPC__?.sendScope(JSON.stringify(updatedScope, walk));
         scope.clearBreadcrumbs();
       });
-    }
-  }
-
-  /**
-   * Pings the main process to confirm Sentry SDK has been enabled there
-   */
-  private _pingMainProcess(): void {
-    // Checks if the main processes is available and logs a warning if not.
-    if (window.__SENTRY_IPC__) {
-      setTimeout(() => {
-        const timeout = setTimeout(() => {
-          // eslint-disable-next-line no-console
-          console.warn('Could not connect to Sentry main process. Did you call init in the Electron main process?');
-        }, PING_TIMEOUT);
-
-        window.__SENTRY_IPC__?.pingMain(() => clearTimeout(timeout));
-      }, PING_TIMEOUT);
     }
   }
 }
