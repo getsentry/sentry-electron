@@ -6,7 +6,7 @@ import { join } from 'path';
 import { TestContext } from './context';
 import { downloadElectron } from './download';
 import { TestServer } from './server';
-import { getLastFrame, getTests } from './utils';
+import { getLastFrame } from './utils';
 
 const SENTRY_KEY = '37f8a2ee37c0409d8970bc7559c7c7e4';
 
@@ -30,7 +30,7 @@ const versions = process.env.ELECTRON_VERSION
       '13.1.2',
     ];
 
-const tests = getTests(...versions);
+const tests = versions.map(v => [v, 'x64']);
 
 describe('Bundle Tests', () => {
   it('Webpack contextIsolation app', async () => {

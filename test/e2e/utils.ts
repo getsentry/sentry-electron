@@ -17,23 +17,6 @@ export function getLastFrame(event: Event): StackFrame {
   return frames.length ? frames[frames.length - 1] : { filename: undefined };
 }
 
-/** Gets the required architecture version pairs for the current platform */
-export function getTests(...versions: string[]): Array<[string, string]> {
-  return versions.reduce(
-    (prev, curr) =>
-      prev.concat(
-        // We dont run both architectures on Windows CI because it takes too long
-        process.platform === 'win32' && !isWindowsOnCI()
-          ? [
-              [curr, 'x64'],
-              // [curr, 'ia32'],
-            ]
-          : [[curr, 'x64']],
-      ),
-    [] as Array<[string, string]>,
-  );
-}
-
 export async function delay(timeout: number): Promise<void> {
   return new Promise<void>(resolve => {
     setTimeout(() => {
