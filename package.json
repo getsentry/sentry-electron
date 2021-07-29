@@ -26,6 +26,7 @@
     "clean": "rimraf dist coverage esm",
     "preexample": "run-s clean build",
     "example": "electron example",
+    "prelint": "yarn prebuild",
     "lint": "run-s lint:prettier lint:eslint",
     "lint:prettier": "prettier --check \"{src,test}/**/*.ts\"",
     "lint:eslint": "eslint . --cache --format stylish",
