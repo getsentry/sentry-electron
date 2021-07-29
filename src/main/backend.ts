@@ -112,7 +112,8 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     this._installIPC();
 
     app.once('ready', () => {
-      this._addPreloadToSessions(options.sessions ? options.sessions() : [session.defaultSession]);
+      const sessions = options.preloadSessions?.() || [session.defaultSession];
+      this._addPreloadsToSessions(sessions);
     });
   }
 
@@ -176,15 +177,18 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   /**
    * Adds required preload scripts to the passed sessions
    */
-  private _addPreloadToSessions(sessions: Session[]): void {
+  private _addPreloadsToSessions(sessions: Session[]): void {
     const preloads = [getHookIPC()];
 
+    // Some older versions of Electron require the native crash reporter starting in the renderer process
     if (requiresNativeHandlerRenderer()) {
       preloads.unshift(getStartNative(this._appName));
     }
 
     for (const sesh of sessions) {
-      sesh.setPreloads(preloads);
+      // Fetch any existing preloads so we don't overwrite them
+      const existing = sesh.getPreloads();
+      sesh.setPreloads([...preloads, ...existing]);
     }
   }
 

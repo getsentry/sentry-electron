@@ -28,7 +28,35 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
     if (window.__SENTRY_IPC__ == undefined) {
       // eslint-disable-next-line no-console
       console.warn(
-        'contextIsolation is enabled but IPC has not been exposed. Did you call "init" in the preload script?',
+        `IPC to the main process has not been exposed.
+This is likely due failed preload injection which can be cause by two issues
+ 1 - Preload scripts are not being injected into the correct sessions
+ 2 - Preload scripts are being overwritten
+
+@sentry/electron automatically injects preload scripts via the Electron session.setPreloads() API
+and does this by default for the defaultSession.
+https://www.electronjs.org/docs/api/session#sessetpreloadspreloads
+
+If you need preload scripts injected for other sessions, you can pass a function to 'init' in
+the main process that returns an array of sessions to inject into:
+
+const Sentry = require('@sentry/electron');
+const { session } = require('electron');
+
+Sentry.init({
+  dsn: '__DSN__',
+  preloadSessions: () => {
+    return [session.fromPartition('persist:something'), session.defaultSession];
+  }
+})
+
+If you are already using the session.setPreloads() API, you have most likely overwritten the scripts
+added by @sentry/electron. You can avoid this by appending your preload script after the existing entries:
+
+const myPreloadPath = '...';
+const sentryPreloads = session.getPreloads();
+session.setPreloads([...sentryPreloads, myPreloadPath]);
+`,
       );
     }
 
@@ -80,13 +108,15 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
    */
   private _pingMainProcess(): void {
     // Checks if the main processes is available and logs a warning if not.
-    setTimeout(() => {
-      const timeout = setTimeout(() => {
-        // eslint-disable-next-line no-console
-        console.warn('Could not connect to Sentry main process. Did you call init in the Electron main process?');
-      }, PING_TIMEOUT);
+    if (window.__SENTRY_IPC__) {
+      setTimeout(() => {
+        const timeout = setTimeout(() => {
+          // eslint-disable-next-line no-console
+          console.warn('Could not connect to Sentry main process. Did you call init in the Electron main process?');
+        }, PING_TIMEOUT);
 
-      window.__SENTRY_IPC__?.pingMain(() => clearTimeout(timeout));
-    }, PING_TIMEOUT);
+        window.__SENTRY_IPC__?.pingMain(() => clearTimeout(timeout));
+      }, PING_TIMEOUT);
+    }
   }
 }
