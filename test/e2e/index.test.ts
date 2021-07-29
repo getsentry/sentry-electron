@@ -58,11 +58,6 @@ describe('E2E Tests', () => {
       return;
     }
 
-    if ((majorVersion === 4 || majorVersion === 3) && process.platform === 'win32') {
-      // We skip electron version 3-4 on Windows as these versions don't exit correctly and stay open consuming CPU
-      return;
-    }
-
     describe(`Electron ${version} ${arch}`, () => {
       let context: TestContext;
 
