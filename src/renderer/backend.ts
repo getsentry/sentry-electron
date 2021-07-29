@@ -5,6 +5,9 @@ import { walk as walkUtil } from '@sentry/utils';
 
 import { CommonBackend, ElectronOptions } from '../common';
 
+/** Timeout used for registering with the main process. */
+const PING_TIMEOUT = 500;
+
 /** Walks an object to perform a normalization on it with a maximum depth of 50 */
 function walk(key: string, value: any): any {
   return walkUtil(key, value, 50);
@@ -30,6 +33,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
     }
 
     this._setupScopeListener();
+    this._pingMainProcess();
   }
 
   /**
@@ -69,5 +73,20 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
         scope.clearBreadcrumbs();
       });
     }
+  }
+
+  /**
+   * Pings the main process to confirm Sentry SDK has been enabled there
+   */
+  private _pingMainProcess(): void {
+    // Checks if the main processes is available and logs a warning if not.
+    setTimeout(() => {
+      const timeout = setTimeout(() => {
+        // eslint-disable-next-line no-console
+        console.warn('Could not connect to Sentry main process. Did you call init in the Electron main process?');
+      }, PING_TIMEOUT);
+
+      window.__SENTRY_IPC__?.pingMain(() => clearTimeout(timeout));
+    }, PING_TIMEOUT);
   }
 }

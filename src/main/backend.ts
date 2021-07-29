@@ -21,7 +21,7 @@ import {
   supportsRenderProcessGone,
 } from '../electron-version';
 import { IPC } from '../ipc';
-import { hookIPCPath, startNativePath } from '../preload/loader';
+import { getHookIPC, getStartNative } from '../preload/loader';
 import { addEventDefaults } from './context';
 import { captureMinidump } from './index';
 import { normalizeEvent, normalizeUrl } from './normalize';
@@ -106,14 +106,13 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     this._setupScopeListener();
 
     if (this._isNativeEnabled()) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       forget(this._installNativeHandler());
     }
 
     this._installIPC();
 
     app.once('ready', () => {
-      this._addPreloadToSessions(options.session);
+      this._addPreloadToSessions(options.sessions ? options.sessions() : [session.defaultSession]);
     });
   }
 
@@ -175,15 +174,13 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   }
 
   /**
-   *
+   * Adds required preload scripts to the passed sessions
    */
-  private _addPreloadToSessions(option?: Session | Session[]): void {
-    const sessions = Array.isArray(option) ? option : [option || session.defaultSession];
-
-    const preloads = [hookIPCPath()];
+  private _addPreloadToSessions(sessions: Session[]): void {
+    const preloads = [getHookIPC()];
 
     if (requiresNativeHandlerRenderer()) {
-      preloads.unshift(startNativePath(this._appName));
+      preloads.unshift(getStartNative(this._appName));
     }
 
     for (const sesh of sessions) {

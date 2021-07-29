@@ -61,11 +61,11 @@ export interface ElectronOptions extends Options, BrowserOptions, NodeOptions {
   enableUnresponsive?: boolean;
 
   /**
-   * The Electron session to inject preload.
+   * Callback to fetch the sessions to inject preloads
    *
-   * Defaults to the default session
+   * Defaults to `session.defaultSession`
    */
-  session?: Electron.Session | Electron.Session[];
+  sessions?(): Electron.Session[];
 
   /**
    * Callback to allow custom naming of renderer processes
