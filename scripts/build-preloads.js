@@ -2,17 +2,21 @@ const { readFileSync, writeFileSync } = require('fs');
 const { join } = require('path');
 const ts = require('typescript');
 
-const ipcModule = readFileSync(join(__dirname, '../src/ipc.ts'), { encoding: 'utf8' });
+function readFile(path) {
+  return readFileSync(join(__dirname, path), { encoding: 'utf8' });
+}
+
+const ipcModule = readFile('../src/ipc.ts');
 
 function transpileFile(path) {
-  let file = readFileSync(join(__dirname, path), { encoding: 'utf8' })
+  let file = readFile(path)
     // Since we're not doing proper bundling we need to replace the ipc import with the code 😋!
     .replace("import { IPC } from '../ipc';", ipcModule);
 
-  return ts.transpile(file, { removeComments: true, module: ts.ModuleKind.CommonJS }).replace(/[\n\r]/g, ' ');
+  return ts.transpile(file, { removeComments: true });
 }
 
-const template = readFileSync(join(__dirname, '../src/preload/bundled.template.ts'), { encoding: 'utf8' });
+const template = readFile('../src/preload/bundled.template.ts');
 
 writeFileSync(
   join(__dirname, '../src/preload/bundled.ts'),

@@ -13,7 +13,7 @@ window.__SENTRY_IPC__ = ipcObject;
 if (contextBridge) {
   // This will fail if contextIsolation is not enabled
   try {
-    contextBridge?.exposeInMainWorld('__SENTRY_IPC__', ipcObject);
+    contextBridge.exposeInMainWorld('__SENTRY_IPC__', ipcObject);
   } catch (e) {
     //
   }

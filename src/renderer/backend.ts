@@ -25,36 +25,38 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
     if (window.__SENTRY_IPC__ == undefined) {
       // eslint-disable-next-line no-console
       console.warn(
-        `IPC communication to the main process has not been exposed.
+        `It looks like preload code injection has failed which can be caused by a number of issues
 
-This can be caused by failed preload injection which can be due to:
- 1 - You have not called 'init' in the main process
- 2 - Preload scripts are not being injected into the correct session
- 3 - Preload scripts are being overwritten
+- Ensure you have called 'Sentry.init' in the main process!
 
-@sentry/electron automatically injects preload scripts via the Electron session.setPreloads() API
-and does this by default for session.defaultSession.
-https://www.electronjs.org/docs/api/session#sessetpreloadspreloads
+- If you are using sessions, ensure preload scripts are being injected into the correct session
 
-If you need preload scripts injected for other sessions, you can pass a function to 'init' in
-the main process that returns an array of sessions to inject into:
+    @sentry/electron automatically injects preload scripts via the Electron session.setPreloads() API
+    https://www.electronjs.org/docs/api/session#sessetpreloadspreloads
+    It does this by default for the defaultSession.
 
-const Sentry = require('@sentry/electron');
-const { session } = require('electron');
+    If you need preload scripts injected for other sessions, you can pass a function to 'init' in
+    the main process that returns an array of sessions to add preload scripts to:
 
-Sentry.init({
-  dsn: '__DSN__',
-  preloadSessions: () => {
-    return [session.fromPartition('persist:something'), session.defaultSession];
-  }
-})
+    const Sentry = require('@sentry/electron');
+    const { session } = require('electron');
 
-If you are already using the session.setPreloads() API, you have most likely overwritten the scripts
-added by @sentry/electron. You can avoid this by appending your preload script after the existing entries:
+    Sentry.init({
+      dsn: '__DSN__',
+      preloadSessions: () => {
+        return [session.fromPartition('persist:something'), session.defaultSession];
+      }
+    })
 
-const myPreloadPath = './some/preload/path/preload.js';
-const sentryPreloads = session.getPreloads();
-session.setPreloads([...sentryPreloads, myPreloadPath]);
+- Ensure preload scripts are not being overwritten
+
+    If you are already using the session.setPreloads() API, you could be overwriting the scripts added
+    by @sentry/electron. You can avoid this by appending your own preload script after the existing
+    entries:
+
+    const myPreloadPath = './some/preload/path/preload.js';
+    const sentryPreloads = session.getPreloads();
+    session.setPreloads([...sentryPreloads, myPreloadPath]);
 `,
       );
     }
