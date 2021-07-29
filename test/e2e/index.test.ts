@@ -16,7 +16,7 @@ use(chaiAsPromised);
 const versions = process.env.ELECTRON_VERSION
   ? [process.env.ELECTRON_VERSION]
   : [
-      '1.8.8',
+      // '1.8.8',
       '2.0.18',
       '3.1.13',
       '4.2.12',
@@ -299,17 +299,6 @@ describe('E2E Tests', () => {
         expect(event.data.tags?.a).to.equal('b');
         expect(event.data.contexts?.server).to.include({ id: '2' });
         expect(event.data.fingerprint).to.include('abcd');
-      });
-
-      it('Loaded via preload script with nodeIntegration disabled', async () => {
-        const electronPath = await downloadElectron(version, arch);
-        context = new TestContext(electronPath, join(__dirname, 'preload-app'));
-        await context.start();
-        await context.waitForEvents(testServer, 1);
-        const event = testServer.events[0];
-
-        expect(testServer.events.length).to.equal(1);
-        expect(event.dump_file).to.be.false;
       });
 
       it('Custom release string for JavaScript error', async () => {

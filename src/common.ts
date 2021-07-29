@@ -5,15 +5,6 @@ import { Client, Event, Options, Scope } from '@sentry/types';
 import { SentryError } from '@sentry/utils';
 import { App } from 'electron';
 
-export const IPC = {
-  /** IPC to ping the main process when initializing in the renderer. */
-  PING: 'sentry-electron.ping',
-  /** IPC to send a captured event (exception or message) to Sentry. */
-  EVENT: 'sentry-electron.event',
-  /** IPC to capture a scope globally. */
-  SCOPE: 'sentry-electron.scope',
-};
-
 /**
  * Configuration options for {@link ElectronOptions}.
  *
@@ -68,6 +59,13 @@ export interface ElectronOptions extends Options, BrowserOptions, NodeOptions {
    * Defaults to `true`.
    */
   enableUnresponsive?: boolean;
+
+  /**
+   * The Electron session to inject preload.
+   *
+   * Defaults to the default session
+   */
+  session?: Electron.Session | Electron.Session[];
 
   /**
    * Callback to allow custom naming of renderer processes

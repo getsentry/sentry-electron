@@ -11,11 +11,17 @@ import {
 import { NodeBackend } from '@sentry/node';
 import { Event, EventHint, ScopeContext, Severity, Transport, TransportOptions } from '@sentry/types';
 import { Dsn, forget, logger, SentryError } from '@sentry/utils';
-import { app, crashReporter, ipcMain } from 'electron';
+import { app, crashReporter, ipcMain, Session, session } from 'electron';
 import { join } from 'path';
 
-import { CommonBackend, ElectronOptions, getNameFallback, IPC } from '../common';
-import { supportsGetPathCrashDumps, supportsRenderProcessGone } from '../electron-version';
+import { CommonBackend, ElectronOptions, getNameFallback } from '../common';
+import {
+  requiresNativeHandlerRenderer,
+  supportsGetPathCrashDumps,
+  supportsRenderProcessGone,
+} from '../electron-version';
+import { IPC } from '../ipc';
+import { hookIPCPath, startNativePath } from '../preload/loader';
 import { addEventDefaults } from './context';
 import { captureMinidump } from './index';
 import { normalizeEvent, normalizeUrl } from './normalize';
@@ -81,6 +87,8 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   /** Counter used to ensure no race condition when updating extra params */
   private _updateEpoch: number;
 
+  private _appName: string;
+
   /** Creates a new Electron backend instance. */
   public constructor(options: ElectronOptions) {
     // Disable session tracking until we've decided how this should work with Electron
@@ -92,6 +100,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     this._scopeStore = new Store<Scope>(getCachePath(), 'scope_v2', new Scope());
     // We need to store the scope in a variable here so it can be attached to minidumps
     this._scopeLastRun = this._scopeStore.get();
+    this._appName = this._options.appName || getNameFallback();
     this._updateEpoch = 0;
 
     this._setupScopeListener();
@@ -102,6 +111,10 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     }
 
     this._installIPC();
+
+    app.once('ready', () => {
+      this._addPreloadToSessions(options.session);
+    });
   }
 
   /**
@@ -159,6 +172,23 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       return new this._options.transport(transportOptions);
     }
     return new NetTransport(transportOptions);
+  }
+
+  /**
+   *
+   */
+  private _addPreloadToSessions(option?: Session | Session[]): void {
+    const sessions = Array.isArray(option) ? option : [option || session.defaultSession];
+
+    const preloads = [hookIPCPath()];
+
+    if (requiresNativeHandlerRenderer()) {
+      preloads.unshift(startNativePath(this._appName));
+    }
+
+    for (const sesh of sessions) {
+      sesh.setPreloads(preloads);
+    }
   }
 
   /**
@@ -293,7 +323,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     crashReporter.start({
       companyName: '',
       ignoreSystemCrashHandler: true,
-      productName: this._options.appName || getNameFallback(),
+      productName: this._appName,
       submitURL: MinidumpUploader.minidumpUrlFromDsn(dsn),
       uploadToServer: this._options.useCrashpadMinidumpUploader || false,
       compress: true,

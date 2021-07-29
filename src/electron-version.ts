@@ -21,6 +21,10 @@ export function supportsRenderProcessGone(): boolean {
  * Electron < 9 requires `crashReporter.start()` in the renderer
  */
 export function requiresNativeHandlerRenderer(): boolean {
+  if (process.platform == 'darwin') {
+    return false;
+  }
+
   const { major } = version();
   return major < 9;
 }

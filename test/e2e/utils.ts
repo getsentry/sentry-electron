@@ -26,7 +26,7 @@ export function getTests(...versions: string[]): Array<[string, string]> {
         process.platform === 'win32' && !isWindowsOnCI()
           ? [
               [curr, 'x64'],
-              [curr, 'ia32'],
+              // [curr, 'ia32'],
             ]
           : [[curr, 'x64']],
       ),

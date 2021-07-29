@@ -16,18 +16,6 @@ module.exports = [
   {
     mode: 'production',
     devtool: 'source-map',
-    entry: './src/sentry.js',
-    target: 'electron-renderer',
-    output: {
-      libraryTarget: 'commonjs2',
-      filename: 'preload.js',
-    },
-    node: false,
-    externals: ['electron'],
-  },
-  {
-    mode: 'production',
-    devtool: 'source-map',
     entry: './src/renderer.js',
     target: 'web',
     output: {
