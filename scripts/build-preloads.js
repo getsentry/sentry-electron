@@ -13,5 +13,6 @@ writeFileSync(
   join(__dirname, '../src/preload/bundled.ts'),
   `export const hookIPC = \`${transpileFile('../src/preload/hook-ipc.ts')}\`;
 
-export const startNative = \`${transpileFile('../src/preload/start-native.ts')}\`;`,
+export const startNative = \`${transpileFile('../src/preload/start-native.ts')}\`;
+`,
 );
