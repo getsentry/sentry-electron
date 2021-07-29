@@ -1,4 +1,5 @@
 import { parseSemver } from '@sentry/utils';
+import { app, crashReporter } from 'electron';
 
 /**
  * Parsed Electron version
@@ -41,7 +42,11 @@ export function supportsCrashpadOnWindows(): boolean {
  * Electron >= 9 supports `app.getPath('crashDumps')` rather than
  * `crashReporter.getCrashesDirectory()`
  */
-export function supportsGetPathCrashDumps(): boolean {
+export function getCrashedDirectory(): string {
   const { major } = version();
-  return major >= 9;
+  return major >= 9
+    ? app.getPath('crashDumps')
+    : // unsafe member access required because of older versions of Electron
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      (crashReporter as any).getCrashesDirectory();
 }

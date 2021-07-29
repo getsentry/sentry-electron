@@ -2,8 +2,6 @@ import { app } from 'electron';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 
-import { ElectronOptions, getNameFallback } from '../common';
-
 // These keys get replaced with transpiled preload scripts via npm prebuild script
 export const bundledCode = {
   'hook-ipc.js': `{{hook-ipc.js}}`,
@@ -11,11 +9,11 @@ export const bundledCode = {
 };
 
 /**
- * Drops preload code to userData and gets the path
+ * Drops preload code into userData and gets the path
  */
-export function dropPreloadAndGetPath(name: 'hook-ipc.js' | 'start-native.js', options: ElectronOptions): string {
+export function dropPreloadAndGetPath(name: 'hook-ipc.js' | 'start-native.js'): string {
   const path = join(app.getPath('userData'), name);
-  const code = bundledCode[name].replace('{{appName}}', options.appName || getNameFallback());
+  const code = bundledCode[name].replace('{{appName}}', app.getName());
   writeFileSync(path, code);
   return path;
 }

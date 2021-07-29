@@ -73,7 +73,7 @@ export class MainClient extends BaseClient<MainBackend, ElectronOptions> impleme
     return super._prepareEvent(event, scope, hint).then((filledEvent: Event | null) =>
       new SyncPromise<Event>(async resolve => {
         if (filledEvent) {
-          resolve(normalizeEvent(await addEventDefaults(this._options.appName, filledEvent)));
+          resolve(normalizeEvent(await addEventDefaults(filledEvent)));
         } else {
           resolve(filledEvent);
         }

@@ -2,7 +2,6 @@ import { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
 import { BaseBackend } from '@sentry/core';
 import { NodeOptions } from '@sentry/node';
 import { Client, Event, Options, Scope } from '@sentry/types';
-import { App } from 'electron';
 
 /**
  * Configuration options for {@link ElectronOptions}.
@@ -20,12 +19,6 @@ import { App } from 'electron';
  * @see ElectronOptions
  */
 export interface ElectronOptions extends Options, BrowserOptions, NodeOptions {
-  /**
-   * The name of the application. Primarily used for crash directory naming. If this property is not supplied,
-   * it will be retrieved using the Electron `app.getName/name` API.
-   */
-  appName?: string;
-
   /**
    * Enables crash reporting for JavaScript errors in this process.
    * Defaults to `true`.
@@ -88,38 +81,6 @@ export interface ElectronClient extends Client<ElectronOptions> {
    * Shows Report Dialog
    */
   showReportDialog(options: ReportDialogOptions): void;
-}
-
-/** Name retrieval references for both Electron <v5 and v7< */
-declare interface CrossApp extends App {
-  /**
-   * A `String` property that indicates the current application's name, which is the
-   * name in the application's `package.json` file.
-   *
-   * Usually the `name` field of `package.json` is a short lowercase name, according
-   * to the npm modules spec. You should usually also specify a `productName` field,
-   * which is your application's full capitalized name, and which will be preferred
-   * over `name` by Electron.
-   */
-  name: string;
-
-  /**
-   * Usually the name field of package.json is a short lowercased name, according to
-   * the npm modules spec. You should usually also specify a productName field, which
-   * is your application's full capitalized name, and which will be preferred over
-   * name by Electron.
-   */
-  getName(): string;
-}
-
-/**
- * Get the name of the app
- */
-export function getNameFallback(): string {
-  const { app } = require('electron');
-
-  const appMain = app as CrossApp;
-  return appMain.name || appMain.getName();
 }
 
 /** Common interface for Electron backends. */

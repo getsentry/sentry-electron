@@ -5,7 +5,6 @@ import { app } from 'electron';
 import { platform, release } from 'os';
 import { join } from 'path';
 
-import { getNameFallback } from '../common';
 import { readDirAsync, readFileAsync } from './fs';
 
 /** SDK version used in every event. */
@@ -227,8 +226,8 @@ async function getOsContext(): Promise<OsContext> {
  * runtimes, limited device information, operating system context and defaults
  * for the release and environment.
  */
-async function getEventDefaults(appName: string | undefined): Promise<Event> {
-  const name = appName || getNameFallback();
+async function getEventDefaults(): Promise<Event> {
+  const name = app.getName();
 
   return {
     contexts: {
@@ -268,12 +267,12 @@ async function getEventDefaults(appName: string | undefined): Promise<Event> {
 }
 
 /** Merges the given event payload with SDK defaults. */
-export async function addEventDefaults(appName: string | undefined, event: Event): Promise<Event> {
+export async function addEventDefaults(event: Event): Promise<Event> {
   // The event defaults are cached as long as the app is running. We create the
   // promise here synchronously to avoid multiple events computing them at the
   // same time.
   if (!defaultsPromise) {
-    defaultsPromise = getEventDefaults(appName);
+    defaultsPromise = getEventDefaults();
   }
 
   const { contexts = {} } = event;

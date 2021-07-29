@@ -14,12 +14,8 @@ import { Dsn, forget, logger, SentryError } from '@sentry/utils';
 import { app, crashReporter, ipcMain, Session, session } from 'electron';
 import { join } from 'path';
 
-import { CommonBackend, ElectronOptions, getNameFallback } from '../common';
-import {
-  requiresNativeHandlerRenderer,
-  supportsGetPathCrashDumps,
-  supportsRenderProcessGone,
-} from '../electron-version';
+import { CommonBackend, ElectronOptions } from '../common';
+import { getCrashedDirectory, requiresNativeHandlerRenderer, supportsRenderProcessGone } from '../electron-version';
 import { IPC } from '../ipc';
 import { dropPreloadAndGetPath } from '../preload/bundled';
 import { addEventDefaults } from './context';
@@ -175,11 +171,11 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
    * Adds required preload scripts to the passed sessions
    */
   private _addPreloadsToSessions(sessions: Session[]): void {
-    const preloads = [dropPreloadAndGetPath('hook-ipc.js', this._options)];
+    const preloads = [dropPreloadAndGetPath('hook-ipc.js')];
 
     // Some older versions of Electron require the native crash reporter starting in the renderer process
     if (requiresNativeHandlerRenderer()) {
-      preloads.unshift(dropPreloadAndGetPath('start-native.js', this._options));
+      preloads.unshift(dropPreloadAndGetPath('start-native.js'));
     }
 
     for (const sesh of sessions) {
@@ -242,7 +238,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     // Apply the scope to the event
     await scope.applyToEvent(event);
     // Add all the extra context
-    event = await addEventDefaults(this._options.appName, event);
+    event = await addEventDefaults(event);
     return normalizeEvent(event);
   }
 
@@ -321,7 +317,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     crashReporter.start({
       companyName: '',
       ignoreSystemCrashHandler: true,
-      productName: this._options.appName || getNameFallback(),
+      productName: app.getName(),
       submitURL: MinidumpUploader.minidumpUrlFromDsn(dsn),
       uploadToServer: this._options.useCrashpadMinidumpUploader || false,
       compress: true,
@@ -329,15 +325,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     });
 
     if (this._options.useSentryMinidumpUploader !== false) {
-      // The crashReporter has a method to retrieve the directory
-      // it uses to store minidumps in. The structure in this directory depends
-      // on the crash library being used (Crashpad or Breakpad).
-      const crashesDirectory = supportsGetPathCrashDumps()
-        ? app.getPath('crashDumps')
-        : // unsafe member access required because of older versions of Electron
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          (crashReporter as any).getCrashesDirectory();
-
+      const crashesDirectory = getCrashedDirectory();
       this._uploader = new MinidumpUploader(dsn, crashesDirectory, getCachePath(), this.getTransport());
 
       // Flush already cached minidumps from the queue.
