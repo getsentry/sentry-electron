@@ -28,10 +28,12 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
     if (window.__SENTRY_IPC__ == undefined) {
       // eslint-disable-next-line no-console
       console.warn(
-        `IPC to the main process has not been exposed.
-This is likely due failed preload injection which can be cause by two issues
- 1 - Preload scripts are not being injected into the correct sessions
- 2 - Preload scripts are being overwritten
+        `IPC communication to the main process has not been exposed.
+
+This is likely due failed preload injection which can be cause by a number of issues:
+ 1 - You have not called 'init' in the main process
+ 2 - Preload scripts are not being injected into the correct session
+ 3 - Preload scripts are being overwritten
 
 @sentry/electron automatically injects preload scripts via the Electron session.setPreloads() API
 and does this by default for the defaultSession.
@@ -53,7 +55,7 @@ Sentry.init({
 If you are already using the session.setPreloads() API, you have most likely overwritten the scripts
 added by @sentry/electron. You can avoid this by appending your preload script after the existing entries:
 
-const myPreloadPath = '...';
+const myPreloadPath = './some/preload/path/preload.js';
 const sentryPreloads = session.getPreloads();
 session.setPreloads([...sentryPreloads, myPreloadPath]);
 `,
