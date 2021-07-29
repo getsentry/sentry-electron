@@ -16,7 +16,6 @@ use(chaiAsPromised);
 const versions = process.env.ELECTRON_VERSION
   ? [process.env.ELECTRON_VERSION]
   : [
-      // '1.8.8',
       '2.0.18',
       '3.1.13',
       '4.2.12',
