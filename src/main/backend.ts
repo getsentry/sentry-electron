@@ -21,7 +21,7 @@ import {
   supportsRenderProcessGone,
 } from '../electron-version';
 import { IPC } from '../ipc';
-import { getHookIPC, getStartNative } from '../preload/loader';
+import { dropPreloadAndGetPath } from '../preload/bundled';
 import { addEventDefaults } from './context';
 import { captureMinidump } from './index';
 import { normalizeEvent, normalizeUrl } from './normalize';
@@ -87,8 +87,6 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   /** Counter used to ensure no race condition when updating extra params */
   private _updateEpoch: number;
 
-  private _appName: string;
-
   /** Creates a new Electron backend instance. */
   public constructor(options: ElectronOptions) {
     // Disable session tracking until we've decided how this should work with Electron
@@ -100,7 +98,6 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     this._scopeStore = new Store<Scope>(getCachePath(), 'scope_v2', new Scope());
     // We need to store the scope in a variable here so it can be attached to minidumps
     this._scopeLastRun = this._scopeStore.get();
-    this._appName = this._options.appName || getNameFallback();
     this._updateEpoch = 0;
 
     this._setupScopeListener();
@@ -178,11 +175,11 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
    * Adds required preload scripts to the passed sessions
    */
   private _addPreloadsToSessions(sessions: Session[]): void {
-    const preloads = [getHookIPC()];
+    const preloads = [dropPreloadAndGetPath('hook-ipc.js', this._options)];
 
     // Some older versions of Electron require the native crash reporter starting in the renderer process
     if (requiresNativeHandlerRenderer()) {
-      preloads.unshift(getStartNative(this._appName));
+      preloads.unshift(dropPreloadAndGetPath('start-native.js', this._options));
     }
 
     for (const sesh of sessions) {
@@ -324,7 +321,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     crashReporter.start({
       companyName: '',
       ignoreSystemCrashHandler: true,
-      productName: this._appName,
+      productName: this._options.appName || getNameFallback(),
       submitURL: MinidumpUploader.minidumpUrlFromDsn(dsn),
       uploadToServer: this._options.useCrashpadMinidumpUploader || false,
       compress: true,
