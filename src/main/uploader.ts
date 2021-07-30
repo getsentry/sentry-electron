@@ -5,7 +5,7 @@ import { Dsn, forget, logger, timestampWithMs } from '@sentry/utils';
 import { basename, join } from 'path';
 
 import { supportsCrashpadOnWindows } from '../electron-version';
-import { mkdirp, readDirAsync, readFileAsync, renameAsync, statAsync, unlinkAsync } from './fs';
+import { mkdirp, readDirAsync, readFileAsync, renameAsync, statAsync, unlinkAsync } from '../fs';
 import { Store } from './store';
 import { NetTransport, SentryElectronRequest } from './transports/net';
 

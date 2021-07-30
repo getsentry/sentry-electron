@@ -5,7 +5,7 @@ import { app } from 'electron';
 import { platform, release } from 'os';
 import { join } from 'path';
 
-import { readDirAsync, readFileAsync } from './fs';
+import { readDirAsync, readFileAsync } from '../fs';
 
 /** SDK version used in every event. */
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access

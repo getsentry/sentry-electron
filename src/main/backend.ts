@@ -171,11 +171,11 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
    * Adds required preload scripts to the passed sessions
    */
   private _addPreloadsToSessions(sessions: Session[]): void {
-    const preloads = [dropPreloadAndGetPath('hook-ipc.js')];
+    const preloads = [dropPreloadAndGetPath('hook-ipc')];
 
     // Some older versions of Electron require the native crash reporter starting in the renderer process
     if (requiresNativeHandlerRenderer()) {
-      preloads.unshift(dropPreloadAndGetPath('start-native.js'));
+      preloads.unshift(dropPreloadAndGetPath('start-native'));
     }
 
     for (const sesh of sessions) {
@@ -325,8 +325,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     });
 
     if (this._options.useSentryMinidumpUploader !== false) {
-      const crashesDirectory = getCrashedDirectory();
-      this._uploader = new MinidumpUploader(dsn, crashesDirectory, getCachePath(), this.getTransport());
+      this._uploader = new MinidumpUploader(dsn, getCrashedDirectory(), getCachePath(), this.getTransport());
 
       // Flush already cached minidumps from the queue.
       forget(this._uploader.flushQueue());

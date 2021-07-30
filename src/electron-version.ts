@@ -44,9 +44,9 @@ export function supportsCrashpadOnWindows(): boolean {
  */
 export function getCrashedDirectory(): string {
   const { major } = version();
+
   return major >= 9
     ? app.getPath('crashDumps')
-    : // unsafe member access required because of older versions of Electron
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    : // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       (crashReporter as any).getCrashesDirectory();
 }

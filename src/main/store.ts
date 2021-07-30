@@ -2,7 +2,7 @@ import { logger } from '@sentry/utils';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 
-import { mkdirpSync } from './fs';
+import { mkdirpSync } from '../fs';
 
 /**
  * Note, this class is only compatible with Node.
