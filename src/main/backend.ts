@@ -317,7 +317,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     crashReporter.start({
       companyName: '',
       ignoreSystemCrashHandler: true,
-      productName: app.getName(),
+      productName: app.name || app.getName(),
       submitURL: MinidumpUploader.minidumpUrlFromDsn(dsn),
       uploadToServer: this._options.useCrashpadMinidumpUploader || false,
       compress: true,

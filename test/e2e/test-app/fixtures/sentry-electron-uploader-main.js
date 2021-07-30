@@ -1,7 +1,6 @@
 const { init, configureScope } = require('../../../../');
 
 init({
-  appName: 'test-app',
   dsn: process.env.DSN,
   debug: true,
   useCrashpadMinidumpUploader: true,

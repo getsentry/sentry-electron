@@ -7,7 +7,6 @@ init({
   debug: true,
   // useCrashpadMinidumpUploader: true,
   // useSentryMinidumpUploader: false,
-  appName: 'Sentry Test',
 });
 
 addBreadcrumb({ message: 'test' });

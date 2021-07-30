@@ -16,7 +16,7 @@ export const bundledCode = {
 export function dropPreloadAndGetPath(name: 'hook-ipc' | 'start-native'): string {
   const path = join(app.getPath('userData'), 'sentry', `${name}.js`);
   mkdirpSync(dirname(path));
-  const code = bundledCode[name].replace('{{appName}}', app.getName());
+  const code = bundledCode[name].replace('{{appName}}', app.name || app.getName());
   writeFileSync(path, code);
   return path;
 }

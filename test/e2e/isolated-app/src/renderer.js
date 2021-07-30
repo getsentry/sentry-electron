@@ -1,5 +1,6 @@
-require('./sentry');
-const { configureScope } = require('../../../..');
+const { init, configureScope } = require('../../../..');
+
+init({});
 
 configureScope(scope => {
   scope.setUser({ id: 'abc-123' });

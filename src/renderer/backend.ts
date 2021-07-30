@@ -20,6 +20,11 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
     if (options.enableJavaScript === false) {
       options.enabled = false;
     }
+
+    // We don't need a dsn in the renderer because events are passed through the main process
+    // We still need a valid looking dsn or the browser sdk will not start
+    options.dsn = options.dsn || 'http://1234@fake_dsn_not.used/12345';
+
     super(options);
 
     if (window.__SENTRY_IPC__ == undefined) {

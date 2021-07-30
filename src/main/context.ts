@@ -227,7 +227,7 @@ async function getOsContext(): Promise<OsContext> {
  * for the release and environment.
  */
 async function getEventDefaults(): Promise<Event> {
-  const name = app.getName();
+  const name = app.name || app.getName();
 
   return {
     contexts: {
