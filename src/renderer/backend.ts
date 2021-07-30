@@ -25,39 +25,8 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
     if (window.__SENTRY_IPC__ == undefined) {
       // eslint-disable-next-line no-console
       console.warn(
-        `It looks like preload code injection has failed which can be caused by a number of issues
-
-- Ensure you have called 'Sentry.init' in the main process!
-
-- If you are using sessions, ensure preload scripts are being injected into the correct session
-
-    @sentry/electron automatically injects preload scripts via the Electron session.setPreloads() API
-    https://www.electronjs.org/docs/api/session#sessetpreloadspreloads
-    It does this by default for the defaultSession.
-
-    If you need preload scripts injected for other sessions, you can pass a function to 'init' in
-    the main process that returns an array of sessions to add preload scripts to:
-
-    const Sentry = require('@sentry/electron');
-    const { session } = require('electron');
-
-    Sentry.init({
-      dsn: '__DSN__',
-      preloadSessions: () => {
-        return [session.fromPartition('persist:something'), session.defaultSession];
-      }
-    })
-
-- Ensure preload scripts are not being overwritten
-
-    If you are already using the session.setPreloads() API, you could be overwriting the scripts added
-    by @sentry/electron. You can avoid this by appending your own preload script after the existing
-    entries:
-
-    const myPreloadPath = './some/preload/path/preload.js';
-    const sentryPreloads = session.getPreloads();
-    session.setPreloads([...sentryPreloads, myPreloadPath]);
-`,
+        'It looks like preload code injection has failed which can be caused by a number of issues. \
+Check out the docs: https://docs.sentry.io/platforms/javascript/guides/electron/#preload-injection',
       );
     }
 
