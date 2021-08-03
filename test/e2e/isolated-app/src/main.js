@@ -21,7 +21,13 @@ app.on('ready', () => {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      sandbox: true,
+      preload: path.join(__dirname, 'preload.js'),
     },
+  });
+
+  window.webContents.on('console-message', (_, __, message) => {
+    console.log(message);
   });
 
   window.loadURL(

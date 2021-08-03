@@ -1,12 +1,10 @@
 import { Transports } from '@sentry/node';
 import { Event, Response, SentryRequest, SentryRequestType, Status, TransportOptions } from '@sentry/types';
 import { logger, PromiseBuffer, SentryError, timestampWithMs } from '@sentry/utils';
-import { net } from 'electron';
+import { app, net } from 'electron';
 import { Readable, Writable } from 'stream';
 import * as url from 'url';
 import { createGzip } from 'zlib';
-
-import { isAppReady } from '../backend';
 
 // Estimated maximum size for reasonable standalone event
 const GZIP_THRESHOLD = 1024 * 32;
@@ -16,6 +14,20 @@ const GZIP_THRESHOLD = 1024 * 32;
  */
 export interface SentryElectronRequest extends Omit<SentryRequest, 'body'> {
   body: string | Buffer;
+}
+
+/**
+ * Returns a promise that resolves when app is ready.
+ */
+export async function isAppReady(): Promise<boolean> {
+  return (
+    app.isReady() ||
+    new Promise<boolean>(resolve => {
+      app.once('ready', () => {
+        resolve(true);
+      });
+    })
+  );
 }
 
 /**

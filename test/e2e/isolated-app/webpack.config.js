@@ -12,6 +12,15 @@ module.exports = [
   },
   {
     mode: 'production',
+    entry: '../../../dist/preload/preload.js',
+    target: 'electron-preload',
+    output: {
+      libraryTarget: 'commonjs2',
+      filename: 'preload.js',
+    },
+  },
+  {
+    mode: 'production',
     entry: './src/renderer.js',
     target: 'web',
     output: {

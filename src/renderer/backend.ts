@@ -31,7 +31,7 @@ export class RendererBackend extends BaseBackend<ElectronOptions> implements Com
       // eslint-disable-next-line no-console
       console.warn(
         'It looks like preload code injection has failed which can be caused by a number of issues. \
-Check out the docs: https://docs.sentry.io/platforms/javascript/guides/electron/#preload-injection',
+Check out the docs: https://docs.sentry.io/platforms/javascript/guides/electron/#preload',
       );
     }
 

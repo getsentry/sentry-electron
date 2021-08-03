@@ -11,4 +11,3 @@ stats.json
 # Eslint
 .eslintcache
 .vagrant
-src/preload/bundled.ts

@@ -11,13 +11,13 @@ import {
 import { NodeBackend } from '@sentry/node';
 import { Event, EventHint, ScopeContext, Severity, Transport, TransportOptions } from '@sentry/types';
 import { Dsn, forget, logger, SentryError } from '@sentry/utils';
-import { app, crashReporter, ipcMain, Session, session } from 'electron';
+import { app, crashReporter, ipcMain, session } from 'electron';
+import { existsSync } from 'fs';
 import { join } from 'path';
 
 import { CommonBackend, ElectronOptions } from '../common';
-import { getCrashedDirectory, requiresNativeHandlerRenderer, supportsRenderProcessGone } from '../electron-version';
+import { getCrashedDirectory, supportsRenderProcessGone } from '../electron-version';
 import { IPC } from '../ipc';
-import { dropPreloadAndGetPath } from '../preload/bundled';
 import { addEventDefaults } from './context';
 import { captureMinidump } from './index';
 import { normalizeEvent, normalizeUrl } from './normalize';
@@ -28,20 +28,6 @@ import { MinidumpUploader } from './uploader';
 /** Gets the path to the Sentry cache directory. */
 function getCachePath(): string {
   return join(app.getPath('userData'), 'sentry');
-}
-
-/**
- * Returns a promise that resolves when app is ready.
- */
-export async function isAppReady(): Promise<boolean> {
-  return (
-    app.isReady() ||
-    new Promise<boolean>(resolve => {
-      app.once('ready', () => {
-        resolve(true);
-      });
-    })
-  );
 }
 
 /** Is object defined and has keys */
@@ -105,8 +91,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     this._installIPC();
 
     app.once('ready', () => {
-      const sessions = options.preloadSessions?.() || [session.defaultSession];
-      this._addPreloadsToSessions(sessions);
+      this._addPreloadsToDefaultSession();
     });
   }
 
@@ -168,20 +153,15 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   }
 
   /**
-   * Adds required preload scripts to the passed sessions
+   * Adds required preload scripts to the default session
    */
-  private _addPreloadsToSessions(sessions: Session[]): void {
-    const preloads = [dropPreloadAndGetPath('hook-ipc')];
+  private _addPreloadsToDefaultSession(): void {
+    const path = require.resolve('../preload/preload');
 
-    // Some older versions of Electron require the native crash reporter starting in the renderer process
-    if (requiresNativeHandlerRenderer()) {
-      preloads.unshift(dropPreloadAndGetPath('start-native'));
-    }
-
-    for (const sesh of sessions) {
+    if (typeof path === 'string' || existsSync(path)) {
       // Fetch any existing preloads so we don't overwrite them
-      const existing = sesh.getPreloads();
-      sesh.setPreloads([...preloads, ...existing]);
+      const existing = session.defaultSession.getPreloads();
+      session.defaultSession.setPreloads([path, ...existing]);
     }
   }
 

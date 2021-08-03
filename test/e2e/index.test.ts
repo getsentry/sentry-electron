@@ -16,25 +16,29 @@ use(chaiAsPromised);
 const versions = process.env.ELECTRON_VERSION
   ? [process.env.ELECTRON_VERSION]
   : [
-      '2.0.18',
-      '3.1.13',
-      '4.2.12',
-      '5.0.13',
-      '6.1.12',
-      '7.3.3',
-      '8.5.5',
-      '9.4.4',
-      '10.4.7',
-      '11.4.8',
-      '12.0.11',
+      // '2.0.18',
+      // '3.1.13',
+      // '4.2.12',
+      // '5.0.13',
+      // '6.1.12',
+      // '7.3.3',
+      // '8.5.5',
+      // '9.4.4',
+      // '10.4.7',
+      // '11.4.8',
+      // '12.0.11',
       '13.1.2',
     ];
 
 const tests = versions.map(v => [v, 'x64']);
 
 describe('Bundle Tests', () => {
-  it('Webpack contextIsolation app', async () => {
-    const result = spawnSync('yarn && yarn build', { shell: true, cwd: join(__dirname, 'isolated-app') });
+  it.only('Webpack contextIsolation app', async () => {
+    const result = spawnSync('yarn && yarn build', {
+      shell: true,
+      cwd: join(__dirname, 'isolated-app'),
+      stdio: 'inherit',
+    });
     expect(result.status).to.equal(0);
   });
 });
@@ -337,7 +341,7 @@ describe('E2E Tests', () => {
         expect(event.data.contexts && (event.data.contexts.electron as any).crashed_process).to.equal('renderer');
       });
 
-      it('JavaScript exception in contextIsolation renderer process', async function() {
+      it.only('JavaScript exception in contextIsolation renderer process', async function() {
         // contextIsolation only added >= 6
         if (majorVersion < 6) {
           this.skip();
