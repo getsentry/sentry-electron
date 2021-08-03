@@ -153,7 +153,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
   }
 
   /**
-   * Adds required preload scripts to the default session
+   * Adds preload script to the default session
    */
   private _addPreloadsToDefaultSession(): void {
     const path = require.resolve('../preload/preload');
@@ -162,6 +162,10 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
       // Fetch any existing preloads so we don't overwrite them
       const existing = session.defaultSession.getPreloads();
       session.defaultSession.setPreloads([path, ...existing]);
+    } else {
+      logger.warn(
+        'The preload script could not be injected automatically. This is most likely caused by bundling of the main process',
+      );
     }
   }
 
