@@ -1,5 +1,3 @@
-console.log(process.argv);
-
 if (process.platform !== 'darwin' && parseInt(process.versions.electron.split('.')[0]) < 9) {
   const { crashReporter, remote } = require('electron');
   crashReporter.start({
