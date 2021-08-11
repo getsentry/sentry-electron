@@ -12,9 +12,6 @@ stats.json
 .eslintcache
 .vagrant
 
-src/main/metadata.ts
-
-
 /preload
 /renderer
 /main

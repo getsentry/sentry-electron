@@ -1,4 +1,4 @@
-import { Event } from '@sentry/types';
+import { Event, SdkInfo } from '@sentry/types';
 import * as child from 'child_process';
 import { app } from 'electron';
 import { platform, release } from 'os';
@@ -215,6 +215,20 @@ async function getOsContext(): Promise<OsContext> {
   }
 }
 
+/** Gets SDK info */
+export function getSdkInfo(): SdkInfo {
+  return {
+    name: SDK_NAME,
+    packages: [
+      {
+        name: 'npm:@sentry/electron',
+        version: SDK_VERSION,
+      },
+    ],
+    version: SDK_VERSION,
+  };
+}
+
 /**
  * Computes Electron-specific default fields for events.
  *
@@ -226,16 +240,7 @@ async function _getEventDefaults(release?: string): Promise<Event> {
   const name = app.name || app.getName();
 
   return {
-    sdk: {
-      name: SDK_NAME,
-      packages: [
-        {
-          name: 'npm:@sentry/electron',
-          version: SDK_VERSION,
-        },
-      ],
-      version: SDK_VERSION,
-    },
+    sdk: getSdkInfo(),
     contexts: {
       app: {
         app_name: name,

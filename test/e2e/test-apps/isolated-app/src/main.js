@@ -8,6 +8,7 @@ const { init } = require('../../../../../');
 init({
   dsn: 'http://37f8a2ee37c0409d8970bc7559c7c7e4@localhost:8123/277345',
   debug: true,
+  autoSessionTracking: false,
   onFatalError: (_error) => {
     // We need this here otherwise we will get a dialog and CI will get stuck
   },
@@ -24,9 +25,7 @@ app.on('ready', () => {
     },
   });
 
-  if (process.env.DEBUG) {
-    window.webContents.on('console-message', (_, __, msg) => console.log(`Renderer: ${msg}`));
-  }
+  window.webContents.on('console-message', (_, __, msg) => console.log(`Renderer: ${msg}`));
 
   window.loadURL(
     url.format({

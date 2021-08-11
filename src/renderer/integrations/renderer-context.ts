@@ -1,7 +1,6 @@
 import { Event, EventProcessor, Integration } from '@sentry/types';
-import * as deepMerge from 'deepmerge';
 
-import { AppContext, normalizeEvent } from '../../common';
+import { AppContext, mergeEvents, normalizeEvent } from '../../common';
 
 /**
  * Fetches context from the main process so the browser SDK can be used in isolation
@@ -31,7 +30,7 @@ export class RendererContext implements Integration {
 
     const appContext = await this._appContext;
 
-    return deepMerge(appContext.eventDefaults, normalizeEvent(event, appContext.appBasePath));
+    return mergeEvents(appContext.eventDefaults, normalizeEvent(event, appContext.appBasePath));
   }
 
   /** Asynchronously fetches context from the main process */

@@ -3,6 +3,7 @@ const { init, configureScope, Integrations } = require('../../../../../');
 init({
   dsn: process.env.DSN,
   debug: true,
+  autoSessionTracking: false,
   integrations: [new Integrations.ElectronMinidump()],
   initialScope: { user: { username: 'some_user' } },
   onFatalError: (_error) => {

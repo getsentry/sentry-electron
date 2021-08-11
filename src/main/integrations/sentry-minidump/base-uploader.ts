@@ -64,6 +64,7 @@ export abstract class BaseUploader {
       logger.warn('Skipping sending minidump');
       return;
     }
+
     logger.log('Sending minidump', request.path);
 
     const transport = this._transport as ElectronNetTransport;
@@ -78,8 +79,9 @@ export abstract class BaseUploader {
       // can remove the minidump file.
       try {
         await unlinkAsync(request.path);
+        logger.log('Deleted minidump', request.path);
       } catch (e) {
-        logger.warn('Could not delete', request.path);
+        logger.warn('Could not delete', request.path, e);
       }
 
       // Forget this minidump in all caches
@@ -233,10 +235,7 @@ export abstract class BaseUploader {
       let minidumpContent = (await readFileAsync(minidumpPath)) as Buffer;
 
       // Breakpad has custom parsing
-      const dump = await this._preProcessFile?.(minidumpContent);
-      if (dump) {
-        minidumpContent = dump;
-      }
+      minidumpContent = (await this._preProcessFile?.(minidumpContent)) || minidumpContent;
 
       const minidumpHeader = JSON.stringify({
         attachment_type: 'event.minidump',
@@ -251,8 +250,8 @@ export abstract class BaseUploader {
     }
 
     return {
-      body: bodyBuffer,
       url: this._api.getEnvelopeEndpointWithUrlEncodedAuth(),
+      body: bodyBuffer,
       type: 'event',
     };
   }

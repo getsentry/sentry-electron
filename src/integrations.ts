@@ -10,6 +10,7 @@ import {
   PreloadInjection,
   RendererIPC,
   SentryMinidump,
+  MainProcessSession,
 } from './main/integrations';
 import { EventToMain, RendererContext, ScopeToMain } from './renderer/integrations';
 
@@ -23,6 +24,7 @@ export interface Integrations {
   RendererIPC: IntegrationClass<RendererIPC>;
   OnUncaughtExcept: IntegrationClass<OnUncaughtException>;
   PreloadInjection: IntegrationClass<PreloadInjection>;
+  MainProcessSession: IntegrationClass<MainProcessSession>;
   // For renderer process
   ScopeToMain: IntegrationClass<ScopeToMain>;
   EventToMain: IntegrationClass<EventToMain>;
@@ -49,6 +51,7 @@ export function getIntegrations(): Integrations {
         RendererIPC: EmptyIntegration,
         OnUncaughtExcept: EmptyIntegration,
         PreloadInjection: EmptyIntegration,
+        MainProcessSession: EmptyIntegration,
       };
 }
 

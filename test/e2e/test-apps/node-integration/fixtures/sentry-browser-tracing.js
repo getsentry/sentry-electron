@@ -3,6 +3,7 @@ if (process.type === 'browser') {
 
   init({
     dsn: process.env.DSN,
+    release: 'some-release',
     debug: true,
     autoSessionTracking: false,
     onFatalError: (_error) => {
@@ -10,13 +11,12 @@ if (process.type === 'browser') {
     },
   });
 } else {
-  const { init, Integrations } = require('../../../../../renderer');
-  const { defaultIntegrations } = require('@sentry/browser');
+  const { init } = require('../../../../../renderer');
+  const { Integrations } = require('@sentry/tracing');
 
   init({
-    dsn: process.env.DSN,
     debug: true,
-    defaultIntegrations: defaultIntegrations,
-    integrations: [new Integrations.RendererContext()],
+    integrations: [new Integrations.BrowserTracing()],
+    tracesSampleRate: 1,
   });
 }

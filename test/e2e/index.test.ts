@@ -2,10 +2,11 @@ import { expect, should, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { spawnSync, SpawnSyncOptionsWithBufferEncoding } from 'child_process';
 import { join } from 'path';
+import { inspect } from 'util';
 
 import { TestContext } from './context';
 import { downloadElectron } from './download';
-import { TestServer } from './server';
+import { TestServer, TestServerEvent } from './server';
 import { getLastFrame } from './utils';
 
 const SENTRY_KEY = '37f8a2ee37c0409d8970bc7559c7c7e4';
@@ -26,17 +27,22 @@ const versions = process.env.ELECTRON_VERSION
       '9.4.4',
       '10.4.7',
       '11.4.10',
-      '12.0.15',
-      '13.1.7',
-      '14.0.0-beta.17',
-      '15.0.0-nightly.20210721',
+      '12.0.16',
+      '13.1.9',
+      '14.0.0-beta.20',
+      '15.0.0-alpha.5',
     ];
 
 const tests = versions.map((v) => [v, 'x64']);
 
 describe('Bundle Tests', () => {
   it('Webpack contextIsolation app', async function () {
-    this.timeout(60000);
+    // We don't need to compile the isolated app if we're not going to test it
+    if (process.env.ELECTRON_VERSION && Math.floor(parseFloat(process.env.ELECTRON_VERSION)) < 6) {
+      this.skip();
+    }
+
+    this.timeout(120000);
 
     const options: SpawnSyncOptionsWithBufferEncoding = {
       shell: true,
@@ -54,6 +60,18 @@ describe('Bundle Tests', () => {
 
 describe('E2E Tests', () => {
   let testServer: TestServer;
+
+  function getEvent(): TestServerEvent {
+    const event = testServer.events.find((e) => e.eventData);
+    expect(event, 'Could not find event').not.to.be.undefined;
+    return event as TestServerEvent;
+  }
+
+  function getSession(status: string): TestServerEvent {
+    const session = testServer.events.find((e) => e.sessionData && e.sessionData.status == status);
+    expect(session, `Could not find '${status}' session`).not.to.be.undefined;
+    return session as TestServerEvent;
+  }
 
   before(() => {
     testServer = new TestServer();
@@ -81,7 +99,18 @@ describe('E2E Tests', () => {
         context = new TestContext(electronPath);
       });
 
-      afterEach(async () => {
+      afterEach(async function () {
+        if (this.currentTest?.state === 'failed') {
+          console.log('App stdout: ');
+          console.log(context.processStdOut);
+
+          if (testServer.events.length) {
+            console.log('Events received: ', inspect(testServer.events, false, null, true));
+          } else {
+            console.log('No Events received');
+          }
+        }
+
         if (context.isStarted()) {
           await context.stop();
         }
@@ -94,13 +123,14 @@ describe('E2E Tests', () => {
         expect(testServer.events.length).to.equal(1);
         const event = testServer.events[0];
         expect(event.method).to.equal('envelope');
-        expect(event.data.contexts?.app?.app_name).to.equal('test-app');
-        expect(event.data.contexts?.electron?.crashed_process).to.equal('WebContents[1]');
+        expect(event.eventData?.contexts?.app?.app_name).to.equal('test-app');
+        expect(event.eventData?.contexts?.electron?.crashed_process).to.equal('WebContents[1]');
         expect(event.dump_file).to.be.false;
-        expect(event.data.platform).to.equal('javascript');
+        expect(event.eventData?.platform).to.equal('javascript');
         expect(event.sentry_key).to.equal(SENTRY_KEY);
-        expect(getLastFrame(event.data).filename).to.equal('app:///fixtures/javascript-renderer.js');
-        expect(event.data.breadcrumbs?.length).to.greaterThan(4);
+        expect(event.eventData?.sdk?.name).to.equal('sentry.javascript.electron');
+        expect(getLastFrame(event.eventData)?.filename).to.equal('app:///fixtures/javascript-renderer.js');
+        expect(event.eventData?.breadcrumbs?.length).to.greaterThan(4);
       });
 
       it('JavaScript unhandledrejection in renderer process', async () => {
@@ -110,13 +140,13 @@ describe('E2E Tests', () => {
         expect(testServer.events.length).to.equal(1);
         const event = testServer.events[0];
         expect(event.method).to.equal('envelope');
-        expect(event.data.contexts?.app?.app_name).to.equal('test-app');
-        expect(event.data.contexts?.electron?.crashed_process).to.equal('WebContents[1]');
+        expect(event.eventData?.contexts?.app?.app_name).to.equal('test-app');
+        expect(event.eventData?.contexts?.electron?.crashed_process).to.equal('WebContents[1]');
         expect(event.dump_file).to.be.false;
         expect(event.sentry_key).to.equal(SENTRY_KEY);
-        expect(event.data.sdk?.name).to.equal('sentry.javascript.electron');
-        expect(getLastFrame(event.data).filename).to.equal('app:///fixtures/javascript-unhandledrejection.js');
-        expect(event.data.breadcrumbs?.length).to.greaterThan(4);
+        expect(event.eventData?.sdk?.name).to.equal('sentry.javascript.electron');
+        expect(getLastFrame(event.eventData)?.filename).to.equal('app:///fixtures/javascript-unhandledrejection.js');
+        expect(event.eventData?.breadcrumbs?.length).to.greaterThan(4);
       });
 
       it('JavaScript exception in main process', async () => {
@@ -126,14 +156,14 @@ describe('E2E Tests', () => {
         expect(testServer.events.length).to.equal(1);
         const event = testServer.events[0];
         expect(event.method).to.equal('envelope');
-        expect(event.data.contexts?.app?.app_name).to.equal('test-app');
-        expect(event.data.contexts?.electron?.crashed_process).to.equal('browser');
+        expect(event.eventData?.contexts?.app?.app_name).to.equal('test-app');
+        expect(event.eventData?.contexts?.electron?.crashed_process).to.equal('browser');
         expect(event.dump_file).to.be.false;
-        expect(event.data.platform).to.equal('node');
+        expect(event.eventData?.platform).to.equal('node');
         expect(event.sentry_key).to.equal(SENTRY_KEY);
-        expect(event.data.sdk?.name).to.equal('sentry.javascript.electron');
-        expect(event.data.breadcrumbs?.length).to.greaterThan(4);
-        expect(getLastFrame(event.data).filename).to.equal('app:///fixtures/javascript-main.js');
+        expect(event.eventData?.sdk?.name).to.equal('sentry.javascript.electron');
+        expect(event.eventData?.breadcrumbs?.length).to.greaterThan(4);
+        expect(getLastFrame(event.eventData)?.filename).to.equal('app:///fixtures/javascript-main.js');
       });
 
       it('JavaScript exception in main process with spaces and parentheses in path', async () => {
@@ -143,12 +173,13 @@ describe('E2E Tests', () => {
         expect(testServer.events.length).to.equal(1);
         const event = testServer.events[0];
         expect(event.method).to.equal('envelope');
-        expect(event.data.contexts?.app?.app_name).to.equal('test-app');
-        expect(event.data.contexts?.electron?.crashed_process).to.equal('browser');
-        expect(getLastFrame(event.data).filename).to.equal('app:///fixtures/javascript main with (parens).js');
+        expect(event.eventData?.contexts?.app?.app_name).to.equal('test-app');
+        expect(event.eventData?.contexts?.electron?.crashed_process).to.equal('browser');
+        expect(getLastFrame(event.eventData)?.filename).to.equal('app:///fixtures/javascript main with (parens).js');
         expect(event.dump_file).to.be.false;
+        expect(event.eventData?.sdk?.name).to.equal('sentry.javascript.electron');
         expect(event.sentry_key).to.equal(SENTRY_KEY);
-        expect(event.data.breadcrumbs?.length).to.greaterThan(4);
+        expect(event.eventData?.breadcrumbs?.length).to.greaterThan(4);
       });
 
       // tslint:disable-next-line
@@ -160,11 +191,12 @@ describe('E2E Tests', () => {
         expect(testServer.events.length).to.equal(1);
         const event = testServer.events[0];
         expect(event.method).to.equal('envelope');
-        expect(event.data.contexts?.app?.app_name).to.equal('test-app');
-        expect(event.data.contexts?.electron?.crashed_process).to.equal('WebContents[1]');
+        expect(event.eventData?.contexts?.app?.app_name).to.equal('test-app');
+        expect(event.eventData?.contexts?.electron?.crashed_process).to.equal('WebContents[1]');
         expect(event.dump_file).to.be.true;
+        expect(event.eventData?.sdk?.name).to.equal('sentry.javascript.electron');
         expect(event.sentry_key).to.equal(SENTRY_KEY);
-        expect(event.data.breadcrumbs?.length).to.greaterThan(4);
+        expect(event.eventData?.breadcrumbs?.length).to.greaterThan(4);
       });
 
       // tslint:disable-next-line
@@ -183,9 +215,10 @@ describe('E2E Tests', () => {
         expect(event.method).to.equal('minidump');
 
         if (majorVersion >= 15 || process.platform !== 'linux') {
-          expect(event.data.contexts?.app?.app_name).to.equal('test-app');
-          expect(event.data.contexts?.electron?.crashed_process).to.equal('browser');
-          expect(event.data.user?.id).to.equal('ABCDEF1234567890');
+          expect(event.eventData?.contexts?.app?.app_name).to.equal('test-app');
+          expect(event.eventData?.contexts?.electron?.crashed_process).to.equal('browser');
+          expect(event.eventData?.user?.id).to.equal('ABCDEF1234567890');
+          expect(event.eventData?.sdk?.name).to.equal('sentry.javascript.electron');
           expect(event.namespaced?.initialScope?.user?.username).to.equal('some_user');
         }
       });
@@ -229,7 +262,7 @@ describe('E2E Tests', () => {
         await context.start('sentry-scope-user-data', 'javascript-main');
         await context.waitForEvents(testServer, 1);
         const event = testServer.events[0];
-        expect(event.data.user?.id).to.equal('johndoe');
+        expect(event.eventData?.user?.id).to.equal('johndoe');
       });
 
       // tslint:disable-next-line
@@ -251,11 +284,12 @@ describe('E2E Tests', () => {
         expect(testServer.events.length).to.equal(1);
         const event = testServer.events[0];
         expect(event.method).to.equal('envelope');
-        expect(event.data.contexts?.app?.app_name).to.equal('test-app');
-        expect(event.data.contexts?.electron?.crashed_process).to.equal('browser');
+        expect(event.eventData?.contexts?.app?.app_name).to.equal('test-app');
+        expect(event.eventData?.contexts?.electron?.crashed_process).to.equal('browser');
+        expect(event.eventData?.sdk?.name).to.equal('sentry.javascript.electron');
         expect(event.dump_file).to.be.true;
         expect(event.sentry_key).to.equal(SENTRY_KEY);
-        expect(event.data.breadcrumbs?.length).to.greaterThan(4);
+        expect(event.eventData?.breadcrumbs?.length).to.greaterThan(4);
       });
 
       it('Captures breadcrumbs in renderer process', async () => {
@@ -265,11 +299,12 @@ describe('E2E Tests', () => {
         expect(testServer.events.length).to.equal(1);
         const event = testServer.events[0];
         expect(event.method).to.equal('envelope');
-        expect(event.data.contexts?.app?.app_name).to.equal('test-app');
-        expect(event.data.contexts?.electron?.crashed_process).to.equal('WebContents[1]');
+        expect(event.eventData?.contexts?.app?.app_name).to.equal('test-app');
+        expect(event.eventData?.contexts?.electron?.crashed_process).to.equal('WebContents[1]');
+        expect(event.eventData?.sdk?.name).to.equal('sentry.javascript.electron');
         expect(event.dump_file).to.be.false;
 
-        const breadcrumbs = event.data.breadcrumbs?.filter((crumb) => crumb.message === 'Something insightful!');
+        const breadcrumbs = event.eventData?.breadcrumbs?.filter((crumb) => crumb.message === 'Something insightful!');
         expect(breadcrumbs?.length, 'filtered breadcrumbs').to.equal(1);
       });
 
@@ -280,13 +315,14 @@ describe('E2E Tests', () => {
         expect(testServer.events.length).to.equal(1);
         const event = testServer.events[0];
         expect(event.method).to.equal('envelope');
-        expect(event.data.contexts?.app?.app_name).to.equal('test-app');
-        expect(event.data.contexts?.electron?.crashed_process).to.equal('WebContents[1]');
-        expect(event.data.extra?.a).to.equal(2);
-        expect(event.data.user?.id).to.equal('1');
-        expect(event.data.tags?.a).to.equal('b');
-        expect(event.data.contexts?.server).to.include({ id: '2' });
-        expect(event.data.fingerprint).to.include('abcd');
+        expect(event.eventData?.contexts?.app?.app_name).to.equal('test-app');
+        expect(event.eventData?.contexts?.electron?.crashed_process).to.equal('WebContents[1]');
+        expect(event.eventData?.sdk?.name).to.equal('sentry.javascript.electron');
+        expect(event.eventData?.extra?.a).to.equal(2);
+        expect(event.eventData?.user?.id).to.equal('1');
+        expect(event.eventData?.tags?.a).to.equal('b');
+        expect(event.eventData?.contexts?.server).to.include({ id: '2' });
+        expect(event.eventData?.fingerprint).to.include('abcd');
       });
 
       it('Captures Scope from main', async () => {
@@ -296,13 +332,14 @@ describe('E2E Tests', () => {
         expect(testServer.events.length).to.equal(1);
         const event = testServer.events[0];
         expect(event.method).to.equal('envelope');
-        expect(event.data.contexts?.app?.app_name).to.equal('test-app');
-        expect(event.data.contexts?.electron?.crashed_process).to.equal('browser');
-        expect(event.data.extra?.a).to.equal(2);
-        expect(event.data.user?.id).to.equal('2');
-        expect(event.data.tags?.a).to.equal('b');
-        expect(event.data.contexts?.server).to.include({ id: '2' });
-        expect(event.data.fingerprint).to.include('abcd');
+        expect(event.eventData?.contexts?.app?.app_name).to.equal('test-app');
+        expect(event.eventData?.contexts?.electron?.crashed_process).to.equal('browser');
+        expect(event.eventData?.sdk?.name).to.equal('sentry.javascript.electron');
+        expect(event.eventData?.extra?.a).to.equal(2);
+        expect(event.eventData?.user?.id).to.equal('2');
+        expect(event.eventData?.tags?.a).to.equal('b');
+        expect(event.eventData?.contexts?.server).to.include({ id: '2' });
+        expect(event.eventData?.fingerprint).to.include('abcd');
       });
 
       it('Main scope not clobbered by scope from renderer', async () => {
@@ -312,13 +349,14 @@ describe('E2E Tests', () => {
         expect(testServer.events.length).to.equal(1);
         const event = testServer.events[0];
         expect(event.method).to.equal('envelope');
-        expect(event.data.contexts?.app?.app_name).to.equal('test-app');
-        expect(event.data.extra?.a).to.equal(2);
-        expect(event.data.user?.id).to.equal('5');
-        expect(event.data.user?.email).to.equal('none@test.org');
-        expect(event.data.tags?.a).to.equal('b');
-        expect(event.data.contexts?.server).to.include({ id: '2' });
-        expect(event.data.fingerprint).to.include('abcd');
+        expect(event.eventData?.contexts?.app?.app_name).to.equal('test-app');
+        expect(event.eventData?.sdk?.name).to.equal('sentry.javascript.electron');
+        expect(event.eventData?.extra?.a).to.equal(2);
+        expect(event.eventData?.user?.id).to.equal('5');
+        expect(event.eventData?.user?.email).to.equal('none@test.org');
+        expect(event.eventData?.tags?.a).to.equal('b');
+        expect(event.eventData?.contexts?.server).to.include({ id: '2' });
+        expect(event.eventData?.fingerprint).to.include('abcd');
       });
 
       it('Custom release string for JavaScript error', async () => {
@@ -328,12 +366,13 @@ describe('E2E Tests', () => {
         expect(testServer.events.length).to.equal(1);
         const event = testServer.events[0];
         expect(event.method).to.equal('envelope');
-        expect(event.data.contexts?.app?.app_name).to.equal('test-app');
-        expect(event.data.release).to.equal('some-custom-release');
+        expect(event.eventData?.contexts?.app?.app_name).to.equal('test-app');
+        expect(event.eventData?.sdk?.name).to.equal('sentry.javascript.electron');
+        expect(event.eventData?.release).to.equal('some-custom-release');
         expect(event.dump_file).to.be.false;
         expect(event.sentry_key).to.equal(SENTRY_KEY);
-        expect(getLastFrame(event.data).filename).to.equal('app:///fixtures/javascript-renderer.js');
-        expect(event.data.breadcrumbs?.length).to.greaterThan(4);
+        expect(getLastFrame(event.eventData)?.filename).to.equal('app:///fixtures/javascript-renderer.js');
+        expect(event.eventData?.breadcrumbs?.length).to.greaterThan(4);
       });
 
       it('Custom release string for minidump', async function () {
@@ -344,12 +383,13 @@ describe('E2E Tests', () => {
         expect(testServer.events.length).to.equal(1);
         const event = testServer.events[0];
 
-        expect(event.data.release).to.equal('some-custom-release');
+        expect(event.eventData?.release).to.equal('some-custom-release');
+        expect(event.eventData?.sdk?.name).to.equal('sentry.javascript.electron');
         expect(event.method).to.equal('envelope');
-        expect(event.data.contexts?.app?.app_name).to.equal('test-app');
+        expect(event.eventData?.contexts?.app?.app_name).to.equal('test-app');
         expect(event.dump_file).to.be.true;
         expect(event.sentry_key).to.equal(SENTRY_KEY);
-        expect(event.data.breadcrumbs?.length).to.greaterThan(4);
+        expect(event.eventData?.breadcrumbs?.length).to.greaterThan(4);
       });
 
       it('Custom named renderer process', async () => {
@@ -358,7 +398,7 @@ describe('E2E Tests', () => {
         const event = testServer.events[0];
 
         expect(testServer.events.length).to.equal(1);
-        expect(event.data.contexts?.electron?.crashed_process).to.equal('SomeWindow');
+        expect(event.eventData?.contexts?.electron?.crashed_process).to.equal('SomeWindow');
       });
 
       it('JavaScript exception in contextIsolation renderer process', async function () {
@@ -374,10 +414,11 @@ describe('E2E Tests', () => {
 
         expect(testServer.events.length).to.equal(1);
         const event = testServer.events[0];
-        expect(event.data.contexts?.app?.app_name).to.equal('isolated-app');
-        expect(event.data.contexts?.electron?.crashed_process).to.equal('WebContents[1]');
+        expect(event.eventData?.contexts?.app?.app_name).to.equal('isolated-app');
+        expect(event.eventData?.contexts?.electron?.crashed_process).to.equal('WebContents[1]');
+        expect(event.eventData?.sdk?.name).to.equal('sentry.javascript.electron');
         expect(event.dump_file).to.be.false;
-        expect(event.data.user?.id).to.equal('abc-123');
+        expect(event.eventData?.user?.id).to.equal('abc-123');
       });
 
       it('JavaScript exception in renderer process sent with browser SDK', async () => {
@@ -387,13 +428,79 @@ describe('E2E Tests', () => {
         expect(testServer.events.length).to.equal(1);
         const event = testServer.events[0];
         expect(event.method).to.equal('store');
-        expect(event.data.contexts?.app?.app_name).to.equal('test-app');
-        expect(event.data.contexts?.electron?.crashed_process).to.equal('WebContents[1]');
+        expect(event.eventData?.contexts?.app?.app_name).to.equal('test-app');
+        expect(event.eventData?.contexts?.electron?.crashed_process).to.equal('WebContents[1]');
+        expect(event.eventData?.sdk?.name).to.equal('sentry.javascript.electron');
         expect(event.dump_file).to.be.false;
-        expect(event.data.platform).to.equal('javascript');
+        expect(event.eventData?.platform).to.equal('javascript');
         expect(event.sentry_key).to.equal(SENTRY_KEY);
-        expect(getLastFrame(event.data).filename).to.equal('app:///fixtures/javascript-renderer.js');
-        expect(event.data.breadcrumbs?.length).to.greaterThanOrEqual(1);
+        expect(getLastFrame(event.eventData)?.filename).to.equal('app:///fixtures/javascript-renderer.js');
+        expect(event.eventData?.breadcrumbs?.length).to.greaterThanOrEqual(1);
+      });
+
+      it('Tracks sessions with MainProcessSession integration', async () => {
+        await context.start('sentry-session', 'do-nothing');
+        await context.waitForEvents(testServer, 1);
+
+        expect(testServer.events.length).to.equal(1);
+
+        const session = testServer.events[0];
+        expect(session.method).to.equal('envelope');
+        expect(session.sessionData?.sid).to.exist;
+        expect(session.sessionData?.started).to.exist;
+        expect(session.sessionData?.status).to.equal('exited');
+        expect(session.sessionData?.errors).to.equal(0);
+      });
+
+      it('Tracks sessions with MainProcessSession integration with error', async () => {
+        await context.start('sentry-session', 'javascript-renderer');
+        await context.waitForEvents(testServer, 3);
+        expect(testServer.events.length).to.equal(3);
+
+        const session = getSession('ok');
+        expect(session.method).to.equal('envelope');
+        expect(session.sessionData?.sid).to.exist;
+        expect(session.sessionData?.started).to.exist;
+        expect(session.sessionData?.errors).to.equal(1);
+
+        const event = getEvent();
+        expect(event.method).to.equal('envelope');
+        expect(event.eventData?.contexts?.app?.app_name).to.equal('test-app');
+        expect(event.eventData?.contexts?.electron?.crashed_process).to.equal('WebContents[1]');
+        expect(event.eventData?.sdk?.name).to.equal('sentry.javascript.electron');
+        expect(event.dump_file).to.be.false;
+        expect(event.eventData?.platform).to.equal('javascript');
+        expect(event.sentry_key).to.equal(SENTRY_KEY);
+        expect(getLastFrame(event.eventData)?.filename).to.equal('app:///fixtures/javascript-renderer.js');
+        expect(event.eventData?.breadcrumbs?.length).to.greaterThan(4);
+
+        const session2 = getSession('exited');
+        expect(session2.method).to.equal('envelope');
+        expect(session2.sessionData?.sid).to.equal(session.sessionData?.sid);
+        expect(session2.sessionData?.started).to.exist;
+        expect(session2.sessionData?.errors).to.equal(1);
+      });
+
+      it('Allows BrowserTracing transactions from renderer', async () => {
+        await context.start('sentry-browser-tracing', 'do-nothing');
+        await context.waitForEvents(testServer, 1);
+
+        expect(testServer.events.length).to.equal(1);
+
+        const event = testServer.events[0];
+        expect(event.method).to.equal('envelope');
+        expect(event.eventData?.type).to.equal('transaction');
+        expect(event.eventData?.release).to.equal('some-release');
+        expect(event.eventData?.contexts?.app?.app_name).to.equal('test-app');
+        expect(event.eventData?.contexts?.electron?.crashed_process).to.be.undefined;
+        expect(event.eventData?.sdk?.name).to.equal('sentry.javascript.electron');
+        expect(event.eventData?.contexts?.trace?.trace_id).to.not.be.undefined;
+        expect(event.eventData?.contexts?.trace?.op).to.equal('pageload');
+        // We don't get spans in Electron v2 (Chrome 61) probably due to missing instrumentation?
+        if (majorVersion >= 3) {
+          expect(event.eventData?.spans?.length).to.be.greaterThanOrEqual(7);
+        }
+        expect(event.eventData?.transaction).to.equal('app:///index.html');
       });
     });
   });

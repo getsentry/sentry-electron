@@ -1,10 +1,21 @@
 import { Transports } from '@sentry/node';
-import { Event, Response, SentryRequest, SentryRequestType, Status, TransportOptions } from '@sentry/types';
-import { logger, PromiseBuffer, SentryError, timestampWithMs } from '@sentry/utils';
+import {
+  Event,
+  Response,
+  SentryRequest,
+  SentryRequestType,
+  Session,
+  SessionAggregates,
+  Status,
+  TransportOptions,
+} from '@sentry/types';
+import { logger, PromiseBuffer, SentryError } from '@sentry/utils';
 import { app, net } from 'electron';
 import { Readable, Writable } from 'stream';
 import * as url from 'url';
 import { createGzip } from 'zlib';
+
+import { getSdkInfo } from '../context';
 
 /**
  * Returns a promise that resolves when app is ready.
@@ -59,15 +70,10 @@ export class ElectronNetTransport extends Transports.BaseTransport {
   public async sendEvent(event: Event): Promise<Response> {
     const envelopeHeaders = JSON.stringify({
       event_id: event.event_id,
-      // Internal helper that uses `perf_hooks` to get clock reading
-      sent_at: new Date(timestampWithMs() * 1000).toISOString(),
+      sent_at: new Date().toISOString(),
     });
-    const type = event.type === 'transaction' ? 'transaction' : 'event';
-    const itemHeaders = JSON.stringify({
-      content_type: 'application/json',
-      // Internal helper that uses `perf_hooks` to get clock reading
-      type: event.type === 'transaction' ? 'transaction' : 'event',
-    });
+    const type = event.type || 'event';
+    const itemHeaders = JSON.stringify({ type });
 
     if (this._isRateLimited(type)) {
       return Promise.reject(
@@ -76,11 +82,35 @@ export class ElectronNetTransport extends Transports.BaseTransport {
     }
 
     const eventPayload = JSON.stringify(event);
-    const bodyBuffer = Buffer.from(`${envelopeHeaders}\n${itemHeaders}\n${eventPayload}\n`);
+    const body = Buffer.from(`${envelopeHeaders}\n${itemHeaders}\n${eventPayload}\n`);
 
     return this.sendRequest({
-      body: bodyBuffer,
       url: this._api.getEnvelopeEndpointWithUrlEncodedAuth(),
+      body,
+      type,
+    });
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public sendSession(session: Session | SessionAggregates): Promise<Response> {
+    const { name, version } = getSdkInfo();
+
+    const envelopeHeaders = JSON.stringify({
+      sent_at: new Date().toISOString(),
+      sdk: { name, version },
+    });
+
+    // I know this is hacky but we don't want to add `session` to request type since it's never rate limited
+    const type = 'aggregates' in session ? ('sessions' as SentryRequestType) : 'session';
+    const itemHeaders = JSON.stringify({ type });
+    const sessionPayload = JSON.stringify(session);
+    const body = Buffer.from(`${envelopeHeaders}\n${itemHeaders}\n${sessionPayload}\n`);
+
+    return this.sendRequest({
+      url: this._api.getEnvelopeEndpointWithUrlEncodedAuth(),
+      body,
       type,
     });
   }

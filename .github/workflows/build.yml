@@ -21,7 +21,7 @@ jobs:
           path: |
             .cache/**
             **/node_modules
-          key: ${{ runner.os }}-${{ github.sha }}
+          key: ${{ runner.os }}
       - name: Install
         run: yarn install
       - name: Build
@@ -46,7 +46,7 @@ jobs:
           path: |
             .cache/**
             **/node_modules
-          key: ${{ runner.os }}-${{ github.sha }}
+          key: ${{ runner.os }}
       - run: yarn install
       - name: Run Linter
         run: yarn lint
@@ -68,7 +68,7 @@ jobs:
           path: |
             .cache/**
             **/node_modules
-          key: ${{ runner.os }}-${{ github.sha }}
+          key: ${{ runner.os }}
       - run: yarn install
       - name: Run Unit Tests
         run: yarn test
@@ -94,10 +94,10 @@ jobs:
             '9.4.4',
             '10.4.7',
             '11.4.10',
-            '12.0.15',
-            '13.1.7',
-            '14.0.0-beta.17',
-            '15.0.0-nightly.20210721',
+            '12.0.16',
+            '13.1.9',
+            '14.0.0-beta.20',
+            '15.0.0-alpha.5',
           ]
     env:
       ELECTRON_VERSION: ${{ matrix.electron }}
@@ -109,7 +109,7 @@ jobs:
           path: |
             .cache/**
             **/node_modules
-          key: ${{ runner.os }}-${{ github.sha }}
+          key: ${{ runner.os }}
       - run: yarn install
       - name: Run E2E Tests
         run: yarn e2e

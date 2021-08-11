@@ -2,6 +2,7 @@ const { init, configureScope } = require('../../../../../');
 
 init({
   dsn: process.env.DSN,
+  autoSessionTracking: false,
   onFatalError: (_error) => {
     // We need this here otherwise we will get a dialog and CI will get stuck
   },

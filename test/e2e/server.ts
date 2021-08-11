@@ -1,8 +1,9 @@
-import { Event } from '@sentry/types';
+import { Event, Session } from '@sentry/types';
 import { Server } from 'http';
 import * as Koa from 'koa';
 import * as bodyParser from 'koa-bodyparser';
 import * as Router from 'koa-tree-router';
+import { inspect } from 'util';
 
 import { parse_multipart, sentryEventFromFormFields } from './multi-part';
 
@@ -12,8 +13,10 @@ export interface TestServerEvent {
   id: string;
   /** Public auth key from the DSN. */
   sentry_key: string;
-  /** Sentry Event data (should conform to the SentryEvent interface). */
-  data: Event;
+  /** Sentry Event data */
+  eventData?: Event;
+  /** Sentry Sessions data */
+  sessionData?: Session;
   /** Extra namespaced form data */
   namespaced?: { [key: string]: any };
   /** An optional minidump file, if included in the event. */
@@ -59,15 +62,27 @@ export class TestServer {
         return;
       }
 
-      const envelope = ctx.request.body.toString().split('\n');
+      const [, itemHeaders, payload, attachmentHeaders, attachment] = ctx.request.body.toString().split('\n');
 
-      this.events.push({
-        data: JSON.parse(envelope[2]) as Event,
-        dump_file: envelope[4] !== undefined && envelope[4].startsWith('MDMP'),
-        id: ctx.params.id,
-        sentry_key: keyMatch[1],
-        method: 'envelope',
-      });
+      const { type } = JSON.parse(itemHeaders) as { type: string | 'event' | 'session' };
+
+      if (type === 'session') {
+        this._addEvent({
+          sessionData: JSON.parse(payload) as Session,
+          dump_file: false,
+          id: ctx.params.id,
+          sentry_key: keyMatch[1],
+          method: `envelope`,
+        });
+      } else {
+        this._addEvent({
+          eventData: JSON.parse(payload) as Event,
+          dump_file: !!attachmentHeaders && !!attachment && attachment.startsWith('MDMP'),
+          id: ctx.params.id,
+          sentry_key: keyMatch[1],
+          method: `envelope`,
+        });
+      }
 
       ctx.status = 200;
       ctx.body = 'Success';
@@ -87,8 +102,8 @@ export class TestServer {
         const [event, namespaced] = sentryEventFromFormFields(result);
         const dump_file = result.files.upload_file_minidump != undefined && result.files.upload_file_minidump > 1024;
 
-        this.events.push({
-          data: event,
+        this._addEvent({
+          eventData: event,
           namespaced,
           dump_file,
           id: ctx.params.id,
@@ -114,8 +129,8 @@ export class TestServer {
 
       const event = JSON.parse(ctx.request.body as string);
 
-      this.events.push({
-        data: event,
+      this._addEvent({
+        eventData: event,
         id: ctx.params.id,
         sentry_key: keyMatch[1],
         method: 'store',
@@ -156,5 +171,13 @@ export class TestServer {
         reject(new Error('Invariant violation: Call .start() first'));
       }
     });
+  }
+
+  private _addEvent(event: TestServerEvent): void {
+    this.events.push(event);
+
+    if (process.env.DEBUG_SERVER) {
+      console.log(inspect(event, false, null, true));
+    }
   }
 }

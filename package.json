@@ -54,7 +54,7 @@
     "pretest": "run-s clean build",
     "test": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe electron-mocha --require ts-node/register/transpile-only --timeout 120000 ./test/unit/**/*.ts",
     "pree2e": "run-s clean build",
-    "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only --timeout 30000 --retries 3 ./test/e2e/*.ts"
+    "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only --timeout 30000 ./test/e2e/*.ts"
   },
   "dependencies": {
     "@sentry/browser": "6.11.0",
@@ -68,6 +68,7 @@
   "devDependencies": {
     "@sentry-internal/eslint-config-sdk": "6.11.0",
     "@sentry-internal/typescript": "6.11.0",
+    "@sentry/tracing": "6.11.0",
     "@types/busboy": "^0.2.3",
     "@types/chai": "^4.2.10",
     "@types/chai-as-promised": "^7.1.0",

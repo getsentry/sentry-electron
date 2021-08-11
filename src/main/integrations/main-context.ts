@@ -1,10 +1,9 @@
 import { getCurrentHub } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { Event, EventProcessor, Integration } from '@sentry/types';
-import * as deepMerge from 'deepmerge';
 import { app } from 'electron';
 
-import { normalizeEvent } from '../../common';
+import { mergeEvents, normalizeEvent } from '../../common';
 import { getEventDefaults } from '../context';
 
 /** Adds Electron context to events and normalises paths. */
@@ -22,7 +21,16 @@ export class MainContext implements Integration {
     addGlobalEventProcessor(async (event: Event) => {
       const normalized = normalizeEvent(event, app.getAppPath());
       const defaults = await getEventDefaults(options?.release);
-      return deepMerge(defaults, normalized);
+      const fullEvent = mergeEvents(defaults, normalized);
+
+      // event.contexts.electron.crashed_process = 'browser' by default so nodejs events
+      // have the correct context. We need to strip this for transactions because there
+      // hasn't been a crash.
+      if (fullEvent.type === 'transaction' && fullEvent.contexts?.electron) {
+        delete fullEvent.contexts.electron;
+      }
+
+      return fullEvent;
     });
   }
 }

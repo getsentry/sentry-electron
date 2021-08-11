@@ -36,6 +36,9 @@ export class TestContext {
   /** Can check if the main process is running and kill it */
   public mainProcess?: ProcessStatus;
 
+  /** App stdout used for writing to console on failed tests */
+  public processStdOut: string = '';
+
   /** Temporary directory that hosts the app's User Data. */
   private _tempDir?: TempDirectory;
 
@@ -85,6 +88,13 @@ export class TestContext {
           return;
         }
         process.stderr.write(data);
+      });
+    } else {
+      childProcess.stdout.on('data', (data) => {
+        this.processStdOut += data.toString();
+      });
+      childProcess.stderr.on('data', (data) => {
+        this.processStdOut += data.toString();
       });
     }
 

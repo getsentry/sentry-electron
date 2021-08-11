@@ -22,9 +22,7 @@ app.on('ready', () => {
     }),
   );
 
-  if (process.env.DEBUG) {
-    window.webContents.on('console-message', (_, __, msg) => console.log(`Renderer: ${msg}`));
-  }
+  window.webContents.on('console-message', (_, __, msg) => console.log(`Renderer: ${msg}`));
 
   require('./load-fixture');
 });

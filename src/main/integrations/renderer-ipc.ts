@@ -52,13 +52,15 @@ export class RendererIPC implements Integration {
 
     event.release = options?.release;
 
-    event.contexts = {
-      electron: {
-        crashed_process: options?.getRendererName?.(contents) || `WebContents[${contents.id}]`,
-        crashed_url: normalizeUrl(contents.getURL(), app.getAppPath()),
-      },
-      ...event.contexts,
-    };
+    if (event.exception) {
+      event.contexts = {
+        electron: {
+          crashed_process: options?.getRendererName?.(contents) || `WebContents[${contents.id}]`,
+          crashed_url: normalizeUrl(contents.getURL(), app.getAppPath()),
+        },
+        ...event.contexts,
+      };
+    }
 
     captureEvent(event);
   }

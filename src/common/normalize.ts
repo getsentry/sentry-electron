@@ -45,6 +45,10 @@ export function normalizeEvent(event: Event, basePath: string): Event {
     });
   }
 
+  if (event.transaction) {
+    event.transaction = normalizeUrl(event.transaction, basePath);
+  }
+
   const { request = {} } = event;
   if (request.url) {
     request.url = normalizeUrl(request.url, basePath);

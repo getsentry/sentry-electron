@@ -1,13 +1,17 @@
+const { app } = require('electron');
+
 const { init } = require('../../../../../');
 
 init({
   dsn: process.env.DSN,
+  release: 'some-release',
+  autoSessionTracking: true,
   debug: true,
-  autoSessionTracking: false,
   onFatalError: (_error) => {
     // We need this here otherwise we will get a dialog and CI will get stuck
   },
-  getRendererName(_) {
-    return 'SomeWindow';
-  },
 });
+
+setTimeout(() => {
+  app.quit();
+}, 2000);

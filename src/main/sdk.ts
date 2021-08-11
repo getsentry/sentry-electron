@@ -5,6 +5,7 @@ import { WebContents } from 'electron';
 import {
   ElectronEvents,
   MainContext,
+  MainProcessSession,
   OnUncaughtException,
   PreloadInjection,
   RendererIPC,
@@ -31,12 +32,35 @@ export interface ElectronMainOptions extends NodeOptions {
   getRendererName?: (contents: WebContents) => string | undefined;
 }
 
+/**
+ * Initialize Sentry in the Electron main process
+ */
+export function init(options: ElectronMainOptions): void {
+  const defaults = defaultIntegrations;
+
+  // Unless autoSessionTracking is specifically disabled, we track sessions as the
+  // lifetime of the Electron main process
+  if (options.autoSessionTracking !== false) {
+    defaults.push(new MainProcessSession());
+    // We don't want nodejs autoSessionTracking
+    options.autoSessionTracking = false;
+  }
+
+  setDefaultIntegrations(defaults, options);
+
+  if (options.dsn && options.transport === undefined) {
+    options.transport = ElectronNetTransport;
+  }
+
+  nodeInit(options);
+}
+
 /** Sets the default integrations and ensures that multiple minidump integrations are not set */
-function setDefaultIntegrations(options: ElectronMainOptions): void {
+function setDefaultIntegrations(defaults: Integration[], options: ElectronMainOptions): void {
   if (options.defaultIntegrations === undefined) {
     // If ElectronMinidump has been included, automatically remove SentryMinidump
     if (Array.isArray(options.integrations) && options.integrations.some((i) => i.name === 'ElectronMinidump')) {
-      options.defaultIntegrations = defaultIntegrations.filter((integration) => integration.name !== 'SentryMinidump');
+      options.defaultIntegrations = defaults.filter((integration) => integration.name !== 'SentryMinidump');
       return;
     } else if (typeof options.integrations === 'function') {
       const originalFn = options.integrations;
@@ -49,21 +73,6 @@ function setDefaultIntegrations(options: ElectronMainOptions): void {
       };
     }
 
-    options.defaultIntegrations = defaultIntegrations;
+    options.defaultIntegrations = defaults;
   }
-}
-
-/**
- * Initialize Sentry in the Electron main process
- */
-export function init(options: ElectronMainOptions): void {
-  options.autoSessionTracking = false;
-
-  setDefaultIntegrations(options);
-
-  if (options.dsn && options.transport === undefined) {
-    options.transport = ElectronNetTransport;
-  }
-
-  nodeInit(options);
 }

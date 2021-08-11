@@ -12,7 +12,11 @@ export function isWindowsOnCI(): boolean {
 }
 
 /** Get the last stack frame from SentryEvent */
-export function getLastFrame(event: Event): StackFrame {
+export function getLastFrame(event?: Event): StackFrame | undefined {
+  if (!event) {
+    return;
+  }
+
   const frames = getFrames(event);
   return frames.length ? frames[frames.length - 1] : { filename: undefined };
 }
