@@ -142,7 +142,7 @@ describe('E2E Tests', () => {
       });
 
       // tslint:disable-next-line
-      it('Native crash in renderer process', async function() {
+      it('Native crash in renderer process', async function () {
         await context.start('sentry-basic', 'native-renderer');
         // It can take rather a long time to get the event on Mac
         await context.waitForEvents(testServer, 1, 20000);
@@ -175,6 +175,7 @@ describe('E2E Tests', () => {
         if (process.platform !== 'linux') {
           expect(event.data.user?.id).to.equal('ABCDEF1234567890');
           expect(event.namespaced?.initialScope?.user).to.equal('some_user');
+          expect(event.namespaced?.initialScope?.release).to.equal('some-release');
         }
       });
 
@@ -197,6 +198,7 @@ describe('E2E Tests', () => {
 
         if (process.platform !== 'linux') {
           expect(event.namespaced?.initialScope?.user).to.equal('some_user');
+          expect(event.namespaced?.initialScope?.release).to.equal('some-release');
         }
       });
 
@@ -216,6 +218,7 @@ describe('E2E Tests', () => {
         expect(event.method).to.equal('minidump');
 
         expect(event.namespaced?.initialScope?.user).to.equal('some_user');
+        expect(event.namespaced?.initialScope?.release).to.equal('some-release');
       });
 
       it('JavaScript exception in main process with user data', async () => {
@@ -228,7 +231,7 @@ describe('E2E Tests', () => {
       });
 
       // tslint:disable-next-line
-      it('Native crash in main process', async function() {
+      it('Native crash in main process', async function () {
         await context.start('sentry-basic', 'native-main');
 
         // wait for the main process to die
@@ -330,7 +333,7 @@ describe('E2E Tests', () => {
       });
 
       // tslint:disable-next-line
-      it('Custom release string for minidump', async function() {
+      it('Custom release string for minidump', async function () {
         await context.start('sentry-custom-release', 'native-renderer');
         // It can take rather a long time to get the event on Mac
         await context.waitForEvents(testServer, 1, 20000);
@@ -354,7 +357,7 @@ describe('E2E Tests', () => {
         expect(event.data.contexts && (event.data.contexts.electron as any).crashed_process).to.equal('renderer');
       });
 
-      it('JavaScript exception in contextIsolation renderer process', async function() {
+      it('JavaScript exception in contextIsolation renderer process', async function () {
         // contextIsolation only added >= 6
         if (majorVersion < 6) {
           this.skip();
