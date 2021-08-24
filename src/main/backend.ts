@@ -9,7 +9,7 @@ import {
   Scope,
 } from '@sentry/core';
 import { NodeBackend } from '@sentry/node';
-import { Event, EventHint, ScopeContext, Severity, Transport, TransportOptions } from '@sentry/types';
+import { Event, EventHint, Severity, Transport, TransportOptions } from '@sentry/types';
 import { Dsn, forget, logger, SentryError } from '@sentry/utils';
 import { app, crashReporter, ipcMain } from 'electron';
 import { join } from 'path';
@@ -48,7 +48,7 @@ function hasKeys(obj: any): boolean {
 }
 
 /** Gets a Scope object with user, tags and extra */
-function getScope(): Partial<ScopeContext> {
+function getScope(options: ElectronOptions): any {
   const scope = getCurrentHub().getScope() as any | undefined;
 
   if (!scope) {
@@ -56,6 +56,8 @@ function getScope(): Partial<ScopeContext> {
   }
 
   return {
+    release: options.release,
+    environment: options.environment,
     /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     ...(hasKeys(scope._user) && { user: scope._user }),
     ...(hasKeys(scope._tags) && { tags: scope._tags }),
@@ -283,7 +285,7 @@ export class MainBackend extends BaseBackend<ElectronOptions> implements CommonB
     // We don't add globalExtra for Linux because Breakpad doesn't support JSON like strings:
     // https://github.com/electron/electron/issues/29711
     const globalExtra =
-      process.platform !== 'linux' ? { sentry___initialScope: JSON.stringify(getScope()) } : undefined;
+      process.platform !== 'linux' ? { sentry___initialScope: JSON.stringify(getScope(this._options)) } : undefined;
 
     const dsn = new Dsn(dsnString);
 

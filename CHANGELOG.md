@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.5.2
+
+-fix: Add `release` and `environment` to electron uploader `initialScope`
+
 ## 2.5.1
 
 - feat: Context and breadcrumbs sent via Crashpad for native crashes in main process when `useCrashpadMinidumpUploader`
