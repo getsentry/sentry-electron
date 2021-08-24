@@ -1,0 +1,261 @@
+---
+description: Webpack 5 app with contextIsolation and sandbox
+condition: 'version.major >= 6'
+command: 'yarn && yarn build'
+timeout: 120
+---
+
+`package.json`
+
+```json
+{
+  "name": "webpack-context-isolation",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "electron .",
+    "build": "webpack"
+  },
+  "main": "dist/main.js",
+  "devDependencies": {
+    "html-webpack-plugin": "^5.3.2",
+    "webpack": "^5.48.0",
+    "webpack-cli": "^4.7.2",
+    "warnings-to-errors-webpack-plugin": "^2.0.1"
+  },
+  "dependencies": {
+    "@sentry/electron": "3.0.0"
+  }
+}
+```
+
+`webpack.config.js`
+
+```js
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const WarningsToErrorsPlugin = require('warnings-to-errors-webpack-plugin');
+
+module.exports = [
+  {
+    mode: 'production',
+    entry: './src/main.js',
+    target: 'electron-main',
+    output: {
+      libraryTarget: 'commonjs2',
+      filename: 'main.js',
+    },
+    plugins: [new WarningsToErrorsPlugin()],
+  },
+  {
+    mode: 'production',
+    entry: '@sentry/electron/preload',
+    target: 'electron-preload',
+    output: {
+      filename: 'preload.js',
+    },
+    plugins: [new WarningsToErrorsPlugin()],
+  },
+  {
+    mode: 'production',
+    entry: './src/renderer.js',
+    target: 'web',
+    output: {
+      filename: 'renderer.js',
+    },
+    plugins: [new HtmlWebpackPlugin(), new WarningsToErrorsPlugin()],
+  },
+];
+```
+
+`src/renderer.js`
+
+```js
+const { init, configureScope } = require('@sentry/electron/renderer');
+
+init({
+  debug: true,
+});
+
+configureScope((scope) => {
+  scope.setUser({ id: 'abc-123' });
+});
+
+setTimeout(() => {
+  throw new Error('Some renderer error');
+}, 500);
+```
+
+`src/main.js`
+
+```js
+const path = require('path');
+const url = require('url');
+
+const { app, BrowserWindow } = require('electron');
+
+const { init } = require('@sentry/electron/main');
+
+init({
+  dsn: 'http://37f8a2ee37c0409d8970bc7559c7c7e4@localhost:8123/277345',
+  debug: true,
+  autoSessionTracking: false,
+  onFatalError: () => {},
+});
+
+app.on('ready', () => {
+  const window = new BrowserWindow({
+    show: false,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
+    },
+  });
+
+  window.loadURL(
+    url.format({
+      pathname: path.join(__dirname, 'index.html'),
+      protocol: 'file:',
+      slashes: true,
+    }),
+  );
+});
+```
+
+`event`
+
+```json
+{
+  "method": "envelope",
+  "sentryKey": "37f8a2ee37c0409d8970bc7559c7c7e4",
+  "appId": "277345",
+  "dumpFile": false,
+  "data": {
+    "sdk": {
+      "name": "sentry.javascript.electron",
+      "packages": [
+        {
+          "name": "npm:@sentry/electron",
+          "version": "{{version}}"
+        }
+      ],
+      "version": "{{version}}"
+    },
+    "contexts": {
+      "app": {
+        "app_name": "webpack-context-isolation",
+        "app_version": "1.0.0"
+      },
+      "browser": {
+        "name": "Chrome"
+      },
+      "chrome": {
+        "name": "Chrome",
+        "type": "runtime",
+        "version": "{{version}}"
+      },
+      "device": {
+        "arch": "{{arch}}",
+        "family": "Desktop"
+      },
+      "node": {
+        "name": "Node",
+        "type": "runtime",
+        "version": "{{version}}"
+      },
+      "os": {
+        "name": "{{platform}}",
+        "version": "{{version}}"
+      },
+      "runtime": {
+        "name": "Electron",
+        "version": "{{version}}"
+      },
+      "electron": {
+        "crashed_process": "WebContents[1]",
+        "crashed_url": "app:///dist/index.html"
+      }
+    },
+    "environment": "production",
+    "user": {
+      "ip_address": "{{auto}}",
+      "id": "abc-123"
+    },
+    "exception": {
+      "values": [
+        {
+          "type": "Error",
+          "value": "Some renderer error",
+          "stacktrace": {
+            "frames": [
+              {
+                "colno": 0,
+                "filename": "app:///dist/renderer.js",
+                "function": "{{function}}",
+                "in_app": true,
+                "lineno": 0
+              },
+              {
+                "colno": 0,
+                "filename": "app:///dist/renderer.js",
+                "function": "{{function}}",
+                "in_app": true,
+                "lineno": 0
+              }
+            ]
+          },
+          "mechanism": {
+            "handled": true,
+            "type": "generic"
+          }
+        }
+      ]
+    },
+    "level": "error",
+    "event_id": "{{id}}",
+    "platform": "javascript",
+    "timestamp": 0,
+    "breadcrumbs": [
+      {
+        "timestamp": 0,
+        "category": "electron",
+        "message": "app.will-finish-launching",
+        "type": "ui"
+      },
+      {
+        "timestamp": 0,
+        "category": "electron",
+        "message": "app.ready",
+        "type": "ui"
+      },
+      {
+        "timestamp": 0,
+        "category": "electron",
+        "message": "app.session-created",
+        "type": "ui"
+      },
+      {
+        "timestamp": 0,
+        "category": "electron",
+        "message": "app.web-contents-created",
+        "type": "ui"
+      },
+      {
+        "timestamp": 0,
+        "category": "electron",
+        "message": "app.browser-window-created",
+        "type": "ui"
+      },
+      {
+        "timestamp": 0,
+        "category": "electron",
+        "message": "WebContents[1].dom-ready",
+        "type": "ui"
+      }
+    ],
+    "request": {
+      "url": "app:///dist/index.html"
+    }
+  }
+}
+```

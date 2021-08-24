@@ -8,21 +8,19 @@ import { inspect } from 'util';
 import { parse_multipart, sentryEventFromFormFields } from './multi-part';
 
 /** Event payload that has been submitted to the test server. */
-export interface TestServerEvent {
+export interface TestServerEvent<T = unknown> {
   /** Request ID (UUID) */
-  id: string;
+  appId: string;
   /** Public auth key from the DSN. */
-  sentry_key: string;
-  /** Sentry Event data */
-  eventData?: Event;
-  /** Sentry Sessions data */
-  sessionData?: Session;
+  sentryKey: string;
   /** Extra namespaced form data */
-  namespaced?: { [key: string]: any };
+  namespacedData?: { [key: string]: any };
   /** An optional minidump file, if included in the event. */
-  dump_file?: boolean;
+  dumpFile?: boolean;
   /** API method used for submission */
   method: 'envelope' | 'minidump' | 'store';
+  /** Sentry Event data */
+  data: T;
 }
 
 /**
@@ -68,18 +66,18 @@ export class TestServer {
 
       if (type === 'session') {
         this._addEvent({
-          sessionData: JSON.parse(payload) as Session,
-          dump_file: false,
-          id: ctx.params.id,
-          sentry_key: keyMatch[1],
+          data: JSON.parse(payload) as Session,
+          dumpFile: false,
+          appId: ctx.params.id,
+          sentryKey: keyMatch[1],
           method: `envelope`,
         });
       } else {
         this._addEvent({
-          eventData: JSON.parse(payload) as Event,
-          dump_file: !!attachmentHeaders && !!attachment && attachment.startsWith('MDMP'),
-          id: ctx.params.id,
-          sentry_key: keyMatch[1],
+          data: JSON.parse(payload) as Event,
+          dumpFile: !!attachmentHeaders && !!attachment && attachment.startsWith('MDMP'),
+          appId: ctx.params.id,
+          sentryKey: keyMatch[1],
           method: `envelope`,
         });
       }
@@ -103,11 +101,11 @@ export class TestServer {
         const dump_file = result.files.upload_file_minidump != undefined && result.files.upload_file_minidump > 1024;
 
         this._addEvent({
-          eventData: event,
-          namespaced,
-          dump_file,
-          id: ctx.params.id,
-          sentry_key: keyMatch[1],
+          data: event,
+          namespacedData: namespaced,
+          dumpFile: dump_file,
+          appId: ctx.params.id,
+          sentryKey: keyMatch[1],
           method: 'minidump',
         });
 
@@ -130,11 +128,11 @@ export class TestServer {
       const event = JSON.parse(ctx.request.body as string);
 
       this._addEvent({
-        eventData: event,
-        id: ctx.params.id,
-        sentry_key: keyMatch[1],
+        data: event,
+        appId: ctx.params.id,
+        sentryKey: keyMatch[1],
         method: 'store',
-        dump_file: false,
+        dumpFile: false,
       });
 
       ctx.headers['Content-Type'] = 'text/plain; charset=utf-8';

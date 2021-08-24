@@ -7,7 +7,7 @@ import { join } from 'path';
 import { readDirAsync, readFileAsync } from './fs';
 
 export const SDK_NAME = 'sentry.javascript.electron';
-export const SDK_VERSION = '2.5.1';
+export const SDK_VERSION = '3.0.0-beta';
 
 /** Operating system context information. */
 interface OsContext {

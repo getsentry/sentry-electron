@@ -1,4 +1,7 @@
 import { Event, StackFrame } from '@sentry/types';
+import { join } from '@sentry/utils';
+import { readFileSync } from 'fs';
+import * as YAML from 'yaml';
 
 /** Get stack frames from SentryEvent */
 function getFrames(event: Event): StackFrame[] {
@@ -19,4 +22,19 @@ export function getLastFrame(event?: Event): StackFrame | undefined {
 
   const frames = getFrames(event);
   return frames.length ? frames[frames.length - 1] : { filename: undefined };
+}
+
+/** Gets the Electron versions to test */
+export function getTestVersions(): string[] {
+  if (process.env.ELECTRON_VERSION) {
+    return [process.env.ELECTRON_VERSION];
+  }
+
+  const ciBuildStr = readFileSync(join(__dirname, '..', '.github', 'workflows', 'build.yml'), {
+    encoding: 'utf8',
+  });
+
+  const ciBuild = YAML.parse(ciBuildStr);
+
+  return ciBuild.jobs.job_4.strategy.matrix.electron;
 }

@@ -19,3 +19,4 @@ stats.json
 /index.*
 /integrations.*
 /ipc.*
+*.tgz
