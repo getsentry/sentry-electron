@@ -220,6 +220,7 @@ describe('E2E Tests', () => {
           expect(event.eventData?.user?.id).to.equal('ABCDEF1234567890');
           expect(event.eventData?.sdk?.name).to.equal('sentry.javascript.electron');
           expect(event.namespaced?.initialScope?.user?.username).to.equal('some_user');
+          expect(event.namespaced?.initialScope?.release).to.equal('some-release');
         }
       });
 
@@ -240,6 +241,7 @@ describe('E2E Tests', () => {
 
         if (majorVersion >= 15 || process.platform !== 'linux') {
           expect(event.namespaced?.initialScope?.user?.username).to.equal('some_user');
+          expect(event.namespaced?.initialScope?.release).to.equal('some-release');
         }
       });
 
@@ -256,6 +258,7 @@ describe('E2E Tests', () => {
         expect(event.sentry_key).to.equal(SENTRY_KEY);
         expect(event.method).to.equal('minidump');
         expect(event.namespaced?.initialScope?.user?.username).to.equal('some_user');
+        expect(event.namespaced?.initialScope?.release).to.equal('some-release');
       });
 
       it('JavaScript exception in main process with user data', async () => {

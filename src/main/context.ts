@@ -5,9 +5,9 @@ import { platform, release } from 'os';
 import { join } from 'path';
 
 import { readDirAsync, readFileAsync } from './fs';
+import { SDK_VERSION } from './version';
 
 export const SDK_NAME = 'sentry.javascript.electron';
-export const SDK_VERSION = '2.5.1';
 
 /** Operating system context information. */
 interface OsContext {

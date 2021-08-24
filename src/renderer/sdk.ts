@@ -33,11 +33,6 @@ See the docs: https://docs.sentry.io/platforms/javascript/guides/electron/#prelo
     options.dsn = 'https://12345@dummy.dsn/12345';
   }
 
-  if (options.release === undefined) {
-    // Events are sent via the main process but tracing wont work without release
-    options.release = 'fake-release';
-  }
-
   // We only handle initialScope in the main process otherwise it can cause race conditions over IPC
   delete options.initialScope;
 

@@ -1,6 +1,6 @@
 import { getCurrentHub, Scope } from '@sentry/core';
-import { NodeClient } from '@sentry/node';
-import { Event, Integration, ScopeContext } from '@sentry/types';
+import { NodeClient, NodeOptions } from '@sentry/node';
+import { Event, Integration } from '@sentry/types';
 import { Dsn, forget, logger, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
@@ -14,7 +14,7 @@ function hasKeys(obj: any): boolean {
 }
 
 /** Gets a Scope object with user, tags and extra */
-function getScope(): Partial<ScopeContext> {
+function getScope(options: NodeOptions): Event {
   const scope = getCurrentHub().getScope() as any | undefined;
 
   if (!scope) {
@@ -22,6 +22,8 @@ function getScope(): Partial<ScopeContext> {
   }
 
   return {
+    release: options.release,
+    environment: options.environment,
     /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     ...(hasKeys(scope._user) && { user: scope._user }),
     ...(hasKeys(scope._tags) && { tags: scope._tags }),
@@ -65,13 +67,14 @@ export class ElectronMinidump implements Integration {
       throw new SentryError(`The '${this.name}' integration is only supported with Electron >= v9`);
     }
 
-    const dsnString = getCurrentHub().getClient<NodeClient>()?.getOptions()?.dsn;
+    const options = getCurrentHub().getClient<NodeClient>()?.getOptions();
+    const dsnString = options?.dsn;
 
-    if (!dsnString) {
+    if (!options || !dsnString) {
       throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
     }
 
-    this._startCrashReporter(dsnString);
+    this._startCrashReporter(options);
 
     // If we're using the Crashpad minidump uploader, we set extra parameters whenever the scope updates
     if (usesCrashpad()) {
@@ -82,10 +85,10 @@ export class ElectronMinidump implements Integration {
   /**
    * Starts the native crash reporter
    */
-  private _startCrashReporter(dsn: string): void {
+  private _startCrashReporter(options: NodeOptions): void {
     // We don't add globalExtra when Breakpad is in use because it doesn't support JSON like strings:
     // https://github.com/electron/electron/issues/29711
-    const globalExtra = usesCrashpad() ? { sentry___initialScope: JSON.stringify(getScope()) } : undefined;
+    const globalExtra = usesCrashpad() ? { sentry___initialScope: JSON.stringify(getScope(options)) } : undefined;
 
     logger.log('Starting Electron crashReporter');
 
@@ -93,7 +96,7 @@ export class ElectronMinidump implements Integration {
       companyName: '',
       ignoreSystemCrashHandler: true,
       productName: app.name || app.getName(),
-      submitURL: minidumpUrlFromDsn(new Dsn(dsn)),
+      submitURL: minidumpUrlFromDsn(new Dsn(options.dsn || '')),
       uploadToServer: true,
       compress: true,
       globalExtra,

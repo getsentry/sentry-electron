@@ -13,7 +13,9 @@ export class ElectronEvents implements Integration {
   /** @inheritDoc */
   public name: string = ElectronEvents.id;
 
-  /** @inheritDoc */
+  /**
+   * @param _unresponsive Whether webContents `unresponsive` events are captured as events
+   */
   public constructor(private readonly _unresponsive: boolean = true) {}
 
   /** @inheritDoc */
@@ -36,18 +38,18 @@ export class ElectronEvents implements Integration {
           return;
         }
 
-        this._instrumentBreadcrumbs(
-          options?.getRendererName?.(contents) || `WebContents[${contents.id}]`,
-          contents,
-          (event) => ['dom-ready', 'load-url', 'destroyed'].includes(event),
-        );
-      });
+        const webContentsName = options?.getRendererName?.(contents) || `WebContents[${contents.id}]`;
 
-      if (this._unresponsive) {
-        contents.on('unresponsive', () => {
-          captureMessage('BrowserWindow Unresponsive');
-        });
-      }
+        this._instrumentBreadcrumbs(webContentsName, contents, (event) =>
+          ['dom-ready', 'load-url', 'destroyed'].includes(event),
+        );
+
+        if (this._unresponsive) {
+          contents.on('unresponsive', () => {
+            captureMessage(`${webContentsName} Unresponsive`);
+          });
+        }
+      });
     });
   }
 

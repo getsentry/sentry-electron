@@ -1,13 +1,13 @@
 import { Event } from '@sentry/types';
 
-export const IPC = {
+export enum IPC {
   /** IPC to send a captured event to Sentry. */
-  EVENT: 'sentry-electron.event',
+  EVENT = 'sentry-electron.event',
   /** IPC to capture scope globally. */
-  SCOPE: 'sentry-electron.scope',
+  SCOPE = 'sentry-electron.scope',
   /** IPC to get Electron scope in renderer */
-  CONTEXT: 'sentry-electron.context',
-};
+  CONTEXT = 'sentry-electron.context',
+}
 
 export interface AppContext {
   eventDefaults: Event;

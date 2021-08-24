@@ -1,6 +1,7 @@
 import { captureEvent, configureScope, getCurrentHub, Scope } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { Event, Integration } from '@sentry/types';
+import { logger } from '@sentry/utils';
 import { app, ipcMain, IpcMainEvent, WebContents } from 'electron';
 
 import { AppContext, IPC, normalizeUrl, walk } from '../../common';
@@ -45,8 +46,7 @@ export class RendererIPC implements Integration {
     try {
       event = JSON.parse(jsonEvent) as Event;
     } catch {
-      // eslint-disable-next-line no-console
-      console.warn('sentry-electron received an invalid IPC_EVENT message');
+      logger.warn('sentry-electron received an invalid IPC_EVENT message');
       return;
     }
 
@@ -73,8 +73,7 @@ export class RendererIPC implements Integration {
     try {
       rendererScope = JSON.parse(jsonScope) as Scope;
     } catch {
-      // eslint-disable-next-line no-console
-      console.warn('sentry-electron received an invalid IPC_SCOPE message');
+      logger.warn('sentry-electron received an invalid IPC_SCOPE message');
       return;
     }
 
