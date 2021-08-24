@@ -7,7 +7,7 @@ module.exports = {
     ecmaVersion: 2018,
   },
   extends: ['@sentry-internal/sdk'],
-  ignorePatterns: ['build/**', 'dist/**', 'esm/**', 'example/**', 'scripts/**', 'test/integration/**'],
+  ignorePatterns: ['build/**', '**/dist/**', 'esm/**', 'example/**', 'scripts/**', 'test/integration/**'],
   overrides: [
     {
       files: ['*.ts', '*.tsx', '*.d.ts'],
