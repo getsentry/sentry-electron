@@ -1,4 +1,4 @@
-import { Integration, IntegrationClass } from '@sentry/types';
+import { Integration } from '@sentry/types';
 import { dynamicRequire } from '@sentry/utils';
 import { ElectronOptions } from './';
 
@@ -17,18 +17,18 @@ import { EventToMain, RendererContext, ScopeToMain } from './renderer/integratio
 /** Convenience interface used to expose Integrations */
 export interface Integrations {
   // For main process
-  SentryMinidump: IntegrationClass<SentryMinidump>;
-  ElectronMinidump: IntegrationClass<ElectronMinidump>;
-  ElectronEvents: IntegrationClass<ElectronEvents>;
-  MainContext: IntegrationClass<MainContext>;
-  RendererIPC: IntegrationClass<RendererIPC>;
-  OnUncaughtExcept: IntegrationClass<OnUncaughtException>;
-  PreloadInjection: IntegrationClass<PreloadInjection>;
-  MainProcessSession: IntegrationClass<MainProcessSession>;
+  SentryMinidump: SentryMinidump;
+  ElectronMinidump: ElectronMinidump;
+  ElectronEvents: ElectronEvents;
+  MainContext: MainContext;
+  RendererIPC: RendererIPC;
+  OnUncaughtExcept: OnUncaughtException;
+  PreloadInjection: PreloadInjection;
+  MainProcessSession: MainProcessSession;
   // For renderer process
-  ScopeToMain: IntegrationClass<ScopeToMain>;
-  EventToMain: IntegrationClass<EventToMain>;
-  RendererContext: IntegrationClass<RendererContext>;
+  ScopeToMain: ScopeToMain;
+  EventToMain: EventToMain;
+  RendererContext: RendererContext;
 }
 
 /** Return all Electron integrations and add EmptyIntegrations for integrations missing in this process. */
