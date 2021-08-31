@@ -2,7 +2,7 @@ import { captureEvent, configureScope, getCurrentHub, Scope } from '@sentry/core
 import { NodeClient } from '@sentry/node';
 import { Event, Integration } from '@sentry/types';
 import { logger } from '@sentry/utils';
-import { app, ipcMain, IpcMainEvent, WebContents } from 'electron';
+import { app, ipcMain, WebContents } from 'electron';
 
 import { AppContext, IPC, normalizeUrl, walk } from '../../common';
 import { getEventDefaults } from '../context';
@@ -30,11 +30,8 @@ export class RendererIPC implements Integration {
   private _setupIPC(): void {
     const options = getCurrentHub().getClient<NodeClient>()?.getOptions() as ElectronMainOptions | undefined;
 
-    ipcMain.on(IPC.EVENT, (event: IpcMainEvent, jsonEvent: string) =>
-      this._handleEvent(jsonEvent, event.sender, options),
-    );
-
-    ipcMain.on(IPC.SCOPE, (_: any, jsonScope: string) => this._handleScope(jsonScope, options));
+    ipcMain.on(IPC.EVENT, (event, jsonEvent: string) => this._handleEvent(jsonEvent, event.sender, options));
+    ipcMain.on(IPC.SCOPE, (_, jsonScope: string) => this._handleScope(jsonScope, options));
     ipcMain.on(IPC.CONTEXT, (event) => this._handleContext(event.sender, options));
   }
 
@@ -106,7 +103,10 @@ export class RendererIPC implements Integration {
     const eventDefaults = await getEventDefaults(options?.release);
 
     const crashed_process = options?.getRendererName?.(contents) || `WebContents[${contents.id}]`;
-    eventDefaults.contexts = { ...eventDefaults.contexts, electron: { ...eventDefaults.contexts, crashed_process } };
+    eventDefaults.contexts = {
+      ...eventDefaults.contexts,
+      electron: { ...eventDefaults.contexts?.electron, crashed_process },
+    };
 
     const context: AppContext = { eventDefaults, appBasePath: app.getAppPath() };
     contents.send(IPC.CONTEXT, JSON.stringify(context, walk));

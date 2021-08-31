@@ -1,22 +1,21 @@
+import { NodeOptions } from '@sentry/node';
 import { Transport } from '@sentry/types';
-import { Dsn, forget, logger } from '@sentry/utils';
+import { forget, logger } from '@sentry/utils';
 import { join } from 'path';
 
+import { getCrashesDirectory } from '../../electron-normalize';
 import { readDirAsync, unlinkAsync } from '../../fs';
 import { BaseUploader } from './base-uploader';
 
 /** */
 export class CrashpadUploader extends BaseUploader {
+  private readonly _crashesDirectory: string = getCrashesDirectory();
+
   /** The sub-directory where crashpad dumps can be found */
   private readonly _crashpadSubDirectory: string;
 
-  public constructor(
-    dsn: Dsn,
-    private readonly _crashesDirectory: string,
-    cacheDirectory: string,
-    transport: Transport,
-  ) {
-    super(dsn, cacheDirectory, transport);
+  public constructor(options: NodeOptions, cacheDirectory: string, transport: Transport) {
+    super(options, cacheDirectory, transport);
     this._crashpadSubDirectory = process.platform === 'win32' ? 'reports' : 'completed';
   }
 

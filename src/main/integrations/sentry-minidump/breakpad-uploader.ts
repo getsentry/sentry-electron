@@ -1,19 +1,18 @@
+import { NodeOptions } from '@sentry/node';
 import { Transport } from '@sentry/types';
-import { Dsn, logger } from '@sentry/utils';
+import { logger } from '@sentry/utils';
 import { join } from 'path';
 
+import { getCrashesDirectory } from '../../electron-normalize';
 import { readDirAsync, unlinkAsync } from '../../fs';
 import { BaseUploader } from './base-uploader';
 
 /** */
 export class BreakpadUploader extends BaseUploader {
-  public constructor(
-    dsn: Dsn,
-    private readonly _crashesDirectory: string,
-    cacheDirectory: string,
-    transport: Transport,
-  ) {
-    super(dsn, cacheDirectory, transport);
+  private readonly _crashesDirectory: string = getCrashesDirectory();
+
+  public constructor(options: NodeOptions, cacheDirectory: string, transport: Transport) {
+    super(options, cacheDirectory, transport);
   }
 
   /** @inheritdoc */

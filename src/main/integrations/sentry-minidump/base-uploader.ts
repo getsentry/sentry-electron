@@ -1,6 +1,7 @@
-import { API } from '@sentry/core';
-import { Event, Status, Transport } from '@sentry/types';
-import { Dsn, logger, timestampWithMs } from '@sentry/utils';
+import { API, getCurrentHub } from '@sentry/core';
+import { NodeOptions } from '@sentry/node';
+import { Event, SessionStatus, Status, Transport } from '@sentry/types';
+import { isThenable, logger, SentryError, timestampWithMs } from '@sentry/utils';
 import { basename, join } from 'path';
 
 import { mkdirp, readFileAsync, renameAsync, statAsync, unlinkAsync } from '../../fs';
@@ -21,7 +22,7 @@ export interface MinidumpRequest {
   /** Path to the minidump file. */
   path: string;
   /** Associated event data. */
-  event: Event;
+  event: Event | null;
 }
 
 /**
@@ -43,10 +44,18 @@ export abstract class BaseUploader {
   /**
    * Creates a new uploader instance.
    */
-  public constructor(dsn: Dsn, private readonly _cacheDirectory: string, private readonly _transport: Transport) {
+  public constructor(
+    private readonly _options: NodeOptions,
+    private readonly _cacheDirectory: string,
+    private readonly _transport: Transport,
+  ) {
     this._knownPaths = [];
 
-    this._api = new API(dsn);
+    if (!_options.dsn) {
+      throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
+    }
+
+    this._api = new API(_options.dsn);
     this._queue = new Store(this._cacheDirectory, 'queue', []);
   }
 
@@ -65,18 +74,43 @@ export abstract class BaseUploader {
       return;
     }
 
-    logger.log('Sending minidump', request.path);
+    // The beforeSend callback can set the event as null
+    if (this._options.beforeSend && request.event) {
+      const maybePromiseResult = this._options.beforeSend(request.event);
+
+      const result = await (isThenable(maybePromiseResult)
+        ? (maybePromiseResult as PromiseLike<Event | null>).then((e) => e)
+        : Promise.resolve(maybePromiseResult));
+
+      if (result === null) {
+        logger.warn('`beforeSend` returned `null`, will not send minidump.');
+        request.event = null;
+      }
+    }
+
+    if (request.event) {
+      const hub = getCurrentHub();
+      const client = hub.getClient();
+      const session = hub.getScope()?.getSession();
+
+      if (client && client.captureSession && session) {
+        session.update({ status: SessionStatus.Crashed, errors: 1 });
+        client.captureSession(session);
+      }
+    }
 
     const transport = this._transport as ElectronNetTransport;
     try {
       let response;
-      if (!transport.isRateLimited('event')) {
+
+      if (request.event && !transport.isRateLimited('event')) {
+        logger.log('Sending minidump', request.path);
+
         const requestForTransport = await this._toMinidumpRequest(transport, request.event, request.path);
         response = await transport.sendRequest(requestForTransport);
       }
 
-      // We either succeeded or something went horribly wrong. Either way, we
-      // can remove the minidump file.
+      // We either succeeded, something went wrong or the send was aborted. Either way, we can remove the minidump file.
       try {
         await unlinkAsync(request.path);
         logger.log('Deleted minidump', request.path);
@@ -85,7 +119,6 @@ export abstract class BaseUploader {
       }
 
       // Forget this minidump in all caches
-      // tslint:disable-next-line: strict-comparisons
       this._queue.update((queued) => queued.filter((stored) => stored !== request));
       this._knownPaths.splice(this._knownPaths.indexOf(request.path), 1);
 

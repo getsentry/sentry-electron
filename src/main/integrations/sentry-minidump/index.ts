@@ -1,11 +1,11 @@
 import { addBreadcrumb, getCurrentHub, Scope } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { Event, Integration, Severity } from '@sentry/types';
-import { Dsn, forget, logger, SentryError } from '@sentry/utils';
+import { forget, logger, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 import { join } from 'path';
 
-import { getCrashesDirectory, onRendererProcessGone, usesCrashpad } from '../../electron-normalize';
+import { onRendererProcessGone, usesCrashpad } from '../../electron-normalize';
 import { normalizeUrl } from '../../../common';
 import { ElectronMainOptions } from '../../sdk';
 import { ElectronNetTransport } from '../../transports/electron-net';
@@ -13,11 +13,6 @@ import { BaseUploader } from './base-uploader';
 import { BreakpadUploader } from './breakpad-uploader';
 import { CrashpadUploader } from './crashpad-uploader';
 import { Store } from './store';
-
-/** Gets the path to the Sentry cache directory. */
-function getCachePath(): string {
-  return join(app.getPath('userData'), 'sentry');
-}
 
 /** Sends minidumps via the Sentry uploader.. */
 export class SentryMinidump implements Integration {
@@ -36,6 +31,9 @@ export class SentryMinidump implements Integration {
   /** Uploader for minidump files. */
   private _uploader?: BaseUploader;
 
+  /** The path to the Sentry cache directory. */
+  private readonly _cachePath: string = join(app.getPath('userData'), 'sentry');
+
   /** @inheritDoc */
   public setupOnce(): void {
     // Mac AppStore builds cannot run the crash reporter due to the sandboxing
@@ -47,7 +45,7 @@ export class SentryMinidump implements Integration {
 
     this._startCrashReporter();
 
-    this._scopeStore = new Store<Scope>(getCachePath(), 'scope_v2', new Scope());
+    this._scopeStore = new Store<Scope>(this._cachePath, 'scope_v2', new Scope());
     // We need to store the scope in a variable here so it can be attached to minidumps
     this._scopeLastRun = this._scopeStore.get();
 
@@ -55,9 +53,8 @@ export class SentryMinidump implements Integration {
 
     const client = getCurrentHub().getClient<NodeClient>();
     const options = client?.getOptions() as ElectronMainOptions;
-    const dsnString = options?.dsn;
 
-    if (!dsnString) {
+    if (!options?.dsn) {
       throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
     }
 
@@ -65,10 +62,10 @@ export class SentryMinidump implements Integration {
     const transport = (client as any)._getBackend().getTransport() as ElectronNetTransport;
 
     this._uploader = usesCrashpad()
-      ? new CrashpadUploader(new Dsn(dsnString), getCrashesDirectory(), getCachePath(), transport)
-      : new BreakpadUploader(new Dsn(dsnString), getCrashesDirectory(), getCachePath(), transport);
+      ? new CrashpadUploader(options, this._cachePath, transport)
+      : new BreakpadUploader(options, this._cachePath, transport);
 
-    // Every time a subprocess or renderer crashes, start sending minidumps right away.
+    // Every time a subprocess or renderer crashes, send a minidump right away.
     onRendererProcessGone((contents, details) => this._sendRendererCrash(options, contents, details));
 
     // Flush already cached minidumps from the queue.
