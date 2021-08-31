@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.5.3
+
+-fix: Possible race condition with `initialScope` over IPC
+
 ## 2.5.2
 
 -fix: Add `release` and `environment` to electron uploader `initialScope`
