@@ -13,6 +13,9 @@ export class RendererClient extends BaseClient<RendererBackend, ElectronOptions>
    * @param options Configuration options for this SDK.
    */
   public constructor(options: ElectronOptions) {
+    // We only handle initialScope in the main process otherwise it can cause race conditions over IPC
+    delete options.initialScope;
+
     super(RendererBackend, options);
   }
 
