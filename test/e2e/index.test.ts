@@ -100,9 +100,10 @@ describe('E2E Tests', () => {
       });
 
       afterEach(async function () {
-        if (this.currentTest?.state === 'failed') {
-          console.log('App stdout: ');
-          console.log(context.processStdOut);
+        if (true) {
+          //this.currentTest?.state === 'failed') {
+          // console.log('App stdout: ');
+          // console.log(context.processStdOut);
 
           if (testServer.events.length) {
             console.log('Events received: ', inspect(testServer.events, false, null, true));
@@ -183,7 +184,7 @@ describe('E2E Tests', () => {
       });
 
       // tslint:disable-next-line
-      it('Native crash in renderer process', async function () {
+      it.only('Native crash in renderer process', async function () {
         await context.start('sentry-basic', 'native-renderer');
         // It can take rather a long time to get the event on Mac
         await context.waitForEvents(testServer, 1, 20000);
@@ -269,7 +270,7 @@ describe('E2E Tests', () => {
       });
 
       // tslint:disable-next-line
-      it('Native crash in main process', async function () {
+      it.only('Native crash in main process', async function () {
         await context.start('sentry-basic', 'native-main');
 
         // wait for the main process to die

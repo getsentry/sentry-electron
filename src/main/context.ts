@@ -276,6 +276,7 @@ async function _getEventDefaults(release?: string): Promise<Event> {
     environment: process.defaultApp ? 'development' : 'production',
     release: release || `${name.replace(/\W/g, '-')}@${app.getVersion()}`,
     user: { ip_address: '{{auto}}' },
+    tags: { event_type: 'javascript' },
   };
 }
 

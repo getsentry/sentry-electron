@@ -6,13 +6,14 @@ import { app, crashReporter } from 'electron';
 import { join } from 'path';
 
 import { onRendererProcessGone, usesCrashpad } from '../../electron-normalize';
-import { normalizeUrl } from '../../../common';
+import { mergeEvents, normalizeUrl } from '../../../common';
 import { ElectronMainOptions } from '../../sdk';
 import { ElectronNetTransport } from '../../transports/electron-net';
 import { BaseUploader } from './base-uploader';
 import { BreakpadUploader } from './breakpad-uploader';
 import { CrashpadUploader } from './crashpad-uploader';
 import { Store } from './store';
+import { getEventDefaults } from '../../context';
 
 /** Sends minidumps via the Sentry uploader.. */
 export class SentryMinidump implements Integration {
@@ -73,7 +74,7 @@ export class SentryMinidump implements Integration {
 
     // Start to submit recent minidump crashes. This will load breadcrumbs and
     // context information that was cached on disk prior to the crash.
-    forget(this._sendNativeCrashes({}));
+    forget(this._sendNativeCrashes({ tags: { event_type: 'native' } }));
   }
 
   /** Starts the native crash reporter */
@@ -103,6 +104,7 @@ export class SentryMinidump implements Integration {
 
     logger.log(`${crashed_process} renderer process has crashed`);
 
+    // Add extra Electron context
     const electron: Record<string, any> = {
       crashed_process,
       crashed_url: normalizeUrl(contents.getURL(), app.getAppPath()),
@@ -113,10 +115,13 @@ export class SentryMinidump implements Integration {
       electron.details = details;
     }
 
-    const event: Event = {
-      release: options.release,
-      contexts: { electron },
-    };
+    const event = mergeEvents(await getEventDefaults(), {
+      contexts: {
+        electron,
+      },
+      // The default is javascript
+      tags: { event_type: 'native' },
+    });
 
     await this._sendNativeCrashes(event);
 
