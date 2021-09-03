@@ -58,6 +58,7 @@ function crashpadLinux(): boolean {
     return false;
   }
 
+  // Crashpad Linux for v15 is behind a switch
   return app.commandLine.hasSwitch('enable-crashpad');
 }
 

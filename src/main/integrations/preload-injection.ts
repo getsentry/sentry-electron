@@ -46,7 +46,7 @@ export class PreloadInjection implements Integration {
         sesh.setPreloads([path, ...existing]);
       }
     } else {
-      logger.log(
+      logger.warn(
         'The preload script could not be injected automatically. This is most likely caused by bundling of the main process',
       );
     }

@@ -22,7 +22,7 @@ declare global {
     __SENTRY_IPC__?: {
       sendScope: (scope: string) => void;
       sendEvent: (event: string) => void;
-      getContext: (callback: (contextJson: string) => void) => void;
+      getContext: (callback: (context: string) => void) => void;
     };
   }
 }

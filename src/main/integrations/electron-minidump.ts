@@ -68,9 +68,8 @@ export class ElectronMinidump implements Integration {
     }
 
     const options = getCurrentHub().getClient<NodeClient>()?.getOptions();
-    const dsnString = options?.dsn;
 
-    if (!options || !dsnString) {
+    if (!options || !options?.dsn) {
       throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
     }
 
