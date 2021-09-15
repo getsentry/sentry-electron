@@ -7,10 +7,7 @@ import { join } from 'path';
 
 import { getNameFallback } from '../common';
 import { readDirAsync, readFileAsync } from './fs';
-
-/** SDK version used in every event. */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-export const SDK_VERSION: string = require('../../package.json').version;
+import { SDK_VERSION } from './version';
 
 export const SDK_NAME = 'sentry.javascript.electron';
 

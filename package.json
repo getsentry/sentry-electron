@@ -16,6 +16,7 @@
     "access": "public"
   },
   "scripts": {
+    "prebuild": "node scripts/update-version.js",
     "build": "run-p build:es6 build:esm",
     "build:es6": "tsc -p tsconfig.build.json",
     "build:esm": "tsc -p tsconfig.esm.json",
