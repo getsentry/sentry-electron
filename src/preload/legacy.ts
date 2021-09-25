@@ -25,6 +25,7 @@ const ipcObject = {
   },
 };
 
+// eslint-disable-next-line no-restricted-globals
 window.__SENTRY_IPC__ = ipcObject;
 
 // We attempt to use contextBridge if it's available

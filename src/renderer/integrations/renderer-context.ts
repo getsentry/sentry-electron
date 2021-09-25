@@ -36,6 +36,7 @@ export class RendererContext implements Integration {
   /** Asynchronously fetches context from the main process */
   private async _getContextFromMain(): Promise<AppContext> {
     return new Promise((resolve) => {
+      // eslint-disable-next-line no-restricted-globals
       window.__SENTRY_IPC__?.getContext((event) => resolve(JSON.parse(event)));
     });
   }

@@ -13,6 +13,7 @@ export const defaultIntegrations = [...defaultBrowserIntegrations, new ScopeToMa
  * Initialize Sentry in the Electron renderer process
  */
 export function init(options: BrowserOptions): void {
+  // eslint-disable-next-line no-restricted-globals
   if (window.__SENTRY_IPC__ === undefined) {
     throw new SentryError(`Communication with the Electron main process could not be established
 See the docs: https://docs.sentry.io/platforms/javascript/guides/electron/#preload`);

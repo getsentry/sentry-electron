@@ -14,15 +14,17 @@ export interface AppContext {
   appBasePath: string;
 }
 
+export interface IPCInterface {
+  sendScope: (scope: string) => void;
+  sendEvent: (event: string) => void;
+  getContext: (callback: (context: string) => void) => void;
+}
+
 /**
  * We store the IPC interface on window so it's the same for both regular and isolated contexts
  */
 declare global {
   interface Window {
-    __SENTRY_IPC__?: {
-      sendScope: (scope: string) => void;
-      sendEvent: (event: string) => void;
-      getContext: (callback: (context: string) => void) => void;
-    };
+    __SENTRY_IPC__?: IPCInterface;
   }
 }
