@@ -115,7 +115,7 @@ export class SentryMinidump implements Integration {
       electron.details = details;
     }
 
-    const event = mergeEvents(await getEventDefaults(), {
+    const event = mergeEvents(await getEventDefaults(options?.release), {
       contexts: {
         electron,
       },

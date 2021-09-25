@@ -8,7 +8,6 @@ import {
   ElectronMinidump,
   OnUncaughtException,
   PreloadInjection,
-  RendererIPC,
   SentryMinidump,
   MainProcessSession,
 } from './main/integrations';
@@ -21,7 +20,6 @@ export interface Integrations {
   ElectronMinidump: ElectronMinidump;
   ElectronEvents: ElectronEvents;
   MainContext: MainContext;
-  RendererIPC: RendererIPC;
   OnUncaughtExcept: OnUncaughtException;
   PreloadInjection: PreloadInjection;
   MainProcessSession: MainProcessSession;
@@ -48,7 +46,6 @@ export function getIntegrations(): Integrations {
         ElectronMinidump: EmptyIntegration,
         ElectronEvents: EmptyIntegration,
         MainContext: EmptyIntegration,
-        RendererIPC: EmptyIntegration,
         OnUncaughtExcept: EmptyIntegration,
         PreloadInjection: EmptyIntegration,
         MainProcessSession: EmptyIntegration,
