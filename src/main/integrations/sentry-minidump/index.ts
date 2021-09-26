@@ -1,6 +1,6 @@
 import { addBreadcrumb, getCurrentHub, Scope } from '@sentry/core';
-import { NodeBackend, NodeClient } from '@sentry/node';
-import { Event, Integration, SessionStatus, Severity } from '@sentry/types';
+import { NodeClient } from '@sentry/node';
+import { Event, Integration, Severity } from '@sentry/types';
 import { forget, isPlainObject, isThenable, logger, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 import { join } from 'path';
@@ -14,6 +14,7 @@ import { BreakpadUploader } from './breakpad-uploader';
 import { CrashpadUploader } from './crashpad-uploader';
 import { Store } from './store';
 import { getEventDefaults } from '../../context';
+import { sessionCrashed } from '../main-process-session';
 
 /** Sends minidumps via the Sentry uploader.. */
 export class SentryMinidump implements Integration {
@@ -74,7 +75,7 @@ export class SentryMinidump implements Integration {
 
     // Start to submit recent minidump crashes. This will load breadcrumbs and
     // context information that was cached on disk prior to the crash.
-    forget(this._sendNativeCrashes({ tags: { event_type: 'native' } }));
+    forget(this._sendNativeCrashes(options, { tags: { event_type: 'native' } }));
   }
 
   /** Starts the native crash reporter */
@@ -100,29 +101,32 @@ export class SentryMinidump implements Integration {
     contents: Electron.WebContents,
     details?: Electron.RenderProcessGoneDetails,
   ): Promise<void> {
-    let event = await this._getRendererCrashEvent(options, contents, details);
+    const { getRendererName, release } = options;
+    const crashed_process = getRendererName?.(contents) || `WebContents[${contents.id}]`;
 
-    const { beforeSend, sampleRate } = options;
+    logger.log(`Renderer process '${crashed_process}' has crashed`);
 
-    if (typeof sampleRate === 'number' && Math.random() > sampleRate) {
-      logger.warn(`Discarding event because it's not included in the random sample (sampling rate = ${sampleRate})`);
-      return;
+    const electron: Record<string, any> = {
+      crashed_process,
+      crashed_url: normalizeUrl(contents.getURL(), app.getAppPath()),
+    };
+
+    if (details) {
+      // We need to do it like this, otherwise we normalize undefined to "[undefined]" in the UI
+      electron.details = details;
     }
 
-    if (beforeSend) {
-      const beforeSendResult = await this._ensureBeforeSendRv(beforeSend(event));
+    const event = mergeEvents(await getEventDefaults(release), {
+      contexts: {
+        electron,
+      },
+      // The default is javascript
+      tags: { event_type: 'native' },
+    });
 
-      if (beforeSendResult === null) {
-        logger.warn('`beforeSend` returned `null`, will not send event.');
-        return;
-      }
+    sessionCrashed();
 
-      event = beforeSendResult;
-    }
-
-    this._setSessionCrashed();
-
-    await this._sendNativeCrashes(event);
+    await this._sendNativeCrashes(options, event);
 
     addBreadcrumb({
       category: 'exception',
@@ -150,7 +154,7 @@ export class SentryMinidump implements Integration {
   }
 
   /** Loads new native crashes from disk and sends them to Sentry. */
-  private async _sendNativeCrashes(event: Event): Promise<void> {
+  private async _sendNativeCrashes(options: ElectronMainOptions, event: Event): Promise<void> {
     // Whenever we are called, assume that the crashes we are going to load down
     // below have occurred recently. This means, we can use the same event data
     // for all minidumps that we load now. There are two conditions:
@@ -175,8 +179,30 @@ export class SentryMinidump implements Integration {
         const currentCloned = Scope.clone(getCurrentHub().getScope());
         const storedScope = Scope.clone(this._scopeLastRun);
         let newEvent = await storedScope.applyToEvent(event);
+
         if (newEvent) {
           newEvent = await currentCloned.applyToEvent(newEvent);
+
+          const { beforeSend, sampleRate } = options;
+
+          if (typeof sampleRate === 'number' && Math.random() > sampleRate) {
+            logger.warn(
+              `Discarding event because it's not included in the random sample (sampling rate = ${sampleRate})`,
+            );
+            return;
+          }
+
+          if (newEvent && beforeSend) {
+            const beforeSendResult = await this._ensureBeforeSendRv(beforeSend(event));
+
+            if (beforeSendResult === null) {
+              logger.warn('`beforeSend` returned `null`, will not send event.');
+              return;
+            }
+
+            newEvent = beforeSendResult;
+          }
+
           paths.map((path) => {
             forget(uploader.uploadMinidump({ path, event: newEvent || {} }));
           });
@@ -187,49 +213,6 @@ export class SentryMinidump implements Integration {
     } catch (_oO) {
       logger.error('Error while sending native crash.');
     }
-  }
-
-  private _setSessionCrashed() {
-    const hub = getCurrentHub();
-    const session = hub.getScope()?.getSession();
-
-    if (session) {
-      session.update({ status: SessionStatus.Crashed });
-
-      const client = hub.getClient();
-      const backend = (client as any)?._getBackend() as NodeBackend;
-      backend?.sendSession(session);
-    }
-  }
-
-  /** Gets an event for a crashed renderer */
-  private async _getRendererCrashEvent(
-    options: ElectronMainOptions,
-    contents: Electron.WebContents,
-    details?: Electron.RenderProcessGoneDetails,
-  ): Promise<Event> {
-    const { getRendererName, release } = options;
-    const crashed_process = getRendererName?.(contents) || `WebContents[${contents.id}]`;
-
-    logger.log(`${crashed_process} renderer process has crashed`);
-
-    const electron: Record<string, any> = {
-      crashed_process,
-      crashed_url: normalizeUrl(contents.getURL(), app.getAppPath()),
-    };
-
-    if (details) {
-      // We need to do it like this, otherwise we normalize undefined to "[undefined]" in the UI
-      electron.details = details;
-    }
-
-    return mergeEvents(await getEventDefaults(release), {
-      contexts: {
-        electron,
-      },
-      // The default is javascript
-      tags: { event_type: 'native' },
-    });
   }
 
   /**

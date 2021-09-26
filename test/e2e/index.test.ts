@@ -455,7 +455,7 @@ describe('E2E Tests', () => {
         expect(session.sessionData?.errors).to.equal(0);
       });
 
-      it('Tracks sessions with MainProcessSession integration with error', async () => {
+      it('Tracks sessions with MainProcessSession integration with JavaScript error', async () => {
         await context.start('sentry-session', 'javascript-renderer');
         await context.waitForEvents(testServer, 3);
         expect(testServer.events.length).to.equal(3);
@@ -482,6 +482,26 @@ describe('E2E Tests', () => {
         expect(session2.sessionData?.sid).to.equal(session.sessionData?.sid);
         expect(session2.sessionData?.started).to.exist;
         expect(session2.sessionData?.errors).to.equal(1);
+      });
+
+      it('Tracks sessions with MainProcessSession integration with native crash', async () => {
+        await context.start('sentry-session', 'native-renderer');
+        await context.waitForEvents(testServer, 2);
+        expect(testServer.events.length).to.equal(2);
+
+        const event = getEvent();
+        expect(event.method).to.equal('envelope');
+        expect(event.eventData?.contexts?.app?.app_name).to.equal('test-app');
+        expect(event.eventData?.contexts?.electron?.crashed_process).to.equal('WebContents[1]');
+        expect(event.eventData?.sdk?.name).to.equal('sentry.javascript.electron');
+        expect(event.dump_file).to.be.true;
+        expect(event.sentry_key).to.equal(SENTRY_KEY);
+        expect(event.eventData?.breadcrumbs?.length).to.greaterThan(4);
+
+        const session = getSession('crashed');
+        expect(session.method).to.equal('envelope');
+        expect(session.sessionData?.started).to.exist;
+        expect(session.sessionData?.errors).to.equal(1);
       });
 
       it('Allows BrowserTracing transactions from renderer', async () => {

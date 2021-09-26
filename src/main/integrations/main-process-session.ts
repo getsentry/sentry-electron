@@ -56,3 +56,11 @@ export class MainProcessSession implements Integration {
     app.exit();
   };
 }
+
+/** Sets the current session as crashed */
+export function sessionCrashed(): void {
+  const hub = getCurrentHub();
+  const session = hub.getScope()?.getSession();
+
+  session?.update({ status: SessionStatus.Crashed, errors: (session.errors += 1) });
+}
