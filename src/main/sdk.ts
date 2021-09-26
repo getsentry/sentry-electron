@@ -55,7 +55,7 @@ export function init(options: ElectronMainOptions): void {
   nodeInit(options);
 }
 
-/** Sets the default integrations and ensures that multiple minidump integrations are not set */
+/** Sets the default integrations and ensures that multiple minidump integrations are not enabled */
 function setDefaultIntegrations(defaults: Integration[], options: ElectronMainOptions): void {
   if (options.defaultIntegrations === undefined) {
     // If ElectronMinidump has been included, automatically remove SentryMinidump

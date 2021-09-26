@@ -1,7 +1,7 @@
 import { addBreadcrumb, getCurrentHub, Scope } from '@sentry/core';
-import { NodeClient } from '@sentry/node';
-import { Event, Integration, Severity } from '@sentry/types';
-import { forget, logger, SentryError } from '@sentry/utils';
+import { NodeBackend, NodeClient } from '@sentry/node';
+import { Event, Integration, SessionStatus, Severity } from '@sentry/types';
+import { forget, isPlainObject, isThenable, logger, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 import { join } from 'path';
 
@@ -100,28 +100,27 @@ export class SentryMinidump implements Integration {
     contents: Electron.WebContents,
     details?: Electron.RenderProcessGoneDetails,
   ): Promise<void> {
-    const crashed_process = options.getRendererName?.(contents) || `WebContents[${contents.id}]`;
+    let event = await this._getRendererCrashEvent(options, contents, details);
 
-    logger.log(`${crashed_process} renderer process has crashed`);
+    const { beforeSend, sampleRate } = options;
 
-    // Add extra Electron context
-    const electron: Record<string, any> = {
-      crashed_process,
-      crashed_url: normalizeUrl(contents.getURL(), app.getAppPath()),
-    };
-
-    if (details) {
-      // We need to do it like this, otherwise we normalize undefined to "[undefined]" in the UI
-      electron.details = details;
+    if (typeof sampleRate === 'number' && Math.random() > sampleRate) {
+      logger.warn(`Discarding event because it's not included in the random sample (sampling rate = ${sampleRate})`);
+      return;
     }
 
-    const event = mergeEvents(await getEventDefaults(options?.release), {
-      contexts: {
-        electron,
-      },
-      // The default is javascript
-      tags: { event_type: 'native' },
-    });
+    if (beforeSend) {
+      const beforeSendResult = await this._ensureBeforeSendRv(beforeSend(event));
+
+      if (beforeSendResult === null) {
+        logger.warn('`beforeSend` returned `null`, will not send event.');
+        return;
+      }
+
+      event = beforeSendResult;
+    }
+
+    this._setSessionCrashed();
 
     await this._sendNativeCrashes(event);
 
@@ -188,5 +187,73 @@ export class SentryMinidump implements Integration {
     } catch (_oO) {
       logger.error('Error while sending native crash.');
     }
+  }
+
+  private _setSessionCrashed() {
+    const hub = getCurrentHub();
+    const session = hub.getScope()?.getSession();
+
+    if (session) {
+      session.update({ status: SessionStatus.Crashed });
+
+      const client = hub.getClient();
+      const backend = (client as any)?._getBackend() as NodeBackend;
+      backend?.sendSession(session);
+    }
+  }
+
+  /** Gets an event for a crashed renderer */
+  private async _getRendererCrashEvent(
+    options: ElectronMainOptions,
+    contents: Electron.WebContents,
+    details?: Electron.RenderProcessGoneDetails,
+  ): Promise<Event> {
+    const { getRendererName, release } = options;
+    const crashed_process = getRendererName?.(contents) || `WebContents[${contents.id}]`;
+
+    logger.log(`${crashed_process} renderer process has crashed`);
+
+    const electron: Record<string, any> = {
+      crashed_process,
+      crashed_url: normalizeUrl(contents.getURL(), app.getAppPath()),
+    };
+
+    if (details) {
+      // We need to do it like this, otherwise we normalize undefined to "[undefined]" in the UI
+      electron.details = details;
+    }
+
+    return mergeEvents(await getEventDefaults(release), {
+      contexts: {
+        electron,
+      },
+      // The default is javascript
+      tags: { event_type: 'native' },
+    });
+  }
+
+  /**
+   * Verifies that return value of configured `beforeSend` is of expected type.
+   *
+   * Copied from @sentry/core
+   */
+  private _ensureBeforeSendRv(rv: PromiseLike<Event | null> | Event | null): PromiseLike<Event | null> | Event | null {
+    const nullErr = '`beforeSend` method has to return `null` or a valid event.';
+    if (isThenable(rv)) {
+      return (rv as PromiseLike<Event | null>).then(
+        (event) => {
+          if (!(isPlainObject(event) || event === null)) {
+            throw new SentryError(nullErr);
+          }
+          return event;
+        },
+        (e) => {
+          throw new SentryError(`beforeSend rejected with ${e}`);
+        },
+      );
+    } else if (!(isPlainObject(rv) || rv === null)) {
+      throw new SentryError(nullErr);
+    }
+    return rv;
   }
 }

@@ -19,20 +19,20 @@ export class MainProcessSession implements Integration {
     // We track sessions via the 'will-quit' event which is the last event emitted before close.
     //
     // We need to be the last 'will-quit' listener so as not to interfere with any user defined listeners which may
-    // want to call `event.preventDefault()`.
-    this._addExitHandlerLast();
+    // call `event.preventDefault()`.
+    this._ensureExitHandlerLast();
 
     // 'before-quit' is always called before 'will-quit' so we listen there and ensure our 'will-quit' handler is still
     // the last listener
     app.on('before-quit', () => {
-      this._addExitHandlerLast();
+      this._ensureExitHandlerLast();
     });
   }
 
   /**
    * Hooks 'will-quit' and ensures the handler is always last
    */
-  private _addExitHandlerLast(): void {
+  private _ensureExitHandlerLast(): void {
     app.removeListener('will-quit', this._exitHandler);
     app.on('will-quit', this._exitHandler);
   }
