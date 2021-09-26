@@ -1,4 +1,6 @@
 import { Event, StackFrame } from '@sentry/types';
+import { spawnSync } from 'child_process';
+import { join } from 'path';
 
 /** Get stack frames from SentryEvent */
 function getFrames(event: Event): StackFrame[] {
@@ -19,4 +21,10 @@ export function getLastFrame(event?: Event): StackFrame | undefined {
 
   const frames = getFrames(event);
   return frames.length ? frames[frames.length - 1] : { filename: undefined };
+}
+
+export function getCrashesDirectory(electronPath: string): string {
+  const appPath = join(__dirname, 'test-apps', 'crashes-directory');
+  const result = spawnSync(electronPath, [appPath], { shell: true, encoding: 'utf-8' });
+  return result.output.join('').replace(/[\n\r]/, '');
 }

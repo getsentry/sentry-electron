@@ -3,11 +3,12 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { spawnSync, SpawnSyncOptionsWithBufferEncoding } from 'child_process';
 import { join } from 'path';
 import { inspect } from 'util';
+import { rmdirSync } from 'fs';
 
 import { TestContext } from './context';
 import { downloadElectron } from './download';
 import { TestServer, TestServerEvent } from './server';
-import { getLastFrame } from './utils';
+import { getCrashesDirectory, getLastFrame } from './utils';
 
 const SENTRY_KEY = '37f8a2ee37c0409d8970bc7559c7c7e4';
 
@@ -91,11 +92,13 @@ describe('E2E Tests', () => {
 
     describe(`Electron ${version} ${arch}`, () => {
       let context: TestContext;
+      let crashDir: string;
 
       beforeEach(async () => {
         testServer.clearEvents();
 
         const electronPath = await downloadElectron(version, arch);
+        crashDir = getCrashesDirectory(electronPath);
         context = new TestContext(electronPath);
       });
 
@@ -114,6 +117,10 @@ describe('E2E Tests', () => {
         if (context.isStarted()) {
           await context.stop();
         }
+
+        try {
+          rmdirSync(crashDir, { recursive: true });
+        } catch (_) {}
       });
 
       it('JavaScript exception in renderer process', async () => {
