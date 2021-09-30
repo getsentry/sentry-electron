@@ -1,7 +1,7 @@
 {
   "name": "@sentry/electron",
   "description": "Official Sentry SDK for Electron",
-  "version": "2.5.1",
+  "version": "2.5.4",
   "main": "./index.js",
   "module": "./esm/main/index.js",
   "browser": "./esm/renderer/index.js",
@@ -82,7 +82,7 @@
     "chai-as-promised": "^7.1.1",
     "cross-env": "^5.2.0",
     "eslint": "7.27.0",
-    "electron": "13.1.8",
+    "electron": "15.0.0",
     "electron-download": "^4.1.1",
     "electron-mocha": "^6.0.4",
     "extract-zip": "^1.6.7",

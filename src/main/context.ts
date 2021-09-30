@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { Event, SdkInfo } from '@sentry/types';
 import * as child from 'child_process';
 import { app } from 'electron';
@@ -276,7 +277,12 @@ async function _getEventDefaults(release?: string): Promise<Event> {
     environment: process.defaultApp ? 'development' : 'production',
     release: release || `${name.replace(/\W/g, '-')}@${app.getVersion()}`,
     user: { ip_address: '{{auto}}' },
-    tags: { event_type: 'javascript' },
+    tags: {
+      'event.origin': 'electron',
+      'event.environment': 'javascript',
+      // Legacy way of filtering native vs JavaScript events
+      event_type: 'javascript',
+    },
   };
 }
 

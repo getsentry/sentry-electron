@@ -147,7 +147,7 @@ export class ElectronMinidump implements Integration {
   /** Builds up an event to send with the native Electron uploader */
   private async _getNativeUploaderEvent(scope: Scope): Promise<Event> {
     const event = mergeEvents(await getEventDefaults(), {
-      tags: { event_type: 'native' },
+      tags: { 'event.environment': 'native', event_type: 'native' },
     });
 
     // Apply the scope to the event

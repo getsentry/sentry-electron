@@ -82,13 +82,13 @@ class EmptyIntegration implements Integration {
 /** Filters out any EmptyIntegrations that are found */
 export function removeEmptyIntegrations(options: ElectronOptions): void {
   if (Array.isArray(options.integrations)) {
-    options.integrations = options.integrations.filter((i) => i.name !== 'EmptyIntegration');
+    options.integrations = options.integrations.filter((i) => i.name !== EmptyIntegration.id);
   } else if (typeof options.integrations === 'function') {
     const originalFn = options.integrations;
 
     options.integrations = (integrations) => {
       const userIntegrations = originalFn(integrations);
-      return userIntegrations.filter((integration) => integration.name !== 'EmptyIntegration');
+      return userIntegrations.filter((integration) => integration.name !== EmptyIntegration.id);
     };
   }
 }

@@ -75,7 +75,7 @@ export class SentryMinidump implements Integration {
 
     // Start to submit recent minidump crashes. This will load breadcrumbs and
     // context information that was cached on disk prior to the crash.
-    forget(this._sendNativeCrashes(options, { tags: { event_type: 'native' } }));
+    forget(this._sendNativeCrashes(options, { tags: { 'event.environment': 'native', event_type: 'native' } }));
   }
 
   /** Starts the native crash reporter */
@@ -121,7 +121,7 @@ export class SentryMinidump implements Integration {
         electron,
       },
       // The default is javascript
-      tags: { event_type: 'native' },
+      tags: { 'event.environment': 'native', event_type: 'native' },
     });
 
     sessionCrashed();
