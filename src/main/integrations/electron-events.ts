@@ -5,6 +5,11 @@ import { app, powerMonitor, screen } from 'electron';
 
 import { ElectronMainOptions } from '../sdk';
 
+interface ElectronEventsOptions {
+  /** Whether webContents `unresponsive` events are captured as events */
+  unresponsive?: boolean;
+}
+
 /** Adds breadcrumbs for Electron events. */
 export class ElectronEvents implements Integration {
   /** @inheritDoc */
@@ -14,9 +19,9 @@ export class ElectronEvents implements Integration {
   public name: string = ElectronEvents.id;
 
   /**
-   * @param _unresponsive Whether webContents `unresponsive` events are captured as events
+   * @param _options Integration options
    */
-  public constructor(private readonly _unresponsive: boolean = true) {}
+  public constructor(private readonly _options: ElectronEventsOptions = { unresponsive: true }) {}
 
   /** @inheritDoc */
   public setupOnce(): void {
@@ -44,7 +49,7 @@ export class ElectronEvents implements Integration {
           ['dom-ready', 'load-url', 'destroyed'].includes(event),
         );
 
-        if (this._unresponsive) {
+        if (this._options.unresponsive) {
           contents.on('unresponsive', () => {
             captureMessage(`${webContentsName} Unresponsive`);
           });

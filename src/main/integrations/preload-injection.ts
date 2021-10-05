@@ -5,6 +5,11 @@ import { existsSync } from 'fs';
 
 import { rendererRequiresCrashReporterStart } from '../electron-normalize';
 
+interface PreloadInjectionOptions {
+  /** Function that fetches the sessions that should have preloads injected */
+  sessions?: () => Session[];
+}
+
 /**
  * Injects the preload script into the provided sessions.
  *
@@ -17,7 +22,9 @@ export class PreloadInjection implements Integration {
   /** @inheritDoc */
   public name: string = PreloadInjection.id;
 
-  public constructor(private readonly _getSessions: () => Session[] = () => [session.defaultSession]) {}
+  public constructor(
+    private readonly _options: PreloadInjectionOptions = { sessions: () => [session.defaultSession] },
+  ) {}
 
   /** @inheritDoc */
   public setupOnce(): void {
@@ -39,8 +46,8 @@ export class PreloadInjection implements Integration {
       //
     }
 
-    if (path && typeof path === 'string' && existsSync(path)) {
-      for (const sesh of this._getSessions()) {
+    if (this._options.sessions && path && typeof path === 'string' && existsSync(path)) {
+      for (const sesh of this._options.sessions()) {
         // Fetch any existing preloads so we don't overwrite them
         const existing = sesh.getPreloads();
         sesh.setPreloads([path, ...existing]);
