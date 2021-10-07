@@ -7,9 +7,10 @@
 
 # Official Sentry SDK for Electron
 
-[![Travis](https://travis-ci.com/getsentry/sentry-electron.svg?branch=master)](https://travis-ci.com/getsentry/sentry-electron)
+[![Build & Test](https://github.com/getsentry/sentry-electron/actions/workflows/build.yml/badge.svg)](https://github.com/getsentry/sentry-electron/actions/workflows/build.yml)
 [![npm version](https://img.shields.io/npm/v/@sentry/electron.svg)](https://www.npmjs.com/package/@sentry/electron)
 [![license](https://img.shields.io/github/license/getsentry/sentry-electron.svg)](https://github.com/getsentry/sentry-electron/blob/master/LICENSE)
+[![Discord](https://img.shields.io/discord/621778831602221064)](https://discord.gg/SugnmRwkmV)
 
 ## Features
 
@@ -19,13 +20,12 @@
   [`@sentry/browser`](https://github.com/getsentry/sentry-javascript/tree/master/packages/browser))
 - Captures **native crashes** (Minidump crash reports) from renderers and the main process
 - Collects **breadcrumbs and context** information along with events across renderers and the main process
-- Support `electron` version >= `1.8.x`
+- Supports `electron >= 2`
 
 ## Usage
 
 To use this SDK, call `init(options)` as early as possible in the entry modules in the main process as well as all
-renderer processes or further sub processees you spawn. This will initialize the SDK and hook into the environment. Note
-that you can turn off almost all side effects using the respective options.
+renderer processes or further sub processes you spawn. This will initialize the SDK and hook into the environment.
 
 ```javascript
 import { init } from '@sentry/electron';
@@ -43,7 +43,7 @@ functions will not perform any action before you have called `init()`:
 import * as Sentry from '@sentry/electron';
 
 // Set user information, as well as tags and further extras
-Sentry.configureScope(scope => {
+Sentry.configureScope((scope) => {
   scope.setExtra('battery', 0.7);
   scope.setTag('user_mode', 'admin');
   scope.setUser({ id: '4711' });

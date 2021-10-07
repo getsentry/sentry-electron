@@ -19,10 +19,14 @@ export class ProcessStatus {
   /** Determines whether this process is still running. */
   public async isRunning(): Promise<boolean> {
     try {
-      process.kill(this._chProcess.pid, 0);
-      return true;
+      if (this._chProcess.pid) {
+        process.kill(this._chProcess.pid, 0);
+        return true;
+      }
     } catch (e) {
-      return false;
+      //
     }
+
+    return false;
   }
 }

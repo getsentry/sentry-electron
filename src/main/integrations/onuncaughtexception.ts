@@ -4,36 +4,24 @@ import { Event, Integration, Severity } from '@sentry/types';
 import { isError } from '@sentry/utils';
 import { dialog } from 'electron';
 
-/** Capture unhandled erros. */
+/** Capture unhandled errors. */
 export class OnUncaughtException implements Integration {
-  /**
-   * @inheritDoc
-   */
+  /** @inheritDoc */
   public static id: string = 'OnUncaughtException';
 
-  /**
-   * @inheritDoc
-   */
+  /** @inheritDoc */
   public name: string = OnUncaughtException.id;
 
   /**
    * @inheritDoc
    */
-  public constructor(
-    private readonly _options: {
-      /** Fatal Error callback */
-      onFatalError?(firstError: Error, secondError?: Error): void;
-    } = {},
-  ) {}
-
-  /**
-   * @inheritDoc
-   */
   public setupOnce(): void {
+    const options = getCurrentHub().getClient<NodeClient>()?.getOptions();
+
     global.process.on('uncaughtException', (error: Error) => {
       const self = getCurrentHub().getIntegration(OnUncaughtException);
       if (self) {
-        getCurrentHub().withScope(async scope => {
+        getCurrentHub().withScope(async (scope) => {
           scope.addEventProcessor(async (event: Event) => ({
             ...event,
             level: Severity.Fatal,
@@ -51,8 +39,8 @@ export class OnUncaughtException implements Integration {
           nodeClient.captureException(theError, { originalException: error }, getCurrentHub().getScope());
           await nodeClient.flush(nodeClient.getOptions().shutdownTimeout || 2000);
 
-          if (this._options.onFatalError) {
-            this._options.onFatalError(error);
+          if (options?.onFatalError) {
+            options.onFatalError(error);
           } else if (global.process.listenerCount('uncaughtException') <= 2) {
             // In addition to this handler there is always one in Electron
             // The dialog is only shown if there are no other handlers

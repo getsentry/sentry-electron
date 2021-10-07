@@ -1,4 +1,10 @@
 /*
 /.*
-!/dist/**/*
+
 !/esm/**/*
+!/preload/**/*
+!/main/**/*
+!/renderer/**/*
+!/common/**/*
+!/index.*
+!/integrations.*

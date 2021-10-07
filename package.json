@@ -1,29 +1,48 @@
 {
   "name": "@sentry/electron",
-  "description": "Offical Sentry SDK for Electron",
+  "description": "Official Sentry SDK for Electron",
   "version": "2.5.4",
-  "main": "./dist/index.js",
+  "main": "./index.js",
   "module": "./esm/main/index.js",
   "browser": "./esm/renderer/index.js",
+  "exports": {
+    ".": {
+      "node": {
+        "require": "./index.js",
+        "module": "./esm/main/index.js"
+      },
+      "default": "./esm/renderer/index.js"
+    },
+    "./main": {
+      "require": "./main/index.js",
+      "module": "./esm/main/index.js"
+    },
+    "./renderer": {
+      "require": "./renderer/index.js",
+      "module": "./esm/renderer/index.js"
+    },
+    "./preload": "./preload/index.js"
+  },
   "repository": "https://github.com/getsentry/sentry-electron.git",
   "author": "Sentry",
   "contributors": [
     "Tim Fish"
   ],
   "license": "MIT",
-  "types": "./dist/index.d.ts",
+  "types": "./index.d.ts",
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
     "prebuild": "node scripts/update-version.js",
-    "build": "run-p build:es6 build:esm",
+    "build": "run-p build:es6 build:esm build:preload",
     "build:es6": "tsc -p tsconfig.build.json",
     "build:esm": "tsc -p tsconfig.esm.json",
+    "build:preload": "node scripts/build-preload.js",
     "build:watch": "run-p build:watch:es6 build:watch:esm",
     "build:watch:es6": "tsc -p tsconfig.build.json -w --preserveWatchOutput",
     "build:watch:esm": "tsc -p tsconfig.esm.json -w --preserveWatchOutput",
-    "clean": "rimraf dist coverage esm",
+    "clean": "rimraf coverage esm main preload renderer index.* integrations.* ipc.*",
     "preexample": "run-s clean build",
     "example": "electron example",
     "lint": "run-s lint:prettier lint:eslint",
@@ -35,20 +54,21 @@
     "pretest": "run-s clean build",
     "test": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe electron-mocha --require ts-node/register/transpile-only --timeout 120000 ./test/unit/**/*.ts",
     "pree2e": "run-s clean build",
-    "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only --timeout 30000 --retries 5 ./test/e2e/*.ts"
+    "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only --timeout 30000 --retries 3 ./test/e2e/*.ts"
   },
   "dependencies": {
-    "@sentry/browser": "6.7.1",
-    "@sentry/core": "6.7.1",
-    "@sentry/minimal": "6.7.1",
-    "@sentry/node": "6.7.1",
-    "@sentry/types": "6.7.1",
-    "@sentry/utils": "6.7.1",
-    "tslib": "^2.2.0"
+    "@sentry/browser": "6.13.2",
+    "@sentry/core": "6.13.2",
+    "@sentry/node": "6.13.2",
+    "@sentry/types": "6.13.2",
+    "@sentry/utils": "6.13.2",
+    "deepmerge": "^4.2.2",
+    "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@sentry-internal/eslint-config-sdk": "6.7.1",
-    "@sentry-internal/typescript": "6.7.1",
+    "@sentry-internal/eslint-config-sdk": "6.13.2",
+    "@sentry-internal/typescript": "6.13.2",
+    "@sentry/tracing": "6.13.2",
     "@types/busboy": "^0.2.3",
     "@types/chai": "^4.2.10",
     "@types/chai-as-promised": "^7.1.0",
@@ -60,10 +80,9 @@
     "busboy": "^0.3.1",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
-    "chai-datetime": "^1.7.0",
     "cross-env": "^5.2.0",
-    "eslint": "7.26.0",
-    "electron": "12.0.7",
+    "eslint": "7.27.0",
+    "electron": "15.0.0",
     "electron-download": "^4.1.1",
     "electron-mocha": "^6.0.4",
     "extract-zip": "^1.6.7",
@@ -72,11 +91,11 @@
     "koa-tree-router": "^0.7.0",
     "mocha": "^6.2.2",
     "npm-run-all": "^4.1.5",
-    "prettier": "^1.19.1",
+    "prettier": "^2.3.2",
     "rimraf": "^2.6.2",
     "temporary-directory": "^1.0.2",
     "ts-node": "^8.5.4",
-    "typescript": "4.2.4",
+    "typescript": "4.3.5",
     "xvfb-maybe": "^0.2.1"
   },
   "sideEffects": false

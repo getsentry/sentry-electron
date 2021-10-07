@@ -1,4 +1,6 @@
 import { Event, StackFrame } from '@sentry/types';
+import { spawnSync } from 'child_process';
+import { join } from 'path';
 
 /** Get stack frames from SentryEvent */
 function getFrames(event: Event): StackFrame[] {
@@ -12,32 +14,17 @@ export function isWindowsOnCI(): boolean {
 }
 
 /** Get the last stack frame from SentryEvent */
-export function getLastFrame(event: Event): StackFrame {
+export function getLastFrame(event?: Event): StackFrame | undefined {
+  if (!event) {
+    return;
+  }
+
   const frames = getFrames(event);
   return frames.length ? frames[frames.length - 1] : { filename: undefined };
 }
 
-/** Gets the required architecture version pairs for the current platform */
-export function getTests(...versions: string[]): Array<[string, string]> {
-  return versions.reduce(
-    (prev, curr) =>
-      prev.concat(
-        // We dont run both architectures on Windows CI because it takes too long
-        process.platform === 'win32' && !isWindowsOnCI()
-          ? [
-              [curr, 'x64'],
-              [curr, 'ia32'],
-            ]
-          : [[curr, 'x64']],
-      ),
-    [] as Array<[string, string]>,
-  );
-}
-
-export async function delay(timeout: number): Promise<void> {
-  return new Promise<void>(resolve => {
-    setTimeout(() => {
-      resolve();
-    }, timeout);
-  });
+export function getCrashesDirectory(electronPath: string): string {
+  const appPath = join(__dirname, 'test-apps', 'crashes-directory');
+  const result = spawnSync(electronPath, [appPath], { shell: true, encoding: 'utf-8' });
+  return result.output.join('').replace(/[\n\r]/, '');
 }
