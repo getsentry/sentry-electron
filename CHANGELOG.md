@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 3.0.0
+## 3.0.0-beta.1
 
 Check out [the migration guide](https://github.com/getsentry/sentry-electron/issues/370).
 
