@@ -1,30 +1,9 @@
 import { spawn } from 'child_process';
 import { join } from 'path';
-import tmpdir = require('temporary-directory');
+import { dir as tempDirectory, DirectoryResult } from 'tmp-promise';
 
 import { ProcessStatus } from './process';
 import { TestServer } from './server';
-
-/** A temporary directory handle. */
-interface TempDirectory {
-  /** Absolute path to the directory. */
-  path: string;
-  /** A function that will remove the directory when invoked. */
-  cleanup(): void;
-}
-
-/** Creates a temporary directory with a cleanup function. */
-async function getTempDir(): Promise<TempDirectory> {
-  return new Promise<TempDirectory>((resolve, reject) => {
-    tmpdir((err, dir, cleanup) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve({ cleanup, path: dir });
-      }
-    });
-  });
-}
 
 if (!process.env.DEBUG) {
   // tslint:disable-next-line
@@ -40,7 +19,7 @@ export class TestContext {
   public processStdOut: string = '';
 
   /** Temporary directory that hosts the app's User Data. */
-  private _tempDir?: TempDirectory;
+  private _tempDir?: DirectoryResult;
 
   private _started: boolean = false;
 
@@ -62,7 +41,7 @@ export class TestContext {
     // Subsequent starts will use the same path
     if (!this._tempDir) {
       // Get a temp directory for this app to use as userData
-      this._tempDir = await getTempDir();
+      this._tempDir = await tempDirectory();
     }
 
     const env: { [key: string]: string | undefined } = {
@@ -117,7 +96,7 @@ export class TestContext {
     await this.mainProcess.kill();
 
     if (this._tempDir && clearData) {
-      this._tempDir.cleanup();
+      await this._tempDir.cleanup();
     }
   }
 
