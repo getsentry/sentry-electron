@@ -17,6 +17,7 @@ export class EventToMain implements Integration {
     addGlobalEventProcessor((event: Event) => {
       // Ensure breadcrumbs is not `undefined` as `walk` translates it into a string
       event.breadcrumbs = event.breadcrumbs || [];
+      // eslint-disable-next-line no-restricted-globals
       window.__SENTRY_IPC__?.sendEvent(JSON.stringify(event, walk));
       // Events are handled and sent from the main process so we return null here so nothing is sent from the renderer
       return null;

@@ -2,6 +2,34 @@
 
 ## Unreleased
 
+## 3.0.0-beta.1
+
+Check out [the migration guide](https://github.com/getsentry/sentry-electron/issues/370).
+
+New Features:
+
+- Session tracking enabled by default
+- Improved bundler support
+- Browser Tracing compatible
+
+Breaking changes:
+
+- Preload script now required
+- Native crashes now consider `sampleRate` and `beforeSend`
+- Configuration through integrations rather than options
+
+## 2.5.4
+
+- fix: Improve compatibility with bundlers
+
+## 2.5.3
+
+- fix: Possible race condition with `initialScope` over IPC
+
+## 2.5.2
+
+- fix: Add `release` and `environment` to electron uploader `initialScope`
+
 ## 2.5.1
 
 - feat: Context and breadcrumbs sent via Crashpad for native crashes in main process when `useCrashpadMinidumpUploader`
@@ -250,7 +278,7 @@ scope data attached.
   ```javascript
   init({
     dsn: 'DSN',
-    onFatalError: error => {
+    onFatalError: (error) => {
       // I really want to crash
       process.exit(1);
     },

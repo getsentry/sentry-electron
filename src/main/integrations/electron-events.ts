@@ -5,6 +5,11 @@ import { app, powerMonitor, screen } from 'electron';
 
 import { ElectronMainOptions } from '../sdk';
 
+interface ElectronEventsOptions {
+  /** Whether webContents `unresponsive` events are captured as events */
+  unresponsive?: boolean;
+}
+
 /** Adds breadcrumbs for Electron events. */
 export class ElectronEvents implements Integration {
   /** @inheritDoc */
@@ -13,8 +18,10 @@ export class ElectronEvents implements Integration {
   /** @inheritDoc */
   public name: string = ElectronEvents.id;
 
-  /** @inheritDoc */
-  public constructor(private readonly _unresponsive: boolean = true) {}
+  /**
+   * @param _options Integration options
+   */
+  public constructor(private readonly _options: ElectronEventsOptions = { unresponsive: true }) {}
 
   /** @inheritDoc */
   public setupOnce(): void {
@@ -36,18 +43,18 @@ export class ElectronEvents implements Integration {
           return;
         }
 
-        this._instrumentBreadcrumbs(
-          options?.getRendererName?.(contents) || `WebContents[${contents.id}]`,
-          contents,
-          (event) => ['dom-ready', 'load-url', 'destroyed'].includes(event),
-        );
-      });
+        const webContentsName = options?.getRendererName?.(contents) || `WebContents[${contents.id}]`;
 
-      if (this._unresponsive) {
-        contents.on('unresponsive', () => {
-          captureMessage('BrowserWindow Unresponsive');
-        });
-      }
+        this._instrumentBreadcrumbs(webContentsName, contents, (event) =>
+          ['dom-ready', 'load-url', 'destroyed'].includes(event),
+        );
+
+        if (this._options.unresponsive) {
+          contents.on('unresponsive', () => {
+            captureMessage(`${webContentsName} Unresponsive`);
+          });
+        }
+      });
     });
   }
 

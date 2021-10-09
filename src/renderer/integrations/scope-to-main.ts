@@ -25,6 +25,7 @@ export class ScopeToMain implements Integration {
     const scope = getCurrentHub().getScope();
     if (scope) {
       scope.addScopeListener((updatedScope) => {
+        // eslint-disable-next-line no-restricted-globals
         window.__SENTRY_IPC__?.sendScope(JSON.stringify(updatedScope, walk));
         scope.clearBreadcrumbs();
       });

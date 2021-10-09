@@ -3,7 +3,7 @@ import { flush } from '@sentry/node';
 import { Integration, SessionStatus } from '@sentry/types';
 import { app } from 'electron';
 
-/** Adds Electron context to events and normalises paths. */
+/** Tracks sessions as the main process lifetime. */
 export class MainProcessSession implements Integration {
   /** @inheritDoc */
   public static id: string = 'MainProcessSession';
@@ -16,25 +16,30 @@ export class MainProcessSession implements Integration {
     const hub = getCurrentHub();
     hub.startSession();
 
-    this._addExitHandlerLast();
+    // We track sessions via the 'will-quit' event which is the last event emitted before close.
+    //
+    // We need to be the last 'will-quit' listener so as not to interfere with any user defined listeners which may
+    // call `event.preventDefault()`.
+    this._ensureExitHandlerLast();
 
-    // We hook 'before-quit' and ensure our exit handler is still the last listener
+    // 'before-quit' is always called before 'will-quit' so we listen there and ensure our 'will-quit' handler is still
+    // the last listener
     app.on('before-quit', () => {
-      this._addExitHandlerLast();
+      this._ensureExitHandlerLast();
     });
   }
 
   /**
-   * Hooks 'will-quit' but ensures the handler is always last so it
-   * doesn't interfere with any existing user handlers
+   * Hooks 'will-quit' and ensures the handler is always last
    */
-  private _addExitHandlerLast(): void {
+  private _ensureExitHandlerLast(): void {
     app.removeListener('will-quit', this._exitHandler);
     app.on('will-quit', this._exitHandler);
   }
 
   /** Handles the exit */
   private _exitHandler: (event: Electron.Event) => Promise<void> = async (event: Electron.Event) => {
+    // Stop the exit so we have time to send the session
     event.preventDefault();
     const hub = getCurrentHub();
 
@@ -46,6 +51,16 @@ export class MainProcessSession implements Integration {
     }
 
     await flush();
+
+    // After flush we can safely exit
     app.exit();
   };
+}
+
+/** Sets the current session as crashed */
+export function sessionCrashed(): void {
+  const hub = getCurrentHub();
+  const session = hub.getScope()?.getSession();
+
+  session?.update({ status: SessionStatus.Crashed, errors: (session.errors += 1) });
 }

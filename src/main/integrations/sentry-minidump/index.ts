@@ -1,23 +1,20 @@
 import { addBreadcrumb, getCurrentHub, Scope } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { Event, Integration, Severity } from '@sentry/types';
-import { Dsn, forget, logger, SentryError } from '@sentry/utils';
+import { forget, isPlainObject, isThenable, logger, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 import { join } from 'path';
 
-import { getCrashesDirectory, onRendererProcessGone, usesCrashpad } from '../../electron-normalize';
-import { normalizeUrl } from '../../../common';
+import { onRendererProcessGone, usesCrashpad } from '../../electron-normalize';
+import { mergeEvents, normalizeUrl } from '../../../common';
 import { ElectronMainOptions } from '../../sdk';
 import { ElectronNetTransport } from '../../transports/electron-net';
 import { BaseUploader } from './base-uploader';
 import { BreakpadUploader } from './breakpad-uploader';
 import { CrashpadUploader } from './crashpad-uploader';
 import { Store } from './store';
-
-/** Gets the path to the Sentry cache directory. */
-function getCachePath(): string {
-  return join(app.getPath('userData'), 'sentry');
-}
+import { getEventDefaults } from '../../context';
+import { sessionCrashed } from '../main-process-session';
 
 /** Sends minidumps via the Sentry uploader.. */
 export class SentryMinidump implements Integration {
@@ -36,6 +33,9 @@ export class SentryMinidump implements Integration {
   /** Uploader for minidump files. */
   private _uploader?: BaseUploader;
 
+  /** The path to the Sentry cache directory. */
+  private readonly _cachePath: string = join(app.getPath('userData'), 'sentry');
+
   /** @inheritDoc */
   public setupOnce(): void {
     // Mac AppStore builds cannot run the crash reporter due to the sandboxing
@@ -47,7 +47,7 @@ export class SentryMinidump implements Integration {
 
     this._startCrashReporter();
 
-    this._scopeStore = new Store<Scope>(getCachePath(), 'scope_v2', new Scope());
+    this._scopeStore = new Store<Scope>(this._cachePath, 'scope_v2', new Scope());
     // We need to store the scope in a variable here so it can be attached to minidumps
     this._scopeLastRun = this._scopeStore.get();
 
@@ -55,9 +55,8 @@ export class SentryMinidump implements Integration {
 
     const client = getCurrentHub().getClient<NodeClient>();
     const options = client?.getOptions() as ElectronMainOptions;
-    const dsnString = options?.dsn;
 
-    if (!dsnString) {
+    if (!options?.dsn) {
       throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
     }
 
@@ -65,10 +64,10 @@ export class SentryMinidump implements Integration {
     const transport = (client as any)._getBackend().getTransport() as ElectronNetTransport;
 
     this._uploader = usesCrashpad()
-      ? new CrashpadUploader(new Dsn(dsnString), getCrashesDirectory(), getCachePath(), transport)
-      : new BreakpadUploader(new Dsn(dsnString), getCrashesDirectory(), getCachePath(), transport);
+      ? new CrashpadUploader(options, this._cachePath, transport)
+      : new BreakpadUploader(options, this._cachePath, transport);
 
-    // Every time a subprocess or renderer crashes, start sending minidumps right away.
+    // Every time a subprocess or renderer crashes, send a minidump right away.
     onRendererProcessGone((contents, details) => this._sendRendererCrash(options, contents, details));
 
     // Flush already cached minidumps from the queue.
@@ -76,7 +75,7 @@ export class SentryMinidump implements Integration {
 
     // Start to submit recent minidump crashes. This will load breadcrumbs and
     // context information that was cached on disk prior to the crash.
-    forget(this._sendNativeCrashes({}));
+    forget(this._sendNativeCrashes(options, { tags: { 'event.environment': 'native', event_type: 'native' } }));
   }
 
   /** Starts the native crash reporter */
@@ -102,9 +101,10 @@ export class SentryMinidump implements Integration {
     contents: Electron.WebContents,
     details?: Electron.RenderProcessGoneDetails,
   ): Promise<void> {
-    const crashed_process = options.getRendererName?.(contents) || `WebContents[${contents.id}]`;
+    const { getRendererName, release } = options;
+    const crashed_process = getRendererName?.(contents) || `WebContents[${contents.id}]`;
 
-    logger.log(`${crashed_process} renderer process has crashed`);
+    logger.log(`Renderer process '${crashed_process}' has crashed`);
 
     const electron: Record<string, any> = {
       crashed_process,
@@ -116,12 +116,17 @@ export class SentryMinidump implements Integration {
       electron.details = details;
     }
 
-    const event: Event = {
-      release: options.release,
-      contexts: { electron },
-    };
+    const event = mergeEvents(await getEventDefaults(release), {
+      contexts: {
+        electron,
+      },
+      // The default is javascript
+      tags: { 'event.environment': 'native', event_type: 'native' },
+    });
 
-    await this._sendNativeCrashes(event);
+    sessionCrashed();
+
+    await this._sendNativeCrashes(options, event);
 
     addBreadcrumb({
       category: 'exception',
@@ -149,7 +154,7 @@ export class SentryMinidump implements Integration {
   }
 
   /** Loads new native crashes from disk and sends them to Sentry. */
-  private async _sendNativeCrashes(event: Event): Promise<void> {
+  private async _sendNativeCrashes(options: ElectronMainOptions, event: Event): Promise<void> {
     // Whenever we are called, assume that the crashes we are going to load down
     // below have occurred recently. This means, we can use the same event data
     // for all minidumps that we load now. There are two conditions:
@@ -174,8 +179,30 @@ export class SentryMinidump implements Integration {
         const currentCloned = Scope.clone(getCurrentHub().getScope());
         const storedScope = Scope.clone(this._scopeLastRun);
         let newEvent = await storedScope.applyToEvent(event);
+
         if (newEvent) {
           newEvent = await currentCloned.applyToEvent(newEvent);
+
+          const { beforeSend, sampleRate } = options;
+
+          if (typeof sampleRate === 'number' && Math.random() > sampleRate) {
+            logger.warn(
+              `Discarding event because it's not included in the random sample (sampling rate = ${sampleRate})`,
+            );
+            return;
+          }
+
+          if (newEvent && beforeSend) {
+            const beforeSendResult = await this._ensureBeforeSendRv(beforeSend(event));
+
+            if (beforeSendResult === null) {
+              logger.warn('`beforeSend` returned `null`, will not send event.');
+              return;
+            }
+
+            newEvent = beforeSendResult;
+          }
+
           paths.map((path) => {
             forget(uploader.uploadMinidump({ path, event: newEvent || {} }));
           });
@@ -186,5 +213,30 @@ export class SentryMinidump implements Integration {
     } catch (_oO) {
       logger.error('Error while sending native crash.');
     }
+  }
+
+  /**
+   * Verifies that return value of configured `beforeSend` is of expected type.
+   *
+   * Copied from @sentry/core
+   */
+  private _ensureBeforeSendRv(rv: PromiseLike<Event | null> | Event | null): PromiseLike<Event | null> | Event | null {
+    const nullErr = '`beforeSend` method has to return `null` or a valid event.';
+    if (isThenable(rv)) {
+      return (rv as PromiseLike<Event | null>).then(
+        (event) => {
+          if (!(isPlainObject(event) || event === null)) {
+            throw new SentryError(nullErr);
+          }
+          return event;
+        },
+        (e) => {
+          throw new SentryError(`beforeSend rejected with ${e}`);
+        },
+      );
+    } else if (!(isPlainObject(rv) || rv === null)) {
+      throw new SentryError(nullErr);
+    }
+    return rv;
   }
 }

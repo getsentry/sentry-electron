@@ -4,14 +4,17 @@
  * npm script `build:preload` calls `node ./scripts/build-preload.js` which inlines ipc and transpiles to JavaScript
  */
 
-import { contextBridge, crashReporter, ipcRenderer, remote } from 'electron';
+import { contextBridge, crashReporter, ipcRenderer } from 'electron';
+import * as electron from 'electron';
 
 import { IPC } from '../common/ipc';
 
 crashReporter.start({
   companyName: '',
   ignoreSystemCrashHandler: true,
-  productName: remote.app.name || remote.app.getName(),
+  // This script is only ever used for Electron < v9 where the remote module is available
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  productName: (electron as any).remote.app.name || (electron as any).remote.app.getName(),
   submitURL: '',
   uploadToServer: false,
 });
@@ -25,6 +28,7 @@ const ipcObject = {
   },
 };
 
+// eslint-disable-next-line no-restricted-globals
 window.__SENTRY_IPC__ = ipcObject;
 
 // We attempt to use contextBridge if it's available

@@ -1,7 +1,8 @@
 import { Event, StackFrame } from '@sentry/types';
-import { join } from '@sentry/utils';
+import { join } from 'path';
 import { readFileSync } from 'fs';
 import * as YAML from 'yaml';
+import { spawnSync } from 'child_process';
 
 /** Get stack frames from SentryEvent */
 function getFrames(event: Event): StackFrame[] {
@@ -37,4 +38,10 @@ export function getTestVersions(): string[] {
   const ciBuild = YAML.parse(ciBuildStr);
 
   return ciBuild.jobs.job_4.strategy.matrix.electron;
+}
+
+export function getCrashesDirectory(electronPath: string): string {
+  const appPath = join(__dirname, 'test-apps', 'crashes-directory');
+  const result = spawnSync(electronPath, [appPath], { shell: true, encoding: 'utf-8' });
+  return result.output.join('').replace(/[\n\r]/, '');
 }

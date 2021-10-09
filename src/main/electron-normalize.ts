@@ -23,7 +23,11 @@ export function onRendererProcessGone(
   app.on('web-contents-created', (_, contents) => {
     if (supportsRenderProcessGone()) {
       contents.on('render-process-gone', async (__, details) => {
-        callback(contents, details);
+        const ignoredReasons = ['clean-exit', 'killed'];
+
+        if (!ignoredReasons.includes(details?.reason || '')) {
+          callback(contents, details);
+        }
       });
     } else {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -58,6 +62,7 @@ function crashpadLinux(): boolean {
     return false;
   }
 
+  // Crashpad Linux for v15 is behind a switch
   return app.commandLine.hasSwitch('enable-crashpad');
 }
 

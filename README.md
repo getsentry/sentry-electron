@@ -25,8 +25,7 @@
 ## Usage
 
 To use this SDK, call `init(options)` as early as possible in the entry modules in the main process as well as all
-renderer processes or further sub processes you spawn. This will initialize the SDK and hook into the environment. Note
-that you can turn off almost all side effects using the respective options.
+renderer processes or further sub processes you spawn. This will initialize the SDK and hook into the environment.
 
 ```javascript
 import { init } from '@sentry/electron';

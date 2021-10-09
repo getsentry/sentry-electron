@@ -2,13 +2,13 @@ import { defaultIntegrations as defaultNodeIntegrations, init as nodeInit, NodeO
 import { Integration } from '@sentry/types';
 import { WebContents } from 'electron';
 
+import { hookIPC } from './hook-ipc';
 import {
   ElectronEvents,
   MainContext,
   MainProcessSession,
   OnUncaughtException,
   PreloadInjection,
-  RendererIPC,
   SentryMinidump,
 } from './integrations';
 import { ElectronNetTransport } from './transports/electron-net';
@@ -17,7 +17,6 @@ export const defaultIntegrations: Integration[] = [
   new SentryMinidump(),
   new ElectronEvents(),
   new MainContext(),
-  new RendererIPC(),
   new OnUncaughtException(),
   new PreloadInjection(),
   ...defaultNodeIntegrations.filter((integration) => integration.name !== 'OnUncaughtException'),
@@ -52,10 +51,11 @@ export function init(options: ElectronMainOptions): void {
     options.transport = ElectronNetTransport;
   }
 
+  hookIPC(options);
   nodeInit(options);
 }
 
-/** Sets the default integrations and ensures that multiple minidump integrations are not set */
+/** Sets the default integrations and ensures that multiple minidump integrations are not enabled */
 function setDefaultIntegrations(defaults: Integration[], options: ElectronMainOptions): void {
   if (options.defaultIntegrations === undefined) {
     // If ElectronMinidump has been included, automatically remove SentryMinidump

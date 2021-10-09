@@ -1,7 +1,6 @@
 export { ElectronEvents } from './electron-events';
 export { OnUncaughtException } from './onuncaughtexception';
 export { MainContext } from './main-context';
-export { RendererIPC } from './renderer-ipc';
 export { SentryMinidump } from './sentry-minidump';
 export { ElectronMinidump } from './electron-minidump';
 export { PreloadInjection } from './preload-injection';

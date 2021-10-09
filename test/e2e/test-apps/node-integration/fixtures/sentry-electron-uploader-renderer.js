@@ -2,11 +2,12 @@ const { init, configureScope, Integrations } = require('../../../../../');
 
 init({
   dsn: process.env.DSN,
+  release: 'some-release',
   debug: true,
   autoSessionTracking: false,
   integrations: [new Integrations.ElectronMinidump()],
   initialScope: { user: { username: 'some_user' } },
-  onFatalError: (_error) => {
+  onFatalError: () => {
     // We need this here otherwise we will get a dialog and CI will get stuck
   },
 });
