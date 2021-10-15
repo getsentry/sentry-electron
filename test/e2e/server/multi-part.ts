@@ -4,6 +4,10 @@ import * as Koa from 'koa';
 import * as Router from 'koa-tree-router';
 import { createGunzip } from 'zlib';
 
+import { createLogger } from '../utils';
+
+const log = createLogger('Test Server Parser');
+
 export interface MultipartResult {
   fields: { [key: string]: any };
   files: { [key: string]: number };
@@ -40,40 +44,32 @@ export function parse_multipart(
   });
 }
 
-function sentryNamespacedFormFields(form: MultipartResult): { [key: string]: any } {
+function sentryNamespacedFormFields(form: MultipartResult): Record<string, any> {
   return Object.entries(form.fields)
     .filter(([key, _]) => key.startsWith('sentry___'))
     .reduce((acc, [key, value]) => {
       acc[key.replace('sentry___', '')] = JSON.parse(value);
       return acc;
-    }, {} as { [key: string]: any });
+    }, {} as Record<string, any>);
 }
 
-export function sentryEventFromFormFields(form: MultipartResult): [Event, { [key: string]: any }] {
-  if ('sentry' in form.fields) {
-    try {
-      const event = JSON.parse(form.fields.sentry);
-      const namespaced = sentryNamespacedFormFields(form);
-      return [event, namespaced];
-    } catch (e) {
-      //
-    }
-  }
-
-  let count = 1;
+export function sentryEventFromFormFields(form: MultipartResult): [Event, Record<string, any>] {
   let json = '';
+  let count = 1;
 
   while (`sentry__${count}` in form.fields) {
     json += form.fields[`sentry__${count}`];
     count += 1;
   }
 
+  if ('sentry' in form.fields) {
+    json = form.fields.sentry;
+  }
+
   try {
-    const event = json === '' ? {} : JSON.parse(json);
-    const namespaced = sentryNamespacedFormFields(form);
-    return [event, namespaced];
-  } catch (e) {
-    //
+    return [json === '' ? {} : JSON.parse(json), sentryNamespacedFormFields(form)];
+  } catch (error) {
+    log('Failed to parse form data', error);
   }
 
   return [{}, {}];

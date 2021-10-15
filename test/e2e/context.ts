@@ -1,9 +1,11 @@
-import { spawn } from 'child_process';
+import { ChildProcess, spawn, spawnSync } from 'child_process';
 import { join } from 'path';
 import { dir as tempDirectory, DirectoryResult } from 'tmp-promise';
 
-import { ProcessStatus } from './process';
 import { TestServer } from './server';
+import { createLogger } from './utils';
+
+const log = createLogger('Test Context');
 
 if (!process.env.DEBUG) {
   // tslint:disable-next-line
@@ -36,7 +38,8 @@ export class TestContext {
   ) {}
 
   /** Starts the app. */
-  public async start(sentryConfig?: string, fixture?: string): Promise<void> {
+  public async start(options: { secondRun?: boolean } = {}): Promise<void> {
+    log('Starting test context');
     // Only setup the tempDir if this the first start of the context
     // Subsequent starts will use the same path
     if (!this._tempDir) {
@@ -44,16 +47,13 @@ export class TestContext {
       this._tempDir = await tempDirectory();
     }
 
-    const env: { [key: string]: string | undefined } = {
+    const env: Record<string, any | undefined> = {
       ...process.env,
-      DSN: 'http://37f8a2ee37c0409d8970bc7559c7c7e4@localhost:8123/277345',
-      E2E_TEST_SENTRY: sentryConfig,
-      E2E_USERDATA_DIRECTORY: this._tempDir.path,
       ELECTRON_ENABLE_LOGGING: process.env.DEBUG,
     };
 
-    if (fixture) {
-      env.E2E_TEST_FIXTURE = fixture;
+    if (!options.secondRun) {
+      env.APP_FIRST_RUN = true;
     }
 
     const childProcess = spawn(this._electronPath, [this._appPath], { env });
@@ -84,18 +84,26 @@ export class TestContext {
       'Timeout: Waiting for app to start',
     );
 
+    log('App process has started');
+
     this._started = true;
   }
 
   /** Stops the app and cleans up. */
-  public async stop(clearData: boolean = true): Promise<void> {
-    if (!this.mainProcess) {
-      throw new Error('Invariant violation: Call .start() first');
+  public async stop(options: { retainData?: boolean; logStdout?: boolean } = {}): Promise<void> {
+    log('Stopping test context');
+
+    if (options.logStdout) {
+      this._logStdout();
+    }
+
+    if (!this.mainProcess || !this.isStarted) {
+      throw new Error('Invariant violation: Call start() first');
     }
 
     await this.mainProcess.kill();
 
-    if (this._tempDir && clearData) {
+    if (this._tempDir && !options.retainData) {
       await this._tempDir.cleanup();
     }
   }
@@ -122,6 +130,7 @@ export class TestContext {
       await new Promise<void>((resolve) => setTimeout(resolve, 100));
       remaining -= 100;
       if (remaining < 0) {
+        log(message);
         throw new Error(message);
       }
     }
@@ -134,10 +143,60 @@ export class TestContext {
    * @param count Number of events to wait for
    */
   public async waitForEvents(testServer: TestServer, count: number, timeout: number = 15000): Promise<void> {
-    await this.waitForTrue(() => testServer.events.length >= count, 'Timeout: Waiting for events', timeout);
+    log(`Waiting for ${count} events`);
+    await this.waitForTrue(
+      () => testServer.events.length >= count,
+      `Timeout: Waiting for ${count} events. Only ${testServer.events.length} events received`,
+      timeout,
+    );
+    log(`${count} events received`);
   }
 
-  public isStarted(): boolean {
+  /** Waits for app to close */
+  public async waitForAppClose(): Promise<void> {
+    await this.waitForTrue(
+      async () => (this.mainProcess ? !(await this.mainProcess.isRunning()) : false),
+      'Timeout: Waiting for app to die',
+    );
+  }
+
+  public get isStarted(): boolean {
     return this._started;
+  }
+
+  /** Logs stdout for debug testing */
+  private _logStdout(): void {
+    log('App stdout: ', this.processStdOut);
+  }
+}
+
+/** Handle for a running process. */
+export class ProcessStatus {
+  public constructor(private readonly _chProcess: ChildProcess) {}
+
+  /** Kills the process if it is still running. */
+  public async kill(): Promise<void> {
+    if (await this.isRunning()) {
+      this._chProcess.kill();
+    }
+
+    if (process.platform == 'win32') {
+      // The tests sometimes hang in CI on Windows because the Electron processes don't exit
+      spawnSync('taskkill /F /IM electron.exe', { shell: true });
+    }
+  }
+
+  /** Determines whether this process is still running. */
+  public async isRunning(): Promise<boolean> {
+    try {
+      if (this._chProcess.pid) {
+        process.kill(this._chProcess.pid, 0);
+        return true;
+      }
+    } catch (e) {
+      //
+    }
+
+    return false;
   }
 }

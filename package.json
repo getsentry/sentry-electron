@@ -42,7 +42,6 @@
     "build:watch": "run-p build:watch:es6 build:watch:esm",
     "build:watch:es6": "tsc -p tsconfig.build.json -w --preserveWatchOutput",
     "build:watch:esm": "tsc -p tsconfig.esm.json -w --preserveWatchOutput",
-    "postbuild": "npm pack",
     "clean": "rimraf coverage esm main preload renderer index.* integrations.* ipc.*",
     "preexample": "run-s clean build",
     "example": "electron example",
@@ -54,7 +53,7 @@
     "fix:eslint": "eslint . --format stylish --fix",
     "pretest": "run-s clean build",
     "test": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe electron-mocha --require ts-node/register/transpile-only --timeout 120000 ./test/unit/**/*.ts",
-    "pree2e": "run-s clean build",
+    "pree2e": "run-s clean build && yarn pack",
     "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only --timeout 30000 --retries 3 ./test/e2e/*.ts"
   },
   "dependencies": {

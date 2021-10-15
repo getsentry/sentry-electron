@@ -238,13 +238,13 @@ export function getSdkInfo(): SdkInfo {
  * for the release and environment.
  */
 async function _getEventDefaults(release?: string): Promise<Event> {
-  const name = app.name || app.getName();
+  const app_name = app.name || app.getName();
 
   return {
     sdk: getSdkInfo(),
     contexts: {
       app: {
-        app_name: name,
+        app_name,
         app_version: app.getVersion(),
         build_type: getBuildType(),
       },
@@ -275,7 +275,7 @@ async function _getEventDefaults(release?: string): Promise<Event> {
       },
     },
     environment: process.defaultApp ? 'development' : 'production',
-    release: release || `${name.replace(/\W/g, '-')}@${app.getVersion()}`,
+    release: release || `${app_name.replace(/\W/g, '-')}@${app.getVersion()}`,
     user: { ip_address: '{{auto}}' },
     tags: {
       'event.origin': 'electron',

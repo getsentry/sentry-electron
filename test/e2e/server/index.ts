@@ -4,21 +4,23 @@ import * as Koa from 'koa';
 import * as bodyParser from 'koa-bodyparser';
 import * as Router from 'koa-tree-router';
 import { inspect } from 'util';
+import { eventIsSession } from '../recipe';
+import { createLogger } from '../utils';
 
 import { parse_multipart, sentryEventFromFormFields } from './multi-part';
+
+const log = createLogger('Test Server');
 
 /** Event payload that has been submitted to the test server. */
 export interface TestServerEvent<T = unknown> {
   /** Request ID (UUID) */
   appId: string;
   /** Public auth key from the DSN. */
-  sentry_key: string;
+  sentryKey: string;
   /** Sentry Event data */
-  eventData?: Event;
-  /** Sentry Sessions data */
-  sessionData?: Session;
+  data: T;
   /** Extra namespaced form data */
-  namespacedData?: { [key: string]: any };
+  namespacedData?: Record<string, any>;
   /** An optional minidump file, if included in the event. */
   dumpFile?: boolean;
   /** API method used for submission */
@@ -32,12 +34,14 @@ export interface TestServerEvent<T = unknown> {
  */
 export class TestServer {
   /** All events received by this server instance. */
-  public events: TestServerEvent[] = [];
+  public events: TestServerEvent<Event | Session>[] = [];
   /** The internal HTTP server. */
   private _server?: Server;
 
   /** Starts accepting requests. */
   public start(): void {
+    log('Starting test server');
+
     const app = new Koa();
 
     app.use(
@@ -62,27 +66,15 @@ export class TestServer {
         return;
       }
 
-      const [, itemHeaders, payload, attachmentHeaders, attachment] = ctx.request.body.toString().split('\n');
+      const [, _itemHeaders, payload, attachmentHeaders, attachment] = ctx.request.body.toString().split('\n');
 
-      const { type } = JSON.parse(itemHeaders) as { type: string | 'event' | 'session' };
-
-      if (type === 'session') {
-        this._addEvent({
-          sessionData: JSON.parse(payload) as Session,
-          dump_file: false,
-          id: ctx.params.id,
-          sentry_key: keyMatch[1],
-          method: `envelope`,
-        });
-      } else {
-        this._addEvent({
-          eventData: JSON.parse(payload) as Event,
-          dump_file: !!attachmentHeaders && !!attachment && attachment.startsWith('MDMP'),
-          id: ctx.params.id,
-          sentry_key: keyMatch[1],
-          method: `envelope`,
-        });
-      }
+      this._addEvent({
+        data: JSON.parse(payload),
+        dumpFile: !!attachmentHeaders && !!attachment && attachment.startsWith('MDMP'),
+        appId: ctx.params.id,
+        sentryKey: keyMatch[1],
+        method: `envelope`,
+      });
 
       ctx.status = 200;
       ctx.body = 'Success';
@@ -99,15 +91,15 @@ export class TestServer {
         }
 
         const result = await parse_multipart(ctx);
-        const [event, namespaced] = sentryEventFromFormFields(result);
-        const dump_file = result.files.upload_file_minidump != undefined && result.files.upload_file_minidump > 1024;
+        const [event, namespacedData] = sentryEventFromFormFields(result);
+        const dumpFile = result.files.upload_file_minidump != undefined && result.files.upload_file_minidump > 1024;
 
         this._addEvent({
-          eventData: event,
-          namespaced,
-          dump_file,
-          id: ctx.params.id,
-          sentry_key: keyMatch[1],
+          data: event,
+          namespacedData,
+          dumpFile,
+          appId: ctx.params.id,
+          sentryKey: keyMatch[1],
           method: 'minidump',
         });
 
@@ -130,11 +122,11 @@ export class TestServer {
       const event = JSON.parse(ctx.request.body as string);
 
       this._addEvent({
-        eventData: event,
-        id: ctx.params.id,
-        sentry_key: keyMatch[1],
+        data: event,
+        appId: ctx.params.id,
+        sentryKey: keyMatch[1],
         method: 'store',
-        dump_file: false,
+        dumpFile: false,
       });
 
       ctx.headers['Content-Type'] = 'text/plain; charset=utf-8';
@@ -156,8 +148,18 @@ export class TestServer {
     this.events = [];
   }
 
+  public logEvents(): void {
+    if (this.events.length) {
+      log('Events received: ', inspect(this.events, false, null, true));
+    } else {
+      log('No Events received');
+    }
+  }
+
   /** Stops accepting requests and closes the server. */
   public async stop(): Promise<void> {
+    log('Stopping test server');
+
     return new Promise<void>((resolve, reject) => {
       if (this._server) {
         this._server.close((e) => {
@@ -173,11 +175,9 @@ export class TestServer {
     });
   }
 
-  private _addEvent(event: TestServerEvent): void {
+  private _addEvent(event: TestServerEvent<Event | Session>): void {
+    const type = eventIsSession(event.data) ? 'session' : 'event';
+    log(`Received '${type}' on '${event.method}' endpoint`);
     this.events.push(event);
-
-    if (process.env.DEBUG_SERVER) {
-      console.log(inspect(event, false, null, true));
-    }
   }
 }

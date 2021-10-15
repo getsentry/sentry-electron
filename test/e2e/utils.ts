@@ -1,8 +1,18 @@
 import { Event, StackFrame } from '@sentry/types';
-import { join } from 'path';
-import { readFileSync } from 'fs';
-import * as YAML from 'yaml';
 import { spawnSync } from 'child_process';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import * as YAML from 'yaml';
+
+export function createLogger(name: string): (...args: any[]) => void {
+  if (process.env.DEBUG) {
+    return (...args: any[]) => console.log(`[${name}]`, ...args);
+  } else {
+    return (_) => {
+      //
+    };
+  }
+}
 
 /** Get stack frames from SentryEvent */
 function getFrames(event: Event): StackFrame[] {
@@ -31,13 +41,13 @@ export function getTestVersions(): string[] {
     return [process.env.ELECTRON_VERSION];
   }
 
-  const ciBuildStr = readFileSync(join(__dirname, '..', '.github', 'workflows', 'build.yml'), {
+  const ciBuildStr = readFileSync(join(__dirname, '..', '..', '.github', 'workflows', 'build.yml'), {
     encoding: 'utf8',
   });
 
-  const ciBuild = YAML.parse(ciBuildStr);
+  const ci = YAML.parse(ciBuildStr);
 
-  return ciBuild.jobs.job_4.strategy.matrix.electron;
+  return ci.jobs.job_4.strategy.matrix.electron;
 }
 
 export function getCrashesDirectory(electronPath: string): string {
