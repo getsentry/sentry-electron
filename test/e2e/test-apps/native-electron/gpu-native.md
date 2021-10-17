@@ -2,7 +2,8 @@
 description: Native GPU Crash
 category: Native (Electron Uploader)
 command: 'yarn'
-condition: version.major >= 13
+# chrome://gpucrash was only added in v13 and only works on Linux when Crashpad was added
+condition: version.major >= 13 && usesCrashpad
 ---
 
 `package.json`

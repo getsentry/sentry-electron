@@ -43,9 +43,13 @@ app.on('ready', () => {
 
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
 
-  setTimeout(() => {
-    process.crash();
-  }, 500);
+  // We only crash on the first run
+  // The second run is where the crash is uploaded
+  if (process.env.APP_FIRST_RUN) {
+    setTimeout(() => {
+      process.crash();
+    }, 500);
+  }
 });
 ```
 
