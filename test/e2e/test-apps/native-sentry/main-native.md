@@ -1,31 +1,24 @@
 ---
-description: Electron Forge
+description: Native Main Crash
+category: Native (Sentry Uploader)
 command: 'yarn'
-timeout: 120
+runTwice: true
 ---
 
 `package.json`
 
 ```json
 {
-  "name": "electron-forge",
+  "name": "native-sentry-main",
   "version": "1.0.0",
-  "main": "src/index.js",
-  "config": {
-    "forge": {}
-  },
+  "main": "src/main.js",
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.0",
     "@sentry/electron": "3.0.0"
-  },
-  "devDependencies": {
-    "@electron-forge/cli": "^6.0.0-beta.59",
-    "electron": "13.1.9"
   }
 }
 ```
 
-`src/index.js`
+`src/main.js`
 
 ```js
 const { app, BrowserWindow } = require('electron');
@@ -39,11 +32,7 @@ init({
   onFatalError: () => {},
 });
 
-if (require('electron-squirrel-startup')) {
-  app.quit();
-}
-
-const createWindow = () => {
+app.on('ready', () => {
   const mainWindow = new BrowserWindow({
     show: false,
     webPreferences: {
@@ -53,21 +42,10 @@ const createWindow = () => {
   });
 
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
-  // mainWindow.webContents.openDevTools();
-};
 
-app.on('ready', createWindow);
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
-
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
+  setTimeout(() => {
+    process.crash();
+  }, 500);
 });
 ```
 
@@ -78,21 +56,14 @@ app.on('activate', () => {
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Hello World!</title>
   </head>
   <body>
-    <h1>💖 Hello World!</h1>
-    <p>Welcome to your Electron application.</p>
     <script>
       const { init } = require('@sentry/electron');
 
       init({
         debug: true,
       });
-
-      setTimeout(() => {
-        throw new Error('Some renderer error');
-      }, 500);
     </script>
   </body>
 </html>
@@ -105,7 +76,7 @@ app.on('activate', () => {
   "method": "envelope",
   "sentryKey": "37f8a2ee37c0409d8970bc7559c7c7e4",
   "appId": "277345",
-  "dumpFile": false,
+  "dumpFile": true,
   "data": {
     "sdk": {
       "name": "sentry.javascript.electron",
@@ -119,7 +90,7 @@ app.on('activate', () => {
     },
     "contexts": {
       "app": {
-        "app_name": "electron-forge",
+        "app_name": "native-sentry-main",
         "app_version": "1.0.0"
       },
       "browser": {
@@ -148,87 +119,52 @@ app.on('activate', () => {
         "version": "{{version}}"
       },
       "electron": {
-        "crashed_process": "WebContents[1]",
-        "crashed_url": "app:///src/index.html"
+        "crashed_process": "browser"
       }
     },
-    "release": "electron-forge@1.0.0",
-    "environment": "production",
+    "release": "native-sentry-main@1.0.0",
+    "environment": "development",
     "user": {
       "ip_address": "{{auto}}"
     },
-    "exception": {
-      "values": [
-        {
-          "type": "Error",
-          "value": "Some renderer error",
-          "stacktrace": {
-            "frames": [
-              {
-                "colno": 0,
-                "filename": "app:///src/index.html",
-                "function": "{{function}}",
-                "in_app": true,
-                "lineno": 0
-              }
-            ]
-          },
-          "mechanism": {
-            "handled": true,
-            "type": "generic"
-          }
-        }
-      ]
-    },
-    "level": "error",
     "event_id": "{{id}}",
-    "platform": "javascript",
     "timestamp": 0,
     "breadcrumbs": [
       {
-        "timestamp": 0,
         "category": "electron",
         "message": "app.will-finish-launching",
+        "timestamp": 0,
         "type": "ui"
       },
       {
-        "timestamp": 0,
         "category": "electron",
         "message": "app.ready",
+        "timestamp": 0,
         "type": "ui"
       },
       {
-        "timestamp": 0,
-        "category": "electron",
-        "message": "app.session-created",
-        "type": "ui"
-      },
-      {
-        "timestamp": 0,
         "category": "electron",
         "message": "app.web-contents-created",
+        "timestamp": 0,
         "type": "ui"
       },
       {
-        "timestamp": 0,
         "category": "electron",
         "message": "app.browser-window-created",
+        "timestamp": 0,
         "type": "ui"
       },
       {
-        "timestamp": 0,
         "category": "electron",
         "message": "WebContents[1].dom-ready",
+        "timestamp": 0,
         "type": "ui"
       }
     ],
-    "request": {
-      "url": "app:///src/index.html"
-    },
     "tags": {
-      "event.environment": "javascript",
+      "event.environment": "native",
       "event.origin": "electron",
-      "event_type": "javascript"
+      "event_type": "native"
     }
   }
 }

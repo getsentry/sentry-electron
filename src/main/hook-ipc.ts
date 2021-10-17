@@ -19,8 +19,6 @@ function handleEvent(jsonEvent: string, contents: WebContents, options?: Electro
     return;
   }
 
-  event.release = options?.release;
-
   if (event.exception) {
     event.contexts = {
       electron: {

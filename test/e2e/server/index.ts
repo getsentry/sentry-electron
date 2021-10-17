@@ -178,6 +178,9 @@ export class TestServer {
   private _addEvent(event: TestServerEvent<Event | Session>): void {
     const type = eventIsSession(event.data) ? 'session' : 'event';
     log(`Received '${type}' on '${event.method}' endpoint`);
+    if (event.dumpFile) {
+      log('Minidump was included');
+    }
     this.events.push(event);
   }
 }

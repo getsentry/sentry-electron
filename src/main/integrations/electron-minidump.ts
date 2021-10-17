@@ -1,6 +1,6 @@
 import { getCurrentHub, Scope } from '@sentry/core';
 import { NodeClient, NodeOptions } from '@sentry/node';
-import { Event, Integration } from '@sentry/types';
+import { Event, Integration, Severity } from '@sentry/types';
 import { Dsn, forget, logger, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
@@ -55,6 +55,8 @@ export class ElectronMinidump implements Integration {
   /** Counter used to ensure no race condition when updating extra params */
   private _updateEpoch: number = 0;
 
+  private _customRelease: string | undefined;
+
   /** @inheritDoc */
   public setupOnce(): void {
     // Mac AppStore builds cannot run the crash reporter due to the sandboxing
@@ -73,6 +75,8 @@ export class ElectronMinidump implements Integration {
     if (!options || !options?.dsn) {
       throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
     }
+
+    this._customRelease = options.release;
 
     this._startCrashReporter(options);
 
@@ -146,12 +150,15 @@ export class ElectronMinidump implements Integration {
 
   /** Builds up an event to send with the native Electron uploader */
   private async _getNativeUploaderEvent(scope: Scope): Promise<Event> {
-    const event = mergeEvents(await getEventDefaults(), {
+    const event = mergeEvents(await getEventDefaults(this._customRelease), {
+      level: Severity.Fatal,
+      platform: 'native',
       tags: { 'event.environment': 'native', event_type: 'native' },
     });
 
     // Apply the scope to the event
     await scope.applyToEvent(event);
+
     // Normalise paths
     return normalizeEvent(event, app.getAppPath());
   }

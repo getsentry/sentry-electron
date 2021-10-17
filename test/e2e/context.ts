@@ -1,9 +1,33 @@
 import { ChildProcess, spawn, spawnSync } from 'child_process';
+import { rmSync } from 'fs';
 import { join } from 'path';
-import { dir as tempDirectory, DirectoryResult } from 'tmp-promise';
 
 import { TestServer } from './server';
 import { createLogger } from './utils';
+
+function getUserDataDir(appName: string): string {
+  switch (process.platform) {
+    case 'win32':
+      return join(process.env.APPDATA || '', appName);
+    case 'darwin':
+      return join('~/Library/Application Support', appName);
+    case 'linux':
+      return join(process.env.XDG_CONFIG_HOME || '~/.config', appName);
+  }
+  return '';
+}
+
+function getCrashesDir(appName: string): string {
+  switch (process.platform) {
+    case 'win32':
+      return join(process.env.LOCALAPPDATA || '', 'Temp', `${appName} Crashes`);
+    case 'darwin':
+      return join('~/Library/Application Support', appName);
+    case 'linux':
+      return join(process.env.XDG_CONFIG_HOME || '~/.config', appName);
+  }
+  return '';
+}
 
 const log = createLogger('Test Context');
 
@@ -20,9 +44,6 @@ export class TestContext {
   /** App stdout used for writing to console on failed tests */
   public processStdOut: string = '';
 
-  /** Temporary directory that hosts the app's User Data. */
-  private _tempDir?: DirectoryResult;
-
   private _started: boolean = false;
 
   /**
@@ -34,22 +55,18 @@ export class TestContext {
    */
   public constructor(
     private readonly _electronPath: string,
-    private readonly _appPath: string = join(__dirname, 'test-apps', 'node-integration'),
+    private readonly _appPath: string,
+    private readonly _appName: string,
   ) {}
 
   /** Starts the app. */
   public async start(options: { secondRun?: boolean } = {}): Promise<void> {
     log('Starting test context');
-    // Only setup the tempDir if this the first start of the context
-    // Subsequent starts will use the same path
-    if (!this._tempDir) {
-      // Get a temp directory for this app to use as userData
-      this._tempDir = await tempDirectory();
-    }
 
     const env: Record<string, any | undefined> = {
       ...process.env,
       ELECTRON_ENABLE_LOGGING: process.env.DEBUG,
+      ELECTRON_DISABLE_SECURITY_WARNINGS: true,
     };
 
     if (!options.secondRun) {
@@ -103,8 +120,9 @@ export class TestContext {
 
     await this.mainProcess.kill();
 
-    if (this._tempDir && !options.retainData) {
-      await this._tempDir.cleanup();
+    if (!options.retainData) {
+      rmSync(getUserDataDir(this._appName), { recursive: true, force: true });
+      rmSync(getCrashesDir(this._appName), { recursive: true, force: true });
     }
   }
 

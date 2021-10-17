@@ -1,31 +1,23 @@
 ---
-description: Electron Forge
-command: 'yarn'
-timeout: 120
+description: JavaScript Renderer Error
+category: JavaScript
+command: 'npm i'
 ---
 
 `package.json`
 
 ```json
 {
-  "name": "electron-forge",
+  "name": "javascript-renderer",
   "version": "1.0.0",
-  "main": "src/index.js",
-  "config": {
-    "forge": {}
-  },
+  "main": "src/main.js",
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.0",
     "@sentry/electron": "3.0.0"
-  },
-  "devDependencies": {
-    "@electron-forge/cli": "^6.0.0-beta.59",
-    "electron": "13.1.9"
   }
 }
 ```
 
-`src/index.js`
+`src/main.js`
 
 ```js
 const { app, BrowserWindow } = require('electron');
@@ -39,11 +31,7 @@ init({
   onFatalError: () => {},
 });
 
-if (require('electron-squirrel-startup')) {
-  app.quit();
-}
-
-const createWindow = () => {
+app.on('ready', () => {
   const mainWindow = new BrowserWindow({
     show: false,
     webPreferences: {
@@ -53,21 +41,6 @@ const createWindow = () => {
   });
 
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
-  // mainWindow.webContents.openDevTools();
-};
-
-app.on('ready', createWindow);
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
-
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
 });
 ```
 
@@ -78,11 +51,8 @@ app.on('activate', () => {
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Hello World!</title>
   </head>
   <body>
-    <h1>💖 Hello World!</h1>
-    <p>Welcome to your Electron application.</p>
     <script>
       const { init } = require('@sentry/electron');
 
@@ -119,7 +89,7 @@ app.on('activate', () => {
     },
     "contexts": {
       "app": {
-        "app_name": "electron-forge",
+        "app_name": "javascript-renderer",
         "app_version": "1.0.0"
       },
       "browser": {
@@ -152,7 +122,7 @@ app.on('activate', () => {
         "crashed_url": "app:///src/index.html"
       }
     },
-    "release": "electron-forge@1.0.0",
+    "release": "javascript-renderer@1.0.0",
     "environment": "production",
     "user": {
       "ip_address": "{{auto}}"
@@ -186,39 +156,33 @@ app.on('activate', () => {
     "timestamp": 0,
     "breadcrumbs": [
       {
-        "timestamp": 0,
         "category": "electron",
         "message": "app.will-finish-launching",
+        "timestamp": 0,
         "type": "ui"
       },
       {
-        "timestamp": 0,
         "category": "electron",
         "message": "app.ready",
+        "timestamp": 0,
         "type": "ui"
       },
       {
-        "timestamp": 0,
-        "category": "electron",
-        "message": "app.session-created",
-        "type": "ui"
-      },
-      {
-        "timestamp": 0,
         "category": "electron",
         "message": "app.web-contents-created",
+        "timestamp": 0,
         "type": "ui"
       },
       {
-        "timestamp": 0,
         "category": "electron",
         "message": "app.browser-window-created",
+        "timestamp": 0,
         "type": "ui"
       },
       {
-        "timestamp": 0,
         "category": "electron",
         "message": "WebContents[1].dom-ready",
+        "timestamp": 0,
         "type": "ui"
       }
     ],

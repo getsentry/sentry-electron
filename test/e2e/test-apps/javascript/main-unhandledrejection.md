@@ -1,31 +1,23 @@
 ---
-description: Electron Forge
+description: JavaScript Main UnhandledRejection
+category: JavaScript
 command: 'yarn'
-timeout: 120
 ---
 
 `package.json`
 
 ```json
 {
-  "name": "electron-forge",
+  "name": "javascript-main-unhandledrejection",
   "version": "1.0.0",
-  "main": "src/index.js",
-  "config": {
-    "forge": {}
-  },
+  "main": "src/main.js",
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.0",
     "@sentry/electron": "3.0.0"
-  },
-  "devDependencies": {
-    "@electron-forge/cli": "^6.0.0-beta.59",
-    "electron": "13.1.9"
   }
 }
 ```
 
-`src/index.js`
+`src/main.js`
 
 ```js
 const { app, BrowserWindow } = require('electron');
@@ -39,11 +31,7 @@ init({
   onFatalError: () => {},
 });
 
-if (require('electron-squirrel-startup')) {
-  app.quit();
-}
-
-const createWindow = () => {
+app.on('ready', () => {
   const mainWindow = new BrowserWindow({
     show: false,
     webPreferences: {
@@ -53,21 +41,12 @@ const createWindow = () => {
   });
 
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
-  // mainWindow.webContents.openDevTools();
-};
 
-app.on('ready', createWindow);
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
-
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
+  setTimeout(() => {
+    new Promise((_resolve, _reject) => {
+      throw new Error('Unhanded promise rejection in main process');
+    });
+  }, 500);
 });
 ```
 
@@ -78,21 +57,14 @@ app.on('activate', () => {
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Hello World!</title>
   </head>
   <body>
-    <h1>💖 Hello World!</h1>
-    <p>Welcome to your Electron application.</p>
     <script>
       const { init } = require('@sentry/electron');
 
       init({
         debug: true,
       });
-
-      setTimeout(() => {
-        throw new Error('Some renderer error');
-      }, 500);
     </script>
   </body>
 </html>
@@ -119,7 +91,7 @@ app.on('activate', () => {
     },
     "contexts": {
       "app": {
-        "app_name": "electron-forge",
+        "app_name": "javascript-main-unhandledrejection",
         "app_version": "1.0.0"
       },
       "browser": {
@@ -148,11 +120,10 @@ app.on('activate', () => {
         "version": "{{version}}"
       },
       "electron": {
-        "crashed_process": "WebContents[1]",
-        "crashed_url": "app:///src/index.html"
+        "crashed_process": "browser"
       }
     },
-    "release": "electron-forge@1.0.0",
+    "release": "javascript-main-unhandledrejection@1.0.0",
     "environment": "production",
     "user": {
       "ip_address": "{{auto}}"
@@ -161,12 +132,12 @@ app.on('activate', () => {
       "values": [
         {
           "type": "Error",
-          "value": "Some renderer error",
+          "value": "Unhanded promise rejection in main process",
           "stacktrace": {
             "frames": [
               {
                 "colno": 0,
-                "filename": "app:///src/index.html",
+                "filename": "app:///src/main.js",
                 "function": "{{function}}",
                 "in_app": true,
                 "lineno": 0
@@ -174,57 +145,50 @@ app.on('activate', () => {
             ]
           },
           "mechanism": {
-            "handled": true,
-            "type": "generic"
+            "handled": false,
+            "type": "onunhandledrejection"
           }
         }
       ]
     },
-    "level": "error",
+    "extra": {
+      "unhandledPromiseRejection": true
+    },
     "event_id": "{{id}}",
-    "platform": "javascript",
+    "platform": "node",
     "timestamp": 0,
     "breadcrumbs": [
       {
-        "timestamp": 0,
         "category": "electron",
         "message": "app.will-finish-launching",
+        "timestamp": 0,
         "type": "ui"
       },
       {
-        "timestamp": 0,
         "category": "electron",
         "message": "app.ready",
+        "timestamp": 0,
         "type": "ui"
       },
       {
-        "timestamp": 0,
-        "category": "electron",
-        "message": "app.session-created",
-        "type": "ui"
-      },
-      {
-        "timestamp": 0,
         "category": "electron",
         "message": "app.web-contents-created",
+        "timestamp": 0,
         "type": "ui"
       },
       {
-        "timestamp": 0,
         "category": "electron",
         "message": "app.browser-window-created",
+        "timestamp": 0,
         "type": "ui"
       },
       {
-        "timestamp": 0,
         "category": "electron",
         "message": "WebContents[1].dom-ready",
+        "timestamp": 0,
         "type": "ui"
       }
     ],
-    "request": {
-      "url": "app:///src/index.html"
-    },
     "tags": {
       "event.environment": "javascript",
       "event.origin": "electron",

@@ -2,8 +2,9 @@ import { parseSemver } from '@sentry/utils';
 import { spawnSync } from 'child_process';
 import { mkdirSync, readdirSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
-import { createContext, runInContext } from 'vm';
+import { Context, createContext, runInContext } from 'vm';
 import { expect } from 'chai';
+import { inspect } from 'util';
 
 import { SDK_VERSION } from '../../../src/main/version';
 import { TestServer } from '../server';
@@ -16,19 +17,53 @@ export * from './normalize';
 
 const log = createLogger('Recipe Runner');
 
+function* walkSync(dir: string): Generator<string> {
+  const files = readdirSync(dir, { withFileTypes: true });
+  for (const file of files) {
+    if (file.isDirectory()) {
+      yield* walkSync(join(dir, file.name));
+    } else {
+      yield join(dir, file.name);
+    }
+  }
+}
+
+function loadRecipes(rootDir: string): RecipeRunner[] {
+  return Array.from(walkSync(rootDir))
+    .filter((p) => p.endsWith('.md'))
+    .map((p) => RecipeRunner.load(p));
+}
+
 export function getExampleRecipes(): RecipeRunner[] {
   return loadRecipes(join(__dirname, '..', '..', '..', 'examples'));
 }
 
-export function getTestRecipes(): RecipeRunner[] {
-  return loadRecipes(join(__dirname, '..', 'test-apps'));
+export function getTestRecipes(): Record<string, RecipeRunner[]> {
+  const allRecipes = loadRecipes(join(__dirname, '..', 'test-apps'));
+
+  return allRecipes.reduce((obj, cur) => {
+    if (obj[cur.category || 'Others']) {
+      obj[cur.category || 'Others'].push(cur);
+    } else {
+      obj[cur.category || 'Others'] = [cur];
+    }
+    return obj;
+  }, {} as Record<string, RecipeRunner[]>);
 }
 
-function loadRecipes(rootDir: string): RecipeRunner[] {
-  return readdirSync(rootDir)
-    .filter((p) => p.endsWith('.md'))
-    .map((p) => join(rootDir, p))
-    .map((p) => RecipeRunner.load(p));
+function getEvalContext(electronVersion: string): Context {
+  const parsed = parseSemver(electronVersion);
+  const version = { major: parsed.major || 0, minor: parsed.minor || 0, patch: parsed.patch || 0 };
+  const platform = process.platform;
+
+  const usesCrashpad =
+    platform === 'darwin' ||
+    (platform === 'win32' && version.major >= 6) ||
+    (platform === 'linux' && version.major >= 15);
+
+  const supportsContextIsolation = version.major >= 6;
+
+  return createContext({ version, platform, usesCrashpad, supportsContextIsolation });
 }
 
 export class RecipeRunner {
@@ -43,26 +78,14 @@ export class RecipeRunner {
       return true;
     }
 
-    log(`Evaluating run condition: '${this._recipe.metadata.condition}'`);
-
-    const parsed = parseSemver(electronVersion);
-    const version = { major: parsed.major || 0, minor: parsed.minor || 0, patch: parsed.patch || 0 };
-    const platform = process.platform;
-
-    const usesCrashpad =
-      platform === 'darwin' ||
-      (platform === 'win32' && version.major >= 6) ||
-      (platform === 'linux' && version.major >= 15);
-
-    const supportsContextIsolation = version.major >= 6;
-
-    const context = { version, platform, usesCrashpad, supportsContextIsolation };
-    createContext(context);
-
+    const context = getEvalContext(electronVersion);
+    log(
+      `Evaluating condition: '${this._recipe.metadata.condition}' with context: ${inspect(context, false, null, true)}`,
+    );
     const result = runInContext(this._recipe.metadata.condition, context);
 
     if (result == false) {
-      log('Failed run condition. Skipping test.');
+      log('Condition result equals false. Skipping test.');
     }
 
     return result;
@@ -72,7 +95,11 @@ export class RecipeRunner {
     return this._recipe.metadata.description;
   }
 
-  get appName(): string {
+  public get category(): string | undefined {
+    return this._recipe.metadata.category;
+  }
+
+  private get appName(): string {
     const erStr = 'Recipe needs a package.json with "name" field';
 
     const pkgJson = this._recipe.files['package.json'];
@@ -88,7 +115,7 @@ export class RecipeRunner {
     return pkg.name;
   }
 
-  public async prepare(context: Mocha.Context, testBasePath: string): Promise<string> {
+  public async prepare(context: Mocha.Context, testBasePath: string): Promise<[string, string]> {
     log(`Preparing recipe '${this.description}'`);
 
     if (this._recipe.metadata.timeout) {
@@ -114,7 +141,7 @@ export class RecipeRunner {
       if (file.endsWith('package.json')) {
         content = content.replace(
           /"@sentry\/electron": ".*"/,
-          `"@sentry/electron": "file:./../../../../sentry-electron-v${SDK_VERSION}.tgz"`,
+          `"@sentry/electron": "file:./../../../../sentry-electron-${SDK_VERSION}.tgz"`,
         );
       }
 
@@ -131,13 +158,13 @@ export class RecipeRunner {
       });
 
       if (result.status) {
-        console.error(result.stdout.toString());
-        console.error(result.stderr.toString());
+        console.error(result.stdout?.toString());
+        console.error(result.stderr?.toString());
         throw new Error('Recipe command failed');
       }
     }
 
-    return appPath;
+    return [appPath, this.appName];
   }
 
   public async runTests(context: TestContext, testServer: TestServer): Promise<void> {

@@ -239,6 +239,7 @@ app.on('activate', () => {
         "crashed_url": "app:///.webpack/renderer/main_window/index.html"
       }
     },
+    "release": "electron-forge-webpack@1.0.0",
     "environment": "production",
     "user": {
       "ip_address": "{{auto}}"

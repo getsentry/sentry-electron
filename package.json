@@ -1,7 +1,7 @@
 {
   "name": "@sentry/electron",
   "description": "Official Sentry SDK for Electron",
-  "version": "3.0.0-beta.1",
+  "version": "3.0.0-beta.2",
   "main": "./index.js",
   "module": "./esm/main/index.js",
   "browser": "./esm/renderer/index.js",
@@ -42,7 +42,7 @@
     "build:watch": "run-p build:watch:es6 build:watch:esm",
     "build:watch:es6": "tsc -p tsconfig.build.json -w --preserveWatchOutput",
     "build:watch:esm": "tsc -p tsconfig.esm.json -w --preserveWatchOutput",
-    "clean": "rimraf coverage esm main preload renderer index.* integrations.* ipc.*",
+    "clean": "rimraf coverage esm main preload renderer index.* integrations.* ipc.* sentry-electron*.tgz",
     "preexample": "run-s clean build",
     "example": "electron example",
     "lint": "run-s lint:prettier lint:eslint",
@@ -53,8 +53,9 @@
     "fix:eslint": "eslint . --format stylish --fix",
     "pretest": "run-s clean build",
     "test": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe electron-mocha --require ts-node/register/transpile-only --timeout 120000 ./test/unit/**/*.ts",
-    "pree2e": "run-s clean build && yarn pack",
-    "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only --timeout 30000 --retries 3 ./test/e2e/*.ts"
+    "pree2e": "run-s clean build && npm pack",
+    "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only --timeout 30000 ./test/e2e/*.ts",
+    "e2e-clean": "rimraf test/e2e/dist && node scripts/clean-cache.js"
   },
   "dependencies": {
     "@sentry/browser": "6.13.2",

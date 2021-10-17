@@ -176,6 +176,7 @@ app.on('ready', () => {
         "crashed_url": "app:///dist/index.html"
       }
     },
+    "release": "webpack-context-isolation@1.0.0",
     "environment": "production",
     "user": {
       "ip_address": "{{auto}}",

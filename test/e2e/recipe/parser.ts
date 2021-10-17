@@ -13,6 +13,7 @@ interface CodeBlock {
 
 export interface TestMetadata {
   description: string;
+  category?: string;
   condition?: string;
   command?: string;
   timeout?: number;
