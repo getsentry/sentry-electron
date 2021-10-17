@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { Event, SdkInfo } from '@sentry/types';
+import { Contexts, Event, SdkInfo } from '@sentry/types';
 import * as child from 'child_process';
 import { app } from 'electron';
 import { platform, release } from 'os';
@@ -230,6 +230,57 @@ export function getSdkInfo(): SdkInfo {
   };
 }
 
+/** Gets the app contexts */
+async function getContexts(): Promise<Contexts> {
+  const app_name = app.name || app.getName();
+
+  const contexts: Contexts = {
+    app: {
+      app_name,
+      app_version: app.getVersion(),
+    },
+    browser: {
+      name: 'Chrome',
+    },
+    chrome: {
+      name: 'Chrome',
+      type: 'runtime',
+      version: process.versions.chrome,
+    },
+    device: {
+      arch: process.arch,
+      family: 'Desktop',
+    },
+    node: {
+      name: 'Node',
+      type: 'runtime',
+      version: process.versions.node,
+    },
+    os: (await getOsContext()) as Record<string, string>,
+    runtime: {
+      name: 'Electron',
+      version: process.versions.electron,
+    },
+    electron: {
+      crashed_process: 'browser',
+    },
+  };
+
+  // This ensures we don't get [undefined] after serialisation
+  const build_type = getBuildType();
+  if (build_type) {
+    contexts.app.build_type = build_type;
+  }
+
+  return contexts;
+}
+
+/** Gets the default release name */
+export function getDefaultReleaseName(): string {
+  const app_name = app.name || app.getName();
+  return `${app_name.replace(/\W/g, '-')}@${app.getVersion()}`;
+}
+
 /**
  * Computes Electron-specific default fields for events.
  *
@@ -238,44 +289,11 @@ export function getSdkInfo(): SdkInfo {
  * for the release and environment.
  */
 async function _getEventDefaults(release?: string): Promise<Event> {
-  const app_name = app.name || app.getName();
-
   return {
     sdk: getSdkInfo(),
-    contexts: {
-      app: {
-        app_name,
-        app_version: app.getVersion(),
-        build_type: getBuildType(),
-      },
-      browser: {
-        name: 'Chrome',
-      },
-      chrome: {
-        name: 'Chrome',
-        type: 'runtime',
-        version: process.versions.chrome,
-      },
-      device: {
-        arch: process.arch,
-        family: 'Desktop',
-      },
-      node: {
-        name: 'Node',
-        type: 'runtime',
-        version: process.versions.node,
-      },
-      os: (await getOsContext()) as Record<string, string>,
-      runtime: {
-        name: 'Electron',
-        version: process.versions.electron,
-      },
-      electron: {
-        crashed_process: 'browser',
-      },
-    },
+    contexts: await getContexts(),
     environment: process.defaultApp ? 'development' : 'production',
-    release: release || `${app_name.replace(/\W/g, '-')}@${app.getVersion()}`,
+    release: release || getDefaultReleaseName(),
     user: { ip_address: '{{auto}}' },
     tags: {
       'event.origin': 'electron',
