@@ -130,38 +130,7 @@ app.on('ready', () => {
     },
     "event_id": "{{id}}",
     "timestamp": 0,
-    "breadcrumbs": [
-      {
-        "category": "electron",
-        "message": "app.will-finish-launching",
-        "timestamp": 0,
-        "type": "ui"
-      },
-      {
-        "category": "electron",
-        "message": "app.ready",
-        "timestamp": 0,
-        "type": "ui"
-      },
-      {
-        "category": "electron",
-        "message": "app.web-contents-created",
-        "timestamp": 0,
-        "type": "ui"
-      },
-      {
-        "category": "electron",
-        "message": "app.browser-window-created",
-        "timestamp": 0,
-        "type": "ui"
-      },
-      {
-        "category": "electron",
-        "message": "WebContents[1].dom-ready",
-        "timestamp": 0,
-        "type": "ui"
-      }
-    ],
+    "breadcrumbs": [],
     "tags": {
       "event.environment": "native",
       "event.origin": "electron",
