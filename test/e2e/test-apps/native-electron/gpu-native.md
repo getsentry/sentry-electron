@@ -22,11 +22,10 @@ condition: version.major >= 13 && usesCrashpad
 `src/main.js`
 
 ```js
-app.commandLine.appendSwitch('enable-crashpad');
-
 const { app, BrowserWindow } = require('electron');
-const path = require('path');
 const { init, Integrations } = require('@sentry/electron');
+
+app.commandLine.appendSwitch('enable-crashpad');
 
 init({
   dsn: '__DSN__',
