@@ -20,7 +20,7 @@ export function createLogger(name: string): (...args: any[]) => void {
   if (process.env.DEBUG) {
     return (...args: any[]) => console.log(`[${name}]`, ...args);
   } else {
-    return (...args: any[]) => TEST_LOG.push(args);
+    return (...args: any[]) => TEST_LOG.push([`[${name}]`, ...args]);
   }
 }
 
