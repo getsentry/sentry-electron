@@ -5,7 +5,7 @@ import { join } from 'path';
 
 import { TestContext } from './context';
 import { downloadElectron } from './download';
-import { getExampleRecipes, getTestRecipes } from './recipe';
+import { getExampleRecipes, getCategorisedTestRecipes } from './recipe';
 import { TestServer } from './server';
 import { getTestVersions } from './utils';
 
@@ -47,7 +47,7 @@ describe('E2E Tests', () => {
       });
 
       describe(`Functional Test Recipes`, () => {
-        const categories = getTestRecipes();
+        const categories = getCategorisedTestRecipes();
 
         for (const category of Object.keys(categories)) {
           describe(category, () => {
@@ -66,19 +66,19 @@ describe('E2E Tests', () => {
         }
       });
 
-      // describe(`Example App Recipes`, () => {
-      //   for (const recipe of getExampleRecipes()) {
-      //     it(recipe.description, async function () {
-      //       if (!recipe.shouldRun(electronVersion)) {
-      //         this.skip();
-      //       }
+      describe(`Example App Recipes`, () => {
+        for (const recipe of getExampleRecipes()) {
+          it(recipe.description, async function () {
+            if (!recipe.shouldRun(electronVersion)) {
+              this.skip();
+            }
 
-      //       const appPath = await recipe.prepare(this, distDir);
-      //       testContext = new TestContext(await electronPath, appPath);
-      //       await recipe.runTests(testContext, testServer);
-      //     });
-      //   }
-      // });
+            const [appPath, appName] = await recipe.prepare(this, distDir);
+            testContext = new TestContext(await electronPath, appPath, appName);
+            await recipe.runTests(testContext, testServer);
+          });
+        }
+      });
     });
   }
 });

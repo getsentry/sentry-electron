@@ -1,15 +1,9 @@
 import { Event, Session } from '@sentry/types';
 import { readFileSync } from 'fs';
-import * as YAML from 'yaml';
+import { join, sep } from 'path';
 
 import { TestServerEvent } from '../server';
-
-const codeBlockRegex = /`([\w./]+)`\s*```\w*[\v\s]*([.\W\w]+?)\s*```/g;
-
-interface CodeBlock {
-  name: string;
-  content: string;
-}
+import { walkSync } from '../utils';
 
 export interface TestMetadata {
   description: string;
@@ -21,68 +15,67 @@ export interface TestMetadata {
 }
 
 export interface TestRecipe {
+  path: string;
   metadata: TestMetadata;
   files: Record<string, string>;
   expectedEvents: TestServerEvent<Event | Session>[];
 }
 
-function getMetadata(raw: string): TestMetadata {
-  const fmMatch = raw.match(/^---([\s\S]+)---/);
+function getDescription(doc: string): string {
+  const match = doc.match(/^#\s+([\s\S]+?)$/m);
 
-  if (!fmMatch) {
-    throw new Error('No test metadata found');
+  if (!match) {
+    throw new Error('Description not found');
   }
 
-  const [, frontMatter] = fmMatch;
-
-  return YAML.parse(frontMatter);
+  return match[1];
 }
 
-function getCodeBlocks(raw: string): CodeBlock[] {
-  const files: CodeBlock[] = [];
-
-  let match;
-
-  while ((match = codeBlockRegex.exec(raw)) !== null) {
-    if (match.index === codeBlockRegex.lastIndex) {
-      codeBlockRegex.lastIndex += 1;
-    }
-
-    const [, path, content] = match;
-
-    files.push({ name: path, content });
-  }
-
-  return files;
+function getTableValue(doc: string, row: string): string | undefined {
+  const r = new RegExp(`${row}\\s*\\|\\s*([\\s\\S]+?)\\s*\\|`, 'gi');
+  const match = r.exec(doc);
+  return match ? match[1] : undefined;
 }
 
-function getEvents(raw: string): TestServerEvent<Event>[] {
-  return getCodeBlocks(raw)
-    .filter((b) => b.name === 'event')
-    .map((b) => JSON.parse(b.content) as TestServerEvent<Event>);
+function parseMetadata(doc: string): TestMetadata {
+  const description = getDescription(doc);
+  const category = getTableValue(doc, 'category');
+  const condition = getTableValue(doc, 'run condition');
+  const command = getTableValue(doc, 'build command');
+  const timeoutStr = getTableValue(doc, 'timeout');
+  const timeout = timeoutStr ? parseInt(timeoutStr.replace('s', '000')) : undefined;
+  const runTwice = !!getTableValue(doc, 'run twice');
+
+  return { description, category, command, condition, timeout, runTwice };
 }
 
-function getSessions(raw: string): TestServerEvent<Session>[] {
-  return getCodeBlocks(raw)
-    .filter((b) => b.name === 'session')
-    .map((b) => JSON.parse(b.content) as TestServerEvent<Session>);
+function isEventOrSession(path: string): boolean {
+  return !!path.match(/(?:session|event).*\.json$/);
 }
 
-function getFiles(raw: string): Record<string, string> {
-  return getCodeBlocks(raw)
-    .filter((b) => b.name !== 'event' && b.name !== 'session')
-    .reduce((obj, file) => {
-      obj[file.name] = file.content;
-      return obj;
+function getEventsAndSessions(rootDir: string): TestServerEvent<Event | Session>[] {
+  return Array.from(walkSync(rootDir))
+    .filter((path) => isEventOrSession(path))
+    .map((path) => JSON.parse(readFileSync(path, { encoding: 'utf-8' })) as TestServerEvent<Event | Session>);
+}
+
+function getFiles(rootDir: string): Record<string, string> {
+  return Array.from(walkSync(rootDir))
+    .filter((path) => !isEventOrSession(path))
+    .reduce((acc, absPath) => {
+      const relPath = absPath.replace(rootDir + sep, '');
+      acc[relPath] = readFileSync(absPath, { encoding: 'utf-8' });
+      return acc;
     }, {} as Record<string, string>);
 }
 
-export function parseRecipe(path: string): TestRecipe {
-  const raw = readFileSync(path, { encoding: 'utf8' });
+export function parseRecipe(rootPath: string): TestRecipe {
+  const readme = readFileSync(join(rootPath, 'README.md'), { encoding: 'utf8' });
 
   return {
-    metadata: getMetadata(raw),
-    files: getFiles(raw),
-    expectedEvents: [...getEvents(raw), ...getSessions(raw)],
+    path: rootPath,
+    metadata: parseMetadata(readme),
+    files: getFiles(rootPath),
+    expectedEvents: getEventsAndSessions(rootPath),
   };
 }

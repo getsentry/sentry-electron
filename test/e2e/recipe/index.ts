@@ -1,6 +1,6 @@
 import { parseSemver } from '@sentry/utils';
 import { spawnSync } from 'child_process';
-import { mkdirSync, readdirSync, writeFileSync } from 'fs';
+import { mkdirSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { Context, createContext, runInContext } from 'vm';
 import { expect } from 'chai';
@@ -8,7 +8,7 @@ import { inspect } from 'util';
 
 import { SDK_VERSION } from '../../../src/main/version';
 import { TestServer } from '../server';
-import { createLogger } from '../utils';
+import { createLogger, walkSync } from '../utils';
 import { normalize } from './normalize';
 import { parseRecipe, TestRecipe } from './parser';
 import { TestContext } from '../context';
@@ -17,35 +17,32 @@ export * from './normalize';
 
 const log = createLogger('Recipe Runner');
 
-function* walkSync(dir: string): Generator<string> {
-  const files = readdirSync(dir, { withFileTypes: true });
-  for (const file of files) {
-    if (file.isDirectory()) {
-      yield* walkSync(join(dir, file.name));
-    } else {
-      yield join(dir, file.name);
-    }
-  }
-}
-
 function loadRecipes(rootDir: string): RecipeRunner[] {
   return Array.from(walkSync(rootDir))
-    .filter((p) => p.endsWith('.md'))
-    .map((p) => RecipeRunner.load(p));
+    .filter((p) => p.endsWith('README.md'))
+    .reduce((arr, p) => {
+      try {
+        arr.push(RecipeRunner.load(dirname(p)));
+      } catch (e) {
+        console.error(e);
+      }
+      return arr;
+    }, [] as RecipeRunner[]);
 }
 
 export function getExampleRecipes(): RecipeRunner[] {
   return loadRecipes(join(__dirname, '..', '..', '..', 'examples'));
 }
 
-export function getTestRecipes(): Record<string, RecipeRunner[]> {
+export function getCategorisedTestRecipes(): Record<string, RecipeRunner[]> {
   const allRecipes = loadRecipes(join(__dirname, '..', 'test-apps'));
 
   return allRecipes.reduce((obj, cur) => {
-    if (obj[cur.category || 'Others']) {
-      obj[cur.category || 'Others'].push(cur);
+    const cat = cur.category || 'Others';
+    if (obj[cat]) {
+      obj[cat].push(cur);
     } else {
-      obj[cur.category || 'Others'] = [cur];
+      obj[cat] = [cur];
     }
     return obj;
   }, {} as Record<string, RecipeRunner[]>);
@@ -119,7 +116,7 @@ export class RecipeRunner {
     log(`Preparing recipe '${this.description}'`);
 
     if (this._recipe.metadata.timeout) {
-      context.timeout(this._recipe.metadata.timeout * 1000);
+      context.timeout(this._recipe.metadata.timeout);
     }
 
     const appPath = join(testBasePath, this.appName);

@@ -1,0 +1,16 @@
+{
+  "name": "electron-forge",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "config": {
+    "forge": {}
+  },
+  "dependencies": {
+    "electron-squirrel-startup": "^1.0.0",
+    "@sentry/electron": "3.0.0"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^6.0.0-beta.59",
+    "electron": "13.1.9"
+  }
+}

@@ -1,5 +1,5 @@
 import { spawnSync } from 'child_process';
-import { readFileSync } from 'fs';
+import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import * as YAML from 'yaml';
 
@@ -32,4 +32,15 @@ export function getCrashesDirectory(electronPath: string): string {
   const appPath = join(__dirname, 'test-apps', 'crashes-directory');
   const result = spawnSync(electronPath, [appPath], { shell: true, encoding: 'utf-8' });
   return result.output.join('').replace(/[\n\r]/, '');
+}
+
+export function* walkSync(dir: string): Generator<string> {
+  const files = readdirSync(dir, { withFileTypes: true });
+  for (const file of files) {
+    if (file.isDirectory()) {
+      yield* walkSync(join(dir, file.name));
+    } else {
+      yield join(dir, file.name);
+    }
+  }
 }

@@ -1,0 +1,44 @@
+{
+  "name": "electron-forge-webpack",
+  "version": "1.0.0",
+  "main": ".webpack/main",
+  "scripts": {
+    "package": "electron-forge package"
+  },
+  "config": {
+    "forge": {
+      "plugins": [
+        [
+          "@electron-forge/plugin-webpack",
+          {
+            "mainConfig": "./webpack.main.config.js",
+            "renderer": {
+              "config": "./webpack.renderer.config.js",
+              "entryPoints": [
+                {
+                  "html": "./src/index.html",
+                  "js": "./src/renderer.js",
+                  "name": "main_window",
+                  "preload": {
+                    "js": "@sentry/electron/preload"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      ]
+    }
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^6.0.0-beta.59",
+    "@electron-forge/plugin-webpack": "6.0.0-beta.59",
+    "@vercel/webpack-asset-relocator-loader": "1.6.0",
+    "electron": "13.1.9",
+    "node-loader": "^2.0.0"
+  },
+  "dependencies": {
+    "@sentry/electron": "3.0.0",
+    "electron-squirrel-startup": "^1.0.0"
+  }
+}
