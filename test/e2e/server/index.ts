@@ -148,14 +148,6 @@ export class TestServer {
     this.events = [];
   }
 
-  public logEvents(): void {
-    if (this.events.length) {
-      log('Events received: ', inspect(this.events, false, null, true));
-    } else {
-      log('No Events received');
-    }
-  }
-
   /** Stops accepting requests and closes the server. */
   public async stop(): Promise<void> {
     log('Stopping test server');
@@ -177,10 +169,7 @@ export class TestServer {
 
   private _addEvent(event: TestServerEvent<Event | Session>): void {
     const type = eventIsSession(event.data) ? 'session' : 'event';
-    log(`Received '${type}' on '${event.method}' endpoint`);
-    if (event.dumpFile) {
-      log('Minidump was included');
-    }
+    log(`Received '${type}' on '${event.method}' endpoint`, inspect(event, false, null, true));
     this.events.push(event);
   }
 }

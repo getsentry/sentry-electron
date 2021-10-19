@@ -3,13 +3,24 @@ import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import * as YAML from 'yaml';
 
+// When DEBUG is not enabled, we collect a log to output if a test fails
+let TEST_LOG: any[][] = [];
+
+export function clearTestLog(): void {
+  TEST_LOG = [];
+}
+
+export function outputTestLog(): void {
+  for (const args of TEST_LOG) {
+    console.log(...args);
+  }
+}
+
 export function createLogger(name: string): (...args: any[]) => void {
   if (process.env.DEBUG) {
     return (...args: any[]) => console.log(`[${name}]`, ...args);
   } else {
-    return (_) => {
-      //
-    };
+    return (...args: any[]) => TEST_LOG.push(args);
   }
 }
 

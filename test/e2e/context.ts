@@ -30,6 +30,7 @@ function getCrashesDir(appName: string): string {
 }
 
 const log = createLogger('Test Context');
+const appLog = createLogger('App Output');
 
 if (!process.env.DEBUG) {
   // tslint:disable-next-line
@@ -40,9 +41,6 @@ if (!process.env.DEBUG) {
 export class TestContext {
   /** Can check if the main process is running and kill it */
   public mainProcess?: ProcessStatus;
-
-  /** App stdout used for writing to console on failed tests */
-  public processStdOut: string = '';
 
   private _started: boolean = false;
 
@@ -75,24 +73,16 @@ export class TestContext {
 
     const childProcess = spawn(this._electronPath, [this._appPath], { env });
 
-    // eslint-disable-next-line no-extra-boolean-cast
-    if (!!process.env.DEBUG) {
-      childProcess.stdout.pipe(process.stdout);
-      childProcess.stderr.on('data', (data) => {
-        const str = data.toString();
-        if (str.match(/^\[\d+:\d+/)) {
-          return;
-        }
-        process.stderr.write(data);
-      });
-    } else {
-      childProcess.stdout.on('data', (data) => {
-        this.processStdOut += data.toString();
-      });
-      childProcess.stderr.on('data', (data) => {
-        this.processStdOut += data.toString();
-      });
+    function logLinesWithoutEmpty(input: string): void {
+      input
+        .split(/[\r\n]+/)
+        .filter((e: string) => e.match(/\S/))
+        .filter((e: string) => !e.match(/^\[\d+:\d+/))
+        .forEach((e: string) => appLog(e));
     }
+
+    childProcess.stdout.on('data', (data) => logLinesWithoutEmpty(data.toString()));
+    childProcess.stderr.on('data', (data) => logLinesWithoutEmpty(data.toString()));
 
     this.mainProcess = new ProcessStatus(childProcess);
 
@@ -107,12 +97,8 @@ export class TestContext {
   }
 
   /** Stops the app and cleans up. */
-  public async stop(options: { retainData?: boolean; logStdout?: boolean } = {}): Promise<void> {
+  public async stop(options: { retainData?: boolean } = {}): Promise<void> {
     log('Stopping test context');
-
-    if (options.logStdout) {
-      this._logStdout();
-    }
 
     if (!this.mainProcess || !this.isStarted) {
       throw new Error('Invariant violation: Call start() first');
@@ -180,11 +166,6 @@ export class TestContext {
 
   public get isStarted(): boolean {
     return this._started;
-  }
-
-  /** Logs stdout for debug testing */
-  private _logStdout(): void {
-    log('App stdout: ', this.processStdOut);
   }
 }
 

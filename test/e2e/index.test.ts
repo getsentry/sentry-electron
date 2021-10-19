@@ -7,7 +7,7 @@ import { TestContext } from './context';
 import { downloadElectron } from './download';
 import { getExampleRecipes, getCategorisedTestRecipes } from './recipe';
 import { TestServer } from './server';
-import { getTestVersions } from './utils';
+import { clearTestLog, getTestVersions, outputTestLog } from './utils';
 
 should();
 use(chaiAsPromised);
@@ -33,14 +33,14 @@ describe('E2E Tests', () => {
 
       beforeEach(async () => {
         testServer.clearEvents();
+        clearTestLog();
       });
 
       afterEach(async function () {
-        const failed = this.currentTest?.state === 'failed';
-        await testContext?.stop({ logStdout: failed });
+        await testContext?.stop();
 
-        if (failed) {
-          testServer.logEvents();
+        if (this.currentTest?.state === 'failed') {
+          outputTestLog();
         }
 
         testContext = undefined;
