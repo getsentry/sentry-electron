@@ -16,6 +16,7 @@ const createWindow = () => {
   const mainWindow = new BrowserWindow({
     show: false,
     webPreferences: {
+      // eslint-disable-next-line no-undef
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
       nodeIntegration: false,
       contextIsolation: true,
@@ -23,8 +24,8 @@ const createWindow = () => {
     },
   });
 
+  // eslint-disable-next-line no-undef
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
-  // mainWindow.webContents.openDevTools();
 };
 
 app.on('ready', createWindow);
