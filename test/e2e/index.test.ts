@@ -52,7 +52,9 @@ describe('E2E Tests', () => {
         for (const category of Object.keys(categories)) {
           describe(category, () => {
             for (const recipe of categories[category]) {
-              it(recipe.description, async function () {
+              const fn = recipe.only ? it.only : it;
+
+              fn(recipe.description, async function () {
                 if (!recipe.shouldRun(electronVersion)) {
                   this.skip();
                 }
@@ -68,7 +70,9 @@ describe('E2E Tests', () => {
 
       describe(`Example App Recipes`, () => {
         for (const recipe of getExampleRecipes()) {
-          it(recipe.description, async function () {
+          const fn = recipe.only ? it.only : it;
+
+          fn(recipe.description, async function () {
             if (!recipe.shouldRun(electronVersion)) {
               this.skip();
             }

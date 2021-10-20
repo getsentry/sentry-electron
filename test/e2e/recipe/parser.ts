@@ -1,6 +1,6 @@
 import { Event, Session } from '@sentry/types';
 import { readFileSync } from 'fs';
-import { join, sep } from 'path';
+import { dirname, sep } from 'path';
 
 import { TestServerEvent } from '../server';
 import { walkSync } from '../utils';
@@ -16,6 +16,7 @@ export interface TestMetadata {
 
 export interface TestRecipe {
   path: string;
+  only: boolean;
   metadata: TestMetadata;
   files: Record<string, string>;
   expectedEvents: TestServerEvent<Event | Session>[];
@@ -69,11 +70,13 @@ function getFiles(rootDir: string): Record<string, string> {
     }, {} as Record<string, string>);
 }
 
-export function parseRecipe(rootPath: string): TestRecipe {
-  const readme = readFileSync(join(rootPath, 'README.md'), { encoding: 'utf8' });
+export function parseRecipe(readmePath: string): TestRecipe {
+  const readme = readFileSync(readmePath, { encoding: 'utf8' });
+  const rootPath = dirname(readmePath);
 
   return {
     path: rootPath,
+    only: readmePath.endsWith('only.md'),
     metadata: parseMetadata(readme),
     files: getFiles(rootPath),
     expectedEvents: getEventsAndSessions(rootPath),

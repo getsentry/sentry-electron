@@ -1,4 +1,5 @@
-const { init, configureScope } = require('@sentry/electron/renderer');
+// eslint-disable-next-line import/no-unresolved
+import { init, configureScope } from '@sentry/electron';
 
 init({
   debug: true,

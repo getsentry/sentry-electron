@@ -1,6 +1,6 @@
 # JavaScript Renderer UnhandledRejection
 
-| Setting | Value |
-| --- | --- |
-| Category | JavaScript |
-| Build Command | yarn |
+| Setting       | Value      |
+| ------------- | ---------- |
+| Category      | JavaScript |
+| Build Command | yarn       |

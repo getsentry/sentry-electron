@@ -1,6 +1,6 @@
 # JavaScript Main Error
 
-| Setting | Value |
-| --- | --- |
-| Category | JavaScript |
-| Build Command | yarn |
+| Setting       | Value      |
+| ------------- | ---------- |
+| Category      | JavaScript |
+| Build Command | yarn       |

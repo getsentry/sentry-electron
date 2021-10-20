@@ -13,7 +13,7 @@ export const defaultIntegrations = [...defaultBrowserIntegrations, new ScopeToMa
 /**
  * Initialize Sentry in the Electron renderer process
  */
-export function init(options: BrowserOptions): void {
+export function init(options: BrowserOptions = {}): void {
   // Ensure the browser SDK is only init'ed once.
   if (window?.__SENTRY__RENDERER_INIT__) {
     logger.warn(`The browser SDK has already been initialized.

@@ -1,4 +1,5 @@
-const { init } = require('@sentry/electron/renderer');
+// eslint-disable-next-line import/no-unresolved
+import { init } from '@sentry/electron';
 
 init({
   debug: true,

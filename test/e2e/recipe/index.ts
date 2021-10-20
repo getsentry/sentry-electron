@@ -19,10 +19,10 @@ const log = createLogger('Recipe Runner');
 
 function loadRecipes(rootDir: string): RecipeRunner[] {
   return Array.from(walkSync(rootDir))
-    .filter((p) => p.endsWith('README.md'))
+    .filter((p) => p.match(/README(?:\.only)*.md$/))
     .reduce((arr, p) => {
       try {
-        arr.push(RecipeRunner.load(dirname(p)));
+        arr.push(RecipeRunner.load(p));
       } catch (e) {
         console.error(e);
       }
@@ -86,6 +86,10 @@ export class RecipeRunner {
     }
 
     return result;
+  }
+
+  public get only(): boolean {
+    return this._recipe.only;
   }
 
   public get description(): string {

@@ -1,8 +1,9 @@
-const path = require('path');
-const url = require('url');
+import * as path from 'path';
+import * as url from 'url';
 
-const { app, BrowserWindow } = require('electron');
-const { init } = require('@sentry/electron/main');
+import { app, BrowserWindow } from 'electron';
+// eslint-disable-next-line import/no-unresolved
+import { init } from '@sentry/electron';
 
 init({
   dsn: '__DSN__',

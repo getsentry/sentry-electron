@@ -34,7 +34,7 @@
     "@electron-forge/cli": "^6.0.0-beta.59",
     "@electron-forge/plugin-webpack": "6.0.0-beta.59",
     "@vercel/webpack-asset-relocator-loader": "1.6.0",
-    "electron": "13.1.9",
+    "electron": "15.2.0",
     "node-loader": "^2.0.0"
   },
   "dependencies": {
