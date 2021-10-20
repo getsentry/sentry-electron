@@ -20,7 +20,7 @@ function loadRecipes(rootDir: string, electronVersion: string): RecipeRunner[] {
     .filter((p) => p.match(/README(?:\.only)*.md$/))
     .reduce((arr, p) => {
       try {
-        arr.push(RecipeRunner.load(p, electronVersion));
+        arr.push(RecipeRunner.load(electronVersion, p));
       } catch (e) {
         console.error(e);
       }
@@ -47,14 +47,14 @@ export function getCategorisedTestRecipes(electronVersion: string): Record<strin
 }
 
 export class RecipeRunner {
-  private constructor(private readonly _recipe: TestRecipe) {}
+  private constructor(private readonly _electronVersion: string, private readonly _recipe: TestRecipe) {}
 
-  public static load(path: string, electronVersion: string): RecipeRunner {
-    return new RecipeRunner(parseRecipe(path, electronVersion));
+  public static load(electronVersion: string, path: string): RecipeRunner {
+    return new RecipeRunner(electronVersion, parseRecipe(path));
   }
 
-  public shouldRun(electronVersion: string): boolean {
-    return evaluateCondition('test run', electronVersion, this._recipe.metadata.condition);
+  public shouldRun(): boolean {
+    return evaluateCondition('test run', this._electronVersion, this._recipe.metadata.condition);
   }
 
   public get only(): boolean {
@@ -148,7 +148,10 @@ export class RecipeRunner {
     }
 
     // Filter out events that are not for this platform/version
-    const expectedEvents = this._recipe.expectedEvents;
+    const expectedEvents = this._recipe.expectedEvents.filter(
+      (event) =>
+        event.condition === undefined || evaluateCondition('event comparison', this._electronVersion, event.condition),
+    );
 
     await context.waitForEvents(testServer, expectedEvents.length);
 
@@ -161,6 +164,8 @@ export class RecipeRunner {
     }
 
     for (const [i, expectedEvent] of expectedEvents.entries()) {
+      delete expectedEvent.condition;
+
       log(`Comparing event ${i + 1} of ${expectedEvents.length}`);
       expect(testServer.events).to.containSubset([expectedEvent]);
     }

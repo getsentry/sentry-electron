@@ -4,7 +4,6 @@ import { dirname, sep } from 'path';
 
 import { TestServerEvent } from '../server';
 import { walkSync } from '../utils';
-import { evaluateCondition } from './eval';
 
 type ConditionalTestServerEvent = TestServerEvent<Event | Session> & { condition?: string };
 
@@ -73,7 +72,7 @@ function getFiles(rootDir: string): Record<string, string> {
     }, {} as Record<string, string>);
 }
 
-export function parseRecipe(readmePath: string, electronVersion: string): TestRecipe {
+export function parseRecipe(readmePath: string): TestRecipe {
   const readme = readFileSync(readmePath, { encoding: 'utf8' });
   const rootPath = dirname(readmePath);
 
@@ -82,9 +81,6 @@ export function parseRecipe(readmePath: string, electronVersion: string): TestRe
     only: readmePath.endsWith('only.md'),
     metadata: parseMetadata(readme),
     files: getFiles(rootPath),
-    expectedEvents: getEventsAndSessions(rootPath).filter(
-      (event) =>
-        event.condition === undefined || evaluateCondition('event comparison', electronVersion, event.condition),
-    ),
+    expectedEvents: getEventsAndSessions(rootPath),
   };
 }

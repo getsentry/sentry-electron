@@ -55,7 +55,7 @@ describe('E2E Tests', () => {
               const fn = recipe.only ? it.only : it;
 
               fn(recipe.description, async function () {
-                if (!recipe.shouldRun(electronVersion)) {
+                if (!recipe.shouldRun()) {
                   this.skip();
                 }
 
@@ -73,7 +73,7 @@ describe('E2E Tests', () => {
           const fn = recipe.only ? it.only : it;
 
           fn(recipe.description, async function () {
-            if (!recipe.shouldRun(electronVersion)) {
+            if (!recipe.shouldRun()) {
               this.skip();
             }
 
