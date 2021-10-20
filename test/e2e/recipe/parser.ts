@@ -4,6 +4,9 @@ import { dirname, sep } from 'path';
 
 import { TestServerEvent } from '../server';
 import { walkSync } from '../utils';
+import { evaluateCondition } from './eval';
+
+type ConditionalTestServerEvent = TestServerEvent<Event | Session> & { condition?: string };
 
 export interface TestMetadata {
   description: string;
@@ -19,7 +22,7 @@ export interface TestRecipe {
   only: boolean;
   metadata: TestMetadata;
   files: Record<string, string>;
-  expectedEvents: TestServerEvent<Event | Session>[];
+  expectedEvents: ConditionalTestServerEvent[];
 }
 
 function getDescription(doc: string): string {
@@ -54,10 +57,10 @@ function isEventOrSession(path: string): boolean {
   return !!path.match(/(?:session|event).*\.json$/);
 }
 
-function getEventsAndSessions(rootDir: string): TestServerEvent<Event | Session>[] {
+function getEventsAndSessions(rootDir: string): ConditionalTestServerEvent[] {
   return Array.from(walkSync(rootDir))
     .filter((path) => isEventOrSession(path))
-    .map((path) => JSON.parse(readFileSync(path, { encoding: 'utf-8' })) as TestServerEvent<Event | Session>);
+    .map((path) => JSON.parse(readFileSync(path, { encoding: 'utf-8' })) as ConditionalTestServerEvent);
 }
 
 function getFiles(rootDir: string): Record<string, string> {
@@ -70,7 +73,7 @@ function getFiles(rootDir: string): Record<string, string> {
     }, {} as Record<string, string>);
 }
 
-export function parseRecipe(readmePath: string): TestRecipe {
+export function parseRecipe(readmePath: string, electronVersion: string): TestRecipe {
   const readme = readFileSync(readmePath, { encoding: 'utf8' });
   const rootPath = dirname(readmePath);
 
@@ -79,6 +82,9 @@ export function parseRecipe(readmePath: string): TestRecipe {
     only: readmePath.endsWith('only.md'),
     metadata: parseMetadata(readme),
     files: getFiles(rootPath),
-    expectedEvents: getEventsAndSessions(rootPath),
+    expectedEvents: getEventsAndSessions(rootPath).filter(
+      (event) =>
+        event.condition === undefined || evaluateCondition('event comparison', electronVersion, event.condition),
+    ),
   };
 }

@@ -47,7 +47,7 @@ describe('E2E Tests', () => {
       });
 
       describe(`Functional Test Recipes`, () => {
-        const categories = getCategorisedTestRecipes();
+        const categories = getCategorisedTestRecipes(electronVersion);
 
         for (const category of Object.keys(categories)) {
           describe(category, () => {
@@ -69,7 +69,7 @@ describe('E2E Tests', () => {
       });
 
       describe(`Example App Recipes`, () => {
-        for (const recipe of getExampleRecipes()) {
+        for (const recipe of getExampleRecipes(electronVersion)) {
           const fn = recipe.only ? it.only : it;
 
           fn(recipe.description, async function () {

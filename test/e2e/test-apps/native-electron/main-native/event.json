@@ -1,4 +1,5 @@
 {
+  "condition": "usesCrashpad",
   "method": "minidump",
   "namespacedData": {
     "initialScope": {

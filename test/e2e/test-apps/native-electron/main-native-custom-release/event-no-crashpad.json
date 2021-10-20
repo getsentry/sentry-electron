@@ -1,14 +1,6 @@
 {
-  "condition": "usesCrashpad",
+  "condition": "!usesCrashpad",
   "method": "minidump",
-  "namespacedData": {
-    "initialScope": {
-      "release": "custom-name",
-      "user": {
-        "username": "some_user"
-      }
-    }
-  },
   "sentryKey": "37f8a2ee37c0409d8970bc7559c7c7e4",
   "appId": "277345",
   "dumpFile": true,

@@ -1,10 +1,7 @@
-import { parseSemver } from '@sentry/utils';
 import { spawnSync } from 'child_process';
 import { mkdirSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
-import { Context, createContext, runInContext } from 'vm';
 import { expect } from 'chai';
-import { inspect } from 'util';
 
 import { SDK_VERSION } from '../../../src/main/version';
 import { TestServer } from '../server';
@@ -12,17 +9,18 @@ import { createLogger, walkSync } from '../utils';
 import { normalize } from './normalize';
 import { parseRecipe, TestRecipe } from './parser';
 import { TestContext } from '../context';
+import { evaluateCondition } from './eval';
 
 export * from './normalize';
 
 const log = createLogger('Recipe Runner');
 
-function loadRecipes(rootDir: string): RecipeRunner[] {
+function loadRecipes(rootDir: string, electronVersion: string): RecipeRunner[] {
   return Array.from(walkSync(rootDir))
     .filter((p) => p.match(/README(?:\.only)*.md$/))
     .reduce((arr, p) => {
       try {
-        arr.push(RecipeRunner.load(p));
+        arr.push(RecipeRunner.load(p, electronVersion));
       } catch (e) {
         console.error(e);
       }
@@ -30,12 +28,12 @@ function loadRecipes(rootDir: string): RecipeRunner[] {
     }, [] as RecipeRunner[]);
 }
 
-export function getExampleRecipes(): RecipeRunner[] {
-  return loadRecipes(join(__dirname, '..', '..', '..', 'examples'));
+export function getExampleRecipes(electronVersion: string): RecipeRunner[] {
+  return loadRecipes(join(__dirname, '..', '..', '..', 'examples'), electronVersion);
 }
 
-export function getCategorisedTestRecipes(): Record<string, RecipeRunner[]> {
-  const allRecipes = loadRecipes(join(__dirname, '..', 'test-apps'));
+export function getCategorisedTestRecipes(electronVersion: string): Record<string, RecipeRunner[]> {
+  const allRecipes = loadRecipes(join(__dirname, '..', 'test-apps'), electronVersion);
 
   return allRecipes.reduce((obj, cur) => {
     const cat = cur.category || 'Others';
@@ -48,44 +46,15 @@ export function getCategorisedTestRecipes(): Record<string, RecipeRunner[]> {
   }, {} as Record<string, RecipeRunner[]>);
 }
 
-function getEvalContext(electronVersion: string): Context {
-  const parsed = parseSemver(electronVersion);
-  const version = { major: parsed.major || 0, minor: parsed.minor || 0, patch: parsed.patch || 0 };
-  const platform = process.platform;
-
-  const usesCrashpad =
-    platform === 'darwin' ||
-    (platform === 'win32' && version.major >= 6) ||
-    (platform === 'linux' && version.major >= 15);
-
-  const supportsContextIsolation = version.major >= 6;
-
-  return createContext({ version, platform, usesCrashpad, supportsContextIsolation });
-}
-
 export class RecipeRunner {
   private constructor(private readonly _recipe: TestRecipe) {}
 
-  public static load(path: string): RecipeRunner {
-    return new RecipeRunner(parseRecipe(path));
+  public static load(path: string, electronVersion: string): RecipeRunner {
+    return new RecipeRunner(parseRecipe(path, electronVersion));
   }
 
   public shouldRun(electronVersion: string): boolean {
-    if (this._recipe.metadata.condition == undefined) {
-      return true;
-    }
-
-    const context = getEvalContext(electronVersion);
-    log(
-      `Evaluating condition: '${this._recipe.metadata.condition}' with context: ${inspect(context, false, null, true)}`,
-    );
-    const result = runInContext(this._recipe.metadata.condition, context);
-
-    if (result == false) {
-      log('Condition result equals false. Skipping test.');
-    }
-
-    return result;
+    return evaluateCondition('test run', electronVersion, this._recipe.metadata.condition);
   }
 
   public get only(): boolean {
@@ -178,20 +147,21 @@ export class RecipeRunner {
       await context.start({ secondRun: true });
     }
 
-    await context.waitForEvents(testServer, this._recipe.expectedEvents?.length || 0);
+    // Filter out events that are not for this platform/version
+    const expectedEvents = this._recipe.expectedEvents;
 
-    const expNumEvents = this._recipe.expectedEvents.length;
+    await context.waitForEvents(testServer, expectedEvents.length);
 
-    if (expNumEvents !== testServer.events.length) {
-      throw new Error(`Expected ${expNumEvents} events but server has ${testServer.events.length} events`);
+    if (expectedEvents.length !== testServer.events.length) {
+      throw new Error(`Expected ${expectedEvents.length} events but server has ${testServer.events.length} events`);
     }
 
     for (const event of testServer.events) {
       event.data = normalize(event.data);
     }
 
-    for (const [i, expectedEvent] of this._recipe.expectedEvents.entries()) {
-      log(`Comparing event ${i + 1} of ${expNumEvents}`);
+    for (const [i, expectedEvent] of expectedEvents.entries()) {
+      log(`Comparing event ${i + 1} of ${expectedEvents.length}`);
       expect(testServer.events).to.containSubset([expectedEvent]);
     }
 
