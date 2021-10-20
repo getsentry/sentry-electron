@@ -30,7 +30,7 @@ function getCrashesDir(appName: string): string {
 }
 
 const log = createLogger('Test Context');
-const appLog = createLogger('App Output');
+const appLog = createLogger('App');
 
 if (!process.env.DEBUG) {
   // tslint:disable-next-line
@@ -75,9 +75,18 @@ export class TestContext {
 
     function logLinesWithoutEmpty(input: string): void {
       input
+        // Replace all the lines from the renderer
+        .replace(/^\[\d+:\d+\S+] "([\s\S]+?)"(?:[\s\S]+?)$/gm, (_, msg) => {
+          return `[Renderer] ${msg
+            .split(/[\r\n]+/)
+            .filter((e: string) => e.match(/\S/))
+            .join('\r\n[Renderer] ')}`;
+        })
         .split(/[\r\n]+/)
+        // ignore empty lines
         .filter((e: string) => e.match(/\S/))
-        .filter((e: string) => !e.match(/^\[\d+:\d+/))
+        // Add [Main] to all non renderer lines
+        .map((e: string) => (e.startsWith('[Renderer]') ? e : `[    Main] ${e}`))
         .forEach((e: string) => appLog(e));
     }
 
@@ -150,7 +159,7 @@ export class TestContext {
     log(`Waiting for ${count} events`);
     await this.waitForTrue(
       () => testServer.events.length >= count,
-      `Timeout: Waiting for ${count} events. Only ${testServer.events.length} events received`,
+      `Timeout: Waiting ${timeout}ms for ${count} events. Only ${testServer.events.length} events received`,
       timeout,
     );
     log(`${count} events received`);
