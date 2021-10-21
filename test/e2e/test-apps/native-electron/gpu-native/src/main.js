@@ -1,3 +1,5 @@
+const path = require('path');
+
 const { app, BrowserWindow } = require('electron');
 const { init, Integrations } = require('@sentry/electron');
 
@@ -15,7 +17,19 @@ init({
 app.on('ready', () => {
   const mainWindow = new BrowserWindow({
     show: false,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+    },
   });
 
-  mainWindow.loadURL('chrome://gpucrash');
+  mainWindow.loadFile(path.join(__dirname, 'index.html'));
+
+  setTimeout(() => {
+    const crashWindow = new BrowserWindow({
+      show: false,
+    });
+
+    crashWindow.loadURL('chrome://gpucrash');
+  }, 500);
 });
