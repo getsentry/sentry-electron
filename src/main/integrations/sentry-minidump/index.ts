@@ -5,7 +5,7 @@ import { forget, isPlainObject, isThenable, logger, SentryError } from '@sentry/
 import { app, crashReporter } from 'electron';
 import { join } from 'path';
 
-import { onRendererProcessGone, usesCrashpad } from '../../electron-normalize';
+import { onChildProcessGone, onRendererProcessGone, usesCrashpad } from '../../electron-normalize';
 import { mergeEvents, normalizeUrl } from '../../../common';
 import { ElectronMainOptions } from '../../sdk';
 import { ElectronNetTransport } from '../../transports/electron-net';
@@ -69,6 +69,7 @@ export class SentryMinidump implements Integration {
 
     // Every time a subprocess or renderer crashes, send a minidump right away.
     onRendererProcessGone((contents, details) => this._sendRendererCrash(options, contents, details));
+    onChildProcessGone((type, details) => this._sendChildProcessCrash(options, type, details));
 
     // Flush already cached minidumps from the queue.
     forget(this._uploader.flushQueue());
@@ -132,6 +133,47 @@ export class SentryMinidump implements Integration {
       category: 'exception',
       level: Severity.Critical,
       message: 'Renderer Crashed',
+    });
+  }
+
+  /**
+   * Helper function for sending child processes (other than the renderer) crashes
+   */
+  private async _sendChildProcessCrash(
+    options: ElectronMainOptions,
+    type: Electron.Details['type'],
+    details?: Electron.Details,
+  ): Promise<void> {
+    const { release } = options;
+    const crashed_process = details?.name || details?.serviceName || type;
+
+    logger.log(`Child process '${crashed_process}' has crashed`);
+
+    const electron: Record<string, any> = {
+      crashed_process,
+    };
+
+    if (details) {
+      // We need to do it like this, otherwise we normalize undefined to "[undefined]" in the UI
+      electron.details = details;
+    }
+
+    const event = mergeEvents(await getEventDefaults(release), {
+      contexts: {
+        electron,
+      },
+      // The default is javascript
+      tags: { 'event.environment': 'native', event_type: 'native' },
+    });
+
+    sessionCrashed();
+
+    await this._sendNativeCrashes(options, event);
+
+    addBreadcrumb({
+      category: 'exception',
+      level: Severity.Critical,
+      message: `${type} Child Process Crashed`,
     });
   }
 

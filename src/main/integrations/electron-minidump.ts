@@ -6,7 +6,12 @@ import { app, crashReporter } from 'electron';
 
 import { mergeEvents, normalizeEvent } from '../../common';
 import { getEventDefaults } from '../context';
-import { onRendererProcessGone, rendererRequiresCrashReporterStart, usesCrashpad } from '../electron-normalize';
+import {
+  onChildProcessGone,
+  onRendererProcessGone,
+  rendererRequiresCrashReporterStart,
+  usesCrashpad,
+} from '../electron-normalize';
 import { sessionCrashed } from './main-process-session';
 
 /** Is object defined and has keys */
@@ -76,10 +81,11 @@ export class ElectronMinidump implements Integration {
 
     this._startCrashReporter(options);
 
-    // If a renderer process crashes, mark any existing session as crashed
+    // If any child process crashes, mark any existing session as crashed
     onRendererProcessGone((_, __) => {
       sessionCrashed();
     });
+    onChildProcessGone((_, __) => sessionCrashed());
 
     // If we're using the Crashpad minidump uploader, we set extra parameters whenever the scope updates
     if (usesCrashpad()) {

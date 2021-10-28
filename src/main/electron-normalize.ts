@@ -1,5 +1,5 @@
 import { parseSemver } from '@sentry/utils';
-import { app, crashReporter, RenderProcessGoneDetails, WebContents } from 'electron';
+import { app, crashReporter, RenderProcessGoneDetails, Details, WebContents } from 'electron';
 
 const parsed = parseSemver(process.versions.electron);
 const version = { major: parsed.major || 0, minor: parsed.minor || 0, patch: parsed.patch || 0 };
@@ -12,6 +12,13 @@ function supportsRenderProcessGone(): boolean {
   return (
     version.major >= 10 || (version.major === 9 && version.minor >= 1) || (version.major === 8 && version.minor >= 4)
   );
+}
+/**
+ * Electron >=11
+ * Use `child-process-gone` rather than `gpu-process-crashed` allowing to capture when other child processes are gone
+ */
+function supportsChildProcessGone(): boolean {
+  return version.major >= 11;
 }
 
 /**
@@ -36,6 +43,28 @@ export function onRendererProcessGone(
       });
     }
   });
+}
+
+/**
+ * Implements 'child-process-crashed' event across Electron versions (if version <= 11 only gpu-process-crashed is supported)
+ */
+export function onChildProcessGone(callback: (type: Details['type'], details?: Details) => void): void {
+  if (supportsChildProcessGone()) {
+    app.on('child-process-gone', async (_, details) => {
+      const ignoredReasons = ['clean-exit', 'killed'];
+
+      if (!ignoredReasons.includes(details?.reason || '')) {
+        callback(details.type, details);
+      }
+    });
+  } else {
+    // eslint-disable-next-line deprecation/deprecation
+    app.on('gpu-process-crashed', async (_, killed) => {
+      if (!killed) {
+        callback('GPU');
+      }
+    });
+  }
 }
 
 /**
