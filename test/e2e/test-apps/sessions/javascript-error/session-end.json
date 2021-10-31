@@ -5,7 +5,7 @@
   "dumpFile": false,
   "data": {
     "sid": "{{id}}",
-    "init": true,
+    "init": false,
     "started": 0,
     "timestamp": 0,
     "status": "exited",
