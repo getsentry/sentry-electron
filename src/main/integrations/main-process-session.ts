@@ -4,6 +4,8 @@ import { Integration, SessionStatus } from '@sentry/types';
 import { logger } from '@sentry/utils';
 import { app } from 'electron';
 
+const TERMINAL_STATES = [SessionStatus.Exited, SessionStatus.Crashed];
+
 /** Tracks sessions as the main process lifetime. */
 export class MainProcessSession implements Integration {
   /** @inheritDoc */
@@ -48,9 +50,8 @@ export class MainProcessSession implements Integration {
     const hub = getCurrentHub();
 
     const session = hub.getScope()?.getSession();
-    const terminalStates = [SessionStatus.Exited, SessionStatus.Crashed];
 
-    if (session && !terminalStates.includes(session.status)) {
+    if (session && !TERMINAL_STATES.includes(session.status)) {
       logger.log('MainProcessSession - Ending session');
       hub.endSession();
     } else {
@@ -70,7 +71,11 @@ export function sessionCrashed(options: { forceCapture?: boolean } = {}): void {
   const hub = getCurrentHub();
   const session = hub.getScope()?.getSession();
 
-  session?.update({ status: SessionStatus.Crashed, errors: (session.errors += 1) });
+  if (session && !TERMINAL_STATES.includes(session.status)) {
+    session.update({ status: SessionStatus.Crashed, errors: (session.errors += 1) });
+  } else {
+    logger.log('No session to update');
+  }
 
   if (options.forceCapture) {
     hub.captureSession();
