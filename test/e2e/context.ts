@@ -5,28 +5,20 @@ import { join } from 'path';
 import { TestServer } from './server';
 import { createLogger } from './utils';
 
-function getUserDataDir(appName: string): string {
+function getDeleteDirectories(appName: string): string[] {
   switch (process.platform) {
     case 'win32':
-      return join(process.env.APPDATA || '', appName);
+      return [
+        join(process.env.APPDATA || '', appName),
+        join(process.env.LOCALAPPDATA || '', 'Temp', `${appName} Crashes`),
+      ];
     case 'darwin':
-      return join('~/Library/Application Support', appName);
+      return [join('~/Library/Application Support', appName)];
     case 'linux':
-      return join(process.env.XDG_CONFIG_HOME || '~/.config', appName);
+      return [join(process.env.XDG_CONFIG_HOME || '~/.config', appName)];
   }
-  return '';
-}
 
-function getCrashesDir(appName: string): string {
-  switch (process.platform) {
-    case 'win32':
-      return join(process.env.LOCALAPPDATA || '', 'Temp', `${appName} Crashes`);
-    case 'darwin':
-      return join('~/Library/Application Support', appName);
-    case 'linux':
-      return join(process.env.XDG_CONFIG_HOME || '~/.config', 'Electron', 'Crash Reports');
-  }
-  return '';
+  throw new Error('Unknown platform');
 }
 
 const log = createLogger('Test Context');
@@ -116,8 +108,9 @@ export class TestContext {
     await this.mainProcess.kill();
 
     if (!options.retainData) {
-      rmSync(getUserDataDir(this._appName), { recursive: true, force: true });
-      rmSync(getCrashesDir(this._appName), { recursive: true, force: true });
+      for (const dir of getDeleteDirectories(this._appName)) {
+        rmSync(dir, { recursive: true, force: true });
+      }
     }
   }
 
