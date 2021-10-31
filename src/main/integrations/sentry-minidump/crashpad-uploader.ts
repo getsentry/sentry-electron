@@ -37,7 +37,7 @@ export class CrashpadUploader extends BaseUploader {
 
   /** Attempts to remove the metadata file so Crashpad doesn't output `failed to stat report` errors to the console */
   private async _deleteCrashpadMetadataFile(waitMs: number = 100): Promise<void> {
-    if (waitMs > 2000) {
+    if (waitMs > 2_000) {
       return;
     }
 

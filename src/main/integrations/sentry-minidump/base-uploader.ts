@@ -147,7 +147,7 @@ export abstract class BaseUploader {
     const minidumps = await this._getMinidumpPaths();
     logger.log(`Found ${minidumps.length} minidumps`);
 
-    const oldestMs = new Date().getTime() - MAX_AGE * 24 * 3600 * 1000;
+    const oldestMs = new Date().getTime() - MAX_AGE * 24 * 3_600 * 1_000;
     return this._filterAsync(minidumps, async (path) => {
       // Skip files that we have seen before
       if (this._knownPaths.indexOf(path) >= 0) {
@@ -248,7 +248,7 @@ export abstract class BaseUploader {
     const envelopeHeaders = JSON.stringify({
       event_id: event.event_id,
       // Internal helper that uses `perf_hooks` to get clock reading
-      sent_at: new Date(timestampWithMs() * 1000).toISOString(),
+      sent_at: new Date(timestampWithMs() * 1_000).toISOString(),
     });
 
     // If attachments are rate-limited we add this hint so users know
