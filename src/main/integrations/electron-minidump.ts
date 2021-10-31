@@ -72,7 +72,7 @@ export class ElectronMinidump implements Integration {
 
     const options = getCurrentHub().getClient<NodeClient>()?.getOptions();
 
-    if (!options || !options?.dsn) {
+    if (!options?.dsn) {
       throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
     }
 
@@ -82,7 +82,7 @@ export class ElectronMinidump implements Integration {
 
     // If a renderer process crashes, mark any existing session as crashed
     onRendererProcessGone((_, __) => {
-      sessionCrashed();
+      sessionCrashed({ forceCapture: true });
     });
 
     // If we're using the Crashpad minidump uploader, we set extra parameters whenever the scope updates

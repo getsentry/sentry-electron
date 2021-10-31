@@ -1,4 +1,3 @@
-import { spawnSync } from 'child_process';
 import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import * as YAML from 'yaml';
@@ -37,12 +36,6 @@ export function getTestVersions(): string[] {
   const ci = YAML.parse(ciBuildStr);
 
   return ci.jobs.job_4.strategy.matrix.electron;
-}
-
-export function getCrashesDirectory(electronPath: string): string {
-  const appPath = join(__dirname, 'test-apps', 'crashes-directory');
-  const result = spawnSync(electronPath, [appPath], { shell: true, encoding: 'utf-8' });
-  return result.output.join('').replace(/[\n\r]/, '');
 }
 
 export function* walkSync(dir: string): Generator<string> {

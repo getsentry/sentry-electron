@@ -36,7 +36,7 @@ export function getCategorisedTestRecipes(electronVersion: string): Record<strin
   const allRecipes = loadRecipes(join(__dirname, '..', 'test-apps'), electronVersion);
 
   return allRecipes.reduce((obj, cur) => {
-    const cat = cur.category || 'Others';
+    const cat = cur.category || 'Other Features';
     if (obj[cat]) {
       obj[cat].push(cur);
     } else {

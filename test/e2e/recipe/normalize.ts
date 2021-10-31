@@ -4,7 +4,7 @@ type EventOrSession = Event | Session;
 
 export function normalize(event: EventOrSession): EventOrSession {
   if (eventIsSession(event)) {
-    throw new Error('Not implemented');
+    return normalizeSession(event as Session);
   } else {
     return normalizeEvent(event as Event);
   }
@@ -15,18 +15,48 @@ export function eventIsSession(data: EventOrSession): boolean {
 }
 
 /**
+ * Normalizes a session so that in can be compared to an expected event
+ *
+ * All properties that are timestamps, versions, ids or variables that may vary
+ * by platform are replaced with placeholder strings
+ */
+function normalizeSession(session: Session): Session {
+  if (session.sid) {
+    session.sid = '{{id}}';
+  }
+
+  if (session.started) {
+    session.started = 0;
+  }
+
+  if (session.timestamp) {
+    session.timestamp = 0;
+  }
+
+  if (session.duration) {
+    session.duration = 0;
+  }
+
+  return session;
+}
+
+/**
  * Normalizes an event so that in can be compared to an expected event
  *
  * All properties that are timestamps, versions, ids or variables that may vary
  * by platform are replaced with placeholder strings
  */
-export function normalizeEvent(event: Event): Event {
+function normalizeEvent(event: Event): Event {
   if (event.sdk?.version) {
     event.sdk.version = '{{version}}';
   }
 
-  if (event?.sdk?.packages?.[0].version) {
-    event.sdk.packages[0].version = '{{version}}';
+  if (event?.sdk?.packages) {
+    for (const pkg of event?.sdk?.packages) {
+      if (pkg.version) {
+        pkg.version = '{{version}}';
+      }
+    }
   }
 
   if (event.contexts?.chrome?.version) {

@@ -53,7 +53,7 @@ function parseMetadata(doc: string): TestMetadata {
 }
 
 function isEventOrSession(path: string): boolean {
-  return !!path.match(/(?:session|event).*\.json$/);
+  return !!path.match(/(?:session|event)[^/\\]*\.json$/);
 }
 
 function getEventsAndSessions(rootDir: string): ConditionalTestServerEvent[] {

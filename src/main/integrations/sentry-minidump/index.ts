@@ -132,8 +132,7 @@ export class SentryMinidump implements Integration {
       tags: { 'event.environment': 'native', event_type: 'native' },
     });
 
-    sessionCrashed();
-
+    await sessionCrashed();
     await this._sendNativeCrashes(options, event);
 
     addBreadcrumb({

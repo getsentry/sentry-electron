@@ -1,6 +1,7 @@
 import { getCurrentHub } from '@sentry/core';
 import { flush } from '@sentry/node';
 import { Integration, SessionStatus } from '@sentry/types';
+import { logger } from '@sentry/utils';
 import { app } from 'electron';
 
 /** Tracks sessions as the main process lifetime. */
@@ -14,6 +15,7 @@ export class MainProcessSession implements Integration {
   /** @inheritDoc */
   public setupOnce(): void {
     const hub = getCurrentHub();
+    logger.log('MainProcessSession - Start session');
     hub.startSession();
 
     // We track sessions via the 'will-quit' event which is the last event emitted before close.
@@ -39,6 +41,8 @@ export class MainProcessSession implements Integration {
 
   /** Handles the exit */
   private _exitHandler: (event: Electron.Event) => Promise<void> = async (event: Electron.Event) => {
+    logger.log('MainProcessSession - Exit Handler');
+
     // Stop the exit so we have time to send the session
     event.preventDefault();
     const hub = getCurrentHub();
@@ -47,7 +51,10 @@ export class MainProcessSession implements Integration {
     const terminalStates = [SessionStatus.Exited, SessionStatus.Crashed];
 
     if (session && !terminalStates.includes(session.status)) {
+      logger.log('MainProcessSession - Ending session');
       hub.endSession();
+    } else {
+      logger.log('MainProcessSession - Session was already ended', session);
     }
 
     await flush();
@@ -58,9 +65,14 @@ export class MainProcessSession implements Integration {
 }
 
 /** Sets the current session as crashed */
-export function sessionCrashed(): void {
+export function sessionCrashed(options: { forceCapture?: boolean } = {}): void {
+  logger.log('Session Crashed');
   const hub = getCurrentHub();
   const session = hub.getScope()?.getSession();
 
   session?.update({ status: SessionStatus.Crashed, errors: (session.errors += 1) });
+
+  if (options.forceCapture) {
+    hub.captureSession();
+  }
 }

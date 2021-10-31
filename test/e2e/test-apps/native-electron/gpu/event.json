@@ -1,8 +1,8 @@
 {
-  "condition": "usesCrashpad",
   "method": "minidump",
   "namespacedData": {
     "initialScope": {
+      "release":"native-electron-gpu@1.0.0",
       "user": {
         "username": "some_user"
       }

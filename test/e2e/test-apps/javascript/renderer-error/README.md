@@ -3,4 +3,4 @@
 | Setting       | Value      |
 | ------------- | ---------- |
 | Category      | JavaScript |
-| Build Command | npm i      |
+| Build Command | yarn       |

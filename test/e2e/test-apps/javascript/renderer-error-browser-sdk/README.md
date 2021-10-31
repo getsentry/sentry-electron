@@ -1,4 +1,4 @@
-# JavaScript Renderer Error (Custom Release Name)
+# JavaScript Renderer Error Browser SDK
 
 | Setting       | Value      |
 | ------------- | ---------- |
