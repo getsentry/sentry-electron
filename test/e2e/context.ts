@@ -24,7 +24,7 @@ function getCrashesDir(appName: string): string {
     case 'darwin':
       return join('~/Library/Application Support', appName);
     case 'linux':
-      return join(process.env.XDG_CONFIG_HOME || '~/.config', appName, 'Crash Reports');
+      return join(process.env.XDG_CONFIG_HOME || '~/.config', 'Electron', 'Crash Reports');
   }
   return '';
 }

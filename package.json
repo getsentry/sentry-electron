@@ -34,7 +34,7 @@
     "access": "public"
   },
   "scripts": {
-    "prebuild": "node scripts/update-version.js",
+    "prebuild": "yarn clean && node scripts/update-version.js",
     "build": "run-p build:es6 build:esm build:preload",
     "build:es6": "tsc -p tsconfig.build.json",
     "build:esm": "tsc -p tsconfig.esm.json",
@@ -43,19 +43,16 @@
     "build:watch:es6": "tsc -p tsconfig.build.json -w --preserveWatchOutput",
     "build:watch:esm": "tsc -p tsconfig.esm.json -w --preserveWatchOutput",
     "clean": "rimraf coverage esm main preload renderer index.* integrations.* ipc.* sentry-electron*.tgz",
-    "preexample": "run-s clean build",
-    "example": "electron example",
     "lint": "run-s lint:prettier lint:eslint",
     "lint:prettier": "prettier --check \"{src,test}/**/*.ts\"",
     "lint:eslint": "eslint . --cache --format stylish",
     "fix": "run-s fix:eslint fix:prettier",
     "fix:prettier": "prettier --write \"{src,test}/**/*.ts\"",
     "fix:eslint": "eslint . --format stylish --fix",
-    "pretest": "run-s clean build",
+    "pretest": "yarn build",
     "test": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe electron-mocha --require ts-node/register/transpile-only --timeout 120000 ./test/unit/**/*.ts",
-    "pree2e": "run-s clean build && npm pack",
-    "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only ./test/e2e/*.ts",
-    "e2e-clean": "rimraf test/e2e/dist && node scripts/clean-cache.js"
+    "pree2e": "rimraf test/e2e/dist/**/node_modules/@sentry/electron/** test/e2e/dist/**/yarn.lock && node scripts/clean-cache.js && yarn build && npm pack",
+    "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only ./test/e2e/*.ts"
   },
   "dependencies": {
     "@sentry/browser": "6.13.2",
