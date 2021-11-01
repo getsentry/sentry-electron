@@ -1,0 +1,117 @@
+{
+  "method": "envelope",
+  "sentryKey": "37f8a2ee37c0409d8970bc7559c7c7e4",
+  "appId": "277345",
+  "dumpFile": false,
+  "data": {
+    "sdk": {
+      "name": "sentry.javascript.electron",
+      "packages": [
+        {
+          "name": "npm:@sentry/electron",
+          "version": "{{version}}"
+        }
+      ],
+      "version": "{{version}}"
+    },
+    "contexts": {
+      "app": {
+        "app_name": "scope-breadcrumbs",
+        "app_version": "1.0.0"
+      },
+      "browser": {
+        "name": "Chrome"
+      },
+      "chrome": {
+        "name": "Chrome",
+        "type": "runtime",
+        "version": "{{version}}"
+      },
+      "device": {
+        "arch": "{{arch}}",
+        "family": "Desktop"
+      },
+      "node": {
+        "name": "Node",
+        "type": "runtime",
+        "version": "{{version}}"
+      },
+      "os": {
+        "name": "{{platform}}",
+        "version": "{{version}}"
+      },
+      "runtime": {
+        "name": "Electron",
+        "version": "{{version}}"
+      },
+      "electron": {
+        "crashed_process": "WebContents[1]",
+        "crashed_url": "app:///src/index.html"
+      }
+    },
+    "release": "scope-breadcrumbs@1.0.0",
+    "environment": "production",
+    "user": {
+      "ip_address": "{{auto}}",
+      "id": "1234567890"
+    },
+    "exception": {
+      "values": [
+        {
+          "type": "Error",
+          "value": "Some renderer error",
+          "stacktrace": {
+            "frames": [
+              {
+                "colno": 0,
+                "filename": "app:///src/index.html",
+                "function": "{{function}}",
+                "in_app": true,
+                "lineno": 0
+              }
+            ]
+          },
+          "mechanism": {
+            "handled": true,
+            "type": "generic"
+          }
+        }
+      ]
+    },
+    "level": "error",
+    "event_id": "{{id}}",
+    "platform": "javascript",
+    "timestamp": 0,
+    "breadcrumbs": [
+      {
+        "category": "console",
+        "level": "log",
+        "message": "Some logging from the main process",
+        "timestamp": 0
+      },
+      {
+       "timestamp": 0,
+       "category": "console",
+       "data": {
+          "arguments": [ "Some logging from the renderer process" ],
+          "logger": "console"
+        },
+        "level": "log",
+        "message": "Some logging from the renderer process"
+      }
+    ],
+    "request": {
+      "url": "app:///src/index.html"
+    },
+    "tags": {
+      "event.environment": "javascript",
+      "event.origin": "electron",
+      "event_type": "javascript",
+      "a-tag": "tag-value",
+      "renderer-tag": "another-value"
+    },
+    "extra": {
+      "some-extra": "extra-value"
+    }
+  }
+}

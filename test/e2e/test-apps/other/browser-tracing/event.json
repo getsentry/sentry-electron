@@ -1,0 +1,132 @@
+{
+  "method": "envelope",
+  "sentryKey": "37f8a2ee37c0409d8970bc7559c7c7e4",
+  "appId": "277345",
+  "dumpFile": false,
+  "data": {
+    "sdk": {
+      "name": "sentry.javascript.electron",
+      "packages": [
+        {
+          "name": "npm:@sentry/electron",
+          "version": "{{version}}"
+        }
+      ],
+      "version": "{{version}}"
+    },
+    "contexts": {
+      "app": {
+        "app_name": "browser-tracing",
+        "app_version": "1.0.0"
+      },
+      "browser": {
+        "name": "Chrome"
+      },
+      "chrome": {
+        "name": "Chrome",
+        "type": "runtime",
+        "version": "{{version}}"
+      },
+      "device": {
+        "arch": "{{arch}}",
+        "family": "Desktop"
+      },
+      "node": {
+        "name": "Node",
+        "type": "runtime",
+        "version": "{{version}}"
+      },
+      "os": {
+        "name": "{{platform}}",
+        "version": "{{version}}"
+      },
+      "runtime": {
+        "name": "Electron",
+        "version": "{{version}}"
+      }
+    },
+    "spans": [
+      {
+        "description": "domContentLoadedEvent",
+        "op": "browser",
+        "parent_span_id": "{{id}}",
+        "span_id": "{{id}}",
+        "start_timestamp": 0,
+        "timestamp": 0,
+        "trace_id": "{{id}}"
+      },
+      {
+        "description": "loadEvent",
+        "op": "browser",
+        "parent_span_id": "{{id}}",
+        "span_id": "{{id}}",
+        "start_timestamp": 0,
+        "timestamp": 0,
+        "trace_id": "{{id}}"
+      },
+      {
+        "description": "connect",
+        "op": "browser",
+        "parent_span_id": "{{id}}",
+        "span_id": "{{id}}",
+        "start_timestamp": 0,
+        "timestamp": 0,
+        "trace_id": "{{id}}"
+      },
+      {
+        "description": "cache",
+        "op": "browser",
+        "parent_span_id": "{{id}}",
+        "span_id": "{{id}}",
+        "start_timestamp": 0,
+        "timestamp":0,
+        "trace_id": "{{id}}"
+      },
+      {
+        "description": "DNS",
+        "op": "browser",
+        "parent_span_id": "{{id}}",
+        "span_id": "{{id}}",
+        "start_timestamp": 0,
+        "timestamp": 0,
+        "trace_id": "{{id}}"
+      },
+      {
+        "description": "request",
+        "op": "browser",
+        "parent_span_id": "{{id}}",
+        "span_id": "{{id}}",
+        "start_timestamp": 0,
+        "timestamp": 0,
+        "trace_id": "{{id}}"
+      },
+      {
+        "description": "response",
+        "op": "browser",
+        "parent_span_id": "{{id}}",
+        "span_id": "{{id}}",
+        "start_timestamp": 0,
+        "timestamp": 0,
+        "trace_id": "{{id}}"
+      }
+    ],
+    "release": "some-release",
+    "environment": "production",
+    "user": {
+      "ip_address": "{{auto}}"
+    },
+    "event_id": "{{id}}",
+    "platform": "javascript",
+    "start_timestamp": 0,
+    "timestamp": 0,
+    "breadcrumbs": [],
+    "request": {
+      "url": "app:///src/index.html"
+    },
+    "tags": {
+      "event.environment": "javascript",
+      "event.origin": "electron",
+      "event_type": "javascript"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <script>
+      const { init, configureScope } = require('@sentry/electron');
+
+      init({
+        debug: true,
+      });
+
+      configureScope((scope) => {
+        scope.setTag('renderer-tag', 'another-value');
+      });
+
+      console.log('Some logging from the renderer process');
+
+      setTimeout(() => {
+        throw new Error('Some renderer error');
+      }, 1000);
+    </script>
+  </body>
+</html>
