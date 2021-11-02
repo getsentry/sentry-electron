@@ -43,6 +43,7 @@
     "build:watch:es6": "tsc -p tsconfig.build.json -w --preserveWatchOutput",
     "build:watch:esm": "tsc -p tsconfig.esm.json -w --preserveWatchOutput",
     "clean": "rimraf coverage esm main preload renderer index.* integrations.* ipc.* sentry-electron*.tgz",
+    "prelint": "node scripts/update-version.js",
     "lint": "run-s lint:prettier lint:eslint",
     "lint:prettier": "prettier --check \"{src,test}/**/*.ts\"",
     "lint:eslint": "eslint . --cache --format stylish",
