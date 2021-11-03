@@ -50,6 +50,8 @@ export interface ElectronOptions extends ElectronMainOptions, BrowserOptions {
   //
 }
 
+export { IPCMode } from './common';
+
 /**
  * The Sentry Electron SDK Client.
  *

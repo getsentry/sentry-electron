@@ -16,6 +16,7 @@ app.on('ready', () => {
   const window = new BrowserWindow({
     show: false,
     webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true,

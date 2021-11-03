@@ -16,7 +16,7 @@
     },
     "contexts": {
       "app": {
-        "app_name": "webpack-context-isolation",
+        "app_name": "javascript-renderer-protocol",
         "app_version": "1.0.0"
       },
       "browser": {
@@ -48,11 +48,10 @@
         "crashed_process": "renderer"
       }
     },
-    "release": "webpack-context-isolation@1.0.0",
+    "release": "javascript-renderer-protocol@1.0.0",
     "environment": "production",
     "user": {
-      "ip_address": "{{auto}}",
-      "id": "abc-123"
+      "ip_address": "{{auto}}"
     },
     "exception": {
       "values": [
@@ -63,14 +62,7 @@
             "frames": [
               {
                 "colno": 0,
-                "filename": "app:///dist/renderer.js",
-                "function": "{{function}}",
-                "in_app": true,
-                "lineno": 0
-              },
-              {
-                "colno": 0,
-                "filename": "app:///dist/renderer.js",
+                "filename": "app:///src/index.html",
                 "function": "{{function}}",
                 "in_app": true,
                 "lineno": 0
@@ -88,46 +80,9 @@
     "event_id": "{{id}}",
     "platform": "javascript",
     "timestamp": 0,
-    "breadcrumbs": [
-      {
-        "timestamp": 0,
-        "category": "electron",
-        "message": "app.will-finish-launching",
-        "type": "ui"
-      },
-      {
-        "timestamp": 0,
-        "category": "electron",
-        "message": "app.ready",
-        "type": "ui"
-      },
-      {
-        "timestamp": 0,
-        "category": "electron",
-        "message": "app.session-created",
-        "type": "ui"
-      },
-      {
-        "timestamp": 0,
-        "category": "electron",
-        "message": "app.web-contents-created",
-        "type": "ui"
-      },
-      {
-        "timestamp": 0,
-        "category": "electron",
-        "message": "app.browser-window-created",
-        "type": "ui"
-      },
-      {
-        "timestamp": 0,
-        "category": "electron",
-        "message": "WebContents[1].dom-ready",
-        "type": "ui"
-      }
-    ],
+    "breadcrumbs": [],
     "request": {
-      "url": "app:///dist/index.html"
+      "url": "app:///src/index.html"
     },
     "tags": {
       "event.environment": "javascript",

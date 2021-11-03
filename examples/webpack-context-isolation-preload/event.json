@@ -1,5 +1,5 @@
 {
-  "method": "store",
+  "method": "envelope",
   "sentryKey": "37f8a2ee37c0409d8970bc7559c7c7e4",
   "appId": "277345",
   "dumpFile": false,
@@ -10,17 +10,13 @@
         {
           "name": "npm:@sentry/electron",
           "version": "{{version}}"
-        },
-        {
-          "name": "npm:@sentry/browser",
-          "version": "{{version}}"
         }
       ],
       "version": "{{version}}"
     },
     "contexts": {
       "app": {
-        "app_name": "javascript-renderer-browser-sdk",
+        "app_name": "webpack-context-isolation-preload",
         "app_version": "1.0.0"
       },
       "browser": {
@@ -49,13 +45,15 @@
         "version": "{{version}}"
       },
       "electron": {
-        "crashed_process": "WebContents[1]"
+        "crashed_process": "WebContents[1]",
+        "crashed_url": "app:///dist/index.html"
       }
     },
-    "release": "javascript-renderer-browser-sdk@1.0.0",
+    "release": "webpack-context-isolation-preload@1.0.0",
     "environment": "production",
     "user": {
-      "ip_address": "{{auto}}"
+      "ip_address": "{{auto}}",
+      "id": "abc-123"
     },
     "exception": {
       "values": [
@@ -66,7 +64,14 @@
             "frames": [
               {
                 "colno": 0,
-                "filename": "app:///src/index.html",
+                "filename": "app:///dist/renderer.js",
+                "function": "{{function}}",
+                "in_app": true,
+                "lineno": 0
+              },
+              {
+                "colno": 0,
+                "filename": "app:///dist/renderer.js",
                 "function": "{{function}}",
                 "in_app": true,
                 "lineno": 0
@@ -74,11 +79,8 @@
             ]
           },
           "mechanism": {
-            "data": {
-              "function": "setTimeout"
-            },
             "handled": true,
-            "type": "instrument"
+            "type": "generic"
           }
         }
       ]
@@ -87,8 +89,46 @@
     "event_id": "{{id}}",
     "platform": "javascript",
     "timestamp": 0,
+    "breadcrumbs": [
+      {
+        "timestamp": 0,
+        "category": "electron",
+        "message": "app.will-finish-launching",
+        "type": "ui"
+      },
+      {
+        "timestamp": 0,
+        "category": "electron",
+        "message": "app.ready",
+        "type": "ui"
+      },
+      {
+        "timestamp": 0,
+        "category": "electron",
+        "message": "app.session-created",
+        "type": "ui"
+      },
+      {
+        "timestamp": 0,
+        "category": "electron",
+        "message": "app.web-contents-created",
+        "type": "ui"
+      },
+      {
+        "timestamp": 0,
+        "category": "electron",
+        "message": "app.browser-window-created",
+        "type": "ui"
+      },
+      {
+        "timestamp": 0,
+        "category": "electron",
+        "message": "WebContents[1].dom-ready",
+        "type": "ui"
+      }
+    ],
     "request": {
-      "url": "app:///src/index.html"
+      "url": "app:///dist/index.html"
     },
     "tags": {
       "event.environment": "javascript",

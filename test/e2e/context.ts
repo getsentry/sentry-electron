@@ -55,7 +55,7 @@ export class TestContext {
 
     const env: Record<string, any | undefined> = {
       ...process.env,
-      ELECTRON_ENABLE_LOGGING: process.env.DEBUG,
+      ELECTRON_ENABLE_LOGGING: true,
       ELECTRON_DISABLE_SECURITY_WARNINGS: true,
     };
 

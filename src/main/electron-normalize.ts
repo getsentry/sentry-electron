@@ -5,6 +5,22 @@ const parsed = parseSemver(process.versions.electron);
 const version = { major: parsed.major || 0, minor: parsed.minor || 0, patch: parsed.patch || 0 };
 
 /**
+ * Returns a promise that resolves when app is ready.
+ */
+async function appIsReady(): Promise<void> {
+  return app.isReady()
+    ? Promise.resolve()
+    : new Promise<void>((resolve) => {
+        app.once('ready', () => {
+          resolve();
+        });
+      });
+}
+
+/** A promise that is resolved when the app is ready */
+export const whenAppReady: Promise<void> = appIsReady();
+
+/**
  * Electron >=8.4 | >=9.1 | >=10
  * Use `render-process-gone` rather than `crashed`
  */
@@ -12,6 +28,13 @@ function supportsRenderProcessGone(): boolean {
   return (
     version.major >= 10 || (version.major === 9 && version.minor >= 1) || (version.major === 8 && version.minor >= 4)
   );
+}
+
+/**
+ * Electron >= 5 support full protocol API
+ */
+export function supportsFullProtocol(): boolean {
+  return version.major >= 5;
 }
 
 /**

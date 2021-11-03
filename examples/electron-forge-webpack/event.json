@@ -45,8 +45,7 @@
         "version": "{{version}}"
       },
       "electron": {
-        "crashed_process": "WebContents[1]",
-        "crashed_url": "app:///.webpack/renderer/main_window/index.html"
+        "crashed_process": "renderer"
       }
     },
     "release": "electron-forge-webpack@1.0.0",

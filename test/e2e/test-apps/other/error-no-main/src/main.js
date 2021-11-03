@@ -1,14 +1,6 @@
 const path = require('path');
 
 const { app, BrowserWindow } = require('electron');
-const { init } = require('@sentry/electron');
-
-init({
-  dsn: '__DSN__',
-  debug: true,
-  autoSessionTracking: false,
-  onFatalError: () => {},
-});
 
 app.on('ready', () => {
   const mainWindow = new BrowserWindow({
@@ -21,3 +13,7 @@ app.on('ready', () => {
 
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
 });
+
+setTimeout(() => {
+  process.exit();
+}, 2000);
