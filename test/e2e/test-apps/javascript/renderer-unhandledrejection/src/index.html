@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <script>
+      const { init } = require('@sentry/electron');
+
+      init({
+        debug: true,
+      });
+
+      setTimeout(() => {
+        new Promise((_resolve, _reject) => {
+          throw new Error('Unhanded promise rejection in renderer process');
+        });
+      }, 500);
+    </script>
+  </body>
+</html>

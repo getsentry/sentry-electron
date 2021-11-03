@@ -19,3 +19,5 @@ stats.json
 /index.*
 /integrations.*
 /ipc.*
+*.tgz
+/src/main/version.ts

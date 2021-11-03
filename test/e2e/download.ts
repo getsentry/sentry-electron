@@ -1,11 +1,7 @@
-import download = require('electron-download');
-import extract = require('extract-zip');
+import { download as electronDownload } from '@electron/get';
+import electronExtract = require('extract-zip');
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { promisify } from 'util';
-
-const electronDownload = promisify(download);
-const electronExtract = promisify(extract);
 
 /** Gets the users home directory */
 function getHomDir(): string {
@@ -37,7 +33,7 @@ export async function downloadElectron(version: string, arch: string): Promise<s
   const dir = join(cacheDir, `${version}-${arch}`);
 
   if (!existsSync(dir)) {
-    const zipPath = await electronDownload({ version, arch, cache: cacheDir });
+    const zipPath = await electronDownload(version, { cacheRoot: cacheDir, downloadOptions: { arch } });
     await electronExtract(zipPath, { dir });
   }
 

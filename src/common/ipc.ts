@@ -26,5 +26,6 @@ export interface IPCInterface {
 declare global {
   interface Window {
     __SENTRY_IPC__?: IPCInterface;
+    __SENTRY__RENDERER_INIT__?: boolean;
   }
 }

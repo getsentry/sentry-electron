@@ -1,0 +1,75 @@
+{
+  "condition": "usesCrashpad",
+  "method": "minidump",
+  "namespacedData": {
+    "initialScope": {
+      "release": "custom-name",
+      "user": {
+        "username": "some_user"
+      }
+    }
+  },
+  "sentryKey": "37f8a2ee37c0409d8970bc7559c7c7e4",
+  "appId": "277345",
+  "dumpFile": true,
+  "data": {
+    "sdk": {
+      "name": "sentry.javascript.electron",
+      "packages": [
+        {
+          "name": "npm:@sentry/electron",
+          "version": "{{version}}"
+        }
+      ],
+      "version": "{{version}}"
+    },
+    "contexts": {
+      "app": {
+        "app_name": "native-electron-main-custom-release",
+        "app_version": "1.0.0"
+      },
+      "browser": {
+        "name": "Chrome"
+      },
+      "chrome": {
+        "name": "Chrome",
+        "type": "runtime",
+        "version": "{{version}}"
+      },
+      "device": {
+        "arch": "{{arch}}",
+        "family": "Desktop"
+      },
+      "node": {
+        "name": "Node",
+        "type": "runtime",
+        "version": "{{version}}"
+      },
+      "os": {
+        "name": "{{platform}}",
+        "version": "{{version}}"
+      },
+      "runtime": {
+        "name": "Electron",
+        "version": "{{version}}"
+      },
+      "electron": {
+        "crashed_process": "browser"
+      }
+    },
+    "release": "custom-name",
+    "environment": "development",
+    "user": {
+      "ip_address": "{{auto}}",
+      "username": "some_user"
+    },
+    "event_id": "{{id}}",
+    "timestamp": 0,
+    "breadcrumbs": [],
+    "tags": {
+      "event.environment": "native",
+      "event.origin": "electron",
+      "event_type": "native"
+    }
+  }
+}

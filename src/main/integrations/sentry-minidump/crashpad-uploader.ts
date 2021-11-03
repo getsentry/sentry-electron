@@ -37,7 +37,7 @@ export class CrashpadUploader extends BaseUploader {
 
   /** Attempts to remove the metadata file so Crashpad doesn't output `failed to stat report` errors to the console */
   private async _deleteCrashpadMetadataFile(waitMs: number = 100): Promise<void> {
-    if (waitMs > 2000) {
+    if (waitMs > 2_000) {
       return;
     }
 
@@ -45,7 +45,7 @@ export class CrashpadUploader extends BaseUploader {
     try {
       await unlinkAsync(metadataPath);
       logger.log('Deleted Crashpad metadata file', metadataPath);
-    } catch (e) {
+    } catch (e: any) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if (e.code && e.code == 'EBUSY') {
         // Since Crashpad probably still has the metadata file open, we make a few attempts to delete it, backing

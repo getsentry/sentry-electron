@@ -75,7 +75,7 @@ export class ElectronEvents implements Integration {
         const breadcrumb = {
           category: 'electron',
           message: `${category}.${event}`,
-          timestamp: new Date().getTime() / 1000,
+          timestamp: new Date().getTime() / 1_000,
           type: 'ui',
         };
 
