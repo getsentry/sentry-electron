@@ -16,7 +16,7 @@
     },
     "contexts": {
       "app": {
-        "app_name": "javascript-renderer-unhandledrejection",
+        "app_name": "javascript-renderer-custom-env",
         "app_version": "1.0.0"
       },
       "browser": {
@@ -49,8 +49,8 @@
         "crashed_url": "app:///src/index.html"
       }
     },
-    "release": "javascript-renderer-unhandledrejection@1.0.0",
-    "environment": "development",
+    "release": "javascript-renderer-custom-env@1.0.0",
+    "environment": "custom-env",
     "user": {
       "ip_address": "{{auto}}"
     },
@@ -58,7 +58,7 @@
       "values": [
         {
           "type": "Error",
-          "value": "Unhanded promise rejection in renderer process",
+          "value": "Some renderer error",
           "stacktrace": {
             "frames": [
               {
@@ -71,8 +71,8 @@
             ]
           },
           "mechanism": {
-            "handled": false,
-            "type": "onunhandledrejection"
+            "handled": true,
+            "type": "generic"
           }
         }
       ]

@@ -50,7 +50,7 @@
       }
     },
     "release": "scope-breadcrumbs@1.0.0",
-    "environment": "production",
+    "environment": "development",
     "user": {
       "ip_address": "{{auto}}",
       "id": "1234567890"

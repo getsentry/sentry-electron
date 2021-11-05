@@ -49,7 +49,7 @@
       }
     },
     "release": "webpack-context-isolation@1.0.0",
-    "environment": "production",
+    "environment": "development",
     "user": {
       "ip_address": "{{auto}}",
       "id": "abc-123"

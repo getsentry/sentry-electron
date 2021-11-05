@@ -5,6 +5,7 @@ import { app } from 'electron';
 import { platform, release } from 'os';
 import { join } from 'path';
 
+import { isPackaged } from './electron-normalize';
 import { readDirAsync, readFileAsync } from './fs';
 import { SDK_VERSION } from './version';
 
@@ -281,6 +282,11 @@ export function getDefaultReleaseName(): string {
   return `${app_name.replace(/\W/g, '-')}@${app.getVersion()}`;
 }
 
+/** Gets the default environment */
+export function getDefaultEnvironment(): string {
+  return isPackaged ? 'production' : 'development';
+}
+
 /**
  * Computes Electron-specific default fields for events.
  *
@@ -292,7 +298,7 @@ async function _getEventDefaults(release?: string): Promise<Event> {
   return {
     sdk: getSdkInfo(),
     contexts: await getContexts(),
-    environment: process.defaultApp ? 'development' : 'production',
+    environment: getDefaultEnvironment(),
     release: release || getDefaultReleaseName(),
     user: { ip_address: '{{auto}}' },
     tags: {

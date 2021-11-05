@@ -3,7 +3,7 @@ import { Integration } from '@sentry/types';
 import { Session, session, WebContents } from 'electron';
 
 import { IPCMode } from '../common';
-import { getDefaultReleaseName } from './context';
+import { getDefaultEnvironment, getDefaultReleaseName } from './context';
 import {
   ElectronEvents,
   MainContext,
@@ -62,6 +62,11 @@ export function init(partialOptions: Partial<ElectronMainOptions>): void {
   // If we don't set a release, @sentry/node will automatically fetch from environment variables
   if (options.release === undefined) {
     options.release = getDefaultReleaseName();
+  }
+
+  // If we don't set an environment, @sentry/core defaults to production
+  if (options.environment === undefined) {
+    options.environment = getDefaultEnvironment();
   }
 
   // Unless autoSessionTracking is specifically disabled, we track sessions as the

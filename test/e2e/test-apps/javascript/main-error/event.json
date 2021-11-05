@@ -49,7 +49,7 @@
       }
     },
     "release": "javascript-main@1.0.0",
-    "environment": "production",
+    "environment": "development",
     "user": {
       "ip_address": "{{auto}}"
     },
