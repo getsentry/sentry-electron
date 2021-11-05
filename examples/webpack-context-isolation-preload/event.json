@@ -50,7 +50,7 @@
       }
     },
     "release": "webpack-context-isolation-preload@1.0.0",
-    "environment": "production",
+    "environment": "development",
     "user": {
       "ip_address": "{{auto}}",
       "id": "abc-123"
