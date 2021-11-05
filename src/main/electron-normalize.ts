@@ -4,10 +4,8 @@ import { app, crashReporter, RenderProcessGoneDetails, WebContents } from 'elect
 const parsed = parseSemver(process.versions.electron);
 const version = { major: parsed.major || 0, minor: parsed.minor || 0, patch: parsed.patch || 0 };
 
-/**
- * Returns a promise that resolves when app is ready.
- */
-async function appIsReady(): Promise<void> {
+/** A promise that is resolved when the app is ready */
+export const whenAppReady: Promise<void> = (() => {
   return app.isReady()
     ? Promise.resolve()
     : new Promise<void>((resolve) => {
@@ -15,20 +13,7 @@ async function appIsReady(): Promise<void> {
           resolve();
         });
       });
-}
-
-/** A promise that is resolved when the app is ready */
-export const whenAppReady: Promise<void> = appIsReady();
-
-/**
- * Electron >=8.4 | >=9.1 | >=10
- * Use `render-process-gone` rather than `crashed`
- */
-function supportsRenderProcessGone(): boolean {
-  return (
-    version.major >= 10 || (version.major === 9 && version.minor >= 1) || (version.major === 8 && version.minor >= 4)
-  );
-}
+})();
 
 /**
  * Electron >= 5 support full protocol API
@@ -43,8 +28,11 @@ export function supportsFullProtocol(): boolean {
 export function onRendererProcessGone(
   callback: (contents: WebContents, details?: RenderProcessGoneDetails) => void,
 ): void {
+  const supportsRenderProcessGone =
+    version.major >= 10 || (version.major === 9 && version.minor >= 1) || (version.major === 8 && version.minor >= 4);
+
   app.on('web-contents-created', (_, contents) => {
-    if (supportsRenderProcessGone()) {
+    if (supportsRenderProcessGone) {
       contents.on('render-process-gone', async (__, details) => {
         const ignoredReasons = ['clean-exit', 'killed'];
 
@@ -99,7 +87,7 @@ export function usesCrashpad(): boolean {
 }
 
 /**
- * Electron >= 9 supports `app.getPath('crashDumps')` rather than
+ * Electron >= 9 uses `app.getPath('crashDumps')` rather than
  * `crashReporter.getCrashesDirectory()`
  */
 export function getCrashesDirectory(): string {
