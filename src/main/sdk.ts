@@ -2,7 +2,7 @@ import { defaultIntegrations as defaultNodeIntegrations, init as nodeInit, NodeO
 import { Integration } from '@sentry/types';
 import { WebContents } from 'electron';
 
-import { getDefaultReleaseName } from './context';
+import { getDefaultEnvironment, getDefaultReleaseName } from './context';
 import { hookIPC } from './hook-ipc';
 import {
   ElectronEvents,
@@ -41,6 +41,11 @@ export function init(options: ElectronMainOptions): void {
   // If we don't set a release, @sentry/node will automatically fetch from environment variables
   if (options.release === undefined) {
     options.release = getDefaultReleaseName();
+  }
+
+  // If we don't set an environment, @sentry/core defaults to production
+  if (options.environment === undefined) {
+    options.environment = getDefaultEnvironment();
   }
 
   // Unless autoSessionTracking is specifically disabled, we track sessions as the

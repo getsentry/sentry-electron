@@ -50,7 +50,7 @@
       }
     },
     "release": "custom-name",
-    "environment": "production",
+    "environment": "development",
     "user": {
       "ip_address": "{{auto}}"
     },

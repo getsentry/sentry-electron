@@ -111,7 +111,7 @@
       }
     ],
     "release": "some-release",
-    "environment": "production",
+    "environment": "development",
     "user": {
       "ip_address": "{{auto}}"
     },
