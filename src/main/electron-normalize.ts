@@ -1,8 +1,18 @@
 import { parseSemver } from '@sentry/utils';
 import { app, crashReporter, RenderProcessGoneDetails, WebContents } from 'electron';
+import { basename } from 'path';
 
 const parsed = parseSemver(process.versions.electron);
 const version = { major: parsed.major || 0, minor: parsed.minor || 0, patch: parsed.patch || 0 };
+
+/** Returns if the app is packaged. Copied from Electron to support < v3 */
+export const isPackaged = (() => {
+  const execFile = basename(process.execPath).toLowerCase();
+  if (process.platform === 'win32') {
+    return execFile !== 'electron.exe';
+  }
+  return execFile !== 'electron';
+})();
 
 /**
  * Electron >=8.4 | >=9.1 | >=10
