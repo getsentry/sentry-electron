@@ -1,4 +1,5 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CspHtmlWebpackPlugin = require('csp-html-webpack-plugin');
 const WarningsToErrorsPlugin = require('warnings-to-errors-webpack-plugin');
 
 module.exports = [
@@ -19,6 +20,13 @@ module.exports = [
     output: {
       filename: 'renderer.js',
     },
-    plugins: [new HtmlWebpackPlugin(), new WarningsToErrorsPlugin()],
+    plugins: [
+      new HtmlWebpackPlugin(),
+      new WarningsToErrorsPlugin(),
+      new CspHtmlWebpackPlugin({
+        'default-src': "'self'",
+        'script-src': "'self'",
+      }),
+    ],
   },
 ];
