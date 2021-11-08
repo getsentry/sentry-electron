@@ -57,10 +57,7 @@ export async function checkPreviousSession(crashed: boolean): Promise<void> {
       ._getBackend()
       .getTransport() as ElectronNetTransport;
 
-    previousSession.status = status;
-    previousSession.errors = (previousSession.errors || 0) + 1;
-
-    await transport.sendSession(previousSession);
+    await transport.sendSession({ ...previousSession, status, errors: (previousSession.errors || 0) + 1 });
 
     previousSession = undefined;
   }

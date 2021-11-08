@@ -35,6 +35,7 @@ export class Store<T> {
   /**
    * Updates data by replacing it with the given value.
    * @param next New data to replace the previous one.
+   * @param forceFlush Forces the write to be flushed to disk immediately
    */
   public set(next: T, forceFlush: boolean = false): void {
     this._data = next;
