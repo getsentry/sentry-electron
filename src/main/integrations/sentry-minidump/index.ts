@@ -12,9 +12,9 @@ import { ElectronNetTransport } from '../../transports/electron-net';
 import { BaseUploader } from './base-uploader';
 import { BreakpadUploader } from './breakpad-uploader';
 import { CrashpadUploader } from './crashpad-uploader';
-import { Store } from './store';
+import { Store } from '../store';
 import { getEventDefaults } from '../../context';
-import { sessionCrashed } from '../main-process-session';
+import { checkPreviousSession, sessionCrashed } from '../main-process-session';
 
 /** Sends minidumps via the Sentry uploader.. */
 export class SentryMinidump implements Integration {
@@ -80,7 +80,7 @@ export class SentryMinidump implements Integration {
         level: Severity.Fatal,
         platform: 'native',
         tags: { 'event.environment': 'native', event_type: 'native' },
-      }),
+      }).then((minidumpsFound) => checkPreviousSession(minidumpsFound)),
     );
   }
 
@@ -132,8 +132,8 @@ export class SentryMinidump implements Integration {
       tags: { 'event.environment': 'native', event_type: 'native' },
     });
 
-    await sessionCrashed();
     await this._sendNativeCrashes(options, event);
+    sessionCrashed();
 
     addBreadcrumb({
       category: 'exception',
@@ -160,8 +160,12 @@ export class SentryMinidump implements Integration {
     }
   }
 
-  /** Loads new native crashes from disk and sends them to Sentry. */
-  private async _sendNativeCrashes(options: ElectronMainOptions, event: Event): Promise<void> {
+  /**
+   * Loads new native crashes from disk and sends them to Sentry.
+   *
+   * Returns true if one or more minidumps were found
+   */
+  private async _sendNativeCrashes(options: ElectronMainOptions, event: Event): Promise<boolean> {
     // Whenever we are called, assume that the crashes we are going to load down
     // below have occurred recently. This means, we can use the same event data
     // for all minidumps that we load now. There are two conditions:
@@ -196,7 +200,7 @@ export class SentryMinidump implements Integration {
             logger.warn(
               `Discarding event because it's not included in the random sample (sampling rate = ${sampleRate})`,
             );
-            return;
+            return true;
           }
 
           if (newEvent && beforeSend) {
@@ -204,7 +208,7 @@ export class SentryMinidump implements Integration {
 
             if (beforeSendResult === null) {
               logger.warn('`beforeSend` returned `null`, will not send event.');
-              return;
+              return true;
             }
 
             newEvent = beforeSendResult;
@@ -216,10 +220,13 @@ export class SentryMinidump implements Integration {
         }
         // Unset to recover memory
         this._scopeLastRun = undefined;
+        return true;
       }
     } catch (_oO) {
       logger.error('Error while sending native crash.');
     }
+
+    return false;
   }
 
   /**

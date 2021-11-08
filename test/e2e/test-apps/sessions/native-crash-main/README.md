@@ -1,9 +1,7 @@
-# Good Session
+# Session with Native Main Crash
 
 | Setting       | Value    |
 | ------------- | -------- |
 | Category      | Sessions |
 | Build Command | yarn     |
 | Run Twice     | true     |
-
-We run this test twice to ensure we don't get an abnormal exit on the first instance

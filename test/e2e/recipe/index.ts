@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import { SDK_VERSION } from '../../../src/main/version';
 import { TestServer } from '../server';
 import { createLogger, walkSync } from '../utils';
-import { normalize } from './normalize';
+import { eventIsSession, normalize } from './normalize';
 import { parseRecipe, TestRecipe } from './parser';
 import { TestContext } from '../context';
 import { evaluateCondition } from './eval';
@@ -166,7 +166,9 @@ export class RecipeRunner {
     for (const [i, expectedEvent] of expectedEvents.entries()) {
       delete expectedEvent.condition;
 
-      log(`Comparing event ${i + 1} of ${expectedEvents.length}`);
+      const isSession = eventIsSession(expectedEvent.data);
+
+      log(`Comparing ${isSession ? 'session' : 'event'} ${i + 1} of ${expectedEvents.length}`);
       expect(testServer.events).to.containSubset([expectedEvent]);
     }
 

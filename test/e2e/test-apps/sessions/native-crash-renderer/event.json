@@ -16,7 +16,7 @@
     },
     "contexts": {
       "app": {
-        "app_name": "session-native-crash",
+        "app_name": "session-native-crash-renderer",
         "app_version": "1.0.0"
       },
       "browser": {
@@ -49,7 +49,7 @@
         "crashed_url": "app:///src/index.html"
       }
     },
-    "release": "session-native-crash@1.0.0",
+    "release": "session-native-crash-renderer@1.0.0",
     "environment": "development",
     "user": {
       "ip_address": "{{auto}}"

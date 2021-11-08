@@ -1,6 +1,7 @@
-# Session with Native Crash
+# Session with Abnormal Exit
 
 | Setting       | Value    |
 | ------------- | -------- |
 | Category      | Sessions |
 | Build Command | yarn     |
+| Run Twice     | true     |

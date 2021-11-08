@@ -4,8 +4,8 @@ import {
   Response,
   SentryRequest,
   SentryRequestType,
-  Session,
   SessionAggregates,
+  SessionContext,
   Status,
   TransportOptions,
 } from '@sentry/types';
@@ -94,7 +94,7 @@ export class ElectronNetTransport extends Transports.BaseTransport {
   /**
    * @inheritDoc
    */
-  public sendSession(session: Session | SessionAggregates): Promise<Response> {
+  public sendSession(session: SessionContext | SessionAggregates): Promise<Response> {
     const { name, version } = getSdkInfo();
 
     const envelopeHeaders = JSON.stringify({

@@ -1,10 +1,22 @@
 import { getCurrentHub } from '@sentry/core';
-import { flush } from '@sentry/node';
-import { Integration, SessionStatus } from '@sentry/types';
+import { flush, NodeClient } from '@sentry/node';
+import { Integration, SessionContext, SessionStatus } from '@sentry/types';
 import { logger } from '@sentry/utils';
 import { app } from 'electron';
+import { join } from 'path';
+
+import { ElectronNetTransport } from '../transports/electron-net';
+import { Store } from './store';
 
 const TERMINAL_STATES = [SessionStatus.Exited, SessionStatus.Crashed];
+
+const sessionStore: Store<SessionContext | undefined> = new Store(
+  join(app.getPath('userData'), 'sentry'),
+  'session',
+  undefined,
+);
+
+let previousSession = sessionStore.get();
 
 /** Tracks sessions as the main process lifetime. */
 export class MainProcessSession implements Integration {
@@ -17,8 +29,10 @@ export class MainProcessSession implements Integration {
   /** @inheritDoc */
   public setupOnce(): void {
     const hub = getCurrentHub();
-    logger.log('MainProcessSession - Start session');
-    hub.startSession();
+
+    logger.log('[MainProcessSession] Start session');
+    const newSession = hub.startSession();
+    sessionStore.set(newSession);
 
     // We track sessions via the 'will-quit' event which is the last event emitted before close.
     //
@@ -43,7 +57,7 @@ export class MainProcessSession implements Integration {
 
   /** Handles the exit */
   private _exitHandler: (event: Electron.Event) => Promise<void> = async (event: Electron.Event) => {
-    logger.log('MainProcessSession - Exit Handler');
+    logger.log('[MainProcessSession] Exit Handler');
 
     // Stop the exit so we have time to send the session
     event.preventDefault();
@@ -52,11 +66,13 @@ export class MainProcessSession implements Integration {
     const session = hub.getScope()?.getSession();
 
     if (session && !TERMINAL_STATES.includes(session.status)) {
-      logger.log('MainProcessSession - Ending session');
+      logger.log('[MainProcessSession] Ending session');
       hub.endSession();
     } else {
-      logger.log('MainProcessSession - Session was already ended', session);
+      logger.log('[MainProcessSession] Session was already ended');
     }
+
+    sessionStore.set(undefined, true);
 
     await flush();
 
@@ -65,19 +81,43 @@ export class MainProcessSession implements Integration {
   };
 }
 
+/** Checks if the previous session needs sending as crashed or abnormal  */
+export async function checkPreviousSession(crashed: boolean): Promise<void> {
+  if (previousSession) {
+    const status = crashed ? SessionStatus.Crashed : SessionStatus.Abnormal;
+
+    logger.log(`[MainProcessSession] Previous session ${status}}`);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const transport = (getCurrentHub().getClient<NodeClient>() as any)
+      ._getBackend()
+      .getTransport() as ElectronNetTransport;
+
+    previousSession.status = status;
+    previousSession.errors = (previousSession.errors || 0) + 1;
+
+    await transport.sendSession(previousSession);
+
+    previousSession = undefined;
+  }
+}
+
 /** Sets the current session as crashed */
-export function sessionCrashed(options: { forceCapture?: boolean } = {}): void {
-  logger.log('Session Crashed');
+export function sessionCrashed(): void {
+  logger.log('[MainProcessSession] Session Crashed');
   const hub = getCurrentHub();
   const session = hub.getScope()?.getSession();
 
-  if (session && !TERMINAL_STATES.includes(session.status)) {
-    session.update({ status: SessionStatus.Crashed, errors: (session.errors += 1) });
-  } else {
-    logger.log('No session to update');
+  if (!session) {
+    logger.log('[MainProcessSession] No session to update');
+    return;
   }
 
-  if (options.forceCapture) {
-    hub.captureSession();
+  if (!TERMINAL_STATES.includes(session.status)) {
+    logger.log(`[MainProcessSession] Setting session as crashed`);
+    session.update({ status: SessionStatus.Crashed, errors: (session.errors += 1) });
+  } else {
+    logger.log('[MainProcessSession] Session already ended');
   }
+
+  hub.captureSession();
 }

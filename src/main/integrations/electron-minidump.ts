@@ -82,7 +82,7 @@ export class ElectronMinidump implements Integration {
 
     // If a renderer process crashes, mark any existing session as crashed
     onRendererProcessGone((_, __) => {
-      sessionCrashed({ forceCapture: true });
+      sessionCrashed();
     });
 
     // If we're using the Crashpad minidump uploader, we set extra parameters whenever the scope updates
