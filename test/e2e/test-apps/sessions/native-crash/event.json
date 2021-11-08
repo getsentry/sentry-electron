@@ -45,7 +45,6 @@
         "version": "{{version}}"
       },
       "electron": {
-        "crashed_process": "WebContents[1]",
         "crashed_url": "app:///src/index.html"
       }
     },
@@ -60,6 +59,7 @@
     "tags": {
       "event.environment": "native",
       "event.origin": "electron",
+      "event.process": "renderer",
       "event_type": "native"
     }
   }

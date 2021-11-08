@@ -43,10 +43,6 @@
       "runtime": {
         "name": "Electron",
         "version": "{{version}}"
-      },
-      "electron": {
-        "crashed_process": "SomeWindow",
-        "crashed_url": "app:///src/index.html"
       }
     },
     "release": "custom-renderer-name@1.0.0",
@@ -95,6 +91,7 @@
     "tags": {
       "event.environment": "javascript",
       "event.origin": "electron",
+      "event.process": "SomeWindow",
       "event_type": "javascript"
     }
   }

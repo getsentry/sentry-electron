@@ -3,7 +3,7 @@ import { Event } from '@sentry/types';
 import { forget, logger, SentryError } from '@sentry/utils';
 import { app, ipcMain, protocol, WebContents } from 'electron';
 
-import { IPCChannel, IPCMode, normalizeUrl, PROTOCOL_SCHEME } from '../common';
+import { IPCChannel, IPCMode, mergeEvents, PROTOCOL_SCHEME } from '../common';
 import { supportsFullProtocol, whenAppReady } from './electron-normalize';
 import { ElectronMainOptions } from './sdk';
 
@@ -19,19 +19,9 @@ export function handleEvent(options: ElectronMainOptions, jsonEvent: string, con
     return;
   }
 
-  if (event.exception) {
-    event.contexts = {
-      ...event.contexts,
-      electron: contents
-        ? {
-            crashed_process: options?.getRendererName?.(contents) || `WebContents[${contents.id}]`,
-            crashed_url: normalizeUrl(contents.getURL(), app.getAppPath()),
-          }
-        : { crashed_process: 'renderer' },
-    };
-  }
+  const process = contents ? options?.getRendererName?.(contents) || `renderer` : 'renderer';
 
-  captureEvent(event);
+  captureEvent(mergeEvents(event, { tags: { 'event.process': process } }));
 }
 
 /** Is object defined and has keys */

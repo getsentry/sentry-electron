@@ -43,9 +43,6 @@
       "runtime": {
         "name": "Electron",
         "version": "{{version}}"
-      },
-      "electron": {
-        "crashed_process": "renderer"
       }
     },
     "release": "error-iframe@1.0.0",
@@ -95,6 +92,7 @@
     "tags": {
       "event.environment": "javascript",
       "event.origin": "electron",
+      "event.process": "renderer",
       "event_type": "javascript"
     }
   }

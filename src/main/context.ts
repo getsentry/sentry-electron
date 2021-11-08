@@ -262,9 +262,6 @@ async function getContexts(): Promise<Contexts> {
       name: 'Electron',
       version: process.versions.electron,
     },
-    electron: {
-      crashed_process: 'browser',
-    },
   };
 
   // This ensures we don't get [undefined] after serialisation
@@ -304,6 +301,7 @@ async function _getEventDefaults(release?: string): Promise<Event> {
     tags: {
       'event.origin': 'electron',
       'event.environment': 'javascript',
+      'event.process': 'browser',
       // Legacy way of filtering native vs JavaScript events
       event_type: 'javascript',
     },
