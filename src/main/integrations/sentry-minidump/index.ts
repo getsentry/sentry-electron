@@ -12,9 +12,9 @@ import { ElectronNetTransport } from '../../transports/electron-net';
 import { BaseUploader } from './base-uploader';
 import { BreakpadUploader } from './breakpad-uploader';
 import { CrashpadUploader } from './crashpad-uploader';
-import { Store } from '../store';
+import { Store } from '../../store';
 import { getEventDefaults } from '../../context';
-import { checkPreviousSession, sessionCrashed } from '../main-process-session';
+import { checkPreviousSession, sessionCrashed } from '../../sessions';
 
 /** Sends minidumps via the Sentry uploader.. */
 export class SentryMinidump implements Integration {

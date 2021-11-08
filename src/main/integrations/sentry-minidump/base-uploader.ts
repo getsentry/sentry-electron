@@ -5,8 +5,8 @@ import { isThenable, logger, SentryError, timestampWithMs } from '@sentry/utils'
 import { basename, join } from 'path';
 
 import { mkdirp, readFileAsync, renameAsync, statAsync, unlinkAsync } from '../../fs';
+import { Store } from '../../store';
 import { ElectronNetTransport, SentryElectronRequest } from '../../transports/electron-net';
-import { Store } from '../store';
 
 /** Maximum number of days to keep a minidump before deleting it. */
 const MAX_AGE = 30;

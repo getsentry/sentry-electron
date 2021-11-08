@@ -7,7 +7,7 @@ import { app, crashReporter } from 'electron';
 import { mergeEvents, normalizeEvent } from '../../common';
 import { getEventDefaults } from '../context';
 import { onRendererProcessGone, rendererRequiresCrashReporterStart, usesCrashpad } from '../electron-normalize';
-import { sessionCrashed } from './main-process-session';
+import { sessionCrashed } from '../sessions';
 
 /** Is object defined and has keys */
 function hasKeys(obj: any): boolean {

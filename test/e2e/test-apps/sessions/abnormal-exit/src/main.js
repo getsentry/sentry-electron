@@ -21,8 +21,8 @@ app.on('ready', () => {
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
 });
 
-// We only crash on the first run
-// The second run is where the crash is uploaded
+// We only exit abnormally on the first run
+// The second run is where the session is uploaded
 if (process.env.APP_FIRST_RUN) {
   setTimeout(() => {
     process.exit();
