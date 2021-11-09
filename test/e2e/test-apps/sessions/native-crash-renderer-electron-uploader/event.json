@@ -3,7 +3,7 @@
   "method": "minidump",
   "namespacedData": {
     "initialScope": {
-      "release":"session-native-crash-electron-uploader@1.0.0",
+      "release":"session-native-crash-renderer-electron-uploader@1.0.0",
       "user": {
         "username": "some_user"
       }

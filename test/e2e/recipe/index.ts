@@ -143,6 +143,7 @@ export class RecipeRunner {
     // Main process native crashes with Sentry Uploader are sent on the next run
     if (this._recipe.metadata.runTwice) {
       await context.waitForAppClose();
+      log('First app instance has closed');
       await context.stop({ retainData: true });
       await context.start({ secondRun: true });
     }

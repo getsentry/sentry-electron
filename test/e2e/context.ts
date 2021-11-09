@@ -51,7 +51,7 @@ export class TestContext {
 
   /** Starts the app. */
   public async start(options: { secondRun?: boolean } = {}): Promise<void> {
-    log('Starting test context');
+    log('Starting test app');
 
     const env: Record<string, any | undefined> = {
       ...process.env,
@@ -99,7 +99,7 @@ export class TestContext {
 
   /** Stops the app and cleans up. */
   public async stop(options: { retainData?: boolean } = {}): Promise<void> {
-    log('Stopping test context');
+    log('Stopping test app');
 
     if (!this.mainProcess || !this.isStarted) {
       throw new Error('Invariant violation: Call start() first');

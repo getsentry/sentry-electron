@@ -7,7 +7,7 @@ import { app, crashReporter } from 'electron';
 import { mergeEvents, normalizeEvent } from '../../common';
 import { getEventDefaults } from '../context';
 import { onRendererProcessGone, rendererRequiresCrashReporterStart, usesCrashpad } from '../electron-normalize';
-import { sessionCrashed } from '../sessions';
+import { checkPreviousSession, sessionCrashed, unreportedDuringLastSession } from '../sessions';
 
 /** Is object defined and has keys */
 function hasKeys(obj: any): boolean {
@@ -89,6 +89,11 @@ export class ElectronMinidump implements Integration {
     if (usesCrashpad()) {
       this._setupScopeListener();
     }
+
+    // Check if last crash report was likely to have been unreported in the last session
+    const previousSessionCrashed = unreportedDuringLastSession(crashReporter.getLastCrashReport()?.date);
+    // Check if a previous session was not closed
+    forget(checkPreviousSession(previousSessionCrashed));
   }
 
   /**

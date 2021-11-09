@@ -80,7 +80,11 @@ export class SentryMinidump implements Integration {
         level: Severity.Fatal,
         platform: 'native',
         tags: { 'event.environment': 'native', event_type: 'native' },
-      }).then((minidumpsFound) => checkPreviousSession(minidumpsFound)),
+      }).then((minidumpsFound) =>
+        // Check for previous uncompleted session. If a previous session exists
+        // and no minidumps were found, its likely an abnormal exit
+        checkPreviousSession(minidumpsFound),
+      ),
     );
   }
 

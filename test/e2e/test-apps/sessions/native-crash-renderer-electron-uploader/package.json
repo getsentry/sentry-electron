@@ -1,5 +1,5 @@
 {
-  "name": "session-native-crash-electron-uploader",
+  "name": "session-native-crash-renderer-electron-uploader",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

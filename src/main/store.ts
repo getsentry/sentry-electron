@@ -1,5 +1,5 @@
 import { logger } from '@sentry/utils';
-import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 
 import { mkdirpSync } from './fs';
@@ -82,6 +82,15 @@ export class Store<T> {
   /** Returns store to its initial state */
   public clear(): void {
     this.set(this._initial);
+  }
+
+  /** Gets the Date that the file was last modified */
+  public getModifiedDate(): Date | undefined {
+    try {
+      return statSync(this._path)?.mtime;
+    } catch (_) {
+      return undefined;
+    }
   }
 
   /** Serializes the current data into the JSON file. */

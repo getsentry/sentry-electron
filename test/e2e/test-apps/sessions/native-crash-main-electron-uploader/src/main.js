@@ -8,7 +8,7 @@ app.commandLine.appendSwitch('enable-crashpad');
 init({
   dsn: '__DSN__',
   debug: true,
-  integrations: [new Integrations.ElectronMinidump()],
+  integrations: (defaults) => [new Integrations.ElectronMinidump(), ...defaults],
   initialScope: { user: { username: 'some_user' } },
   onFatalError: () => {},
 });
@@ -25,6 +25,12 @@ app.on('ready', () => {
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
 });
 
+// We only crash on the first run
+// The second run is where the crash is uploaded
 setTimeout(() => {
-  app.quit();
-}, 3000);
+  if (process.env.APP_FIRST_RUN) {
+    process.crash();
+  } else {
+    app.quit();
+  }
+}, 2000);
