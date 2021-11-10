@@ -1,9 +1,0 @@
-{
-  "name": "javascript-renderer-browser-sdk",
-  "version": "1.0.0",
-  "main": "src/main.js",
-  "dependencies": {
-    "@sentry/electron": "3.0.0",
-    "@sentry/browser": "6.13.2"
-  }
-}

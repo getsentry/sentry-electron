@@ -1,23 +1,17 @@
-import { Event } from '@sentry/types';
+export const PROTOCOL_SCHEME = 'sentry-ipc';
 
-export enum IPC {
+export enum IPCChannel {
+  /** IPC to check main process is listening */
+  PING = 'sentry-electron.ping',
   /** IPC to send a captured event to Sentry. */
   EVENT = 'sentry-electron.event',
   /** IPC to capture scope globally. */
   SCOPE = 'sentry-electron.scope',
-  /** IPC to get Electron scope in renderer */
-  CONTEXT = 'sentry-electron.context',
-}
-
-export interface AppContext {
-  eventDefaults: Event;
-  appBasePath: string;
 }
 
 export interface IPCInterface {
   sendScope: (scope: string) => void;
   sendEvent: (event: string) => void;
-  getContext: (callback: (context: string) => void) => void;
 }
 
 /**

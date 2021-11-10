@@ -18,10 +18,7 @@
                 {
                   "html": "./src/index.html",
                   "js": "./src/renderer.js",
-                  "name": "main_window",
-                  "preload": {
-                    "js": "@sentry/electron/preload"
-                  }
+                  "name": "main_window"
                 }
               ]
             }

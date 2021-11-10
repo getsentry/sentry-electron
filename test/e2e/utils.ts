@@ -9,6 +9,16 @@ export function clearTestLog(): void {
   TEST_LOG = [];
 }
 
+export function getTestLog(): string[] {
+  const output = [];
+
+  for (const args of TEST_LOG) {
+    output.push(args.map((a) => a.toString()).join(' '));
+  }
+
+  return output;
+}
+
 export function outputTestLog(): void {
   for (const args of TEST_LOG) {
     console.log(...args);
@@ -17,7 +27,10 @@ export function outputTestLog(): void {
 
 export function createLogger(name: string): (...args: any[]) => void {
   if (process.env.DEBUG) {
-    return (...args: any[]) => console.log(`[${name}]`, ...args);
+    return (...args: any[]) => {
+      console.log(`[${name}]`, ...args);
+      TEST_LOG.push([`[${name}]`, ...args]);
+    };
   } else {
     return (...args: any[]) => TEST_LOG.push([`[${name}]`, ...args]);
   }

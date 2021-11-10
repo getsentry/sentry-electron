@@ -53,7 +53,7 @@
     "pretest": "yarn build",
     "test": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe electron-mocha --require ts-node/register/transpile-only --timeout 120000 ./test/unit/**/*.ts",
     "pree2e": "rimraf test/e2e/dist/**/node_modules/@sentry/electron/** test/e2e/dist/**/yarn.lock && node scripts/clean-cache.js && yarn build && npm pack",
-    "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only --retries 3 ./test/e2e/*.ts"
+    "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only ./test/e2e/*.ts"
   },
   "dependencies": {
     "@sentry/browser": "6.13.3",
@@ -77,7 +77,7 @@
     "@types/koa-bodyparser": "^4.3.0",
     "@types/mocha": "^9.0.0",
     "busboy": "^0.3.1",
-    "chai": "^4.1.2",
+    "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
     "chai-subset": "^1.6.0",
     "cross-env": "^7.0.3",

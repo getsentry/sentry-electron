@@ -43,7 +43,7 @@ export class ElectronEvents implements Integration {
           return;
         }
 
-        const webContentsName = options?.getRendererName?.(contents) || `WebContents[${contents.id}]`;
+        const webContentsName = options?.getRendererName?.(contents) || 'renderer';
 
         this._instrumentBreadcrumbs(webContentsName, contents, (event) =>
           ['dom-ready', 'load-url', 'destroyed'].includes(event),

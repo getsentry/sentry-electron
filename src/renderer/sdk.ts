@@ -4,7 +4,7 @@ import {
   defaultIntegrations as defaultBrowserIntegrations,
   init as browserInit,
 } from '@sentry/browser';
-import { logger, SentryError } from '@sentry/utils';
+import { logger } from '@sentry/utils';
 
 import { EventToMain, ScopeToMain } from './integrations';
 
@@ -22,21 +22,6 @@ If init has been called in the preload and contextIsolation is disabled, is not 
   }
 
   window.__SENTRY__RENDERER_INIT__ = true;
-
-  if (window.__SENTRY_IPC__ === undefined) {
-    throw new SentryError(`Communication with the Electron main process could not be established.
-
-This is likely because the preload script was not run.
-Preload scripts are usually injected automatically but this can fail if you are bundling the Electron main process code.
-
-The required preload code can be imported via:
-  require('@sentry/electron/preload');
-or
-  import '@sentry/electron/preload';
-
-Check out the Webpack example for how to configure this:
-https://github.com/getsentry/sentry-electron/blob/master/examples/webpack-context-isolation.md`);
-  }
 
   // We don't want browser session tracking enabled by default because we already have Electron
   // specific session tracking

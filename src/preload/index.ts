@@ -6,25 +6,27 @@
 
 import { contextBridge, ipcRenderer } from 'electron';
 
-import { IPC } from '../common/ipc';
+import { IPCChannel } from '../common/ipc';
 
-const ipcObject = {
-  sendScope: (scopeJson: string) => ipcRenderer.send(IPC.SCOPE, scopeJson),
-  sendEvent: (eventJson: string) => ipcRenderer.send(IPC.EVENT, eventJson),
-  getContext: (callback: (eventJson: string) => void) => {
-    ipcRenderer.once(IPC.CONTEXT, (_, json) => callback(json));
-    ipcRenderer.send(IPC.CONTEXT);
-  },
-};
+// eslint-disable-next-line no-restricted-globals
+if (window.__SENTRY_IPC__) {
+  // eslint-disable-next-line no-console
+  console.log('Sentry Electron preload has already been run');
+} else {
+  const ipcObject = {
+    sendScope: (scopeJson: string) => ipcRenderer.send(IPCChannel.SCOPE, scopeJson),
+    sendEvent: (eventJson: string) => ipcRenderer.send(IPCChannel.EVENT, eventJson),
+  };
 
-window.__SENTRY_IPC__ = ipcObject;
+  window.__SENTRY_IPC__ = ipcObject;
 
-// We attempt to use contextBridge if it's available
-if (contextBridge) {
-  // This will fail if contextIsolation is not enabled
-  try {
-    contextBridge.exposeInMainWorld('__SENTRY_IPC__', ipcObject);
-  } catch (e) {
-    //
+  // We attempt to use contextBridge if it's available
+  if (contextBridge) {
+    // This will fail if contextIsolation is not enabled
+    try {
+      contextBridge.exposeInMainWorld('__SENTRY_IPC__', ipcObject);
+    } catch (e) {
+      //
+    }
   }
 }

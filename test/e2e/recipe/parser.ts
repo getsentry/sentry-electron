@@ -14,6 +14,7 @@ export interface TestMetadata {
   command?: string;
   timeout?: number;
   runTwice?: boolean;
+  expectedError?: string;
 }
 
 export interface TestRecipe {
@@ -46,10 +47,11 @@ function parseMetadata(doc: string): TestMetadata {
   const condition = getTableValue(doc, 'run condition');
   const command = getTableValue(doc, 'build command');
   const timeoutStr = getTableValue(doc, 'timeout');
+  const expectedError = getTableValue(doc, 'expected error');
   const timeout = timeoutStr ? parseInt(timeoutStr.replace('s', '000')) : undefined;
   const runTwice = !!getTableValue(doc, 'run twice');
 
-  return { description, category, command, condition, timeout, runTwice };
+  return { description, category, command, condition, timeout, runTwice, expectedError };
 }
 
 function isEventOrSession(path: string): boolean {

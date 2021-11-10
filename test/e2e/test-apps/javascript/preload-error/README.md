@@ -1,4 +1,4 @@
-# JavaScript Renderer Error Browser SDK
+# JavaScript Preload Error
 
 | Setting       | Value      |
 | ------------- | ---------- |
