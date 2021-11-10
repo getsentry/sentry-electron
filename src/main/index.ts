@@ -46,3 +46,4 @@ export { ElectronNetTransport } from './transports/electron-net';
 export const Integrations = { ...ElectronMainIntegrations, ...NodeIntegrations };
 
 export { init, ElectronMainOptions, defaultIntegrations } from './sdk';
+export { IPCMode } from '../common';

@@ -79,7 +79,7 @@ export class SentryMinidump implements Integration {
       this._sendNativeCrashes(options, {
         level: Severity.Fatal,
         platform: 'native',
-        tags: { 'event.environment': 'native', event_type: 'native' },
+        tags: { 'event.environment': 'native', 'event.process': 'browser', event_type: 'native' },
       }).then((minidumpsFound) =>
         // Check for previous uncompleted session. If a previous session exists
         // and no minidumps were found, its likely an abnormal exit
@@ -112,12 +112,11 @@ export class SentryMinidump implements Integration {
     details?: Electron.RenderProcessGoneDetails,
   ): Promise<void> {
     const { getRendererName, release } = options;
-    const crashed_process = getRendererName?.(contents) || `WebContents[${contents.id}]`;
+    const crashedProcess = getRendererName?.(contents) || 'renderer';
 
-    logger.log(`Renderer process '${crashed_process}' has crashed`);
+    logger.log(`Renderer process '${crashedProcess}' has crashed`);
 
     const electron: Record<string, any> = {
-      crashed_process,
       crashed_url: normalizeUrl(contents.getURL(), app.getAppPath()),
     };
 
@@ -133,7 +132,7 @@ export class SentryMinidump implements Integration {
       level: Severity.Fatal,
       // The default is javascript
       platform: 'native',
-      tags: { 'event.environment': 'native', event_type: 'native' },
+      tags: { 'event.environment': 'native', 'event.process': crashedProcess, event_type: 'native' },
     });
 
     await this._sendNativeCrashes(options, event);

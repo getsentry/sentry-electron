@@ -43,10 +43,6 @@
       "runtime": {
         "name": "Electron",
         "version": "{{version}}"
-      },
-      "electron": {
-        "crashed_process": "WebContents[1]",
-        "crashed_url": "app:///src/index.html"
       }
     },
     "release": "scope-breadcrumbs@1.0.0",
@@ -106,6 +102,7 @@
     "tags": {
       "event.environment": "javascript",
       "event.origin": "electron",
+      "event.process": "renderer",
       "event_type": "javascript",
       "a-tag": "tag-value",
       "renderer-tag": "another-value"

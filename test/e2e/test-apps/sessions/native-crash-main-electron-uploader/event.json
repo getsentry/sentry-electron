@@ -51,9 +51,6 @@
       "runtime": {
         "name": "Electron",
         "version": "{{version}}"
-      },
-      "electron": {
-        "crashed_process": "browser"
       }
     },
     "release": "session-native-crash-main-electron-uploader@1.0.0",
@@ -68,6 +65,7 @@
     "tags": {
       "event.environment": "native",
       "event.origin": "electron",
+      "event.process": "browser",
       "event_type": "native"
     }
   }

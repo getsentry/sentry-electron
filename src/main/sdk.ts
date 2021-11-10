@@ -1,9 +1,9 @@
 import { defaultIntegrations as defaultNodeIntegrations, init as nodeInit, NodeOptions } from '@sentry/node';
 import { Integration } from '@sentry/types';
-import { WebContents } from 'electron';
+import { Session, session, WebContents } from 'electron';
 
+import { IPCMode } from '../common';
 import { getDefaultEnvironment, getDefaultReleaseName } from './context';
-import { hookIPC } from './hook-ipc';
 import {
   ElectronEvents,
   MainContext,
@@ -12,6 +12,7 @@ import {
   PreloadInjection,
   SentryMinidump,
 } from './integrations';
+import { configureIPC } from './ipc';
 import { ElectronNetTransport } from './transports/electron-net';
 
 export const defaultIntegrations: Integration[] = [
@@ -25,17 +26,37 @@ export const defaultIntegrations: Integration[] = [
 
 export interface ElectronMainOptions extends NodeOptions {
   /**
-   * Callback to allow custom naming of renderer processes
+   * Inter-process communication mode
+   */
+  ipcMode: IPCMode;
+  /**
+   * Callback to allow custom naming of renderer processes.
+   *
    * If the callback is not set, or it returns `undefined`, the default naming
    * scheme is used.
    */
   getRendererName?: (contents: WebContents) => string | undefined;
+  /**
+   * A function that returns an array of Electron session objects
+   *
+   * These sessions are used to configure communication between the Electron
+   * main and renderer processes.
+   *
+   * Defaults to () => [session.defaultSession]
+   */
+  getSessions: () => Session[];
 }
+
+const defaultOptions: ElectronMainOptions = {
+  ipcMode: IPCMode.Both,
+  getSessions: () => [session.defaultSession],
+};
 
 /**
  * Initialize Sentry in the Electron main process
  */
-export function init(options: ElectronMainOptions): void {
+export function init(partialOptions: Partial<ElectronMainOptions>): void {
+  const options: ElectronMainOptions = Object.assign(defaultOptions, partialOptions);
   const defaults = defaultIntegrations;
 
   // If we don't set a release, @sentry/node will automatically fetch from environment variables
@@ -62,7 +83,7 @@ export function init(options: ElectronMainOptions): void {
     options.transport = ElectronNetTransport;
   }
 
-  hookIPC(options);
+  configureIPC(options);
   nodeInit(options);
 }
 

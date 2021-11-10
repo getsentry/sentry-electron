@@ -11,7 +11,7 @@ import {
   SentryMinidump,
   MainProcessSession,
 } from './main/integrations';
-import { EventToMain, RendererContext, ScopeToMain } from './renderer/integrations';
+import { EventToMain, ScopeToMain } from './renderer/integrations';
 
 /** Convenience interface used to expose Integrations */
 export interface Integrations {
@@ -26,7 +26,6 @@ export interface Integrations {
   // For renderer process
   ScopeToMain: ScopeToMain;
   EventToMain: EventToMain;
-  RendererContext: RendererContext;
 }
 
 /** Return all Electron integrations and add EmptyIntegrations for integrations missing in this process. */
@@ -37,7 +36,6 @@ export function getIntegrations(): Integrations {
         ...dynamicRequire(module, './main').Integrations,
         ScopeToMain: EmptyIntegration,
         EventToMain: EmptyIntegration,
-        RendererContext: EmptyIntegration,
       }
     : {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access

@@ -1,14 +1,13 @@
+import { getCurrentHub } from '@sentry/core';
+import { NodeClient } from '@sentry/node';
 import { Integration } from '@sentry/types';
 import { logger } from '@sentry/utils';
-import { app, Session, session } from 'electron';
+import { app } from 'electron';
 import { existsSync } from 'fs';
 
+import { IPCMode } from '../../common';
 import { rendererRequiresCrashReporterStart } from '../electron-normalize';
-
-interface PreloadInjectionOptions {
-  /** Function that fetches the sessions that should have preloads injected */
-  sessions?: () => Session[];
-}
+import { ElectronMainOptions } from '../sdk';
 
 /**
  * Injects the preload script into the provided sessions.
@@ -22,21 +21,25 @@ export class PreloadInjection implements Integration {
   /** @inheritDoc */
   public name: string = PreloadInjection.id;
 
-  public constructor(
-    private readonly _options: PreloadInjectionOptions = { sessions: () => [session.defaultSession] },
-  ) {}
-
   /** @inheritDoc */
   public setupOnce(): void {
+    const options = getCurrentHub().getClient<NodeClient>()?.getOptions() as ElectronMainOptions;
+
+    // If classic IPC mode is disabled, we shouldn't attempt to inject preload scripts
+    // eslint-disable-next-line no-bitwise
+    if ((options.ipcMode & IPCMode.Classic) == 0) {
+      return;
+    }
+
     app.once('ready', () => {
-      this._addPreloadToSessions();
+      this._addPreloadToSessions(options);
     });
   }
 
   /**
    * Attempts to add the preload script the the provided sessions
    */
-  private _addPreloadToSessions(): void {
+  private _addPreloadToSessions(options: ElectronMainOptions): void {
     let path = undefined;
     try {
       path = rendererRequiresCrashReporterStart()
@@ -46,14 +49,14 @@ export class PreloadInjection implements Integration {
       //
     }
 
-    if (this._options.sessions && path && typeof path === 'string' && existsSync(path)) {
-      for (const sesh of this._options.sessions()) {
+    if (path && typeof path === 'string' && existsSync(path)) {
+      for (const sesh of options.getSessions()) {
         // Fetch any existing preloads so we don't overwrite them
         const existing = sesh.getPreloads();
         sesh.setPreloads([path, ...existing]);
       }
     } else {
-      logger.warn(
+      logger.log(
         'The preload script could not be injected automatically. This is most likely caused by bundling of the main process',
       );
     }

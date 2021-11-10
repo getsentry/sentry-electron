@@ -23,13 +23,6 @@ export class MainContext implements Integration {
       const defaults = await getEventDefaults(options?.release);
       const fullEvent = mergeEvents(defaults, normalized);
 
-      // event.contexts.electron.crashed_process = 'browser' by default so nodejs events
-      // have the correct context. We need to strip this for transactions because there
-      // hasn't been a crash.
-      if (fullEvent.type === 'transaction' && fullEvent.contexts?.electron) {
-        delete fullEvent.contexts.electron;
-      }
-
       return fullEvent;
     });
   }

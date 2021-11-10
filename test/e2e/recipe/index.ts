@@ -5,7 +5,7 @@ import { expect } from 'chai';
 
 import { SDK_VERSION } from '../../../src/main/version';
 import { TestServer } from '../server';
-import { createLogger, walkSync } from '../utils';
+import { createLogger, getTestLog, walkSync } from '../utils';
 import { eventIsSession, normalize } from './normalize';
 import { parseRecipe, TestRecipe } from './parser';
 import { TestContext } from '../context';
@@ -36,7 +36,7 @@ export function getCategorisedTestRecipes(electronVersion: string): Record<strin
   const allRecipes = loadRecipes(join(__dirname, '..', 'test-apps'), electronVersion);
 
   return allRecipes.reduce((obj, cur) => {
-    const cat = cur.category || 'Other Features';
+    const cat = cur.category || 'Other';
     if (obj[cat]) {
       obj[cat].push(cur);
     } else {
@@ -87,6 +87,7 @@ export class RecipeRunner {
 
   public async prepare(context: Mocha.Context, testBasePath: string): Promise<[string, string]> {
     log(`Preparing recipe '${this.description}'`);
+
 
     const timeout = this._recipe.metadata.timeout || 30_000;
     // macOS runs quite slowly in GitHub actions
@@ -158,6 +159,17 @@ export class RecipeRunner {
 
     if (expectedEvents.length !== testServer.events.length) {
       throw new Error(`Expected ${expectedEvents.length} events but server has ${testServer.events.length} events`);
+    }
+
+    // Checks the app output for an expected error string
+    if (this._recipe.metadata.expectedError) {
+      // if there are no expected events, at least wait until the app closes
+      if (expectedEvents.length === 0) {
+        await context.waitForAppClose();
+      }
+
+      const log = getTestLog().join(' ');
+      expect(log).to.include(this._recipe.metadata.expectedError);
     }
 
     for (const event of testServer.events) {

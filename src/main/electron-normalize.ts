@@ -14,14 +14,22 @@ export const isPackaged = (() => {
   return execFile !== 'electron';
 })();
 
+/** A promise that is resolved when the app is ready */
+export const whenAppReady: Promise<void> = (() => {
+  return app.isReady()
+    ? Promise.resolve()
+    : new Promise<void>((resolve) => {
+        app.once('ready', () => {
+          resolve();
+        });
+      });
+})();
+
 /**
- * Electron >=8.4 | >=9.1 | >=10
- * Use `render-process-gone` rather than `crashed`
+ * Electron >= 5 support full protocol API
  */
-function supportsRenderProcessGone(): boolean {
-  return (
-    version.major >= 10 || (version.major === 9 && version.minor >= 1) || (version.major === 8 && version.minor >= 4)
-  );
+export function supportsFullProtocol(): boolean {
+  return version.major >= 5;
 }
 
 /**
@@ -30,8 +38,11 @@ function supportsRenderProcessGone(): boolean {
 export function onRendererProcessGone(
   callback: (contents: WebContents, details?: RenderProcessGoneDetails) => void,
 ): void {
+  const supportsRenderProcessGone =
+    version.major >= 10 || (version.major === 9 && version.minor >= 1) || (version.major === 8 && version.minor >= 4);
+
   app.on('web-contents-created', (_, contents) => {
-    if (supportsRenderProcessGone()) {
+    if (supportsRenderProcessGone) {
       contents.on('render-process-gone', async (__, details) => {
         const ignoredReasons = ['clean-exit', 'killed'];
 
@@ -86,7 +97,7 @@ export function usesCrashpad(): boolean {
 }
 
 /**
- * Electron >= 9 supports `app.getPath('crashDumps')` rather than
+ * Electron >= 9 uses `app.getPath('crashDumps')` rather than
  * `crashReporter.getCrashesDirectory()`
  */
 export function getCrashesDirectory(): string {

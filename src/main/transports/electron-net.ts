@@ -10,26 +10,13 @@ import {
   TransportOptions,
 } from '@sentry/types';
 import { logger, PromiseBuffer, SentryError } from '@sentry/utils';
-import { app, net } from 'electron';
+import { net } from 'electron';
 import { Readable, Writable } from 'stream';
 import * as url from 'url';
 import { createGzip } from 'zlib';
 
 import { getSdkInfo } from '../context';
-
-/**
- * Returns a promise that resolves when app is ready.
- */
-async function isAppReady(): Promise<boolean> {
-  return (
-    app.isReady() ||
-    new Promise<boolean>((resolve) => {
-      app.once('ready', () => {
-        resolve(true);
-      });
-    })
-  );
-}
+import { whenAppReady } from '../electron-normalize';
 
 // Estimated maximum size for reasonable standalone event
 const GZIP_THRESHOLD = 1024 * 32;
@@ -130,7 +117,7 @@ export class ElectronNetTransport extends Transports.BaseTransport {
       return Promise.reject(new SentryError('Not adding Promise due to buffer limit reached.'));
     }
 
-    await isAppReady();
+    await whenAppReady;
 
     const options = this._getRequestOptions(new url.URL(request.url));
     options.headers = {

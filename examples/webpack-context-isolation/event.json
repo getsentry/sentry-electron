@@ -43,10 +43,6 @@
       "runtime": {
         "name": "Electron",
         "version": "{{version}}"
-      },
-      "electron": {
-        "crashed_process": "WebContents[1]",
-        "crashed_url": "app:///dist/index.html"
       }
     },
     "release": "webpack-context-isolation@1.0.0",
@@ -123,7 +119,7 @@
       {
         "timestamp": 0,
         "category": "electron",
-        "message": "WebContents[1].dom-ready",
+        "message": "renderer.dom-ready",
         "type": "ui"
       }
     ],
@@ -133,6 +129,7 @@
     "tags": {
       "event.environment": "javascript",
       "event.origin": "electron",
+      "event.process": "renderer",
       "event_type": "javascript"
     }
   }

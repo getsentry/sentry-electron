@@ -77,7 +77,7 @@
     "@types/koa-bodyparser": "^4.3.0",
     "@types/mocha": "^9.0.0",
     "busboy": "^0.3.1",
-    "chai": "^4.1.2",
+    "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
     "chai-subset": "^1.6.0",
     "cross-env": "^7.0.3",
