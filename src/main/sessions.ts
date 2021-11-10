@@ -8,7 +8,7 @@ import { join } from 'path';
 import { Store } from './store';
 import { ElectronNetTransport } from './transports/electron-net';
 
-const PERSIST_INTERVAL = 60_000;
+const PERSIST_INTERVAL_MS = 60_000;
 
 /** Stores the app session in case of termination due to main process crash or app killed */
 const sessionStore = new Store<SessionContext | undefined>(
@@ -35,7 +35,7 @@ export function startSession(): void {
     if (currentSession && currentSession.status === SessionStatus.Ok) {
       sessionStore.set(currentSession);
     }
-  }, PERSIST_INTERVAL);
+  }, PERSIST_INTERVAL_MS);
 }
 
 /** Cleanly ends a session */
@@ -79,9 +79,9 @@ export function unreportedDuringLastSession(crashDate: Date | undefined): boolea
   const crashTime = crashDate.getTime();
 
   // Session could have run until modified time + persist interval
-  const prevSessionEnd = previousSessionModifiedTime + PERSIST_INTERVAL;
+  const prevSessionEnd = previousSessionModifiedTime + PERSIST_INTERVAL_MS;
 
-  // Event cannot be much before last persist time
+  // Event cannot have occurred before last persist time, We add a 2 second overlap to be sure
   const lastPersist = previousSessionModifiedTime - 2_000;
 
   // If the crash occurred between the last persist and estimated end of session
