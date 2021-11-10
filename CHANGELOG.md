@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix: Correctly handle previously crashed/abnormal sessions (#379)
 - feat: Remove the need for preload script in most cases by falling back to custom protocol (#377)
 - fix: Fix issues with incorrect environment (#378)
 - test: Refactor tests and examples into self contained apps (#373)
