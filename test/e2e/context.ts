@@ -21,6 +21,12 @@ function getDeleteDirectories(appName: string): string[] {
   throw new Error('Unknown platform');
 }
 
+export function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 const log = createLogger('Test Context');
 const appLog = createLogger('App');
 
@@ -51,7 +57,7 @@ export class TestContext {
 
   /** Starts the app. */
   public async start(options: { secondRun?: boolean } = {}): Promise<void> {
-    log('Starting test context');
+    log('Starting test app');
 
     const env: Record<string, any | undefined> = {
       ...process.env,
@@ -99,7 +105,7 @@ export class TestContext {
 
   /** Stops the app and cleans up. */
   public async stop(options: { retainData?: boolean } = {}): Promise<void> {
-    log('Stopping test context');
+    log('Stopping test app');
 
     if (!this.mainProcess || !this.isStarted) {
       throw new Error('Invariant violation: Call start() first');
@@ -112,6 +118,8 @@ export class TestContext {
         rmSync(dir, { recursive: true, force: true });
       }
     }
+
+    log('Test app stopped');
   }
 
   /**
@@ -164,6 +172,9 @@ export class TestContext {
       async () => (this.mainProcess ? !(await this.mainProcess.isRunning()) : false),
       'Timeout: Waiting for app to die',
     );
+
+    // Ensure everything has closed
+    await delay(1_000);
   }
 
   public get isStarted(): boolean {
@@ -177,13 +188,17 @@ export class ProcessStatus {
 
   /** Kills the process if it is still running. */
   public async kill(): Promise<void> {
+    const pid = this._chProcess.pid;
+
     if (await this.isRunning()) {
       this._chProcess.kill();
     }
 
-    if (process.platform == 'win32') {
-      // The tests sometimes hang in CI on Windows because the Electron processes don't exit
+    // The tests sometimes hang in CI because the Electron processes don't exit
+    if (process.platform === 'win32') {
       spawnSync('taskkill /F /IM electron.exe', { shell: true });
+    } else if (process.platform === 'darwin') {
+      spawnSync(`kill ${pid}`, { shell: true });
     }
   }
 

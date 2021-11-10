@@ -1,8 +1,8 @@
 import { logger } from '@sentry/utils';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 
-import { mkdirpSync } from '../../fs';
+import { mkdirpSync } from './fs';
 
 /**
  * Note, this class is only compatible with Node.
@@ -35,15 +35,20 @@ export class Store<T> {
   /**
    * Updates data by replacing it with the given value.
    * @param next New data to replace the previous one.
+   * @param forceFlush Forces the write to be flushed to disk immediately
    */
-  public set(next: T): void {
+  public set(next: T, forceFlush: boolean = false): void {
     this._data = next;
 
     if (!this._flushing) {
       this._flushing = true;
-      setImmediate(() => {
+      if (forceFlush) {
         this._flush();
-      });
+      } else {
+        setImmediate(() => {
+          this._flush();
+        });
+      }
     }
   }
 
@@ -79,11 +84,24 @@ export class Store<T> {
     this.set(this._initial);
   }
 
+  /** Gets the Date that the file was last modified */
+  public getModifiedDate(): Date | undefined {
+    try {
+      return statSync(this._path)?.mtime;
+    } catch (_) {
+      return undefined;
+    }
+  }
+
   /** Serializes the current data into the JSON file. */
   private _flush(): void {
     try {
-      mkdirpSync(dirname(this._path));
-      writeFileSync(this._path, JSON.stringify(this._data));
+      if (this._data === undefined) {
+        unlinkSync(this._path);
+      } else {
+        mkdirpSync(dirname(this._path));
+        writeFileSync(this._path, JSON.stringify(this._data));
+      }
     } catch (e) {
       logger.warn('Failed to flush store', e);
       // This usually fails due to anti virus scanners, issues in the file

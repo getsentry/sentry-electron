@@ -1,0 +1,19 @@
+{
+  "appId": "277345",
+  "sentryKey": "37f8a2ee37c0409d8970bc7559c7c7e4",
+  "method": "envelope",
+  "dumpFile": false,
+  "data": {
+    "sid": "{{id}}",
+    "did": "some_user",
+    "init": true,
+    "started": 0,
+    "timestamp": 0,
+    "status": "abnormal",
+    "errors": 1,
+    "duration": 0,
+    "attrs": {
+      "release": "session-abnormal-exit-electron-uploader@1.0.0"
+    }
+  }
+}

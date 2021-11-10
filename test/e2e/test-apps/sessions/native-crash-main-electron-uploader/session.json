@@ -5,14 +5,15 @@
   "dumpFile": false,
   "data": {
     "sid": "{{id}}",
+    "did": "some_user",
     "init": true,
     "started": 0,
     "timestamp": 0,
-    "status": "crashed",
-    "errors": 1,
+    "status": "exited",
+    "errors": 0,
     "duration": 0,
     "attrs": {
-      "release": "session-native-crash@1.0.0"
+      "release": "session-native-crash-main-electron-uploader@1.0.0"
     }
   }
 }

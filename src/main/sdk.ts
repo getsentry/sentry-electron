@@ -26,16 +26,15 @@ export const defaultIntegrations: Integration[] = [
 
 export interface ElectronMainOptions extends NodeOptions {
   /**
-   * Inter-process communication mode
+   * Inter-process communication mode to receive event and scope from renderers
+   *
+   * IPCMode.Classic - Configures Electron IPC
+   * IPCMode.Protocol - Configures a custom protocol
+   * IPCMode.Both - Configures both IPC and custom protocol
+   *
+   * defaults to IPCMode.Both for maximum compatibility
    */
   ipcMode: IPCMode;
-  /**
-   * Callback to allow custom naming of renderer processes.
-   *
-   * If the callback is not set, or it returns `undefined`, the default naming
-   * scheme is used.
-   */
-  getRendererName?: (contents: WebContents) => string | undefined;
   /**
    * A function that returns an array of Electron session objects
    *
@@ -45,6 +44,13 @@ export interface ElectronMainOptions extends NodeOptions {
    * Defaults to () => [session.defaultSession]
    */
   getSessions: () => Session[];
+  /**
+   * Callback to allow custom naming of renderer processes.
+   *
+   * If the callback is not set, or it returns `undefined`, the default naming
+   * scheme is used.
+   */
+  getRendererName?: (contents: WebContents) => string | undefined;
 }
 
 const defaultOptions: ElectronMainOptions = {

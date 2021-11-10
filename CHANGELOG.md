@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- fix: Correctly handle previously crashed/abnormal sessions (#379)
+- feat: Remove the need for preload script in most cases by falling back to custom protocol (#377)
+- fix: Fix issues with incorrect environment (#378)
+- test: Refactor tests and examples into self contained apps (#373)
+- fix: Fixed a number of issues with incorrect context (#373)
+
 ## 3.0.0-beta.1
 
 Check out [the migration guide](https://github.com/getsentry/sentry-electron/issues/370).

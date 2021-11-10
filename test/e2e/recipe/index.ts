@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import { SDK_VERSION } from '../../../src/main/version';
 import { TestServer } from '../server';
 import { createLogger, getTestLog, walkSync } from '../utils';
-import { normalize } from './normalize';
+import { eventIsSession, normalize } from './normalize';
 import { parseRecipe, TestRecipe } from './parser';
 import { TestContext } from '../context';
 import { evaluateCondition } from './eval';
@@ -88,8 +88,6 @@ export class RecipeRunner {
   public async prepare(context: Mocha.Context, testBasePath: string): Promise<[string, string]> {
     log(`Preparing recipe '${this.description}'`);
 
-    context.retries(process.env.CI ? 3 : 0);
-
     const timeout = this._recipe.metadata.timeout || 30_000;
     // macOS runs quite slowly in GitHub actions
     context.timeout(process.platform === 'darwin' ? timeout * 2 : timeout);
@@ -145,6 +143,7 @@ export class RecipeRunner {
     // Main process native crashes with Sentry Uploader are sent on the next run
     if (this._recipe.metadata.runTwice) {
       await context.waitForAppClose();
+      log('First app instance has closed');
       await context.stop({ retainData: true });
       await context.start({ secondRun: true });
     }
@@ -178,7 +177,10 @@ export class RecipeRunner {
 
     for (const [i, expectedEvent] of expectedEvents.entries()) {
       delete expectedEvent.condition;
-      log(`Comparing event ${i + 1} of ${expectedEvents.length}`);
+
+      const isSession = eventIsSession(expectedEvent.data);
+
+      log(`Comparing ${isSession ? 'session' : 'event'} ${i + 1} of ${expectedEvents.length}`);
       expect(testServer.events).to.containSubset([expectedEvent]);
     }
 

@@ -1,5 +1,5 @@
 {
-  "name": "session-native-crash",
+  "name": "session-abnormal-exit",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

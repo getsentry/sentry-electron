@@ -1,4 +1,4 @@
-# Session with Native Crash (Electron Uploader)
+# Session with Native Renderer Crash (Electron Uploader)
 
 | Setting       | Value              |
 | ------------- | ------------------ |

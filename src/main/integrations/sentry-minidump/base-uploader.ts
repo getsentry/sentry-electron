@@ -1,12 +1,12 @@
-import { API, getCurrentHub } from '@sentry/core';
+import { API } from '@sentry/core';
 import { NodeOptions } from '@sentry/node';
-import { Event, SessionStatus, Status, Transport } from '@sentry/types';
+import { Event, Status, Transport } from '@sentry/types';
 import { isThenable, logger, SentryError, timestampWithMs } from '@sentry/utils';
 import { basename, join } from 'path';
 
 import { mkdirp, readFileAsync, renameAsync, statAsync, unlinkAsync } from '../../fs';
+import { Store } from '../../store';
 import { ElectronNetTransport, SentryElectronRequest } from '../../transports/electron-net';
-import { Store } from './store';
 
 /** Maximum number of days to keep a minidump before deleting it. */
 const MAX_AGE = 30;
@@ -85,17 +85,6 @@ export abstract class BaseUploader {
       if (result === null) {
         logger.warn('`beforeSend` returned `null`, will not send minidump.');
         request.event = null;
-      }
-    }
-
-    if (request.event) {
-      const hub = getCurrentHub();
-      const client = hub.getClient();
-      const session = hub.getScope()?.getSession();
-
-      if (client && client.captureSession && session) {
-        session.update({ status: SessionStatus.Crashed, errors: 1 });
-        client.captureSession(session);
       }
     }
 
