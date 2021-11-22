@@ -104,6 +104,7 @@ jobs:
             '13.5.2',
             '14.1.1',
             '15.2.0',
+            '16.0.1',
           ]
     env:
       ELECTRON_VERSION: ${{ matrix.electron }}
