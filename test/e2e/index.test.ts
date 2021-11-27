@@ -4,10 +4,10 @@ import * as chaiSubset from 'chai-subset';
 import { join } from 'path';
 
 import { TestContext } from './context';
-import { downloadElectron } from './download';
+import { downloadAllElectron, downloadElectron } from './download';
 import { getExampleRecipes, getCategorisedTestRecipes } from './recipe';
 import { TestServer } from './server';
-import { clearTestLog, getTestVersions, outputTestLog } from './utils';
+import { clearTestLog, getElectronTestVersions, outputTestLog } from './utils';
 
 should();
 use(chaiAsPromised);
@@ -15,43 +15,65 @@ use(chaiSubset);
 
 const distDir = join(__dirname, 'dist');
 
-describe('E2E Tests', () => {
-  const testServer = new TestServer();
+getElectronTestVersions()
+  // Ensure all Electron binaries are downloaded before tests start so it doesn't eat into test timeout
+  .then((electronVersions) => downloadAllElectron(electronVersions))
+  .then((electronVersions) => {
+    describe('E2E Tests', () => {
+      const testServer = new TestServer();
 
-  before(() => {
-    testServer.start();
-  });
-
-  after(async () => {
-    await testServer.stop();
-  });
-
-  for (const electronVersion of getTestVersions()) {
-    describe(`Electron v${electronVersion}`, () => {
-      let testContext: TestContext | undefined;
-      const electronPath = downloadElectron(electronVersion, 'x64');
-
-      beforeEach(async () => {
-        testServer.clearEvents();
-        clearTestLog();
+      before(() => {
+        testServer.start();
       });
 
-      afterEach(async function () {
-        await testContext?.stop();
-
-        if (this.currentTest?.state === 'failed') {
-          outputTestLog();
-        }
-
-        testContext = undefined;
+      after(async () => {
+        await testServer.stop();
       });
 
-      describe(`Functional Test Recipes`, () => {
-        const categories = getCategorisedTestRecipes(electronVersion);
+      for (const electronVersion of electronVersions) {
+        describe(`Electron v${electronVersion}`, () => {
+          let testContext: TestContext | undefined;
+          const electronPath = downloadElectron(electronVersion);
 
-        for (const category of Object.keys(categories)) {
-          describe(category, () => {
-            for (const recipe of categories[category]) {
+          beforeEach(async () => {
+            testServer.clearEvents();
+            clearTestLog();
+          });
+
+          afterEach(async function () {
+            await testContext?.stop();
+
+            if (this.currentTest?.state === 'failed') {
+              outputTestLog();
+            }
+
+            testContext = undefined;
+          });
+
+          describe(`Functional Test Recipes`, () => {
+            const categories = getCategorisedTestRecipes(electronVersion);
+
+            for (const category of Object.keys(categories)) {
+              describe(category, () => {
+                for (const recipe of categories[category]) {
+                  const fn = recipe.only ? it.only : it;
+
+                  fn(recipe.description, async function () {
+                    if (!recipe.shouldRun()) {
+                      this.skip();
+                    }
+
+                    const [appPath, appName] = await recipe.prepare(this, distDir);
+                    testContext = new TestContext(await electronPath, appPath, appName);
+                    await recipe.runTests(testContext, testServer);
+                  });
+                }
+              });
+            }
+          });
+
+          describe(`Example App Recipes`, () => {
+            for (const recipe of getExampleRecipes(electronVersion)) {
               const fn = recipe.only ? it.only : it;
 
               fn(recipe.description, async function () {
@@ -65,24 +87,10 @@ describe('E2E Tests', () => {
               });
             }
           });
-        }
-      });
-
-      describe(`Example App Recipes`, () => {
-        for (const recipe of getExampleRecipes(electronVersion)) {
-          const fn = recipe.only ? it.only : it;
-
-          fn(recipe.description, async function () {
-            if (!recipe.shouldRun()) {
-              this.skip();
-            }
-
-            const [appPath, appName] = await recipe.prepare(this, distDir);
-            testContext = new TestContext(await electronPath, appPath, appName);
-            await recipe.runTests(testContext, testServer);
-          });
-        }
-      });
+        });
+      }
     });
-  }
-});
+
+    // mocha is run with the --delay flag so it waits until our async code has fetched the required Electron versions
+    run();
+  });

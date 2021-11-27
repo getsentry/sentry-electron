@@ -20,6 +20,13 @@ function getExecutablePath(): string {
   }
 }
 
+export async function downloadAllElectron(versions: string[]): Promise<string[]> {
+  for (const version of versions) {
+    await downloadElectron(version);
+  }
+  return versions;
+}
+
 /**
  * Downloads and unpacks the requested Electron version
  *
@@ -28,12 +35,12 @@ function getExecutablePath(): string {
  * @param arch The Electron arch
  * @returns Path to the Electron executable
  */
-export async function downloadElectron(version: string, arch: string): Promise<string> {
+export async function downloadElectron(version: string): Promise<string> {
   const cacheDir = join(process.env.ELECTRON_CACHE_DIR ?? getHomDir(), '.cache');
-  const dir = join(cacheDir, `${version}-${arch}`);
+  const dir = join(cacheDir, `${version}-x64`);
 
   if (!existsSync(dir)) {
-    const zipPath = await electronDownload(version, { cacheRoot: cacheDir, downloadOptions: { arch } });
+    const zipPath = await electronDownload(version, { cacheRoot: cacheDir, downloadOptions: { arch: 'x64' } });
     await electronExtract(zipPath, { dir });
   }
 

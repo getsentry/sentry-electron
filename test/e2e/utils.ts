@@ -1,6 +1,7 @@
-import { readdirSync, readFileSync } from 'fs';
+import { getLatestVersions as getLatestElectronVersions } from 'electron-latest-versions';
+import { readdirSync } from 'fs';
 import { join } from 'path';
-import * as YAML from 'yaml';
+import { inspect } from 'util';
 
 // When DEBUG is not enabled, we collect a log to output if a test fails
 let TEST_LOG: any[][] = [];
@@ -13,7 +14,7 @@ export function getTestLog(): string[] {
   const output = [];
 
   for (const args of TEST_LOG) {
-    output.push(args.map((a) => a.toString()).join(' '));
+    output.push(args.map((a) => (typeof a === 'string' ? a : inspect(a, false, null, true))).join(' '));
   }
 
   return output;
@@ -26,29 +27,22 @@ export function outputTestLog(): void {
 }
 
 export function createLogger(name: string): (...args: any[]) => void {
-  if (process.env.DEBUG) {
-    return (...args: any[]) => {
+  return (...args: any[]) => {
+    TEST_LOG.push([`[${name}]`, ...args]);
+
+    if (process.env.DEBUG) {
       console.log(`[${name}]`, ...args);
-      TEST_LOG.push([`[${name}]`, ...args]);
-    };
-  } else {
-    return (...args: any[]) => TEST_LOG.push([`[${name}]`, ...args]);
-  }
+    }
+  };
 }
 
 /** Gets the Electron versions to test */
-export function getTestVersions(): string[] {
+export async function getElectronTestVersions(): Promise<string[]> {
   if (process.env.ELECTRON_VERSION) {
     return [process.env.ELECTRON_VERSION];
   }
 
-  const ciBuildStr = readFileSync(join(__dirname, '..', '..', '.github', 'workflows', 'build.yml'), {
-    encoding: 'utf8',
-  });
-
-  const ci = YAML.parse(ciBuildStr);
-
-  return ci.jobs.job_4.strategy.matrix.electron;
+  return getLatestElectronVersions({ start: 2 });
 }
 
 export function* walkSync(dir: string): Generator<string> {
