@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.0.0-beta.3
+
+- fix: Enable CORS for custom protocol
+
 ## 3.0.0-beta.2
 
 - fix: Correctly handle previously crashed/abnormal sessions (#379)
