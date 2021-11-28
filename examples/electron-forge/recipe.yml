@@ -1,0 +1,3 @@
+description: Electron Forge
+command: yarn
+timeout: 120

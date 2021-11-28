@@ -17,7 +17,7 @@ const log = createLogger('Recipe Runner');
 
 function loadRecipes(rootDir: string, electronVersion: string): RecipeRunner[] {
   return Array.from(walkSync(rootDir))
-    .filter((p) => p.match(/README(?:\.only)*.md$/))
+    .filter((p) => p.match(/recipe(?:\.only)*.yml$/))
     .reduce((arr, p) => {
       try {
         arr.push(RecipeRunner.load(electronVersion, p));
@@ -88,7 +88,7 @@ export class RecipeRunner {
   public async prepare(context: Mocha.Context, testBasePath: string): Promise<[string, string]> {
     log(`Preparing recipe '${this.description}'`);
 
-    const timeout = this._recipe.metadata.timeout || 30_000;
+    const timeout = (this._recipe.metadata.timeout || 30) * 1_000;
     // macOS runs quite slowly in GitHub actions
     context.timeout(process.platform === 'darwin' ? timeout * 2 : timeout);
 

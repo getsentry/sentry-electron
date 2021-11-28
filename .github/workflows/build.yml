@@ -5,7 +5,9 @@ on:
       - master
       - release/**
   pull_request:
-
+  schedule:
+    # Every 0:00 on Monday
+    - cron: '0 0 * * 1'
 env:
   ELECTRON_CACHE_DIR: ${{ github.workspace }}
 

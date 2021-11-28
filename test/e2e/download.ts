@@ -20,13 +20,6 @@ function getExecutablePath(): string {
   }
 }
 
-export async function downloadAllElectron(versions: string[]): Promise<string[]> {
-  for (const version of versions) {
-    await downloadElectron(version);
-  }
-  return versions;
-}
-
 /**
  * Downloads and unpacks the requested Electron version
  *

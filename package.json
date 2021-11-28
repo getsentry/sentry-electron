@@ -54,7 +54,7 @@
     "pretest": "yarn build",
     "test": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe electron-mocha --require ts-node/register/transpile-only --timeout 120000 ./test/unit/**/*.ts",
     "pree2e": "rimraf test/e2e/dist/**/node_modules/@sentry/electron/** test/e2e/dist/**/yarn.lock && node scripts/clean-cache.js && yarn build && npm pack",
-    "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only --delay --retries 3 ./test/e2e/*.ts"
+    "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only --retries 3 ./test/e2e/*.ts"
   },
   "dependencies": {
     "@sentry/browser": "6.13.3",
@@ -85,7 +85,7 @@
     "eslint": "7.27.0",
     "electron": "15.3.0",
     "@electron/get": "^1.13.0",
-    "electron-mocha": "^10.1.0",
+    "electron-mocha": "^11.0.0",
     "electron-latest-versions": "^0.1.6",
     "extract-zip": "^2.0.1",
     "koa": "^2.13.4",
@@ -97,7 +97,8 @@
     "rimraf": "^3.0.2",
     "ts-node": "^10.4.0",
     "typescript": "^4.4.4",
-    "xvfb-maybe": "^0.2.1"
+    "xvfb-maybe": "^0.2.1",
+    "yaml": "^1.10.2"
   },
   "sideEffects": false
 }

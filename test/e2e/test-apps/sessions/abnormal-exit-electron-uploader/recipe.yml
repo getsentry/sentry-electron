@@ -1,0 +1,5 @@
+description: Session with Abnormal Exit (Electron Uploader)
+category: Sessions
+command: yarn
+condition: version.major >= 9
+runTwice: true

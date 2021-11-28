@@ -1,0 +1,4 @@
+description: Webpack 5 app with contextIsolation and sandbox with preload
+command: yarn && yarn build
+condition: supportsContextIsolation
+timeout: 120

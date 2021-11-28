@@ -1,0 +1,4 @@
+description: JavaScript Renderer Error via Protocol
+category: JavaScript
+command: yarn
+condition: version.major >= 5

@@ -1,0 +1,4 @@
+description: Session with Native Main Crash
+category: Sessions
+command: yarn
+runTwice: true

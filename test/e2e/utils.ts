@@ -1,4 +1,4 @@
-import { getLatestVersions as getLatestElectronVersions } from 'electron-latest-versions';
+import { spawnSync } from 'child_process';
 import { readdirSync } from 'fs';
 import { join } from 'path';
 import { inspect } from 'util';
@@ -37,12 +37,16 @@ export function createLogger(name: string): (...args: any[]) => void {
 }
 
 /** Gets the Electron versions to test */
-export async function getElectronTestVersions(): Promise<string[]> {
+export function getElectronTestVersions(): string[] {
   if (process.env.ELECTRON_VERSION) {
     return [process.env.ELECTRON_VERSION];
   }
 
-  return getLatestElectronVersions({ start: 2 });
+  const result = spawnSync('yarn run --silent electron-versions', {
+    shell: true,
+  });
+
+  return JSON.parse(result.output.map((b) => b?.toString()).join(''));
 }
 
 export function* walkSync(dir: string): Generator<string> {

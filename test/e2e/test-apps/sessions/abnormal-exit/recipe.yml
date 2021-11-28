@@ -1,0 +1,4 @@
+description: Session with Abnormal Exit
+category: Sessions
+command: yarn
+runTwice: true
