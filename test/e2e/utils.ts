@@ -1,5 +1,4 @@
-import { spawnSync } from 'child_process';
-import { readdirSync } from 'fs';
+import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { inspect } from 'util';
 
@@ -38,15 +37,9 @@ export function createLogger(name: string): (...args: any[]) => void {
 
 /** Gets the Electron versions to test */
 export function getElectronTestVersions(): string[] {
-  if (process.env.ELECTRON_VERSION) {
-    return [process.env.ELECTRON_VERSION];
-  }
-
-  const result = spawnSync('yarn run --silent electron-versions', {
-    shell: true,
-  });
-
-  return JSON.parse(result.output.map((b) => b?.toString()).join(''));
+  return process.env.ELECTRON_VERSION
+    ? [process.env.ELECTRON_VERSION]
+    : JSON.parse(readFileSync(join(__dirname, 'versions.json'), { encoding: 'utf8' }).toString());
 }
 
 export function* walkSync(dir: string): Generator<string> {

@@ -5,9 +5,6 @@ on:
       - master
       - release/**
   pull_request:
-  schedule:
-    # Every 0:00 on Monday
-    - cron: '0 0 * * 1'
 env:
   ELECTRON_CACHE_DIR: ${{ github.workspace }}
 
@@ -39,7 +36,7 @@ jobs:
           path: |
             ${{ github.workspace }}/*.tgz
       - id: set-matrix
-        run: echo "::set-output name=matrix::$(yarn run --silent electron-versions)"
+        run: echo "::set-output name=matrix::$(cat ./test/e2e/versions.json)"
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
 

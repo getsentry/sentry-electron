@@ -1,0 +1,24 @@
+name: Create PR for new Electron version
+on:
+  schedule:
+    # At 9am every day
+    - cron: '0 9 * * *'
+
+jobs:
+  test:
+    name: Check new versions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - name: Update Versions
+        run: yarn update-electron-versions
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        branch: test/new-electron-versions
+        delete-branch: true
+        title: 'test: New Electron versions'
+        body: |
+          Automatically generated PR to test new Electron releases

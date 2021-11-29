@@ -44,7 +44,7 @@
     "build:watch:esm": "tsc -p tsconfig.esm.json -w --preserveWatchOutput",
     "clean": "rimraf coverage esm main preload renderer index.* integrations.* ipc.* sentry-electron*.tgz",
     "prelint": "node scripts/update-version.js",
-    "electron-versions": "electron-latest-versions --start 2",
+    "update-electron-versions": "electron-latest-versions --start 2 > ./test/e2e/versions.json",
     "lint": "run-s lint:prettier lint:eslint",
     "lint:prettier": "prettier --check \"{src,test}/**/*.ts\"",
     "lint:eslint": "eslint . --cache --format stylish",
