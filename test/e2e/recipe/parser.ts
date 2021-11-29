@@ -1,6 +1,7 @@
 import { Event, Session } from '@sentry/types';
 import { readFileSync } from 'fs';
 import { dirname, sep } from 'path';
+import * as YAML from 'yaml';
 
 import { TestServerEvent } from '../server';
 import { walkSync } from '../utils';
@@ -10,8 +11,8 @@ type ConditionalTestServerEvent = TestServerEvent<Event | Session> & { condition
 export interface TestMetadata {
   description: string;
   category?: string;
-  condition?: string;
   command?: string;
+  condition?: string;
   timeout?: number;
   runTwice?: boolean;
   expectedError?: string;
@@ -23,35 +24,6 @@ export interface TestRecipe {
   metadata: TestMetadata;
   files: Record<string, string>;
   expectedEvents: ConditionalTestServerEvent[];
-}
-
-function getDescription(doc: string): string {
-  const match = doc.match(/^#\s+([\s\S]+?)$/m);
-
-  if (!match) {
-    throw new Error('Description not found');
-  }
-
-  return match[1];
-}
-
-function getTableValue(doc: string, row: string): string | undefined {
-  const r = new RegExp(`${row}\\s*\\|\\s*([\\s\\S]+?)\\s*\\|`, 'gi');
-  const match = r.exec(doc);
-  return match ? match[1] : undefined;
-}
-
-function parseMetadata(doc: string): TestMetadata {
-  const description = getDescription(doc);
-  const category = getTableValue(doc, 'category');
-  const condition = getTableValue(doc, 'run condition');
-  const command = getTableValue(doc, 'build command');
-  const timeoutStr = getTableValue(doc, 'timeout');
-  const expectedError = getTableValue(doc, 'expected error');
-  const timeout = timeoutStr ? parseInt(timeoutStr.replace('s', '000')) : undefined;
-  const runTwice = !!getTableValue(doc, 'run twice');
-
-  return { description, category, command, condition, timeout, runTwice, expectedError };
 }
 
 function isEventOrSession(path: string): boolean {
@@ -66,7 +38,7 @@ function getEventsAndSessions(rootDir: string): ConditionalTestServerEvent[] {
 
 function getFiles(rootDir: string): Record<string, string> {
   return Array.from(walkSync(rootDir))
-    .filter((path) => !isEventOrSession(path))
+    .filter((path) => !isEventOrSession(path) && !path.endsWith('recipe.yml'))
     .reduce((acc, absPath) => {
       const relPath = absPath.replace(rootDir + sep, '');
       acc[relPath] = readFileSync(absPath, { encoding: 'utf-8' });
@@ -74,14 +46,13 @@ function getFiles(rootDir: string): Record<string, string> {
     }, {} as Record<string, string>);
 }
 
-export function parseRecipe(readmePath: string): TestRecipe {
-  const readme = readFileSync(readmePath, { encoding: 'utf8' });
-  const rootPath = dirname(readmePath);
+export function parseRecipe(ymlPath: string): TestRecipe {
+  const rootPath = dirname(ymlPath);
 
   return {
     path: rootPath,
-    only: readmePath.endsWith('only.md'),
-    metadata: parseMetadata(readme),
+    only: ymlPath.endsWith('only.yml'),
+    metadata: YAML.parse(readFileSync(ymlPath, { encoding: 'utf8' })),
     files: getFiles(rootPath),
     expectedEvents: getEventsAndSessions(rootPath),
   };

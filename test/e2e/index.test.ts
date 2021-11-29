@@ -7,7 +7,7 @@ import { TestContext } from './context';
 import { downloadElectron } from './download';
 import { getExampleRecipes, getCategorisedTestRecipes } from './recipe';
 import { TestServer } from './server';
-import { clearTestLog, getTestVersions, outputTestLog } from './utils';
+import { clearTestLog, getElectronTestVersions, outputTestLog } from './utils';
 
 should();
 use(chaiAsPromised);
@@ -26,10 +26,10 @@ describe('E2E Tests', () => {
     await testServer.stop();
   });
 
-  for (const electronVersion of getTestVersions()) {
+  for (const electronVersion of getElectronTestVersions()) {
     describe(`Electron v${electronVersion}`, () => {
       let testContext: TestContext | undefined;
-      const electronPath = downloadElectron(electronVersion, 'x64');
+      const electronPath = downloadElectron(electronVersion);
 
       beforeEach(async () => {
         testServer.clearEvents();

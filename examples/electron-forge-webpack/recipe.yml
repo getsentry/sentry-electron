@@ -1,0 +1,4 @@
+description: Electron Forge Webpack with contextIsolation and sandbox
+command: yarn && yarn package
+condition: supportsContextIsolation
+timeout: 120

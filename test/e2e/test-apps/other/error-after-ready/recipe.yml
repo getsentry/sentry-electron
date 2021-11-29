@@ -1,0 +1,4 @@
+description: Error thrown if init after app ready
+command: yarn
+condition: version.major >= 5
+expectedError: should be initialized before the Electron app 'ready'
