@@ -70,7 +70,7 @@ function configureProtocol(options: ElectronMainOptions): void {
   protocol.registerSchemesAsPrivileged([
     {
       scheme: PROTOCOL_SCHEME,
-      privileges: { bypassCSP: true, supportFetchAPI: true },
+      privileges: { bypassCSP: true, corsEnabled: true, supportFetchAPI: true },
     },
   ]);
 
