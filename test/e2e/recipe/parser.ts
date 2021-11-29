@@ -51,7 +51,7 @@ export function parseRecipe(ymlPath: string): TestRecipe {
 
   return {
     path: rootPath,
-    only: ymlPath.endsWith('only.md'),
+    only: ymlPath.endsWith('only.yml'),
     metadata: YAML.parse(readFileSync(ymlPath, { encoding: 'utf8' })),
     files: getFiles(rootPath),
     expectedEvents: getEventsAndSessions(rootPath),

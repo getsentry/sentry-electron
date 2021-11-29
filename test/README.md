@@ -49,20 +49,20 @@ The `recipe.yml` contains a number of optional keys with only `description` requ
 
 Run a single test by renaming to `recipe.only.yml`.
 
-| Key             | Type      | Description                                     |
-| --------------- | --------- | ----------------------------------------------- |
-| `description`   | `string`  | Friendly name displayed in test output          |
-| `category`      | `string`  | Used for grouping test output                   |
-| `command`       | `string`  | Initialization/build command to run in app root |
-| `condition`     | `string`  | Condition for running the test                  |
-| `timeout`       | `number`  | Test timeout in seconds                         |
-| `runTwice`      | `boolean` | If the application should be run twice          |
-| `expectedError` | `string`  | Expected error string in log output             |
+| Key             | Type      | Description                                             |
+| --------------- | --------- | ------------------------------------------------------- |
+| `description`   | `string`  | Friendly name displayed in test output                  |
+| `category`      | `string`  | Used for grouping test output                           |
+| `command`       | `string`  | Initialization/build command to run in app root         |
+| `condition`     | `string`  | JavaScript expression for conditionally skipping a test |
+| `timeout`       | `number`  | Test timeout in seconds                                 |
+| `runTwice`      | `boolean` | If the application should be run twice                  |
+| `expectedError` | `string`  | Expected error string in log output                     |
 
 #### `condition`
 
-A JavaScript expression evaluated to determine whether the test should be run for the current platform and version of
-Electron. A number of variables are available to simplify usage:
+A JavaScript expression evaluated to `boolean` and used to determine whether the test should be run for the current
+platform and version of Electron. A number of variables are available to simplify usage:
 
 ```ts
 namespace Global {
@@ -93,17 +93,18 @@ if the string cannot be found in the application log output.
 
 ### Recipe Steps
 
-- If `condition` is defined, it's evaluated and the recipe is skipped if it returns `false`
-- All files apart from `recipe.yaml`/`event*.json`/`session*.json` are copied to a temporary directory
-  - Occurrences of `__DSN__` found in any file are replaced with the the mock server localhost DSN
-  - If `@sentry/electron` is found in the dependencies in `package.json`, the version is replaced with a path to the npm
-    packed SDK in the project root `file:../../../sentry-electron-{version}.tgz`
-- If `command` is defined, it's run in the root of the recipe and we ensure a zero exit code
-- Application is started with a specific Electron version
-- If `runTwice == true`, the app will be started again when it closes
-- Wait for the expected number of events to be sent to the mock server
-- Compare received events and ensure they match events found in `event*.json`/`session*.json` files
-  - Server events are normalized by replacing timestamps, versions and IDs so they can be compared
-  - `event*.json`/`session*.json` may contain a `condition` key so event matching can vary by platform or Electron
-    version
-- If `expectedError` is defined, ensure string is found in log output
+1. If `condition` is defined, it's evaluated and the recipe is skipped if it returns `false`
+2. All files apart from `recipe.yaml`/`event*.json`/`session*.json` are copied to a temporary directory
+3. Occurrences of `__DSN__` found in any file are replaced with the the mock server localhost DSN
+4. If `@sentry/electron` is found in the dependencies in `package.json`, the version is replaced with a path to the npm
+   packed SDK in the project root `file:../../../sentry-electron-{version}.tgz`
+5. If `command` is defined, it's run via `spawnSync(command, { shell: true})` in the root of the recipe and a non-zero
+   exit code results in test failure
+6. Application is started with a specific Electron version
+7. If `runTwice == true`, the app will be started again when it closes
+8. Wait for the expected number of events to be sent to the mock server
+9. Compare received events and ensure they match events found in `event*.json`/`session*.json` files
+   - Server events are normalized by replacing timestamps, versions and IDs so they can be compared
+   - `event*.json`/`session*.json` may contain a `condition` key so event matching can vary by platform or Electron
+     version
+10. If `expectedError` is defined, ensure string is found in log output
