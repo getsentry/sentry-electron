@@ -13,7 +13,7 @@ function getImplementation(): IPCInterface {
 
   logger.log('IPC was not configured in preload script, falling back to custom protocol and fetch');
 
-  fetch(`${PROTOCOL_SCHEME}://${IPCChannel.PING}`).catch(() =>
+  fetch(`${PROTOCOL_SCHEME}://${IPCChannel.PING}`, { mode: 'cors' }).catch(() =>
     console.error(`Sentry SDK failed to establish connection with the Electron main process.
  - Ensure you have initialized the SDK in the main process
  - If your renderers use custom sessions, be sure to set 'getSessions' in the main process options
@@ -24,12 +24,14 @@ function getImplementation(): IPCInterface {
   // https://github.com/getsentry/sentry-javascript/blob/a3f70d8869121183bec037571a3ee78efaf26b0b/packages/browser/src/integrations/breadcrumbs.ts#L240
   return {
     sendScope: (scope) => {
-      fetch(`${PROTOCOL_SCHEME}://${IPCChannel.SCOPE}/sentry_key`, { method: 'POST', body: scope }).catch(() => {
+      const init: RequestInit = { mode: 'cors', method: 'POST', body: scope };
+      fetch(`${PROTOCOL_SCHEME}://${IPCChannel.SCOPE}/sentry_key`, init).catch(() => {
         // ignore
       });
     },
     sendEvent: (event) => {
-      fetch(`${PROTOCOL_SCHEME}://${IPCChannel.EVENT}/sentry_key`, { method: 'POST', body: event }).catch(() => {
+      const init: RequestInit = { mode: 'cors', method: 'POST', body: event };
+      fetch(`${PROTOCOL_SCHEME}://${IPCChannel.EVENT}/sentry_key`, init).catch(() => {
         // ignore
       });
     },

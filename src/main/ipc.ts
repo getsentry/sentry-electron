@@ -86,7 +86,7 @@ function configureProtocol(options: ElectronMainOptions): void {
             handleScope(options, data);
           }
 
-          callback('');
+          callback({ data: '', headers: { 'Access-Control-Allow-Origin': '*' } });
         });
       }
     }),
