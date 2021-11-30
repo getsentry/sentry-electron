@@ -17,8 +17,9 @@ jobs:
         run: yarn update-electron-versions
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
-        branch: test/new-electron-versions
-        delete-branch: true
-        title: 'test: New Electron versions'
-        body: |
-          Automatically generated PR to test new Electron releases
+        with:
+          branch: test/new-electron-versions
+          delete-branch: true
+          title: 'test: New Electron versions'
+          body: |
+            Automatically generated PR to test new Electron releases
