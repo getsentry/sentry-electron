@@ -4,12 +4,13 @@ import { ElectronOptions } from './';
 
 import {
   MainContext,
-  ElectronEvents,
+  ElectronBreadcrumbs,
   ElectronMinidump,
   OnUncaughtException,
   PreloadInjection,
   SentryMinidump,
   MainProcessSession,
+  AdditionalContext,
 } from './main/integrations';
 import { EventToMain, ScopeToMain } from './renderer/integrations';
 
@@ -18,11 +19,12 @@ export interface Integrations {
   // For main process
   SentryMinidump: SentryMinidump;
   ElectronMinidump: ElectronMinidump;
-  ElectronEvents: ElectronEvents;
+  ElectronBreadcrumbs: ElectronBreadcrumbs;
   MainContext: MainContext;
   OnUncaughtExcept: OnUncaughtException;
   PreloadInjection: PreloadInjection;
   MainProcessSession: MainProcessSession;
+  AdditionalContext: AdditionalContext;
   // For renderer process
   ScopeToMain: ScopeToMain;
   EventToMain: EventToMain;
@@ -42,11 +44,12 @@ export function getIntegrations(): Integrations {
         ...dynamicRequire(module, './renderer').Integrations,
         SentryMinidump: EmptyIntegration,
         ElectronMinidump: EmptyIntegration,
-        ElectronEvents: EmptyIntegration,
+        ElectronBreadcrumbs: EmptyIntegration,
         MainContext: EmptyIntegration,
         OnUncaughtExcept: EmptyIntegration,
         PreloadInjection: EmptyIntegration,
         MainProcessSession: EmptyIntegration,
+        AdditionalContext: EmptyIntegration,
       };
 }
 
