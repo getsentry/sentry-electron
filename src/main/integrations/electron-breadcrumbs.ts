@@ -8,11 +8,15 @@ import { ElectronMainOptions } from '../sdk';
 interface ElectronBreadcrumbsOptions {
   /** Whether webContents `unresponsive` events are captured as events */
   unresponsive?: boolean;
+  /** Capture app events */
   app?: boolean;
+  /** Capture webContents events */
   webContents?: boolean;
   /** Capture BrowserWindow events */
   window?: boolean;
+  /** Capture screen events */
   screen?: boolean;
+  /** Capture powerMonitor events */
   powerMonitor?: boolean;
 }
 
@@ -38,7 +42,7 @@ export class ElectronBreadcrumbs implements Integration {
     }
 
     app.once('ready', () => {
-      // We can't access these until 'ready'
+      // We can't access these until app 'ready'
       if (this._options.screen != false) {
         this._instrumentBreadcrumbs('Screen', screen);
       }
@@ -56,6 +60,7 @@ export class ElectronBreadcrumbs implements Integration {
           browserWindow,
           (event) =>
             [
+              'closed',
               'close',
               'unresponsive',
               'responsive',
@@ -69,7 +74,7 @@ export class ElectronBreadcrumbs implements Integration {
               'enter-full-screen',
               'leave-full-screen',
             ].includes(event),
-          () => ({ id: browserWindow.id, title: browserWindow.getTitle() }),
+          () => (browserWindow.isDestroyed() ? {} : { id: browserWindow.id, title: browserWindow.getTitle() }),
         );
       });
     }
@@ -84,12 +89,13 @@ export class ElectronBreadcrumbs implements Integration {
           }
 
           const webContentsName = options?.getRendererName?.(contents) || 'renderer';
+
           if (this._options.webContents != false) {
             this._instrumentBreadcrumbs(
               webContentsName,
               contents,
-              (event) => ['dom-ready', 'load-url'].includes(event),
-              () => ({ id: contents.id, title: contents.getTitle() }),
+              (event) => ['dom-ready', 'load-url', 'destroyed'].includes(event),
+              () => (contents.isDestroyed() ? {} : { id: contents.id, title: contents.getTitle() }),
             );
           }
 

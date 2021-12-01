@@ -33,11 +33,11 @@ export class AdditionalContext implements Integration {
     if (language != false || screen != false) {
       // Some metrics are only available after app ready so we lazily load them
       void whenAppReady.then(() => {
-        if (language) {
+        if (language != false) {
           this._deviceContext.language = app.getLocale();
         }
 
-        if (screen) {
+        if (screen != false) {
           this._setPrimaryDisplayInfo();
 
           electronScreen.on('display-metrics-changed', () => {
