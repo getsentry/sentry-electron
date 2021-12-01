@@ -88,7 +88,7 @@ export class ElectronBreadcrumbs implements Integration {
             this._instrumentBreadcrumbs(
               webContentsName,
               contents,
-              (event) => ['dom-ready', 'load-url', 'destroyed'].includes(event),
+              (event) => ['dom-ready', 'load-url'].includes(event),
               () => ({ id: contents.id, title: contents.getTitle() }),
             );
           }
