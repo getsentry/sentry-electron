@@ -58,6 +58,12 @@ export class TestServer {
 
     // Handles the Sentry envelope endpoint
     router.post('/api/:id/envelope/', async (ctx) => {
+      if (ctx.params.id === '666') {
+        ctx.status = 404;
+        ctx.body = 'Not found';
+        return;
+      }
+
       const auth = (ctx.headers['x-sentry-auth'] as string) || '';
       const keyMatch = auth.match(/sentry_key=([a-f0-9]*)/);
       if (!keyMatch) {

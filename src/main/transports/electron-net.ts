@@ -26,6 +26,7 @@ const GZIP_THRESHOLD = 1024 * 32;
  */
 export interface SentryElectronRequest extends Omit<SentryRequest, 'body'> {
   body: string | Buffer;
+  date?: Date;
 }
 
 /**
@@ -46,7 +47,7 @@ export class ElectronNetTransport extends Transports.BaseTransport {
   /** A simple buffer holding all requests. */
   protected readonly _buffer: PromiseBuffer<Response> = new PromiseBuffer(30);
 
-  /** Create a new instance and set this.agent */
+  /** Create a new instance */
   public constructor(public options: TransportOptions) {
     super(options);
   }
@@ -114,10 +115,17 @@ export class ElectronNetTransport extends Transports.BaseTransport {
    */
   public async sendRequest(request: SentryElectronRequest): Promise<Response> {
     if (!this._buffer.isReady()) {
-      return Promise.reject(new SentryError('Not adding Promise due to buffer limit reached.'));
+      throw new SentryError('Not adding Promise due to buffer limit reached.');
     }
 
-    await whenAppReady;
+    if (this._isRateLimited(request.type)) {
+      return {
+        reason: `Transport for ${request.type} requests locked till ${this._disabledUntil(
+          request.type,
+        )} due to too many requests.`,
+        status: Status.RateLimit,
+      };
+    }
 
     const options = this._getRequestOptions(new url.URL(request.url));
     options.headers = {
@@ -132,6 +140,8 @@ export class ElectronNetTransport extends Transports.BaseTransport {
       bodyStream = bodyStream.pipe(createGzip());
     }
 
+    await whenAppReady;
+
     return this._buffer.add(
       () =>
         new Promise<Response>((resolve, reject) => {
@@ -141,7 +151,7 @@ export class ElectronNetTransport extends Transports.BaseTransport {
             res.on('error', reject);
 
             const status = Status.fromHttpCode(res.statusCode);
-            if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+            if (status == Status.Success) {
               resolve({ status });
             } else {
               if (status === Status.RateLimit) {

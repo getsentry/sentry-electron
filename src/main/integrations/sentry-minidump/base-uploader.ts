@@ -77,7 +77,6 @@ export abstract class BaseUploader {
     try {
       if (request.event && !transport.isRateLimited('event')) {
         logger.log('Sending minidump', request.path);
-
         const requestForTransport = await this._toMinidumpRequest(transport, request.event, request.path);
         await transport.sendRequest(requestForTransport);
         logger.log('Minidump sent');

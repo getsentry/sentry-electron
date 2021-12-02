@@ -1,0 +1,4 @@
+description: Native Crash
+category: Offline
+command: yarn
+runTwice: true

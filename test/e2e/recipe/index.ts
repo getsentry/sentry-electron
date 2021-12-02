@@ -104,7 +104,9 @@ export class RecipeRunner {
       let content = this._recipe.files[file];
 
       // Replace with the test server localhost DSN
-      content = content.replace('__DSN__', 'http://37f8a2ee37c0409d8970bc7559c7c7e4@localhost:8123/277345');
+      content = content
+        .replace('__DSN__', 'http://37f8a2ee37c0409d8970bc7559c7c7e4@localhost:8123/277345')
+        .replace('__INCORRECT_DSN__', 'http://37f8a2ee37c0409d8970bc7559c7c7e4@localhost:8123/666');
 
       // We replace the @sentry/electron dependency in package.json with
       // the path to the tarball

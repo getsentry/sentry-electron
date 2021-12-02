@@ -1,5 +1,5 @@
 import { app } from 'electron';
-import { mkdir, mkdirSync, readdir, readFile, rename, stat, Stats, statSync, unlink } from 'fs';
+import { mkdir, mkdirSync, readdir, readFile, rename, stat, Stats, statSync, unlink, writeFile } from 'fs';
 import { dirname, join, resolve } from 'path';
 
 export const sentryCachePath = join(app.getPath('userData'), 'sentry');
@@ -22,6 +22,30 @@ export async function readFileAsync(
         reject(err);
       } else {
         res(data);
+      }
+    });
+  });
+}
+
+/**
+ * Asynchronously reads given files content.
+ *
+ * @param path A relative or absolute path to the file
+ * @returns A Promise that resolves when the file has been read.
+ */
+export async function writeFileAsync(
+  path: string,
+  data: Buffer | string,
+  options?: { encoding?: string; flag?: string },
+): Promise<void> {
+  // We cannot use util.promisify here because that was only introduced in Node
+  // 8 and we need to support older Node versions.
+  return new Promise((res, reject) => {
+    writeFile(path, data, options as any, (err: any) => {
+      if (err) {
+        reject(err);
+      } else {
+        res();
       }
     });
   });
