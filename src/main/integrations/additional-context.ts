@@ -28,24 +28,22 @@ export class AdditionalContext implements Integration {
   public setupOnce(addGlobalEventProcessor: (callback: EventProcessor) => void): void {
     addGlobalEventProcessor(async (event: Event) => this._addAdditionalContext(event));
 
-    const { language, screen } = this._options;
+    // Some metrics are only available after app ready so we lazily load them
+    void whenAppReady.then(() => {
+      const { language, screen } = this._options;
 
-    if (language != false || screen != false) {
-      // Some metrics are only available after app ready so we lazily load them
-      void whenAppReady.then(() => {
-        if (language != false) {
-          this._deviceContext.language = app.getLocale();
-        }
+      if (language != false) {
+        this._deviceContext.language = app.getLocale();
+      }
 
-        if (screen != false) {
+      if (screen != false) {
+        this._setPrimaryDisplayInfo();
+
+        electronScreen.on('display-metrics-changed', () => {
           this._setPrimaryDisplayInfo();
-
-          electronScreen.on('display-metrics-changed', () => {
-            this._setPrimaryDisplayInfo();
-          });
-        }
-      });
-    }
+        });
+      }
+    });
   }
 
   /** Adds additional context to event */
