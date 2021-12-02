@@ -1,5 +1,8 @@
+import { app } from 'electron';
 import { mkdir, mkdirSync, readdir, readFile, rename, stat, Stats, statSync, unlink } from 'fs';
-import { dirname, resolve } from 'path';
+import { dirname, join, resolve } from 'path';
+
+export const sentryCachePath = join(app.getPath('userData'), 'sentry');
 
 /**
  * Asynchronously reads given files content.

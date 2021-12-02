@@ -160,13 +160,12 @@ export class ElectronNetTransport extends Transports.BaseTransport {
                 if (limited) logger.warn(`Too many requests, backing off until: ${this._disabledUntil(request.type)}`);
               }
 
-              // tslint:disable:no-unsafe-any
               if (res.headers && res.headers['x-sentry-error']) {
                 let reason: string | string[] = res.headers['x-sentry-error'];
                 if (Array.isArray(reason)) {
                   reason = reason.join(', ');
                 }
-                // tslint:enable:no-unsafe-any
+
                 reject(new SentryError(`HTTP Error (${res.statusCode}): ${reason}`));
               } else {
                 reject(new SentryError(`HTTP Error (${res.statusCode})`));
@@ -182,7 +181,7 @@ export class ElectronNetTransport extends Transports.BaseTransport {
           });
 
           // The docs say that ClientRequest is Writable but the types don't match exactly
-          bodyStream.pipe(req as any as Writable);
+          bodyStream.pipe(req as unknown as Writable);
         }),
     );
   }

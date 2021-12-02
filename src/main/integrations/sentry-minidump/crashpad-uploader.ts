@@ -14,8 +14,8 @@ export class CrashpadUploader extends BaseUploader {
   /** The sub-directory where crashpad dumps can be found */
   private readonly _crashpadSubDirectory: string;
 
-  public constructor(options: NodeOptions, cacheDirectory: string, transport: Transport) {
-    super(options, cacheDirectory, transport);
+  public constructor(options: NodeOptions, transport: Transport) {
+    super(options, transport);
     this._crashpadSubDirectory = process.platform === 'win32' ? 'reports' : 'completed';
   }
 
