@@ -1,13 +1,15 @@
 import { Response, Status, TransportOptions } from '@sentry/types';
 import { logger } from '@sentry/utils';
 import { net } from 'electron';
+import { join } from 'path';
 
+import { sentryCachePath } from '../fs';
 import { ElectronNetTransport, SentryElectronRequest } from './electron-net';
 import { PersistedRequestQueue } from './queue';
 
 /** Using net module of Electron */
 export class ElectronOfflineNetTransport extends ElectronNetTransport {
-  private _queue: PersistedRequestQueue = new PersistedRequestQueue(30, 30);
+  private _queue: PersistedRequestQueue = new PersistedRequestQueue(join(sentryCachePath, 'queue'), 30, 30);
   private _url: string = this._api.getEnvelopeEndpointWithUrlEncodedAuth();
 
   /** Create a new instance  */
@@ -39,7 +41,7 @@ export class ElectronOfflineNetTransport extends ElectronNetTransport {
 
   /** */
   public async flushQueue(): Promise<void> {
-    const found = await this._queue.pop(this._url);
+    const found = await this._queue.first(this._url);
 
     if (found) {
       await this.sendRequest(found);

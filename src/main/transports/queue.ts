@@ -2,7 +2,7 @@ import { SentryRequestType } from '@sentry/types';
 import { uuid4 } from '@sentry/utils';
 import { join } from 'path';
 
-import { readFileAsync, sentryCachePath, unlinkAsync, writeFileAsync } from '../fs';
+import { readFileAsync, unlinkAsync, writeFileAsync } from '../fs';
 import { Store } from '../store';
 import { SentryElectronRequest } from './electron-net';
 
@@ -16,10 +16,13 @@ interface PersistedRequest {
 
 /** */
 export class PersistedRequestQueue {
-  private readonly _queuePath: string = join(sentryCachePath, 'queue');
   private readonly _queue: Store<PersistedRequest[]> = new Store(this._queuePath, 'queue', []);
 
-  public constructor(private readonly _maxAgeDays: number, private readonly _maxCount: number) {}
+  public constructor(
+    private readonly _queuePath: string,
+    private readonly _maxAgeDays: number,
+    private readonly _maxCount: number,
+  ) {}
 
   /** */
   public async add(request: SentryElectronRequest): Promise<void> {
@@ -49,20 +52,18 @@ export class PersistedRequestQueue {
 
     this._queue.update((q) => {
       const i = q.findIndex((i) => i.bodyPath === item.bodyPath);
-      if (i >= 0) {
-        q.splice(i, 1);
-      }
+      if (i >= 0) q.splice(i, 1);
       return q;
     });
   }
 
   /** */
-  public async pop(url: string): Promise<SentryElectronRequest | undefined> {
+  public async first(url: string): Promise<SentryElectronRequest | undefined> {
     let found: PersistedRequest | undefined;
     const cutOff = Date.now() - MILLISECONDS_PER_DAY * this._maxAgeDays;
 
     this._queue.update((queue) => {
-      while ((found = queue.pop())) {
+      while ((found = queue.shift())) {
         if (found.date.getTime() < cutOff) {
           found = undefined;
         } else {
