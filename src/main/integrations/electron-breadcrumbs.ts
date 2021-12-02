@@ -12,7 +12,7 @@ type EventTypes = boolean | string[] | EventFunction | undefined;
 
 interface ElectronBreadcrumbsOptions<EventTypes> {
   /**
-   * Whether webContents `unresponsive` events are captured as events
+   * Whether webContents `unresponsive` events are captured as Sentry events
    *
    * default: true
    */
@@ -82,7 +82,7 @@ const defaults: ElectronBreadcrumbsOptions<EventFunction> = {
 };
 
 /** Converts string[] to function and true | undefined to defaults function  */
-function getOption(
+function getOptionOrDefault(
   options: Partial<ElectronBreadcrumbsOptions<EventTypes>>,
   key: keyof ElectronBreadcrumbsOptions<EventTypes>,
 ): EventFunction | undefined {
@@ -114,12 +114,12 @@ export class ElectronBreadcrumbs implements Integration {
   public constructor(options: Partial<ElectronBreadcrumbsOptions<EventTypes>> = {}) {
     this._options = {
       unresponsive: options.unresponsive != false,
-      app: getOption(options, 'app'),
-      autoUpdater: getOption(options, 'autoUpdater'),
-      webContents: getOption(options, 'webContents'),
-      browserWindow: getOption(options, 'browserWindow'),
-      screen: getOption(options, 'screen'),
-      powerMonitor: getOption(options, 'powerMonitor'),
+      app: getOptionOrDefault(options, 'app'),
+      autoUpdater: getOptionOrDefault(options, 'autoUpdater'),
+      webContents: getOptionOrDefault(options, 'webContents'),
+      browserWindow: getOptionOrDefault(options, 'browserWindow'),
+      screen: getOptionOrDefault(options, 'screen'),
+      powerMonitor: getOptionOrDefault(options, 'powerMonitor'),
     };
   }
 
