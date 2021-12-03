@@ -13,11 +13,13 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
+      - run: yarn install
       - name: Update Versions
         run: yarn update-electron-versions
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           branch: test/new-electron-versions
           delete-branch: true
           title: 'test: New Electron versions'
