@@ -5,3 +5,4 @@ export { SentryMinidump } from './sentry-minidump';
 export { ElectronMinidump } from './electron-minidump';
 export { PreloadInjection } from './preload-injection';
 export { MainProcessSession } from './main-process-session';
+export { Net } from './net-breadcrumbs';
