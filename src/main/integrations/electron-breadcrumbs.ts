@@ -55,7 +55,7 @@ interface ElectronBreadcrumbsOptions<EventTypes> {
   powerMonitor: EventTypes;
 }
 
-const defaults: ElectronBreadcrumbsOptions<EventFunction> = {
+const DEFAULT_OPTIONS: ElectronBreadcrumbsOptions<EventFunction> = {
   unresponsive: true,
   // We exclude events starting with remote as they can be quite verbose
   app: (name) => !name.startsWith('remote-'),
@@ -81,23 +81,6 @@ const defaults: ElectronBreadcrumbsOptions<EventFunction> = {
   powerMonitor: () => true,
 };
 
-/** Converts string[] to function and true | undefined to defaults function  */
-function getOptionOrDefault(
-  options: Partial<ElectronBreadcrumbsOptions<EventTypes>>,
-  key: keyof ElectronBreadcrumbsOptions<EventTypes>,
-): EventFunction | undefined {
-  const input = options[key];
-  if (Array.isArray(input)) {
-    return (name) => input.includes(name);
-  }
-
-  if (input === true || input === undefined) {
-    return defaults[key] as EventFunction;
-  }
-
-  return undefined;
-}
-
 /** Adds breadcrumbs for Electron events. */
 export class ElectronBreadcrumbs implements Integration {
   /** @inheritDoc */
@@ -112,14 +95,16 @@ export class ElectronBreadcrumbs implements Integration {
    * @param _options Integration options
    */
   public constructor(options: Partial<ElectronBreadcrumbsOptions<EventTypes>> = {}) {
+    // Convert all 'true' properties to undefined since undefined uses the defaults too
+    (Object.keys(options) as (keyof ElectronBreadcrumbsOptions<EventTypes>)[]).map((k) => {
+      if (options[k] === true) {
+        options[k] = undefined;
+      }
+    });
+
     this._options = {
-      unresponsive: options.unresponsive != false,
-      app: getOptionOrDefault(options, 'app'),
-      autoUpdater: getOptionOrDefault(options, 'autoUpdater'),
-      webContents: getOptionOrDefault(options, 'webContents'),
-      browserWindow: getOptionOrDefault(options, 'browserWindow'),
-      screen: getOptionOrDefault(options, 'screen'),
-      powerMonitor: getOptionOrDefault(options, 'powerMonitor'),
+      ...options,
+      ...DEFAULT_OPTIONS,
     };
   }
 
@@ -186,8 +171,8 @@ export class ElectronBreadcrumbs implements Integration {
   }
 
   /**
-   * Hooks into the Electron EventEmitter to capture breadcrumbs for the
-   * specified events.
+   * Monkey patches the Electron EventEmitter to capture breadcrumbs for the
+   * specified events. 🙈
    */
   private _instrumentBreadcrumbs(
     category: string,
