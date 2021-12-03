@@ -1,4 +1,4 @@
-import { addBreadcrumb, captureMessage, getCurrentHub } from '@sentry/core';
+import { addBreadcrumb, getCurrentHub } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { Breadcrumb, Integration } from '@sentry/types';
 import { app, autoUpdater, BrowserWindow, powerMonitor, screen, WebContents } from 'electron';
@@ -11,12 +11,6 @@ type EventFunction = (name: string) => boolean;
 type EventTypes = boolean | string[] | EventFunction | undefined;
 
 interface ElectronBreadcrumbsOptions<EventTypes> {
-  /**
-   * Whether webContents `unresponsive` events are captured as Sentry events
-   *
-   * default: true
-   */
-  unresponsive: boolean;
   /**
    * app events
    *
@@ -56,7 +50,6 @@ interface ElectronBreadcrumbsOptions<EventTypes> {
 }
 
 const DEFAULT_OPTIONS: ElectronBreadcrumbsOptions<EventFunction> = {
-  unresponsive: true,
   // We exclude events starting with remote as they can be quite verbose
   app: (name) => !name.startsWith('remote-'),
   autoUpdater: () => true,
@@ -95,15 +88,18 @@ export class ElectronBreadcrumbs implements Integration {
    * @param _options Integration options
    */
   public constructor(options: Partial<ElectronBreadcrumbsOptions<EventTypes>> = {}) {
-    // Convert all 'true' properties to undefined since undefined uses the defaults too
-    (Object.keys(options) as (keyof ElectronBreadcrumbsOptions<EventTypes>)[]).map((k) => {
-      if (options[k] === true) {
-        options[k] = undefined;
+    const userOptions = (Object.keys(options) as (keyof ElectronBreadcrumbsOptions<EventTypes>)[]).reduce((obj, k) => {
+      const val: EventTypes = options[k];
+      if (Array.isArray(val)) {
+        obj[k] = (name) => val.includes(name);
+      } else if (typeof val === 'function' || val === false) {
+        obj[k] = val;
       }
-    });
+      return obj;
+    }, {} as Partial<ElectronBreadcrumbsOptions<EventFunction | false>>);
 
     this._options = {
-      ...options,
+      ...userOptions,
       ...DEFAULT_OPTIONS,
     };
   }
@@ -145,7 +141,7 @@ export class ElectronBreadcrumbs implements Integration {
       });
     }
 
-    if (this._options.webContents || this._options.unresponsive != false) {
+    if (this._options.webContents) {
       app.on('web-contents-created', (_, contents) => {
         // SetImmediate is required for contents.id to be correct in older versions of Electron
         // https://github.com/electron/electron/issues/12036
@@ -156,15 +152,7 @@ export class ElectronBreadcrumbs implements Integration {
 
           const webContentsName = initOptions?.getRendererName?.(contents) || 'renderer';
 
-          if (this._options.webContents) {
-            this._instrumentBreadcrumbs(webContentsName, contents, (name) => this._options.webContents?.(name));
-          }
-
-          if (this._options.unresponsive != false) {
-            contents.on('unresponsive', () => {
-              captureMessage(`${webContentsName} Unresponsive`);
-            });
-          }
+          this._instrumentBreadcrumbs(webContentsName, contents, (name) => this._options.webContents?.(name));
         });
       });
     }
