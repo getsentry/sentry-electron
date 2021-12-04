@@ -74,6 +74,21 @@ const DEFAULT_OPTIONS: ElectronBreadcrumbsOptions<EventFunction> = {
   powerMonitor: () => true,
 };
 
+/** Converts all user supplied options to function | false */
+function normalizeOptions(
+  options: Partial<ElectronBreadcrumbsOptions<EventTypes>>,
+): Partial<ElectronBreadcrumbsOptions<EventFunction | false>> {
+  return (Object.keys(options) as (keyof ElectronBreadcrumbsOptions<EventTypes>)[]).reduce((obj, k) => {
+    const val: EventTypes = options[k];
+    if (Array.isArray(val)) {
+      obj[k] = (name) => val.includes(name);
+    } else if (typeof val === 'function' || val === false) {
+      obj[k] = val;
+    }
+    return obj;
+  }, {} as Partial<ElectronBreadcrumbsOptions<EventFunction | false>>);
+}
+
 /** Adds breadcrumbs for Electron events. */
 export class ElectronBreadcrumbs implements Integration {
   /** @inheritDoc */
@@ -88,18 +103,8 @@ export class ElectronBreadcrumbs implements Integration {
    * @param _options Integration options
    */
   public constructor(options: Partial<ElectronBreadcrumbsOptions<EventTypes>> = {}) {
-    const userOptions = (Object.keys(options) as (keyof ElectronBreadcrumbsOptions<EventTypes>)[]).reduce((obj, k) => {
-      const val: EventTypes = options[k];
-      if (Array.isArray(val)) {
-        obj[k] = (name) => val.includes(name);
-      } else if (typeof val === 'function' || val === false) {
-        obj[k] = val;
-      }
-      return obj;
-    }, {} as Partial<ElectronBreadcrumbsOptions<EventFunction | false>>);
-
     this._options = {
-      ...userOptions,
+      ...normalizeOptions(options),
       ...DEFAULT_OPTIONS,
     };
   }
@@ -111,20 +116,20 @@ export class ElectronBreadcrumbs implements Integration {
     void whenAppReady.then(() => {
       // We can't access these until app 'ready'
       if (this._options.screen) {
-        this._instrumentBreadcrumbs('screen', screen, (name) => this._options.screen?.(name));
+        this._patchEventEmitter(screen, 'screen', this._options.screen);
       }
 
       if (this._options.powerMonitor) {
-        this._instrumentBreadcrumbs('powerMonitor', powerMonitor, (name) => this._options.powerMonitor?.(name));
+        this._patchEventEmitter(powerMonitor, 'powerMonitor', this._options.powerMonitor);
       }
     });
 
     if (this._options.app) {
-      this._instrumentBreadcrumbs('app', app, (event) => this._options.app?.(event));
+      this._patchEventEmitter(app, 'app', this._options.app);
     }
 
     if (this._options.autoUpdater) {
-      this._instrumentBreadcrumbs('autoUpdater', autoUpdater, (name) => this._options.autoUpdater?.(name));
+      this._patchEventEmitter(autoUpdater, 'autoUpdater', this._options.autoUpdater);
     }
 
     if (this._options.browserWindow) {
@@ -136,7 +141,7 @@ export class ElectronBreadcrumbs implements Integration {
             return;
           }
           const windowName = initOptions?.getRendererName?.(window.webContents) || 'window';
-          this._instrumentBreadcrumbs(windowName, window, (name) => this._options.browserWindow?.(name));
+          this._patchEventEmitter(window, windowName, this._options.browserWindow);
         });
       });
     }
@@ -152,25 +157,24 @@ export class ElectronBreadcrumbs implements Integration {
 
           const webContentsName = initOptions?.getRendererName?.(contents) || 'renderer';
 
-          this._instrumentBreadcrumbs(webContentsName, contents, (name) => this._options.webContents?.(name));
+          this._patchEventEmitter(contents, webContentsName, this._options.webContents);
         });
       });
     }
   }
 
   /**
-   * Monkey patches the Electron EventEmitter to capture breadcrumbs for the
-   * specified events. 🙈
+   * Monkey patches the EventEmitter to capture breadcrumbs for the specified events. 🙈
    */
-  private _instrumentBreadcrumbs(
-    category: string,
+  private _patchEventEmitter(
     emitter: NodeJS.EventEmitter | WebContents | BrowserWindow,
-    shouldInclude: (event: string) => boolean | undefined,
+    category: string,
+    shouldCapture: EventFunction | undefined,
   ): void {
     const emit = emitter.emit.bind(emitter) as (event: string, ...args: unknown[]) => boolean;
 
     emitter.emit = (event: string, ...args: unknown[]) => {
-      if (shouldInclude(event)) {
+      if (shouldCapture && shouldCapture(event)) {
         const breadcrumb: Breadcrumb = {
           category: 'electron',
           message: `${category}.${event}`,
