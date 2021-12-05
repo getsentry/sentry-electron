@@ -79,7 +79,6 @@ export abstract class BaseUploader {
         logger.log('Sending minidump', request.path);
         const requestForTransport = await this._toMinidumpRequest(transport, request.event, request.path);
         await transport.sendRequest(requestForTransport);
-        logger.log('Minidump sent');
       }
 
       // We either succeeded, something went wrong or the send was aborted. Either way, we can remove the minidump file.

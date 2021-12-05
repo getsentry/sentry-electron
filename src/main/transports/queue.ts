@@ -1,5 +1,5 @@
 import { SentryRequestType } from '@sentry/types';
-import { uuid4 } from '@sentry/utils';
+import { logger, uuid4 } from '@sentry/utils';
 import { join } from 'path';
 
 import { readFileAsync, unlinkAsync, writeFileAsync } from '../fs';
@@ -14,17 +14,17 @@ interface PersistedRequest {
   date: Date;
 }
 
-/** */
+/** A request queue that is persisted to disk to survive app restarts */
 export class PersistedRequestQueue {
   private readonly _queue: Store<PersistedRequest[]> = new Store(this._queuePath, 'queue', []);
 
   public constructor(
     private readonly _queuePath: string,
-    private readonly _maxAgeDays: number,
-    private readonly _maxCount: number,
+    private readonly _maxAgeDays: number = 30,
+    private readonly _maxCount: number = 30,
   ) {}
 
-  /** */
+  /** Adds a request to the queue */
   public async add(request: SentryElectronRequest): Promise<void> {
     const bodyPath = uuid4();
 
@@ -42,29 +42,24 @@ export class PersistedRequestQueue {
     });
 
     if (added) {
-      await writeFileAsync(join(this._queuePath, bodyPath), request.body);
+      try {
+        await writeFileAsync(join(this._queuePath, bodyPath), request.body);
+      } catch (_) {
+        //
+      }
     }
   }
 
-  /** */
-  public async remove(item: PersistedRequest): Promise<void> {
-    void this._removeBody(item.bodyPath);
-
-    this._queue.update((q) => {
-      const i = q.findIndex((i) => i.bodyPath === item.bodyPath);
-      if (i >= 0) q.splice(i, 1);
-      return q;
-    });
-  }
-
-  /** */
-  public async first(url: string): Promise<SentryElectronRequest | undefined> {
+  /** Pops the oldest event from the queue */
+  public async pop(url: string): Promise<SentryElectronRequest | undefined> {
     let found: PersistedRequest | undefined;
     const cutOff = Date.now() - MILLISECONDS_PER_DAY * this._maxAgeDays;
 
     this._queue.update((queue) => {
       while ((found = queue.shift())) {
         if (found.date.getTime() < cutOff) {
+          // we're dropping this event so delete the body
+          void this._removeBody(found.bodyPath);
           found = undefined;
         } else {
           break;
@@ -86,7 +81,7 @@ export class PersistedRequestQueue {
         };
       } catch (e) {
         // eslint-disable-next-line no-console
-        console.error(e);
+        logger.warn('Filed to read queued request body', e);
       }
     }
 
