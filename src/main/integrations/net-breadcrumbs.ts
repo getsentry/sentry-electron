@@ -32,7 +32,7 @@ export class Net implements Integration {
    */
   public constructor(options: { breadcrumbs?: boolean; tracing?: boolean } = {}) {
     this._breadcrumbs = typeof options.breadcrumbs === 'undefined' ? true : options.breadcrumbs;
-    this._tracing = typeof options.tracing === 'undefined' ? false : options.tracing;
+    this._tracing = typeof options.tracing === 'undefined' ? true : options.tracing;
   }
 
   /**
@@ -44,7 +44,7 @@ export class Net implements Integration {
       return;
     }
 
-    fill(net, 'request', createWrappedRequestFactory(this._breadcrumbs, false));
+    fill(net, 'request', createWrappedRequestFactory(this._breadcrumbs, this._tracing));
   }
 }
 
@@ -122,7 +122,7 @@ function createWrappedRequestFactory(
 
         if (parentSpan) {
           span = parentSpan.startChild({
-            description: `${requestMethod} ${url}`,
+            description: `${method} ${url}`,
             op: 'request',
           });
 
