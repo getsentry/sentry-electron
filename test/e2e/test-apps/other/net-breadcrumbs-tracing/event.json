@@ -52,7 +52,6 @@
         "parent_span_id": "{{id}}",
         "span_id": "{{id}}",
         "start_timestamp": 0,
-        "endTimestamp": 0,
         "timestamp": 0,
         "description": "GET http://localhost:8123/something",
         "status": "not_found",
@@ -67,6 +66,7 @@
       "ip_address": "{{auto}}"
     },
     "type": "transaction",
+    "transaction": "some-transaction",
     "event_id": "{{id}}",
     "platform": "node",
     "start_timestamp": 0,
@@ -75,8 +75,7 @@
     "tags": {
       "event.environment": "javascript",
       "event.origin": "electron",
-      "event_type": "javascript",
-      "transaction": "some-transaction"
+      "event_type": "javascript"
     }
   }
 }
