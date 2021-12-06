@@ -6,14 +6,28 @@ function readFile(path) {
   return readFileSync(join(__dirname, path), { encoding: 'utf8' });
 }
 
+function ensureOnlyRequiresElectron(code) {
+  const result = code.match(/require\("(\S+?)"\)/g);
+  if (result) {
+    if (!result.every((r) => r === 'require("electron")')) {
+      throw new Error('Bundling error. The preload script should only require electron!');
+    }
+  }
+}
+
 const ipcModule = readFile('../src/common/ipc.ts').replace('export', '');
 
 function transpileFile(input, output, esm) {
   const module = esm ? ts.ModuleKind.ES2020 : ts.ModuleKind.CommonJS;
 
   // Because we're not using a proper bundler, we need to replace the import for ipc with inlined code
-  const file = readFile(input).replace("import { IPC } from '../common/ipc';", ipcModule);
+  const file = readFile(input).replace("import { IPCChannel } from '../common/ipc'", ipcModule);
   const code = ts.transpile(file, { removeComments: true, module });
+
+  if (!esm) {
+    ensureOnlyRequiresElectron(code);
+  }
+
   const outPath = join(__dirname, output);
   try {
     mkdirSync(dirname(outPath), { recursive: true });
