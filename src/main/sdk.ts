@@ -6,8 +6,8 @@ import { IPCMode } from '../common';
 import { getDefaultEnvironment, getDefaultReleaseName } from './context';
 import {
   AdditionalContext,
-  ElectronBreadcrumbs,
   ChildProcess,
+  ElectronBreadcrumbs,
   MainContext,
   MainProcessSession,
   OnUncaughtException,
