@@ -47,7 +47,7 @@
     },
     "spans": [
       {
-        "op": "request",
+        "op": "http.client",
         "trace_id": "{{id}}",
         "parent_span_id": "{{id}}",
         "span_id": "{{id}}",

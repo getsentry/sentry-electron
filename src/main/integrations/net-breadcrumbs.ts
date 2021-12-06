@@ -5,46 +5,62 @@ import { fill } from '@sentry/utils';
 import { ClientRequest, ClientRequestConstructorOptions, IncomingMessage, net } from 'electron';
 import * as urlModule from 'url';
 
+type OrBool<T> = {
+  [P in keyof T]: T[P] | boolean;
+};
+
+type OrFalse<T> = {
+  [P in keyof T]: T[P] | false;
+};
+
+type ShouldTraceFn = (method: string, url: string) => boolean;
+
+interface NetOptions {
+  breadcrumbs: boolean;
+  tracing: ShouldTraceFn;
+  tracingOrigins: ShouldTraceFn;
+}
+
+const DEFAULT_OPTIONS: NetOptions = {
+  breadcrumbs: true,
+  tracing: (_method, _url) => true,
+  tracingOrigins: (_method, _url) => true,
+};
+
+/** Converts all user supplied options to T | false */
+export function normalizeOptions(options: Partial<OrBool<NetOptions>>): Partial<OrFalse<NetOptions>> {
+  return (Object.keys(options) as (keyof NetOptions)[]).reduce((obj, k) => {
+    if (typeof options[k] === 'function' || options[k] === false) {
+      obj[k] = options[k] as boolean & (false | ShouldTraceFn);
+    }
+    return obj;
+  }, {} as Partial<OrFalse<NetOptions>>);
+}
+
 /** http module integration */
 export class Net implements Integration {
-  /**
-   * @inheritDoc
-   */
+  /** @inheritDoc */
   public static id: string = 'Net';
 
-  /**
-   * @inheritDoc
-   */
+  /** @inheritDoc */
   public name: string = Net.id;
 
-  /**
-   * @inheritDoc
-   */
-  private readonly _breadcrumbs: boolean;
+  private readonly _options: OrFalse<NetOptions>;
 
-  /**
-   * @inheritDoc
-   */
-  private readonly _tracing: boolean;
-
-  /**
-   * @inheritDoc
-   */
-  public constructor(options: { breadcrumbs?: boolean; tracing?: boolean } = {}) {
-    this._breadcrumbs = typeof options.breadcrumbs === 'undefined' ? true : options.breadcrumbs;
-    this._tracing = typeof options.tracing === 'undefined' ? true : options.tracing;
+  /** @inheritDoc */
+  public constructor(options: Partial<OrBool<NetOptions>> = {}) {
+    this._options = {
+      ...DEFAULT_OPTIONS,
+      ...normalizeOptions(options),
+    };
   }
 
-  /**
-   * @inheritDoc
-   */
+  /** @inheritDoc */
   public setupOnce(): void {
     // No need to instrument if we don't want to track anything
-    if (!this._breadcrumbs && !this._tracing) {
-      return;
+    if (this._options.breadcrumbs || this._options.tracing) {
+      fill(net, 'request', createWrappedRequestFactory(this._options));
     }
-
-    fill(net, 'request', createWrappedRequestFactory(this._breadcrumbs, this._tracing));
   }
 }
 
@@ -98,17 +114,14 @@ type RequestMethod = (opt: RequestOptions) => ClientRequest;
 type WrappedRequestMethodFactory = (original: RequestMethod) => RequestMethod;
 
 /** */
-function createWrappedRequestFactory(
-  breadcrumbsEnabled: boolean,
-  tracingEnabled: boolean,
-): WrappedRequestMethodFactory {
+function createWrappedRequestFactory(options: OrFalse<NetOptions>): WrappedRequestMethodFactory {
   return function wrappedRequestMethodFactory(originalRequestMethod: RequestMethod): RequestMethod {
-    return function requestMethod(this: typeof net, options: RequestOptions): ClientRequest {
+    return function requestMethod(this: typeof net, reqOptions: RequestOptions): ClientRequest {
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       const netModule = this;
 
-      const { url, method } = parseOptions(options);
-      const request = originalRequestMethod.apply(netModule, [options]) as ClientRequest;
+      const { url, method } = parseOptions(reqOptions);
+      const request = originalRequestMethod.apply(netModule, [reqOptions]) as ClientRequest;
 
       if (url.match(/sentry_key/) || request.getHeader('x-sentry-auth')) {
         return request;
@@ -117,16 +130,18 @@ function createWrappedRequestFactory(
       let span: Span | undefined;
 
       const scope = getCurrentHub().getScope();
-      if (scope && tracingEnabled) {
+      if (scope && options.tracing && options.tracing(method, url)) {
         const parentSpan = scope.getSpan();
 
         if (parentSpan) {
           span = parentSpan.startChild({
             description: `${method} ${url}`,
-            op: 'request',
+            op: 'http.client',
           });
 
-          request.setHeader('sentry-trace', span.toTraceparent());
+          if (options.tracingOrigins && options.tracingOrigins(method, url)) {
+            request.setHeader('sentry-trace', span.toTraceparent());
+          }
         }
       }
 
@@ -134,10 +149,10 @@ function createWrappedRequestFactory(
         .once('response', function (this: ClientRequest, res: IncomingMessage): void {
           // eslint-disable-next-line @typescript-eslint/no-this-alias
           const req = this;
-          if (breadcrumbsEnabled) {
+          if (options.breadcrumbs) {
             addRequestBreadcrumb('response', method, url, req, res);
           }
-          if (tracingEnabled && span) {
+          if (span) {
             if (res.statusCode) {
               span.setHttpStatus(res.statusCode);
             }
@@ -148,10 +163,10 @@ function createWrappedRequestFactory(
           // eslint-disable-next-line @typescript-eslint/no-this-alias
           const req = this;
 
-          if (breadcrumbsEnabled) {
+          if (options.breadcrumbs) {
             addRequestBreadcrumb('error', method, url, req, undefined);
           }
-          if (tracingEnabled && span) {
+          if (span) {
             span.setHttpStatus(500);
             span.finish();
           }

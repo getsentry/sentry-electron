@@ -10,15 +10,15 @@ init({
   onFatalError: () => {},
 });
 
-app.on('ready', async () => {
+app.on('ready', () => {
   const transaction = startTransaction({ name: 'some-transaction' });
   getCurrentHub().configureScope((scope) => scope.setSpan(transaction));
 
-  await fetch.default('http://localhost:8123/something');
+  fetch.default('http://localhost:8123/something').then(() => {
+    transaction.finish();
 
-  transaction.finish();
-
-  setTimeout(() => {
-    app.quit();
-  }, 1000);
+    setTimeout(() => {
+      app.quit();
+    }, 1000);
+  });
 });
