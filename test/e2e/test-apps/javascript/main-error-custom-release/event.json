@@ -17,7 +17,8 @@
     "contexts": {
       "app": {
         "app_name": "javascript-main-custom-release",
-        "app_version": "1.0.0"
+        "app_version": "1.0.0",
+        "app_start_time": "{{time}}"
       },
       "browser": {
         "name": "Chrome"
@@ -29,7 +30,15 @@
       },
       "device": {
         "arch": "{{arch}}",
-        "family": "Desktop"
+        "family": "Desktop",
+        "memory_size": 0,
+        "free_memory": 0,
+        "processor_count": 0,
+        "processor_frequency": 0,
+        "cpu_description": "{{cpu}}",
+        "screen_resolution":"{{screen}}",
+        "screen_density": 1,
+        "language": "{{language}}"
       },
       "node": {
         "name": "Node",

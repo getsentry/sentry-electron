@@ -25,7 +25,8 @@
     "contexts": {
       "app": {
         "app_name": "session-native-crash-main-electron-uploader",
-        "app_version": "1.0.0"
+        "app_version": "1.0.0",
+        "app_start_time": "{{time}}"
       },
       "browser": {
         "name": "Chrome"
