@@ -26,7 +26,8 @@
     "contexts": {
       "app": {
         "app_name": "native-electron-main",
-        "app_version": "1.0.0"
+        "app_version": "1.0.0",
+        "app_start_time": "{{time}}"
       },
       "browser": {
         "name": "Chrome"

@@ -5,7 +5,8 @@ import { Session, session, WebContents } from 'electron';
 import { IPCMode } from '../common';
 import { getDefaultEnvironment, getDefaultReleaseName } from './context';
 import {
-  ElectronEvents,
+  AdditionalContext,
+  ElectronBreadcrumbs,
   MainContext,
   MainProcessSession,
   OnUncaughtException,
@@ -17,10 +18,11 @@ import { ElectronOfflineNetTransport } from './transports/electron-offline-net';
 
 export const defaultIntegrations: Integration[] = [
   new SentryMinidump(),
-  new ElectronEvents(),
+  new ElectronBreadcrumbs(),
   new MainContext(),
   new OnUncaughtException(),
   new PreloadInjection(),
+  new AdditionalContext(),
   ...defaultNodeIntegrations.filter((integration) => integration.name !== 'OnUncaughtException'),
 ];
 

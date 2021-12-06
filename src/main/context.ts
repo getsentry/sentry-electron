@@ -11,6 +11,18 @@ import { SDK_VERSION } from './version';
 
 export const SDK_NAME = 'sentry.javascript.electron';
 
+/** App context information. */
+interface AppContext {
+  /** The name of the app. */
+  app_name: string;
+  /** The app version. */
+  app_version: string;
+  /** app start time */
+  app_start_time: string;
+  /** app build type */
+  build_type?: string;
+}
+
 /** Operating system context information. */
 interface OsContext {
   /** The name of the operating system. */
@@ -70,9 +82,6 @@ const LINUX_VERSIONS: {
   ubuntu: (content) => matchFirst(/distrib_release=(.*)/, content),
 };
 
-/** Cached event prototype with default values. */
-let defaultsPromise: Promise<Event>;
-
 /**
  * Executes a regular expression with one capture group.
  *
@@ -83,19 +92,6 @@ let defaultsPromise: Promise<Event>;
 function matchFirst(regex: RegExp, text: string): string | undefined {
   const match = regex.exec(text);
   return match ? match[1] : undefined;
-}
-
-/** Returns the build type of this app, if possible. */
-function getBuildType(): string | undefined {
-  if (process.mas) {
-    return 'app-store';
-  }
-
-  if (process.windowsStore) {
-    return 'windows-store';
-  }
-
-  return undefined;
 }
 
 /** Loads the macOS operating system context. */
@@ -231,15 +227,30 @@ export function getSdkInfo(): SdkInfo {
   };
 }
 
+/** Gets the app context */
+function getAppContext(): AppContext {
+  const appCtx: AppContext = {
+    app_name: app.name || app.getName(),
+    app_version: app.getVersion(),
+    app_start_time: new Date(Date.now() - process.uptime() * 1_000).toISOString(),
+  };
+
+  if (process.mas) {
+    appCtx.build_type = 'app-store';
+  }
+
+  if (process.windowsStore) {
+    appCtx.build_type = 'windows-store';
+  }
+
+  return appCtx;
+}
+
 /** Gets the app contexts */
 async function getContexts(): Promise<Contexts> {
-  const app_name = app.name || app.getName();
-
   const contexts: Contexts = {
-    app: {
-      app_name,
-      app_version: app.getVersion(),
-    },
+    app: getAppContext() as Record<string, any>,
+    os: (await getOsContext()) as Record<string, any>,
     browser: {
       name: 'Chrome',
     },
@@ -257,18 +268,11 @@ async function getContexts(): Promise<Contexts> {
       type: 'runtime',
       version: process.versions.node,
     },
-    os: (await getOsContext()) as Record<string, string>,
     runtime: {
       name: 'Electron',
       version: process.versions.electron,
     },
   };
-
-  // This ensures we don't get [undefined] after serialisation
-  const build_type = getBuildType();
-  if (build_type) {
-    contexts.app.build_type = build_type;
-  }
 
   return contexts;
 }
@@ -308,6 +312,9 @@ async function _getEventDefaults(release?: string): Promise<Event> {
   };
 }
 
+/** Cached event prototype with default values. */
+let cachedDefaultsPromise: Promise<Event>;
+
 /**
  * Computes and caches Electron-specific default fields for events.
  *
@@ -319,9 +326,9 @@ export async function getEventDefaults(release?: string): Promise<Event> {
   // The event defaults are cached as long as the app is running. We create the
   // promise here synchronously to avoid multiple events computing them at the
   // same time.
-  if (!defaultsPromise) {
-    defaultsPromise = _getEventDefaults(release);
+  if (!cachedDefaultsPromise) {
+    cachedDefaultsPromise = _getEventDefaults(release);
   }
 
-  return await defaultsPromise;
+  return await cachedDefaultsPromise;
 }

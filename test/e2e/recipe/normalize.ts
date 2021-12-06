@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import { Event, Session } from '@sentry/types';
 
 type EventOrSession = Event | Session;
@@ -59,6 +60,10 @@ function normalizeEvent(event: Event): Event {
     }
   }
 
+  if (event.contexts?.app?.app_start_time) {
+    event.contexts.app.app_start_time = '{{time}}';
+  }
+
   if (event.contexts?.chrome?.version) {
     event.contexts.chrome.version = '{{version}}';
   }
@@ -73,6 +78,38 @@ function normalizeEvent(event: Event): Event {
 
   if (event.contexts?.device?.arch) {
     event.contexts.device.arch = '{{arch}}';
+  }
+
+  if (event.contexts?.device?.memory_size) {
+    event.contexts.device.memory_size = 0;
+  }
+
+  if (event.contexts?.device?.free_memory) {
+    event.contexts.device.free_memory = 0;
+  }
+
+  if (event.contexts?.device?.processor_count) {
+    event.contexts.device.processor_count = 0;
+  }
+
+  if (event.contexts?.device?.processor_frequency) {
+    event.contexts.device.processor_frequency = 0;
+  }
+
+  if (event.contexts?.device?.cpu_description) {
+    event.contexts.device.cpu_description = '{{cpu}}';
+  }
+
+  if (event.contexts?.device?.screen_resolution) {
+    event.contexts.device.screen_resolution = '{{screen}}';
+  }
+
+  if (event.contexts?.device?.screen_density) {
+    event.contexts.device.screen_density = 1;
+  }
+
+  if (event.contexts?.device?.language) {
+    event.contexts.device.language = '{{language}}';
   }
 
   if (event.contexts?.os?.name) {
