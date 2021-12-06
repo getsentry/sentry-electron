@@ -114,7 +114,7 @@ export class SentryMinidump implements Integration {
     const { getRendererName, release } = options;
     const crashedProcess = getRendererName?.(contents) || 'renderer';
 
-    logger.log(`Renderer process '${crashedProcess}' ${details.reason}`);
+    logger.log(`'${crashedProcess}' process '${details.reason}'`);
 
     const event = mergeEvents(await getEventDefaults(release), {
       contexts: {
@@ -129,8 +129,11 @@ export class SentryMinidump implements Integration {
       tags: { 'event.environment': 'native', 'event.process': crashedProcess, event_type: 'native' },
     });
 
-    await this._sendNativeCrashes(options, event);
-    sessionCrashed();
+    const found = await this._sendNativeCrashes(options, event);
+
+    if (found) {
+      sessionCrashed();
+    }
   }
 
   /**
@@ -152,8 +155,11 @@ export class SentryMinidump implements Integration {
       tags: { 'event.environment': 'native', 'event.process': details.type, event_type: 'native' },
     });
 
-    await this._sendNativeCrashes(options, event);
-    sessionCrashed();
+    const found = await this._sendNativeCrashes(options, event);
+
+    if (found) {
+      sessionCrashed();
+    }
   }
 
   /**

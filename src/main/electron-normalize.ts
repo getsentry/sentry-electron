@@ -52,18 +52,10 @@ export const ALL_REASONS: ExitReason[] = [
   'integrity-failure',
 ];
 
+type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
+
 /** Same as the Electron interface but with optional exitCode */
-interface RenderProcessGoneDetails {
-  /**
-   * The reason the render process is gone.  Possible values:
-   */
-  reason: ExitReason;
-  /**
-   * The exit code of the process, unless `reason` is `launch-failed`, in which case
-   * `exitCode` will be a platform-specific launch failure error code.
-   */
-  exitCode?: number;
-}
+type RenderProcessGoneDetails = Optional<Electron.RenderProcessGoneDetails, 'exitCode'>;
 
 /**
  * Implements 'render-process-gone' event across Electron versions
@@ -84,7 +76,8 @@ export function onRendererProcessGone(
     onWebContentsCreated((contents) => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       (contents as any).on('crashed', (__: Electron.Event, killed: boolean) => {
-        const reason: ExitReason = killed ? 'killed' : 'crashed';
+        // When using Breakpad, crashes are incorrectly reported as killed
+        const reason: ExitReason = usesCrashpad() && killed ? 'killed' : 'crashed';
 
         if (reasons.includes(reason)) {
           callback(contents, { reason });
@@ -94,31 +87,7 @@ export function onRendererProcessGone(
   }
 }
 
-/** Same as the Electron interface but with optional exitCode */
-interface Details {
-  /**
-   * Process type. One of the following values:
-   */
-  type: 'Utility' | 'Zygote' | 'Sandbox helper' | 'GPU' | 'Pepper Plugin' | 'Pepper Plugin Broker' | 'Unknown';
-  /**
-   * The reason the child process is gone. Possible values:
-   */
-  reason: 'clean-exit' | 'abnormal-exit' | 'killed' | 'crashed' | 'oom' | 'launch-failed' | 'integrity-failure';
-  /**
-   * The exit code for the process (e.g. status from waitpid if on posix, from
-   * GetExitCodeProcess on Windows).
-   */
-  exitCode?: number;
-  /**
-   * The non-localized name of the process.
-   */
-  serviceName?: string;
-  /**
-   * The name of the process. Examples for utility: `Audio Service`, `Content
-   * Decryption Module Service`, `Network Service`, `Video Capture`, etc.
-   */
-  name?: string;
-}
+type Details = Optional<Electron.Details, 'exitCode'>;
 
 /**
  * Calls callback on child process crash if Electron version support 'child-process-gone' event

@@ -71,6 +71,13 @@ export class ChildProcess implements Integration {
       onChildProcessGone(allReasons, (details) => {
         const { reason } = details;
 
+        // Capture message first
+        if (capture.includes(reason)) {
+          const { message, level } = getMessageAndSeverity(details.reason, details.type);
+          captureMessage(message, { level, tags: { 'event.process': details.type } });
+        }
+
+        // And then add breadcrumbs for subsequent events
         if (breadcrumbs.includes(reason)) {
           addBreadcrumb({
             type: 'process',
@@ -79,17 +86,19 @@ export class ChildProcess implements Integration {
             data: details,
           });
         }
-
-        if (capture.includes(reason)) {
-          const { message, level } = getMessageAndSeverity(details.reason, details.type);
-          captureMessage(message, { level, tags: { 'event.process': details.type } });
-        }
       });
 
       onRendererProcessGone(allReasons, (contents, details) => {
         const { reason } = details;
         const getName = (): string => options?.getRendererName?.(contents) || 'renderer';
 
+        // Capture message first
+        if (capture.includes(reason)) {
+          const { message, level } = getMessageAndSeverity(details.reason, getName());
+          captureMessage(message, level);
+        }
+
+        // And then add breadcrumbs for subsequent events
         if (breadcrumbs.includes(reason)) {
           addBreadcrumb({
             type: 'process',
@@ -97,11 +106,6 @@ export class ChildProcess implements Integration {
             ...getMessageAndSeverity(details.reason, getName()),
             data: details,
           });
-        }
-
-        if (capture.includes(reason)) {
-          const { message, level } = getMessageAndSeverity(details.reason, getName());
-          captureMessage(message, level);
         }
       });
     }
