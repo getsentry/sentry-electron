@@ -75,7 +75,7 @@ const DEFAULT_OPTIONS: ElectronBreadcrumbsOptions<EventFunction> = {
 };
 
 /** Converts all user supplied options to function | false */
-function normalizeOptions(
+export function normalizeOptions(
   options: Partial<ElectronBreadcrumbsOptions<EventTypes>>,
 ): Partial<ElectronBreadcrumbsOptions<EventFunction | false>> {
   return (Object.keys(options) as (keyof ElectronBreadcrumbsOptions<EventTypes>)[]).reduce((obj, k) => {
