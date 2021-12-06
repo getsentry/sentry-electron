@@ -16,7 +16,7 @@ import { Store } from '../../store';
 import { getEventDefaults } from '../../context';
 import { checkPreviousSession, sessionCrashed } from '../../sessions';
 
-/** Sends minidumps via the Sentry uploader.. */
+/** Sends minidumps via the Sentry uploader */
 export class SentryMinidump implements Integration {
   /** @inheritDoc */
   public static id: string = 'SentryMinidump';
