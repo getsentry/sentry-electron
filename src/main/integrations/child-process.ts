@@ -6,9 +6,9 @@ import { ALL_REASONS, ExitReason, onChildProcessGone, onRendererProcessGone } fr
 import { ElectronMainOptions } from '../sdk';
 
 interface ChildProcessOptions<T> {
-  /** Child process events than generate breadcrumbs */
+  /** Child process events that generate breadcrumbs */
   breadcrumbs: T;
-  /** Child process events than capture events */
+  /** Child process events that capture events */
   capture: T;
 }
 
@@ -32,7 +32,7 @@ function getMessageAndSeverity(reason: ExitReason, proc?: string): { message: st
     case 'oom':
     case 'launch-failed':
     case 'integrity-failure':
-      level = Severity.Error;
+      level = Severity.Critical;
   }
 
   return { message, level };
