@@ -1,0 +1,87 @@
+{
+  "method": "envelope",
+  "sentryKey": "37f8a2ee37c0409d8970bc7559c7c7e4",
+  "appId": "277345",
+  "dumpFile": false,
+  "data": {
+    "sdk": {
+      "name": "sentry.javascript.electron",
+      "packages": [
+        {
+          "name": "npm:@sentry/electron",
+          "version": "{{version}}"
+        }
+      ],
+      "version": "{{version}}"
+    },
+    "contexts": {
+      "app": {
+        "app_name": "child-process-killed",
+        "app_version": "1.0.0",
+        "app_start_time": "{{time}}"
+      },
+      "browser": {
+        "name": "Chrome"
+      },
+      "chrome": {
+        "name": "Chrome",
+        "type": "runtime",
+        "version": "{{version}}"
+      },
+      "device": {
+        "arch": "{{arch}}",
+        "family": "Desktop",
+        "memory_size": 0,
+        "free_memory": 0,
+        "processor_count": 0,
+        "processor_frequency": 0,
+        "cpu_description": "{{cpu}}",
+        "screen_resolution":"{{screen}}",
+        "screen_density": 1,
+        "language": "{{language}}"
+      },
+      "node": {
+        "name": "Node",
+        "type": "runtime",
+        "version": "{{version}}"
+      },
+      "os": {
+        "name": "{{platform}}",
+        "version": "{{version}}"
+      },
+      "runtime": {
+        "name": "Electron",
+        "version": "{{version}}"
+      }
+    },
+    "release": "child-process-killed@1.0.0",
+    "environment": "development",
+    "user": {
+      "ip_address": "{{auto}}"
+    },
+    "level": "warning",
+    "event_id": "{{id}}",
+    "message": "'GPU'' process exited with 'killed'",
+    "platform": "node",
+    "timestamp": 0,
+    "breadcrumbs": [
+      {
+        "timestamp": 0,
+        "type": "process",
+        "category": "child-process",
+        "message": "'GPU'' process exited with 'killed'",
+        "level": "warning",
+        "data": {
+          "type": "GPU",
+          "reason": "killed"
+        }
+      }
+    ],
+    "tags": {
+      "event.environment": "javascript",
+      "event.origin": "electron",
+      "event.process": "GPU",
+      "event_type": "javascript"
+    }
+  }
+}

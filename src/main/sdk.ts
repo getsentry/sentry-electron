@@ -7,6 +7,7 @@ import { getDefaultEnvironment, getDefaultReleaseName } from './context';
 import {
   AdditionalContext,
   ElectronBreadcrumbs,
+  ChildProcess,
   MainContext,
   MainProcessSession,
   OnUncaughtException,
@@ -20,6 +21,7 @@ export const defaultIntegrations: Integration[] = [
   new SentryMinidump(),
   new ElectronBreadcrumbs(),
   new MainContext(),
+  new ChildProcess(),
   new OnUncaughtException(),
   new PreloadInjection(),
   new AdditionalContext(),

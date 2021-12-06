@@ -1,0 +1,5 @@
+description: Native GPU Crash
+category: Native (Sentry Uploader)
+# We will only get GPU crashes from Crashpad
+condition: usesCrashpad && version.major >= 13
+command: yarn
