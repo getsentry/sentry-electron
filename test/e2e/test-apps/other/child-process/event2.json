@@ -59,16 +59,53 @@
     "user": {
       "ip_address": "{{auto}}"
     },
-    "level": "warning",
+    "exception": {
+      "values": [
+        {
+          "type": "Error",
+          "value": "Some renderer error",
+          "stacktrace": {
+            "frames": [
+              {
+                "colno": 0,
+                "filename": "app:///src/index.html",
+                "function": "{{function}}",
+                "in_app": true,
+                "lineno": 0
+              }
+            ]
+          },
+          "mechanism": {
+            "handled": true,
+            "type": "generic"
+          }
+        }
+      ]
+    },
+    "level": "error",
     "event_id": "{{id}}",
-    "message": "'GPU'' process exited with 'killed'",
-    "platform": "node",
+    "platform": "javascript",
     "timestamp": 0,
-    "breadcrumbs": [],
+    "breadcrumbs": [
+      {
+        "timestamp": 0,
+        "type": "process",
+        "category": "child-process",
+        "message": "'GPU'' process exited with 'killed'",
+        "level": "warning",
+        "data": {
+          "type": "GPU",
+          "reason": "killed"
+        }
+      }
+    ],
+    "request": {
+      "url": "app:///src/index.html"
+    },
     "tags": {
       "event.environment": "javascript",
       "event.origin": "electron",
-      "event.process": "GPU",
+      "event.process": "renderer",
       "event_type": "javascript"
     }
   }
