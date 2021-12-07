@@ -17,11 +17,7 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
-      - uses: actions/cache@v2
-        with:
-          path: |
-            **/node_modules
-          key: ${{ runner.os }}
+          cache: 'yarn'
       - name: Install
         run: yarn install
       - name: Build
@@ -47,11 +43,7 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
-      - uses: actions/cache@v2
-        with:
-          path: |
-            **/node_modules
-          key: ${{ runner.os }}
+          cache: 'yarn'
       - run: yarn install
       - name: Run Linter
         run: yarn lint
@@ -70,11 +62,7 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
-      - uses: actions/cache@v2
-        with:
-          path: |
-            **/node_modules
-          key: ${{ runner.os }}
+          cache: 'yarn'
       - run: yarn install
       - name: Run Unit Tests
         run: yarn test
@@ -95,11 +83,7 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
-      - uses: actions/cache@v2
-        with:
-          path: |
-            **/node_modules
-          key: ${{ runner.os }}
+          cache: 'yarn'
       - uses: actions/cache@v2
         with:
           path: |
