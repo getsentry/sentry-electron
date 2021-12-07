@@ -4,7 +4,7 @@ const { app, BrowserWindow } = require('electron');
 const { init } = require('@sentry/electron');
 
 init({
-  dsn: process.env.APP_FIRST_RUN ? '__INCORRECT_DSN__' : '__DSN__',
+  dsn: process.env.APP_FIRST_RUN ? '__RATE_LIMIT_DSN__' : '__DSN__',
   debug: true,
   autoSessionTracking: false,
   onFatalError: () => {},
@@ -14,7 +14,7 @@ app.on('ready', () => {
   if (process.env.APP_FIRST_RUN) {
     setTimeout(() => {
       app.quit();
-    }, 10000);
+    }, 5000);
   }
 
   const mainWindow = new BrowserWindow({

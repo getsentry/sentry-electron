@@ -4,7 +4,7 @@ const { app, BrowserWindow } = require('electron');
 const { init } = require('@sentry/electron');
 
 init({
-  dsn: process.env.APP_FIRST_RUN ? '__RATE_LIMIT_DSN__' : '__DSN__',
+  dsn: process.env.APP_FIRST_RUN ? '__ERROR_DSN__' : '__DSN__',
   debug: true,
   autoSessionTracking: false,
   onFatalError: () => {},

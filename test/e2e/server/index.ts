@@ -13,7 +13,7 @@ const log = createLogger('Test Server');
 
 export const SERVER_PORT = 8123;
 export const RATE_LIMIT_ID = 666;
-export const ERROR_ID = 666;
+export const ERROR_ID = 999;
 
 /** Event payload that has been submitted to the test server. */
 export interface TestServerEvent<T = unknown> {

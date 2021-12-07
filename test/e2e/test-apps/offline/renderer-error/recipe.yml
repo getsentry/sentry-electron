@@ -1,4 +1,4 @@
-description: JavaScript Error
+description: JavaScript Error Rate Limit
 category: Offline
 command: yarn
 runTwice: true
