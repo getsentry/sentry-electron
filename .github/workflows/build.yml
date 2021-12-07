@@ -20,7 +20,6 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: |
-            .cache/**
             **/node_modules
           key: ${{ runner.os }}
       - name: Install
@@ -51,7 +50,6 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: |
-            .cache/**
             **/node_modules
           key: ${{ runner.os }}
       - run: yarn install
@@ -75,7 +73,6 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: |
-            .cache/**
             **/node_modules
           key: ${{ runner.os }}
       - run: yarn install
@@ -101,9 +98,13 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: |
-            .cache/**
             **/node_modules
           key: ${{ runner.os }}
+      - uses: actions/cache@v2
+        with:
+          path: |
+            **/.cache/**/*.zip
+          key: ${{ runner.os }}-${{ matrix.electron }}
       - run: yarn install
       - name: Run E2E Tests
         run: yarn e2e
