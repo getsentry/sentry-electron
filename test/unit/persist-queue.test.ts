@@ -63,7 +63,7 @@ describe('PersistedRequestQueue', () => {
     }
 
     expect(popped.length).to.equal(5);
-    expect(popped.map((p) => p.body.toString()).join('')).to.equal('12345');
+    expect(popped.map((p) => p.body.toString()).join('')).to.equal('34567');
     expectFilesInDirectory(tempDir.name, 1);
   });
 

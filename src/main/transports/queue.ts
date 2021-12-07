@@ -28,25 +28,26 @@ export class PersistedRequestQueue {
   public async add(request: SentryElectronRequest): Promise<void> {
     const bodyPath = uuid4();
 
-    let added = false;
     this._queue.update((queue) => {
-      if (queue.length < this._maxCount) {
-        added = true;
-        queue.push({
-          bodyPath,
-          type: request.type,
-          date: request.date || new Date(),
-        });
+      queue.push({
+        bodyPath,
+        type: request.type,
+        date: request.date || new Date(),
+      });
+
+      while (queue.length > this._maxCount) {
+        const removed = queue.shift();
+        if (removed) {
+          void this._removeBody(removed.bodyPath);
+        }
       }
       return queue;
     });
 
-    if (added) {
-      try {
-        await writeFileAsync(join(this._queuePath, bodyPath), request.body);
-      } catch (_) {
-        //
-      }
+    try {
+      await writeFileAsync(join(this._queuePath, bodyPath), request.body);
+    } catch (_) {
+      //
     }
   }
 

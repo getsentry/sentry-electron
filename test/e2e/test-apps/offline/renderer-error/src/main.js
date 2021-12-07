@@ -14,7 +14,7 @@ app.on('ready', () => {
   if (process.env.APP_FIRST_RUN) {
     setTimeout(() => {
       app.quit();
-    }, 5000);
+    }, 10000);
   }
 
   const mainWindow = new BrowserWindow({

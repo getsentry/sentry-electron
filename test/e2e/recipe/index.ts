@@ -4,7 +4,7 @@ import { dirname, join } from 'path';
 import { expect } from 'chai';
 
 import { SDK_VERSION } from '../../../src/main/version';
-import { TestServer } from '../server';
+import { ERROR_ID, RATE_LIMIT_ID, SERVER_PORT, TestServer } from '../server';
 import { createLogger, getTestLog, walkSync } from '../utils';
 import { eventIsSession, normalize } from './normalize';
 import { parseRecipe, TestRecipe } from './parser';
@@ -12,6 +12,8 @@ import { TestContext } from '../context';
 import { evaluateCondition } from './eval';
 
 export * from './normalize';
+
+const SENTRY_KEY = '37f8a2ee37c0409d8970bc7559c7c7e4';
 
 const log = createLogger('Recipe Runner');
 
@@ -105,8 +107,10 @@ export class RecipeRunner {
 
       // Replace with the test server localhost DSN
       content = content
-        .replace('__DSN__', 'http://37f8a2ee37c0409d8970bc7559c7c7e4@localhost:8123/277345')
-        .replace('__INCORRECT_DSN__', 'http://37f8a2ee37c0409d8970bc7559c7c7e4@localhost:8123/666');
+        .replace('__DSN__', `http://${SENTRY_KEY}@localhost:${SERVER_PORT}/277345`)
+        .replace('__INCORRECT_DSN__', `http://${SENTRY_KEY}@localhost:9999/277345`)
+        .replace('__RATE_LIMIT_DSN__', `http://${SENTRY_KEY}@localhost:${SERVER_PORT}/${RATE_LIMIT_ID}`)
+        .replace('__ERROR_DSN__', `http://${SENTRY_KEY}@localhost:${SERVER_PORT}/${ERROR_ID}`);
 
       // We replace the @sentry/electron dependency in package.json with
       // the path to the tarball

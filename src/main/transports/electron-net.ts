@@ -9,7 +9,7 @@ import {
   Status,
   TransportOptions,
 } from '@sentry/types';
-import { logger, PromiseBuffer, SentryError } from '@sentry/utils';
+import { logger, PromiseBuffer } from '@sentry/utils';
 import { net } from 'electron';
 import { Readable, Writable } from 'stream';
 import * as url from 'url';
@@ -20,6 +20,13 @@ import { whenAppReady } from '../electron-normalize';
 
 // Estimated maximum size for reasonable standalone event
 const GZIP_THRESHOLD = 1024 * 32;
+
+/** Wraps HTTP errors and includes the status */
+export class HTTPError extends Error {
+  public constructor(public readonly status: Status, message: string) {
+    super(message);
+  }
+}
 
 /**
  * SentryElectronRequest
@@ -64,8 +71,9 @@ export class ElectronNetTransport extends Transports.BaseTransport {
     const itemHeaders = JSON.stringify({ type });
 
     if (this._isRateLimited(type)) {
-      return Promise.reject(
-        new SentryError(`Transport locked till ${JSON.stringify(this._rateLimits, null, 2)} due to too many requests.`),
+      throw new HTTPError(
+        Status.RateLimit,
+        `Transport locked till ${JSON.stringify(this._rateLimits, null, 2)} due to too many requests.`,
       );
     }
 
@@ -114,17 +122,19 @@ export class ElectronNetTransport extends Transports.BaseTransport {
    * Dispatches a Request to Sentry. Only handles SentryRequest
    */
   public async sendRequest(request: SentryElectronRequest): Promise<Response> {
+    logger.log(`Sending '${request.type}' request`);
+
     if (!this._buffer.isReady()) {
-      throw new SentryError('Not adding Promise due to buffer limit reached.');
+      throw new HTTPError(Status.Unknown, 'Not adding Promise due to buffer limit reached.');
     }
 
     if (this._isRateLimited(request.type)) {
-      return {
-        reason: `Transport for ${request.type} requests locked till ${this._disabledUntil(
+      throw new HTTPError(
+        Status.RateLimit,
+        `Transport for ${request.type} requests locked till ${this._disabledUntil(
           request.type,
         )} due to too many requests.`,
-        status: Status.RateLimit,
-      };
+      );
     }
 
     const options = this._getRequestOptions(new url.URL(request.url));
@@ -151,7 +161,7 @@ export class ElectronNetTransport extends Transports.BaseTransport {
             res.on('error', reject);
 
             const status = Status.fromHttpCode(res.statusCode);
-            if (status == Status.Success) {
+            if (status === Status.Success) {
               resolve({ status });
             } else {
               if (status === Status.RateLimit) {
@@ -161,13 +171,9 @@ export class ElectronNetTransport extends Transports.BaseTransport {
                 let rlHeader = res.headers ? res.headers['x-sentry-rate-limits'] : '';
                 rlHeader = (Array.isArray(rlHeader) ? rlHeader[0] : rlHeader) as string;
 
-                const headers = {
-                  'x-sentry-rate-limits': rlHeader,
-                  'retry-after': retryAfterHeader,
-                };
-
-                const limited = this._handleRateLimit(headers);
-                if (limited) logger.warn(`Too many requests, backing off until: ${this._disabledUntil(request.type)}`);
+                if (this._handleRateLimit({ 'x-sentry-rate-limits': rlHeader, 'retry-after': retryAfterHeader })) {
+                  logger.warn(`Too many requests, backing off until: ${this._disabledUntil(request.type)}`);
+                }
               }
 
               if (res.headers && res.headers['x-sentry-error']) {
@@ -176,9 +182,9 @@ export class ElectronNetTransport extends Transports.BaseTransport {
                   reason = reason.join(', ');
                 }
 
-                reject(new SentryError(`HTTP Error (${res.statusCode}): ${reason}`));
+                reject(new HTTPError(status, `HTTP Error (${res.statusCode}): ${reason}`));
               } else {
-                reject(new SentryError(`HTTP Error (${res.statusCode})`));
+                reject(new HTTPError(status, `HTTP Error (${res.statusCode})`));
               }
             }
             // force the socket to drain
