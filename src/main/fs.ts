@@ -1,76 +1,19 @@
 import { app } from 'electron';
-import { mkdir, mkdirSync, readdir, readFile, rename, stat, Stats, statSync, unlink, writeFile } from 'fs';
+import { mkdir, mkdirSync, readdir, readFile, rename, stat, statSync, unlink, writeFile } from 'fs';
 import { dirname, join, resolve } from 'path';
+import { promisify } from 'util';
 
 export const sentryCachePath = join(app.getPath('userData'), 'sentry');
 
-/**
- * Asynchronously reads given files content.
- *
- * @param path A relative or absolute path to the file
- * @returns A Promise that resolves when the file has been read.
- */
-export async function readFileAsync(
-  path: string,
-  options?: { encoding?: string; flag?: string },
-): Promise<string | Buffer> {
-  // We cannot use util.promisify here because that was only introduced in Node
-  // 8 and we need to support older Node versions.
-  return new Promise<string | Buffer>((res, reject) => {
-    readFile(path, options as any, (err: any, data: any) => {
-      if (err) {
-        reject(err);
-      } else {
-        res(data);
-      }
-    });
-  });
-}
+export const writeFileAsync = promisify(writeFile);
+export const readFileAsync = promisify(readFile);
+export const mkdirAsync = promisify(mkdir);
+export const statAsync = promisify(stat);
+export const unlinkAsync = promisify(unlink);
+export const readDirAsync = promisify(readdir);
+export const renameAsync = promisify(rename);
 
-/**
- * Asynchronously reads given files content.
- *
- * @param path A relative or absolute path to the file
- * @returns A Promise that resolves when the file has been read.
- */
-export async function writeFileAsync(
-  path: string,
-  data: Buffer | string,
-  options?: { encoding?: string; flag?: string },
-): Promise<void> {
-  // We cannot use util.promisify here because that was only introduced in Node
-  // 8 and we need to support older Node versions.
-  return new Promise((res, reject) => {
-    writeFile(path, data, options as any, (err: any) => {
-      if (err) {
-        reject(err);
-      } else {
-        res();
-      }
-    });
-  });
-}
-
-/**
- * Asynchronously creates the given directory.
- *
- * @param path A relative or absolute path to the directory.
- * @param mode The permission mode.
- * @returns A Promise that resolves when the path has been created.
- */
-async function mkdirAsync(path: string, mode: number): Promise<void> {
-  // We cannot use util.promisify here because that was only introduced in Node
-  // 8 and we need to support older Node versions.
-  return new Promise<void>((res, reject) => {
-    mkdir(path, mode, (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        res();
-      }
-    });
-  });
-}
+// mkdir/mkdirSync with recursive was only added in Node 10+
 
 /**
  * Recursively creates the given path.
@@ -126,64 +69,4 @@ export function mkdirpSync(path: string): void {
       }
     }
   }
-}
-
-/**
- * Read stats async
- */
-export function statAsync(path: string): Promise<Stats> {
-  return new Promise<Stats>((res, reject) => {
-    stat(path, (err, stats) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      res(stats);
-    });
-  });
-}
-
-/**
- * unlink async
- */
-export function unlinkAsync(path: string): Promise<void> {
-  return new Promise<void>((res, reject) => {
-    unlink(path, (err) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      res();
-    });
-  });
-}
-
-/**
- * readdir async
- */
-export function readDirAsync(path: string): Promise<string[]> {
-  return new Promise<string[]>((res, reject) => {
-    readdir(path, (err, files) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      res(files);
-    });
-  });
-}
-
-/**
- * rename async
- */
-export function renameAsync(oldPath: string, newPath: string): Promise<void> {
-  return new Promise<void>((res, reject) => {
-    rename(oldPath, newPath, (err) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      res();
-    });
-  });
 }
