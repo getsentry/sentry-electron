@@ -10,6 +10,7 @@ import {
   ElectronBreadcrumbs,
   MainContext,
   MainProcessSession,
+  Net,
   OnUncaughtException,
   PreloadInjection,
   SentryMinidump,
@@ -20,6 +21,7 @@ import { ElectronNetTransport } from './transports/electron-net';
 export const defaultIntegrations: Integration[] = [
   new SentryMinidump(),
   new ElectronBreadcrumbs(),
+  new Net(),
   new MainContext(),
   new ChildProcess(),
   new OnUncaughtException(),

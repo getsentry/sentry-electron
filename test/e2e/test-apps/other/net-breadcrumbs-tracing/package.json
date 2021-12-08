@@ -1,0 +1,9 @@
+{
+  "name": "net-breadcrumbs-tracing",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "dependencies": {
+    "@sentry/electron": "3.0.0",
+    "electron-fetch": "1.7.4"
+  }
+}

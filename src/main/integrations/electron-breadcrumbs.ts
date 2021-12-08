@@ -10,43 +10,43 @@ import { ElectronMainOptions } from '../sdk';
 type EventFunction = (name: string) => boolean;
 type EventTypes = boolean | string[] | EventFunction | undefined;
 
-interface ElectronBreadcrumbsOptions<EventTypes> {
+interface ElectronBreadcrumbsOptions<T> {
   /**
    * app events
    *
    * default: (name) => !name.startsWith('remote-')
    */
-  app: EventTypes;
+  app: T;
   /**
    * autoUpdater events
    *
    * default: all
    */
-  autoUpdater: EventTypes;
+  autoUpdater: T;
   /**
    * webContents events
    * default: ['dom-ready', 'context-menu', 'load-url', 'destroyed']
    */
-  webContents: EventTypes;
+  webContents: T;
   /**
    * BrowserWindow events
    *
    * default: ['closed', 'close', 'unresponsive', 'responsive', 'show', 'blur', 'focus', 'hide',
    *            'maximize', 'minimize', 'restore', 'enter-full-screen', 'leave-full-screen' ]
    */
-  browserWindow: EventTypes;
+  browserWindow: T;
   /**
    * screen events
    *
    * default: all
    */
-  screen: EventTypes;
+  screen: T;
   /**
    * powerMonitor events
    *
    * default: all
    */
-  powerMonitor: EventTypes;
+  powerMonitor: T;
 }
 
 const DEFAULT_OPTIONS: ElectronBreadcrumbsOptions<EventFunction> = {
@@ -97,16 +97,13 @@ export class ElectronBreadcrumbs implements Integration {
   /** @inheritDoc */
   public name: string = ElectronBreadcrumbs.id;
 
-  private readonly _options: ElectronBreadcrumbsOptions<EventFunction | undefined>;
+  private readonly _options: ElectronBreadcrumbsOptions<EventFunction | false>;
 
   /**
    * @param _options Integration options
    */
   public constructor(options: Partial<ElectronBreadcrumbsOptions<EventTypes>> = {}) {
-    this._options = {
-      ...normalizeOptions(options),
-      ...DEFAULT_OPTIONS,
-    };
+    this._options = { ...DEFAULT_OPTIONS, ...normalizeOptions(options) };
   }
 
   /** @inheritDoc */
@@ -153,7 +150,7 @@ export class ElectronBreadcrumbs implements Integration {
   private _patchEventEmitter(
     emitter: NodeJS.EventEmitter | WebContents | BrowserWindow,
     category: string,
-    shouldCapture: EventFunction | undefined,
+    shouldCapture: EventFunction | undefined | false,
   ): void {
     const emit = emitter.emit.bind(emitter) as (event: string, ...args: unknown[]) => boolean;
 
