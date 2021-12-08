@@ -16,8 +16,25 @@ type OrFalse<T> = {
 type ShouldTraceFn = (method: string, url: string) => boolean;
 
 interface NetOptions {
+  /**
+   * Whether breadcrumbs should be captured for net requests
+   *
+   * Defaults to: true
+   */
   breadcrumbs: boolean;
+  /**
+   * Whether to capture transaction spans for net requests
+   *
+   * true | false | (method: string, url: string) => boolean
+   * Defaults to: true
+   */
   tracing: ShouldTraceFn;
+  /**
+   * Whether to add 'sentry-trace' headers to outgoing requests
+   *
+   * true | false | (method: string, url: string) => boolean
+   * Defaults to: true
+   */
   tracingOrigins: ShouldTraceFn;
 }
 
