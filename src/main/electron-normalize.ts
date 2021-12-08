@@ -51,7 +51,7 @@ type RenderProcessGoneDetails = Optional<Electron.RenderProcessGoneDetails, 'exi
  * Implements 'render-process-gone' event across Electron versions
  */
 export function onRendererProcessGone(
-  reasons: ExitReason[],
+  reasons: Readonly<ExitReason[]>,
   callback: (contents: WebContents, details: RenderProcessGoneDetails) => void,
 ): void {
   const supportsRenderProcessGone =
@@ -82,7 +82,7 @@ type Details = Optional<Electron.Details, 'exitCode'>;
 /**
  * Calls callback on child process crash if Electron version support 'child-process-gone' event
  */
-export function onChildProcessGone(reasons: ExitReason[], callback: (details: Details) => void): void {
+export function onChildProcessGone(reasons: Readonly<ExitReason[]>, callback: (details: Details) => void): void {
   if (version.major >= 11) {
     app.on('child-process-gone', (_, details) => {
       if (reasons.includes(details.reason)) {

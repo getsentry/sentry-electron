@@ -7,13 +7,13 @@ import { ElectronMainOptions } from '../sdk';
 
 interface ChildProcessOptions {
   /** Child process events that generate breadcrumbs */
-  breadcrumbs: ExitReason[];
+  breadcrumbs: Readonly<ExitReason[]>;
   /** Child process events that capture events */
-  capture: ExitReason[];
+  capture: Readonly<ExitReason[]>;
 }
 
 const DEFAULT_OPTIONS: ChildProcessOptions = {
-  breadcrumbs: Array.from(EXIT_REASONS),
+  breadcrumbs: EXIT_REASONS,
   capture: ['abnormal-exit', 'launch-failed', 'integrity-failure'],
 };
 
