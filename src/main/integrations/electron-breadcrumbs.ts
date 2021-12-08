@@ -3,50 +3,50 @@ import { NodeClient } from '@sentry/node';
 import { Breadcrumb, Integration } from '@sentry/types';
 import { app, autoUpdater, BrowserWindow, powerMonitor, screen, WebContents } from 'electron';
 
-import { whenAppReady } from '../electron-normalize';
+import { onBrowserWindowCreated, onWebContentsCreated, whenAppReady } from '../electron-normalize';
 import { ElectronMainOptions } from '../sdk';
 
 /** A function that returns true if the named event should create breadcrumbs */
 type EventFunction = (name: string) => boolean;
 type EventTypes = boolean | string[] | EventFunction | undefined;
 
-interface ElectronBreadcrumbsOptions<EventTypes> {
+interface ElectronBreadcrumbsOptions<T> {
   /**
    * app events
    *
    * default: (name) => !name.startsWith('remote-')
    */
-  app: EventTypes;
+  app: T;
   /**
    * autoUpdater events
    *
    * default: all
    */
-  autoUpdater: EventTypes;
+  autoUpdater: T;
   /**
    * webContents events
    * default: ['dom-ready', 'context-menu', 'load-url', 'destroyed']
    */
-  webContents: EventTypes;
+  webContents: T;
   /**
    * BrowserWindow events
    *
    * default: ['closed', 'close', 'unresponsive', 'responsive', 'show', 'blur', 'focus', 'hide',
    *            'maximize', 'minimize', 'restore', 'enter-full-screen', 'leave-full-screen' ]
    */
-  browserWindow: EventTypes;
+  browserWindow: T;
   /**
    * screen events
    *
    * default: all
    */
-  screen: EventTypes;
+  screen: T;
   /**
    * powerMonitor events
    *
    * default: all
    */
-  powerMonitor: EventTypes;
+  powerMonitor: T;
 }
 
 const DEFAULT_OPTIONS: ElectronBreadcrumbsOptions<EventFunction> = {
@@ -97,16 +97,13 @@ export class ElectronBreadcrumbs implements Integration {
   /** @inheritDoc */
   public name: string = ElectronBreadcrumbs.id;
 
-  private readonly _options: ElectronBreadcrumbsOptions<EventFunction | undefined>;
+  private readonly _options: ElectronBreadcrumbsOptions<EventFunction | false>;
 
   /**
    * @param _options Integration options
    */
   public constructor(options: Partial<ElectronBreadcrumbsOptions<EventTypes>> = {}) {
-    this._options = {
-      ...normalizeOptions(options),
-      ...DEFAULT_OPTIONS,
-    };
+    this._options = { ...DEFAULT_OPTIONS, ...normalizeOptions(options) };
   }
 
   /** @inheritDoc */
@@ -133,32 +130,16 @@ export class ElectronBreadcrumbs implements Integration {
     }
 
     if (this._options.browserWindow) {
-      app.on('browser-window-created', (_, window) => {
-        // SetImmediate is required for contents.id to be correct in older versions of Electron
-        // https://github.com/electron/electron/issues/12036
-        setImmediate(() => {
-          if (window.isDestroyed()) {
-            return;
-          }
-          const windowName = initOptions?.getRendererName?.(window.webContents) || 'window';
-          this._patchEventEmitter(window, windowName, this._options.browserWindow);
-        });
+      onBrowserWindowCreated((window) => {
+        const windowName = initOptions?.getRendererName?.(window.webContents) || 'window';
+        this._patchEventEmitter(window, windowName, this._options.browserWindow);
       });
     }
 
     if (this._options.webContents) {
-      app.on('web-contents-created', (_, contents) => {
-        // SetImmediate is required for contents.id to be correct in older versions of Electron
-        // https://github.com/electron/electron/issues/12036
-        setImmediate(() => {
-          if (contents.isDestroyed()) {
-            return;
-          }
-
-          const webContentsName = initOptions?.getRendererName?.(contents) || 'renderer';
-
-          this._patchEventEmitter(contents, webContentsName, this._options.webContents);
-        });
+      onWebContentsCreated((contents) => {
+        const webContentsName = initOptions?.getRendererName?.(contents) || 'renderer';
+        this._patchEventEmitter(contents, webContentsName, this._options.webContents);
       });
     }
   }
@@ -169,7 +150,7 @@ export class ElectronBreadcrumbs implements Integration {
   private _patchEventEmitter(
     emitter: NodeJS.EventEmitter | WebContents | BrowserWindow,
     category: string,
-    shouldCapture: EventFunction | undefined,
+    shouldCapture: EventFunction | undefined | false,
   ): void {
     const emit = emitter.emit.bind(emitter) as (event: string, ...args: unknown[]) => boolean;
 

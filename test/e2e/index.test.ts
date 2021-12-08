@@ -37,6 +37,7 @@ describe('E2E Tests', () => {
       });
 
       afterEach(async function () {
+        this.timeout(5_000);
         await testContext?.stop();
 
         if (this.currentTest?.state === 'failed') {

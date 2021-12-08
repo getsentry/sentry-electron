@@ -1,10 +1,10 @@
-import { addBreadcrumb, getCurrentHub, Scope } from '@sentry/core';
+import { getCurrentHub, Scope } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { Event, Integration, Severity } from '@sentry/types';
 import { forget, isPlainObject, isThenable, logger, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
-import { onRendererProcessGone, usesCrashpad } from '../../electron-normalize';
+import { CRASH_REASONS, onChildProcessGone, onRendererProcessGone, usesCrashpad } from '../../electron-normalize';
 import { mergeEvents, normalizeUrl } from '../../../common';
 import { ElectronMainOptions } from '../../sdk';
 import { ElectronNetTransport } from '../../transports/electron-net';
@@ -64,8 +64,8 @@ export class SentryMinidump implements Integration {
       ? new CrashpadUploader(options, transport)
       : new BreakpadUploader(options, transport);
 
-    // Every time a subprocess or renderer crashes, send a minidump right away.
-    onRendererProcessGone((contents, details) => this._sendRendererCrash(options, contents, details));
+    onRendererProcessGone(CRASH_REASONS, (contents, details) => this._sendRendererCrash(options, contents, details));
+    onChildProcessGone(CRASH_REASONS, (details) => this._sendChildProcessCrash(options, details));
 
     // Start to submit recent minidump crashes. This will load breadcrumbs and
     // context information that was cached on disk prior to the crash.
@@ -103,25 +103,19 @@ export class SentryMinidump implements Integration {
   private async _sendRendererCrash(
     options: ElectronMainOptions,
     contents: Electron.WebContents,
-    details?: Electron.RenderProcessGoneDetails,
+    details: Partial<Electron.RenderProcessGoneDetails>,
   ): Promise<void> {
     const { getRendererName, release } = options;
     const crashedProcess = getRendererName?.(contents) || 'renderer';
 
-    logger.log(`Renderer process '${crashedProcess}' has crashed`);
-
-    const electron: Record<string, any> = {
-      crashed_url: normalizeUrl(contents.getURL(), app.getAppPath()),
-    };
-
-    if (details) {
-      // We need to do it like this, otherwise we normalize undefined to "[undefined]" in the UI
-      electron.details = details;
-    }
+    logger.log(`'${crashedProcess}' process '${details.reason}'`);
 
     const event = mergeEvents(await getEventDefaults(release), {
       contexts: {
-        electron,
+        electron: {
+          crashed_url: normalizeUrl(contents.getURL(), app.getAppPath()),
+          details,
+        },
       },
       level: Severity.Fatal,
       // The default is javascript
@@ -129,14 +123,37 @@ export class SentryMinidump implements Integration {
       tags: { 'event.environment': 'native', 'event.process': crashedProcess, event_type: 'native' },
     });
 
-    await this._sendNativeCrashes(options, event);
-    sessionCrashed();
+    const found = await this._sendNativeCrashes(options, event);
 
-    addBreadcrumb({
-      category: 'exception',
-      level: Severity.Critical,
-      message: 'Renderer Crashed',
+    if (found) {
+      sessionCrashed();
+    }
+  }
+
+  /**
+   * Helper function for sending child process crashes
+   */
+  private async _sendChildProcessCrash(
+    options: ElectronMainOptions,
+    details: Omit<Electron.Details, 'exitCode'>,
+  ): Promise<void> {
+    logger.log(`${details.type} process has ${details.reason}`);
+
+    const event = mergeEvents(await getEventDefaults(options.release), {
+      contexts: {
+        electron: { details },
+      },
+      level: Severity.Fatal,
+      // The default is javascript
+      platform: 'native',
+      tags: { 'event.environment': 'native', 'event.process': details.type, event_type: 'native' },
     });
+
+    const found = await this._sendNativeCrashes(options, event);
+
+    if (found) {
+      sessionCrashed();
+    }
   }
 
   /**

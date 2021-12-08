@@ -6,9 +6,11 @@ import { IPCMode } from '../common';
 import { getDefaultEnvironment, getDefaultReleaseName } from './context';
 import {
   AdditionalContext,
+  ChildProcess,
   ElectronBreadcrumbs,
   MainContext,
   MainProcessSession,
+  Net,
   OnUncaughtException,
   PreloadInjection,
   SentryMinidump,
@@ -19,7 +21,9 @@ import { ElectronOfflineNetTransport } from './transports/electron-offline-net';
 export const defaultIntegrations: Integration[] = [
   new SentryMinidump(),
   new ElectronBreadcrumbs(),
+  new Net(),
   new MainContext(),
+  new ChildProcess(),
   new OnUncaughtException(),
   new PreloadInjection(),
   new AdditionalContext(),
