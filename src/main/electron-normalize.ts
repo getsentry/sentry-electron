@@ -1,5 +1,5 @@
 import { parseSemver } from '@sentry/utils';
-import { app, crashReporter, RenderProcessGoneDetails, WebContents } from 'electron';
+import { app, BrowserWindow, crashReporter, WebContents } from 'electron';
 import { basename } from 'path';
 
 const parsed = parseSemver(process.versions.electron);
@@ -32,27 +32,107 @@ export function supportsFullProtocol(): boolean {
   return version.major >= 5;
 }
 
+export const EXIT_REASONS = [
+  'clean-exit',
+  'abnormal-exit',
+  'killed',
+  'crashed',
+  'oom',
+  'launch-failed',
+  'integrity-failure',
+] as const;
+export type ExitReason = typeof EXIT_REASONS[number];
+export const CRASH_REASONS: Readonly<ExitReason[]> = ['crashed', 'oom'] as const;
+
+/** Same as the Electron interface but with optional exitCode */
+type RenderProcessGoneDetails = Optional<Electron.RenderProcessGoneDetails, 'exitCode'>;
+
 /**
  * Implements 'render-process-gone' event across Electron versions
  */
 export function onRendererProcessGone(
-  callback: (contents: WebContents, details?: RenderProcessGoneDetails) => void,
+  reasons: Readonly<ExitReason[]>,
+  callback: (contents: WebContents, details: RenderProcessGoneDetails) => void,
 ): void {
   const supportsRenderProcessGone =
     version.major >= 10 || (version.major === 9 && version.minor >= 1) || (version.major === 8 && version.minor >= 4);
+  if (supportsRenderProcessGone) {
+    app.on('render-process-gone', (_, contents, details) => {
+      if (reasons.includes(details.reason)) {
+        callback(contents, details);
+      }
+    });
+  } else {
+    onWebContentsCreated((contents) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      (contents as any).on('crashed', (__: Electron.Event, killed: boolean) => {
+        // When using Breakpad, crashes are incorrectly reported as killed
+        const reason: ExitReason = usesCrashpad() && killed ? 'killed' : 'crashed';
 
-  app.on('web-contents-created', (_, contents) => {
-    if (supportsRenderProcessGone) {
-      contents.on('render-process-gone', async (__, details) => {
-        const ignoredReasons = ['clean-exit', 'killed'];
-
-        if (!ignoredReasons.includes(details?.reason || '')) {
-          callback(contents, details);
+        if (reasons.includes(reason)) {
+          callback(contents, { reason });
         }
       });
+    });
+  }
+}
+
+type Details = Optional<Electron.Details, 'exitCode'>;
+
+/**
+ * Calls callback on child process crash if Electron version support 'child-process-gone' event
+ */
+export function onChildProcessGone(reasons: Readonly<ExitReason[]>, callback: (details: Details) => void): void {
+  if (version.major >= 11) {
+    app.on('child-process-gone', (_, details) => {
+      if (reasons.includes(details.reason)) {
+        callback(details);
+      }
+    });
+  } else {
+    // eslint-disable-next-line deprecation/deprecation
+    app.on('gpu-process-crashed', (_, killed) => {
+      const reason: ExitReason = killed ? 'killed' : 'crashed';
+
+      if (reasons.includes(reason)) {
+        callback({ type: 'GPU', reason });
+      }
+    });
+  }
+}
+
+/** Calls callback when BrowserWindow are created */
+export function onBrowserWindowCreated(callback: (window: BrowserWindow) => void): void {
+  app.on('browser-window-created', (_, window) => {
+    // SetImmediate is required for window.id to be correct in older versions of Electron
+    // https://github.com/electron/electron/issues/12036
+    if (version.major >= 3) {
+      callback(window);
     } else {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      (contents as any).on('crashed', async () => {
+      setImmediate(() => {
+        if (window.isDestroyed()) {
+          return;
+        }
+
+        callback(window);
+      });
+    }
+  });
+}
+
+/** Calls callback when WebContents are created */
+export function onWebContentsCreated(callback: (window: WebContents) => void): void {
+  app.on('web-contents-created', (_, contents) => {
+    // SetImmediate is required for contents.id to be correct in older versions of Electron
+    // https://github.com/electron/electron/issues/12036
+    if (version.major >= 3) {
+      callback(contents);
+    } else {
+      setImmediate(() => {
+        if (contents.isDestroyed()) {
+          return;
+        }
+
         callback(contents);
       });
     }

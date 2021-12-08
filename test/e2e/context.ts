@@ -95,7 +95,7 @@ export class TestContext {
 
     await this.waitForTrue(
       async () => (this.mainProcess ? this.mainProcess.isRunning() : false),
-      'Timeout: Waiting for app to start',
+      () => 'Timeout: Waiting for app to start',
     );
 
     log('App process has started');
@@ -130,7 +130,7 @@ export class TestContext {
    */
   public async waitForTrue(
     method: () => boolean | Promise<boolean>,
-    message: string = 'Timeout',
+    message: () => string = () => 'Timeout',
     timeout: number = 8_000,
   ): Promise<void> {
     if (!this.mainProcess) {
@@ -144,8 +144,9 @@ export class TestContext {
       await new Promise<void>((resolve) => setTimeout(resolve, 100));
       remaining -= 100;
       if (remaining < 0) {
-        log(message);
-        throw new Error(message);
+        const msg = message();
+        log(msg);
+        throw new Error(msg);
       }
     }
   }
@@ -160,7 +161,7 @@ export class TestContext {
     log(`Waiting for ${count} events`);
     await this.waitForTrue(
       () => testServer.events.length >= count,
-      `Timeout: Waiting ${timeout}ms for ${count} events. Only ${testServer.events.length} events received`,
+      () => `Timeout: Waiting ${timeout}ms for ${count} events. Only ${testServer.events.length} events received`,
       timeout,
     );
     log(`${count} events received`);
@@ -170,7 +171,7 @@ export class TestContext {
   public async waitForAppClose(): Promise<void> {
     await this.waitForTrue(
       async () => (this.mainProcess ? !(await this.mainProcess.isRunning()) : false),
-      'Timeout: Waiting for app to die',
+      () => 'Timeout: Waiting for app to die',
     );
 
     // Ensure everything has closed

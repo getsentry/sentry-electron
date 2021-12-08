@@ -6,6 +6,7 @@ import { IPCMode } from '../common';
 import { getDefaultEnvironment, getDefaultReleaseName } from './context';
 import {
   AdditionalContext,
+  ChildProcess,
   ElectronBreadcrumbs,
   MainContext,
   MainProcessSession,
@@ -22,6 +23,7 @@ export const defaultIntegrations: Integration[] = [
   new ElectronBreadcrumbs(),
   new Net(),
   new MainContext(),
+  new ChildProcess(),
   new OnUncaughtException(),
   new PreloadInjection(),
   new AdditionalContext(),

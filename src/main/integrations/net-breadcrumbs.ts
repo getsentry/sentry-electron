@@ -5,14 +5,6 @@ import { fill } from '@sentry/utils';
 import { ClientRequest, ClientRequestConstructorOptions, IncomingMessage, net } from 'electron';
 import * as urlModule from 'url';
 
-type OrBool<T> = {
-  [P in keyof T]: T[P] | boolean;
-};
-
-type OrFalse<T> = {
-  [P in keyof T]: T[P] | false;
-};
-
 type ShouldTraceFn = (method: string, url: string) => boolean;
 
 interface NetOptions {

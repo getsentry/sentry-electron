@@ -11,6 +11,7 @@ import {
   SentryMinidump,
   MainProcessSession,
   AdditionalContext,
+  ChildProcess,
 } from './main/integrations';
 import { EventToMain, ScopeToMain } from './renderer/integrations';
 
@@ -25,6 +26,7 @@ export interface Integrations {
   PreloadInjection: PreloadInjection;
   MainProcessSession: MainProcessSession;
   AdditionalContext: AdditionalContext;
+  ChildProcess: ChildProcess;
   // For renderer process
   ScopeToMain: ScopeToMain;
   EventToMain: EventToMain;
@@ -50,6 +52,7 @@ export function getIntegrations(): Integrations {
         PreloadInjection: EmptyIntegration,
         MainProcessSession: EmptyIntegration,
         AdditionalContext: EmptyIntegration,
+        ChildProcess: EmptyIntegration,
       };
 }
 

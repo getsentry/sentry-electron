@@ -3,7 +3,7 @@ import { NodeClient } from '@sentry/node';
 import { Breadcrumb, Integration } from '@sentry/types';
 import { app, autoUpdater, BrowserWindow, powerMonitor, screen, WebContents } from 'electron';
 
-import { whenAppReady } from '../electron-normalize';
+import { onBrowserWindowCreated, onWebContentsCreated, whenAppReady } from '../electron-normalize';
 import { ElectronMainOptions } from '../sdk';
 
 /** A function that returns true if the named event should create breadcrumbs */
@@ -130,32 +130,16 @@ export class ElectronBreadcrumbs implements Integration {
     }
 
     if (this._options.browserWindow) {
-      app.on('browser-window-created', (_, window) => {
-        // SetImmediate is required for contents.id to be correct in older versions of Electron
-        // https://github.com/electron/electron/issues/12036
-        setImmediate(() => {
-          if (window.isDestroyed()) {
-            return;
-          }
-          const windowName = initOptions?.getRendererName?.(window.webContents) || 'window';
-          this._patchEventEmitter(window, windowName, this._options.browserWindow);
-        });
+      onBrowserWindowCreated((window) => {
+        const windowName = initOptions?.getRendererName?.(window.webContents) || 'window';
+        this._patchEventEmitter(window, windowName, this._options.browserWindow);
       });
     }
 
     if (this._options.webContents) {
-      app.on('web-contents-created', (_, contents) => {
-        // SetImmediate is required for contents.id to be correct in older versions of Electron
-        // https://github.com/electron/electron/issues/12036
-        setImmediate(() => {
-          if (contents.isDestroyed()) {
-            return;
-          }
-
-          const webContentsName = initOptions?.getRendererName?.(contents) || 'renderer';
-
-          this._patchEventEmitter(contents, webContentsName, this._options.webContents);
-        });
+      onWebContentsCreated((contents) => {
+        const webContentsName = initOptions?.getRendererName?.(contents) || 'renderer';
+        this._patchEventEmitter(contents, webContentsName, this._options.webContents);
       });
     }
   }
