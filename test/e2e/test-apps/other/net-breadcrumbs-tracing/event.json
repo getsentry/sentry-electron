@@ -1,0 +1,81 @@
+{
+  "method": "envelope",
+  "sentryKey": "37f8a2ee37c0409d8970bc7559c7c7e4",
+  "appId": "277345",
+  "dumpFile": false,
+  "data": {
+    "sdk": {
+      "name": "sentry.javascript.electron",
+      "packages": [
+        {
+          "name": "npm:@sentry/electron",
+          "version": "{{version}}"
+        }
+      ],
+      "version": "{{version}}"
+    },
+    "contexts": {
+      "app": {
+        "app_name": "net-breadcrumbs-tracing",
+        "app_version": "1.0.0"
+      },
+      "browser": {
+        "name": "Chrome"
+      },
+      "chrome": {
+        "name": "Chrome",
+        "type": "runtime",
+        "version": "{{version}}"
+      },
+      "device": {
+        "arch": "{{arch}}",
+        "family": "Desktop"
+      },
+      "node": {
+        "name": "Node",
+        "type": "runtime",
+        "version": "{{version}}"
+      },
+      "os": {
+        "name": "{{platform}}",
+        "version": "{{version}}"
+      },
+      "runtime": {
+        "name": "Electron",
+        "version": "{{version}}"
+      }
+    },
+    "spans": [
+      {
+        "op": "http.client",
+        "trace_id": "{{id}}",
+        "parent_span_id": "{{id}}",
+        "span_id": "{{id}}",
+        "start_timestamp": 0,
+        "timestamp": 0,
+        "description": "GET http://localhost:8123/something",
+        "status": "not_found",
+        "tags": {
+          "http.status_code": "404"
+        }
+      }
+    ],
+    "release": "net-breadcrumbs-tracing@1.0.0",
+    "environment": "development",
+    "user": {
+      "ip_address": "{{auto}}"
+    },
+    "type": "transaction",
+    "transaction": "some-transaction",
+    "event_id": "{{id}}",
+    "platform": "node",
+    "start_timestamp": 0,
+    "timestamp": 0,
+    "breadcrumbs": [],
+    "tags": {
+      "event.environment": "javascript",
+      "event.origin": "electron",
+      "event_type": "javascript"
+    }
+  }
+}
