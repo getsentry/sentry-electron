@@ -2,18 +2,18 @@ import { addBreadcrumb, captureMessage, getCurrentHub } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { Integration, Severity } from '@sentry/types';
 
-import { ALL_REASONS, ExitReason, onChildProcessGone, onRendererProcessGone } from '../electron-normalize';
+import { EXIT_REASONS, ExitReason, onChildProcessGone, onRendererProcessGone } from '../electron-normalize';
 import { ElectronMainOptions } from '../sdk';
 
-interface ChildProcessOptions<T> {
+interface ChildProcessOptions {
   /** Child process events that generate breadcrumbs */
-  breadcrumbs: T;
+  breadcrumbs: ExitReason[];
   /** Child process events that capture events */
-  capture: T;
+  capture: ExitReason[];
 }
 
-const DEFAULT_OPTIONS: ChildProcessOptions<ExitReason[]> = {
-  breadcrumbs: ALL_REASONS,
+const DEFAULT_OPTIONS: ChildProcessOptions = {
+  breadcrumbs: Array.from(EXIT_REASONS),
   capture: ['abnormal-exit', 'launch-failed', 'integrity-failure'],
 };
 
@@ -21,21 +21,18 @@ const DEFAULT_OPTIONS: ChildProcessOptions<ExitReason[]> = {
 function getMessageAndSeverity(reason: ExitReason, proc?: string): { message: string; level: Severity } {
   const message = `'${proc}'' process exited with '${reason}'`;
 
-  let level = Severity.Debug;
-
   switch (reason) {
     case 'abnormal-exit':
     case 'killed':
-      level = Severity.Warning;
-      break;
+      return { message, level: Severity.Warning };
     case 'crashed':
     case 'oom':
     case 'launch-failed':
     case 'integrity-failure':
-      level = Severity.Critical;
+      return { message, level: Severity.Critical };
+    default:
+      return { message, level: Severity.Debug };
   }
-
-  return { message, level };
 }
 
 /** Adds breadcrumbs for Electron events. */
@@ -46,12 +43,12 @@ export class ChildProcess implements Integration {
   /** @inheritDoc */
   public name: string = ChildProcess.id;
 
-  private readonly _options: ChildProcessOptions<ExitReason[]>;
+  private readonly _options: ChildProcessOptions;
 
   /**
    * @param _options Integration options
    */
-  public constructor(options: Partial<ChildProcessOptions<ExitReason[] | boolean>> = {}) {
+  public constructor(options: Partial<OrBool<ChildProcessOptions>> = {}) {
     const { breadcrumbs, capture } = options;
     this._options = {
       breadcrumbs: Array.isArray(breadcrumbs) ? breadcrumbs : breadcrumbs == false ? [] : DEFAULT_OPTIONS.breadcrumbs,
@@ -90,11 +87,11 @@ export class ChildProcess implements Integration {
 
       onRendererProcessGone(allReasons, (contents, details) => {
         const { reason } = details;
-        const getName = (): string => options?.getRendererName?.(contents) || 'renderer';
+        const name = options?.getRendererName?.(contents) || 'renderer';
 
         // Capture message first
         if (capture.includes(reason)) {
-          const { message, level } = getMessageAndSeverity(details.reason, getName());
+          const { message, level } = getMessageAndSeverity(details.reason, name);
           captureMessage(message, level);
         }
 
@@ -103,7 +100,7 @@ export class ChildProcess implements Integration {
           addBreadcrumb({
             type: 'process',
             category: 'child-process',
-            ...getMessageAndSeverity(details.reason, getName()),
+            ...getMessageAndSeverity(details.reason, name),
             data: details,
           });
         }

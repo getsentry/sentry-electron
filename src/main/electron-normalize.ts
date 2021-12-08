@@ -32,17 +32,7 @@ export function supportsFullProtocol(): boolean {
   return version.major >= 5;
 }
 
-export type ExitReason =
-  | 'clean-exit'
-  | 'abnormal-exit'
-  | 'killed'
-  | 'crashed'
-  | 'oom'
-  | 'launch-failed'
-  | 'integrity-failure';
-
-export const CRASH_REASONS: ExitReason[] = ['crashed', 'oom'];
-export const ALL_REASONS: ExitReason[] = [
+export const EXIT_REASONS = [
   'clean-exit',
   'abnormal-exit',
   'killed',
@@ -50,9 +40,9 @@ export const ALL_REASONS: ExitReason[] = [
   'oom',
   'launch-failed',
   'integrity-failure',
-];
-
-type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
+] as const;
+export type ExitReason = typeof EXIT_REASONS[number];
+export const CRASH_REASONS: Readonly<ExitReason[]> = ['crashed', 'oom'] as const;
 
 /** Same as the Electron interface but with optional exitCode */
 type RenderProcessGoneDetails = Optional<Electron.RenderProcessGoneDetails, 'exitCode'>;
