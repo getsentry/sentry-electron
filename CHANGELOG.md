@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 3.0.0-beta.4
+
+- feat: Adds `ElectronOfflineNetTransport` and makes it the default transport
+- feat: Adds `AdditionalContext` integration that includes additional device and enables it by default (#390)
+- feat: Renames `ElectronEvents ` to `ElectronBreadcrumbs` and allows more complex configuration
+- fix: Fixes bundling of preload code (#396)
+- feat: Adds breadcrumbs and tracing for the Electron `net` module (#395)
+- feat: Breadcrumbs and events for child processes (#398)
+- feat: Capture minidumps for GPU crashes with `SentryMinidump` integration (#398)
+
 ## 3.0.0-beta.3
 
 - fix: Enable CORS for custom protocol

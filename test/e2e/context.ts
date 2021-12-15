@@ -172,7 +172,6 @@ export class TestContext {
     await this.waitForTrue(
       async () => (this.mainProcess ? !(await this.mainProcess.isRunning()) : false),
       () => 'Timeout: Waiting for app to die',
-      15_000,
     );
 
     // Ensure everything has closed
