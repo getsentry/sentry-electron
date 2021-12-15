@@ -43,6 +43,7 @@ export {
 export { NodeOptions, NodeBackend, NodeClient, lastEventId } from '@sentry/node';
 
 export { ElectronNetTransport } from './transports/electron-net';
+export { ElectronOfflineNetTransport } from './transports/electron-offline-net';
 export const Integrations = { ...ElectronMainIntegrations, ...NodeIntegrations };
 
 export { init, ElectronMainOptions, defaultIntegrations } from './sdk';

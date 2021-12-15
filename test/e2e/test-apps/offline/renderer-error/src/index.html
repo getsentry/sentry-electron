@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <script>
+      const { init } = require('@sentry/electron');
+
+      init({
+        debug: true,
+      });
+
+      if (process.env.APP_FIRST_RUN) {
+        setTimeout(() => {
+          throw new Error('Some renderer error');
+        }, 500);
+      }
+    </script>
+  </body>
+</html>

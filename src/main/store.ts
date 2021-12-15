@@ -4,6 +4,17 @@ import { dirname, join } from 'path';
 
 import { mkdirpSync } from './fs';
 
+const dateFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.*\d{0,10}Z$/;
+
+/** JSON revive function to enable de-serialization of Date objects */
+function dateReviver(_: string, value: any): any {
+  if (typeof value === 'string' && dateFormat.test(value)) {
+    return new Date(value);
+  }
+
+  return value;
+}
+
 /**
  * Note, this class is only compatible with Node.
  * Lazily serializes data to a JSON file to persist. When created, it loads data
@@ -70,7 +81,9 @@ export class Store<T> {
   public get(): T {
     if (this._data === undefined) {
       try {
-        this._data = existsSync(this._path) ? (JSON.parse(readFileSync(this._path, 'utf8')) as T) : this._initial;
+        this._data = existsSync(this._path)
+          ? (JSON.parse(readFileSync(this._path, 'utf8'), dateReviver) as T)
+          : this._initial;
       } catch (e) {
         this._data = this._initial;
       }

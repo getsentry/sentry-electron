@@ -3,7 +3,6 @@ import { NodeClient } from '@sentry/node';
 import { Event, Integration, Severity } from '@sentry/types';
 import { forget, isPlainObject, isThenable, logger, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
-import { join } from 'path';
 
 import { CRASH_REASONS, onChildProcessGone, onRendererProcessGone, usesCrashpad } from '../../electron-normalize';
 import { mergeEvents, normalizeUrl } from '../../../common';
@@ -15,6 +14,7 @@ import { CrashpadUploader } from './crashpad-uploader';
 import { Store } from '../../store';
 import { getEventDefaults } from '../../context';
 import { checkPreviousSession, sessionCrashed } from '../../sessions';
+import { sentryCachePath } from '../../fs';
 
 /** Sends minidumps via the Sentry uploader */
 export class SentryMinidump implements Integration {
@@ -33,9 +33,6 @@ export class SentryMinidump implements Integration {
   /** Uploader for minidump files. */
   private _uploader?: BaseUploader;
 
-  /** The path to the Sentry cache directory. */
-  private readonly _cachePath: string = join(app.getPath('userData'), 'sentry');
-
   /** @inheritDoc */
   public setupOnce(): void {
     // Mac AppStore builds cannot run the crash reporter due to the sandboxing
@@ -47,7 +44,7 @@ export class SentryMinidump implements Integration {
 
     this._startCrashReporter();
 
-    this._scopeStore = new Store<Scope>(this._cachePath, 'scope_v2', new Scope());
+    this._scopeStore = new Store<Scope>(sentryCachePath, 'scope_v2', new Scope());
     // We need to store the scope in a variable here so it can be attached to minidumps
     this._scopeLastRun = this._scopeStore.get();
 
@@ -64,14 +61,11 @@ export class SentryMinidump implements Integration {
     const transport = (client as any)._getBackend().getTransport() as ElectronNetTransport;
 
     this._uploader = usesCrashpad()
-      ? new CrashpadUploader(options, this._cachePath, transport)
-      : new BreakpadUploader(options, this._cachePath, transport);
+      ? new CrashpadUploader(options, transport)
+      : new BreakpadUploader(options, transport);
 
     onRendererProcessGone(CRASH_REASONS, (contents, details) => this._sendRendererCrash(options, contents, details));
     onChildProcessGone(CRASH_REASONS, (details) => this._sendChildProcessCrash(options, details));
-
-    // Flush already cached minidumps from the queue.
-    forget(this._uploader.flushQueue());
 
     // Start to submit recent minidump crashes. This will load breadcrumbs and
     // context information that was cached on disk prior to the crash.

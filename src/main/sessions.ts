@@ -2,20 +2,15 @@ import { getCurrentHub } from '@sentry/core';
 import { flush, NodeClient } from '@sentry/node';
 import { SessionContext, SessionStatus } from '@sentry/types';
 import { logger } from '@sentry/utils';
-import { app } from 'electron';
-import { join } from 'path';
 
+import { sentryCachePath } from './fs';
 import { Store } from './store';
 import { ElectronNetTransport } from './transports/electron-net';
 
 const PERSIST_INTERVAL_MS = 60_000;
 
 /** Stores the app session in case of termination due to main process crash or app killed */
-const sessionStore = new Store<SessionContext | undefined>(
-  join(app.getPath('userData'), 'sentry'),
-  'session',
-  undefined,
-);
+const sessionStore = new Store<SessionContext | undefined>(sentryCachePath, 'session', undefined);
 
 /** Previous session that did not exit cleanly */
 let previousSession = sessionStore.get();

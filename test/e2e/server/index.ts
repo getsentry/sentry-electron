@@ -11,6 +11,10 @@ import { parse_multipart, sentryEventFromFormFields } from './multi-part';
 
 const log = createLogger('Test Server');
 
+export const SERVER_PORT = 8123;
+export const RATE_LIMIT_ID = 666;
+export const ERROR_ID = 999;
+
 /** Event payload that has been submitted to the test server. */
 export interface TestServerEvent<T = unknown> {
   /** Request ID (UUID) */
@@ -58,6 +62,18 @@ export class TestServer {
 
     // Handles the Sentry envelope endpoint
     router.post('/api/:id/envelope/', async (ctx) => {
+      if (ctx.params.id === RATE_LIMIT_ID.toString()) {
+        ctx.status = 429;
+        ctx.body = 'Not found';
+        return;
+      }
+
+      if (ctx.params.id === ERROR_ID.toString()) {
+        ctx.status = 500;
+        ctx.body = 'Not found';
+        return;
+      }
+
       const auth = (ctx.headers['x-sentry-auth'] as string) || '';
       const keyMatch = auth.match(/sentry_key=([a-f0-9]*)/);
       if (!keyMatch) {
@@ -141,7 +157,7 @@ export class TestServer {
       });
     }
 
-    this._server = app.listen(8123);
+    this._server = app.listen(SERVER_PORT);
   }
 
   public clearEvents(): void {

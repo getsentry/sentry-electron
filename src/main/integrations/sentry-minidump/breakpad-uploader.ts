@@ -11,8 +11,8 @@ import { BaseUploader } from './base-uploader';
 export class BreakpadUploader extends BaseUploader {
   private readonly _crashesDirectory: string = getCrashesDirectory();
 
-  public constructor(options: NodeOptions, cacheDirectory: string, transport: Transport) {
-    super(options, cacheDirectory, transport);
+  public constructor(options: NodeOptions, transport: Transport) {
+    super(options, transport);
   }
 
   /** @inheritdoc */
