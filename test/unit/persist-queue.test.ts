@@ -9,7 +9,16 @@ import { walkSync } from '../e2e/utils';
 should();
 use(chaiAsPromised);
 
-function expectFilesInDirectory(dir: string, count: number): void {
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+async function expectFilesInDirectory(dir: string, count: number): Promise<void> {
+  // We delay because store flushing is async and not waited on
+  await delay(500);
+
   const found = Array.from(walkSync(dir)).length;
   expect(found, 'files in directory').to.equal(count);
 }
@@ -28,10 +37,12 @@ describe('PersistedRequestQueue', () => {
 
   it('Queues and returns a request', async () => {
     const queue = new PersistedRequestQueue(tempDir.name);
-    expectFilesInDirectory(tempDir.name, 0);
+    await expectFilesInDirectory(tempDir.name, 0);
 
     await queue.add({ type: 'event', url: '', body: 'just a string' });
-    expectFilesInDirectory(tempDir.name, 2);
+    await expectFilesInDirectory(tempDir.name, 2);
+
+    await delay(1_000);
 
     // We create a new queue to force reading from serialized store
     const queue2 = new PersistedRequestQueue(tempDir.name);
@@ -41,7 +52,8 @@ describe('PersistedRequestQueue', () => {
     expect(popped?.body).to.not.be.undefined;
     expect(popped?.url).to.equal('http://nothing');
     expect(popped?.body.toString()).to.equal('just a string');
-    expectFilesInDirectory(tempDir.name, 1);
+
+    await expectFilesInDirectory(tempDir.name, 1);
   });
 
   it('Drops requests when full', async () => {
@@ -54,7 +66,8 @@ describe('PersistedRequestQueue', () => {
     await queue.add({ type: 'event', url: '', body: '5' });
     await queue.add({ type: 'event', url: '', body: '6' });
     await queue.add({ type: 'event', url: '', body: '7' });
-    expectFilesInDirectory(tempDir.name, 6);
+
+    await expectFilesInDirectory(tempDir.name, 6);
 
     const popped: SentryElectronRequest[] = [];
     let pop: SentryElectronRequest | undefined;
@@ -64,7 +77,8 @@ describe('PersistedRequestQueue', () => {
 
     expect(popped.length).to.equal(5);
     expect(popped.map((p) => p.body.toString()).join('')).to.equal('34567');
-    expectFilesInDirectory(tempDir.name, 1);
+
+    await expectFilesInDirectory(tempDir.name, 1);
   });
 
   it('Drops old events', async () => {
@@ -74,12 +88,14 @@ describe('PersistedRequestQueue', () => {
     await queue.add({ type: 'event', url: '', body: 'so old 2', date: new Date(Date.now() - 100_000_000) });
     await queue.add({ type: 'event', url: '', body: 'so old 3', date: new Date(Date.now() - 100_000_000) });
     await queue.add({ type: 'event', url: '', body: 'so old 4' });
-    expectFilesInDirectory(tempDir.name, 5);
+
+    await expectFilesInDirectory(tempDir.name, 5);
 
     const pop = await queue.pop('http://nothing');
     expect(pop).to.not.be.undefined;
     const pop2 = await queue.pop('http://nothing');
     expect(pop2).to.be.undefined;
-    expectFilesInDirectory(tempDir.name, 1);
+
+    await expectFilesInDirectory(tempDir.name, 1);
   });
 });
