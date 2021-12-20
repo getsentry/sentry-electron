@@ -2,6 +2,7 @@ import { ChildProcess, spawn, spawnSync } from 'child_process';
 import { rmSync } from 'fs';
 import { join } from 'path';
 
+import { delay } from '../helpers';
 import { TestServer } from './server';
 import { createLogger } from './utils';
 
@@ -19,12 +20,6 @@ function getDeleteDirectories(appName: string): string[] {
   }
 
   throw new Error('Unknown platform');
-}
-
-export function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
 }
 
 const log = createLogger('Test Context');

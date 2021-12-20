@@ -5,15 +5,10 @@ import * as tmp from 'tmp';
 import { SentryElectronRequest } from '../../src/main/transports/electron-net';
 import { PersistedRequestQueue } from '../../src/main/transports/queue';
 import { walkSync } from '../e2e/utils';
+import { delay } from '../helpers';
 
 should();
 use(chaiAsPromised);
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
 
 async function expectFilesInDirectory(dir: string, count: number): Promise<void> {
   // We delay because store flushing is async and not waited on
