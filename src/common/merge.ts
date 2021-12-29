@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Event } from '@sentry/types';
-import * as deepMerge from 'deepmerge';
+import deepMerge from 'deepmerge';
 
 /** Removes private properties fro event before merging */
 function removePrivateProperties(event: Event): void {
