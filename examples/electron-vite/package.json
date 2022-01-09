@@ -1,0 +1,18 @@
+{
+  "name": "electron-vite",
+  "version": "1.0.0",
+  "main": "dist/main/index.js",
+  "scripts": {
+    "build":"yarn run build:main && yarn run build:renderer",
+    "build:main": "vite build --config vite.config.main.js",
+    "build:renderer": "vite build --config vite.config.renderer.js"
+  },
+  "dependencies": {
+    "electron-squirrel-startup": "^1.0.0",
+    "@sentry/electron": "3.0.0"
+  },
+  "devDependencies": {
+    "vite": "^2.7.10",
+    "electron": "13.1.9"
+  }
+}
