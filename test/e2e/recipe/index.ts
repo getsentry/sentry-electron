@@ -90,10 +90,6 @@ export class RecipeRunner {
   public async prepare(context: Mocha.Context, testBasePath: string): Promise<[string, string]> {
     log(`Preparing recipe '${this.description}'`);
 
-    if (process.env.CI) {
-      context.retries(3);
-    }
-
     const timeout = (this._recipe.metadata.timeout || 30) * 1_000;
     // macOS runs quite slowly in GitHub actions
     context.timeout(process.platform === 'darwin' ? timeout * 2 : timeout);
