@@ -10,7 +10,7 @@
     "@sentry/electron": "3.0.0"
   },
   "devDependencies": {
-    "@electron-forge/cli": "^6.0.0-beta.59",
+    "@electron-forge/cli": "^6.0.0-beta.62",
     "electron": "13.1.9"
   }
 }
