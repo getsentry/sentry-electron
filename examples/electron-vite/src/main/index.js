@@ -1,6 +1,6 @@
-const { app, BrowserWindow } = require('electron');
-const path = require('path');
-const { init } = require('@sentry/electron');
+import { app, BrowserWindow } from 'electron';
+import * as path from 'path';
+import { init } from '@sentry/electron/main';
 
 init({
   dsn: '__DSN__',

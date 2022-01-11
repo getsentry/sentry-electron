@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Event } from '@sentry/types';
-import * as deepMerge from 'deepmerge';
+const deepMerge = require('deepmerge');
 
-/** Removes private properties fro event before merging */
+/** Removes private properties from event before merging */
 function removePrivateProperties(event: Event): void {
   for (const span of event.spans || []) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     delete (span as any).spanRecorder;
     delete span.transaction;
   }
