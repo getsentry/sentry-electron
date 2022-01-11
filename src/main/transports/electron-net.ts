@@ -1,15 +1,16 @@
+import { getEnvelopeEndpointWithUrlEncodedAuth } from '@sentry/core';
 import { Transports } from '@sentry/node';
 import {
   Event,
+  EventStatus,
   Response,
   SentryRequest,
   SentryRequestType,
   SessionAggregates,
   SessionContext,
-  Status,
   TransportOptions,
 } from '@sentry/types';
-import { logger, PromiseBuffer } from '@sentry/utils';
+import { eventStatusFromHttpCode, logger, makePromiseBuffer, PromiseBuffer } from '@sentry/utils';
 import { net } from 'electron';
 import { Readable, Writable } from 'stream';
 import * as url from 'url';
@@ -23,7 +24,7 @@ const GZIP_THRESHOLD = 1024 * 32;
 
 /** Wraps HTTP errors and includes the status */
 export class HTTPError extends Error {
-  public constructor(public readonly status: Status, message: string) {
+  public constructor(public readonly status: EventStatus, message: string) {
     super(message);
   }
 }
@@ -52,7 +53,7 @@ function streamFromBody(body: Buffer | string): Readable {
 /** Using net module of Electron */
 export class ElectronNetTransport extends Transports.BaseTransport {
   /** A simple buffer holding all requests. */
-  protected readonly _buffer: PromiseBuffer<Response> = new PromiseBuffer(30);
+  protected readonly _buffer: PromiseBuffer<Response> = makePromiseBuffer(30);
 
   /** Create a new instance */
   public constructor(public options: TransportOptions) {
@@ -72,7 +73,7 @@ export class ElectronNetTransport extends Transports.BaseTransport {
 
     if (this._isRateLimited(type)) {
       throw new HTTPError(
-        Status.RateLimit,
+        'rate_limit',
         `Transport locked till ${JSON.stringify(this._rateLimits, null, 2)} due to too many requests.`,
       );
     }
@@ -81,7 +82,7 @@ export class ElectronNetTransport extends Transports.BaseTransport {
     const body = Buffer.from(`${envelopeHeaders}\n${itemHeaders}\n${eventPayload}\n`);
 
     return this.sendRequest({
-      url: this._api.getEnvelopeEndpointWithUrlEncodedAuth(),
+      url: getEnvelopeEndpointWithUrlEncodedAuth(this._api.dsn),
       body,
       type,
     });
@@ -105,7 +106,7 @@ export class ElectronNetTransport extends Transports.BaseTransport {
     const body = Buffer.from(`${envelopeHeaders}\n${itemHeaders}\n${sessionPayload}\n`);
 
     return this.sendRequest({
-      url: this._api.getEnvelopeEndpointWithUrlEncodedAuth(),
+      url: getEnvelopeEndpointWithUrlEncodedAuth(this._api.dsn),
       body,
       type,
     });
@@ -124,13 +125,9 @@ export class ElectronNetTransport extends Transports.BaseTransport {
   public async sendRequest(request: SentryElectronRequest): Promise<Response> {
     logger.log(`Sending '${request.type}' request`);
 
-    if (!this._buffer.isReady()) {
-      throw new HTTPError(Status.Unknown, 'Not adding Promise due to buffer limit reached.');
-    }
-
     if (this._isRateLimited(request.type)) {
       throw new HTTPError(
-        Status.RateLimit,
+        'rate_limit',
         `Transport for ${request.type} requests locked till ${this._disabledUntil(
           request.type,
         )} due to too many requests.`,
@@ -160,11 +157,11 @@ export class ElectronNetTransport extends Transports.BaseTransport {
           req.on('response', (res: Electron.IncomingMessage) => {
             res.on('error', reject);
 
-            const status = Status.fromHttpCode(res.statusCode);
-            if (status === Status.Success) {
+            const status = eventStatusFromHttpCode(res.statusCode);
+            if (status === 'success') {
               resolve({ status });
             } else {
-              if (status === Status.RateLimit) {
+              if (status === 'rate_limit') {
                 let retryAfterHeader = res.headers ? res.headers['retry-after'] : '';
                 retryAfterHeader = (Array.isArray(retryAfterHeader) ? retryAfterHeader[0] : retryAfterHeader) as string;
 

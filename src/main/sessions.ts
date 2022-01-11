@@ -27,7 +27,7 @@ export function startSession(): void {
   persistTimer = setInterval(() => {
     const currentSession = hub.getScope()?.getSession();
     // Only bother saving if it hasn't already ended
-    if (currentSession && currentSession.status === SessionStatus.Ok) {
+    if (currentSession && currentSession.status === 'ok') {
       sessionStore.set(currentSession);
     }
   }, PERSIST_INTERVAL_MS);
@@ -44,7 +44,7 @@ export async function endSession(): Promise<void> {
   const session = hub.getScope()?.getSession();
 
   if (session) {
-    if (session.status === SessionStatus.Ok) {
+    if (session.status === 'ok') {
       logger.log('Ending session');
       hub.endSession();
     } else {
@@ -87,12 +87,12 @@ export function unreportedDuringLastSession(crashDate: Date | undefined): boolea
 export async function checkPreviousSession(crashed: boolean): Promise<void> {
   if (previousSession) {
     // Ignore if the previous session is already ended
-    if (previousSession.status !== SessionStatus.Ok) {
+    if (previousSession.status !== 'ok') {
       previousSession = undefined;
       return;
     }
 
-    const status = crashed ? SessionStatus.Crashed : SessionStatus.Abnormal;
+    const status: SessionStatus = crashed ? 'crashed' : 'abnormal';
 
     logger.log(`Found previous ${status} session`);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -122,9 +122,9 @@ export function sessionCrashed(): void {
     return;
   }
 
-  if (session.status === SessionStatus.Ok) {
+  if (session.status === 'ok') {
     logger.log(`Setting session as crashed`);
-    session.update({ status: SessionStatus.Crashed, errors: (session.errors += 1) });
+    session.update({ status: 'crashed', errors: (session.errors += 1) });
   } else {
     logger.log('Session already ended');
   }

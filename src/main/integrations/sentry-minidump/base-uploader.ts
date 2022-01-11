@@ -1,7 +1,7 @@
-import { API } from '@sentry/core';
+import { getEnvelopeEndpointWithUrlEncodedAuth } from '@sentry/core';
 import { NodeOptions } from '@sentry/node';
-import { Event, Transport } from '@sentry/types';
-import { isThenable, logger, SentryError, timestampWithMs } from '@sentry/utils';
+import { DsnComponents, Event, Transport } from '@sentry/types';
+import { isThenable, logger, makeDsn, SentryError, timestampWithMs } from '@sentry/utils';
 import { basename } from 'path';
 
 import { readFileAsync, statAsync, unlinkAsync } from '../../fs';
@@ -29,7 +29,7 @@ export abstract class BaseUploader {
   private readonly _knownPaths: string[];
 
   /** API object */
-  private readonly _api: API;
+  private readonly _dsn: DsnComponents;
 
   /**
    * Creates a new uploader instance.
@@ -41,7 +41,7 @@ export abstract class BaseUploader {
       throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
     }
 
-    this._api = new API(_options.dsn);
+    this._dsn = makeDsn(_options.dsn);
   }
 
   /**
@@ -197,7 +197,7 @@ export abstract class BaseUploader {
     }
 
     return {
-      url: this._api.getEnvelopeEndpointWithUrlEncodedAuth(),
+      url: getEnvelopeEndpointWithUrlEncodedAuth(this._dsn),
       body: bodyBuffer,
       type: 'event',
     };
