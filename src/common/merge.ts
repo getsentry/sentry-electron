@@ -1,4 +1,5 @@
 import { Event } from '@sentry/types';
+// import * as deepmerge does not work with ES modules
 const deepMerge = require('deepmerge');
 
 /** Removes private properties from event before merging */
