@@ -1,0 +1,4 @@
+description: Electron Vite
+command: yarn && yarn build
+condition: version.major >= 7
+timeout: 120
