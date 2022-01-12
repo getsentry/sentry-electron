@@ -1,3 +1,6 @@
+import { ensureProcess } from '../common';
+ensureProcess('renderer');
+
 import { Integrations as BrowserIntegrations } from '@sentry/browser';
 
 import * as ElectronRendererIntegrations from './integrations';
