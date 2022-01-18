@@ -1,3 +1,6 @@
+import { ensureProcess } from '../common';
+ensureProcess('main');
+
 import { Integrations as NodeIntegrations } from '@sentry/node';
 
 import * as ElectronMainIntegrations from './integrations';
