@@ -1,7 +1,7 @@
 import { getCurrentHub, Scope } from '@sentry/core';
 import { NodeClient, NodeOptions } from '@sentry/node';
 import { Event, Integration, Severity } from '@sentry/types';
-import { Dsn, forget, logger, SentryError } from '@sentry/utils';
+import { forget, logger, makeDsn, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
 import { mergeEvents, normalizeEvent } from '../../common';
@@ -42,8 +42,8 @@ function getScope(options: NodeOptions): Event {
  * Returns the minidump endpoint in Sentry
  * @param dsn Dsn
  */
-export function minidumpUrlFromDsn(dsn: Dsn): string {
-  const { host, path, projectId, port, protocol, user } = dsn;
+export function minidumpUrlFromDsn(dsn: string): string {
+  const { host, path, projectId, port, protocol, user } = makeDsn(dsn);
   return `${protocol}://${host}${port !== '' ? `:${port}` : ''}${
     path !== '' ? `/${path}` : ''
   }/api/${projectId}/minidump/?sentry_key=${user}`;
@@ -115,7 +115,7 @@ export class ElectronMinidump implements Integration {
       companyName: '',
       ignoreSystemCrashHandler: true,
       productName: app.name || app.getName(),
-      submitURL: minidumpUrlFromDsn(new Dsn(options.dsn || '')),
+      submitURL: minidumpUrlFromDsn(options.dsn || ''),
       uploadToServer: true,
       compress: true,
       globalExtra,

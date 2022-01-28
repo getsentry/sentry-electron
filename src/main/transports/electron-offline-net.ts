@@ -1,4 +1,5 @@
-import { Response, Status, TransportOptions } from '@sentry/types';
+import { getEnvelopeEndpointWithUrlEncodedAuth } from '@sentry/core';
+import { Response, TransportOptions } from '@sentry/types';
 import { logger } from '@sentry/utils';
 import { net } from 'electron';
 import { join } from 'path';
@@ -17,7 +18,7 @@ function maybeOnline(): boolean {
 /** Using net module of Electron */
 export class ElectronOfflineNetTransport extends ElectronNetTransport {
   private _queue: PersistedRequestQueue = new PersistedRequestQueue(join(sentryCachePath, 'queue'));
-  private _url: string = this._api.getEnvelopeEndpointWithUrlEncodedAuth();
+  private _url: string = getEnvelopeEndpointWithUrlEncodedAuth(this._api.dsn);
   private _retryDelay: number = START_DELAY;
 
   /** Create a new instance  */
@@ -37,7 +38,7 @@ export class ElectronOfflineNetTransport extends ElectronNetTransport {
         this._requestSuccess();
         return response;
       } catch (error) {
-        if (error instanceof HTTPError && error.status != Status.RateLimit) {
+        if (error instanceof HTTPError && error.status != 'rate_limit') {
           logger.log('Dropping request');
           // We don't queue HTTP errors that are not rate limited
           throw error;
@@ -72,7 +73,7 @@ export class ElectronOfflineNetTransport extends ElectronNetTransport {
 
     this._retryDelay *= 3;
 
-    return { status: Status.Unknown };
+    return { status: 'unknown' };
   }
 
   /** Attempts to send the first event in the queue if one is found */
