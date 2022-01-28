@@ -1,6 +1,6 @@
 import { getCurrentHub, Scope } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
-import { Event, Integration } from '@sentry/types';
+import { Event, Integration, Severity } from '@sentry/types';
 import { forget, isPlainObject, isThenable, logger, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
@@ -71,7 +71,7 @@ export class SentryMinidump implements Integration {
     // context information that was cached on disk prior to the crash.
     forget(
       this._sendNativeCrashes(options, {
-        level: 'fatal',
+        level: Severity.Fatal,
         platform: 'native',
         tags: { 'event.environment': 'native', 'event.process': 'browser', event_type: 'native' },
       }).then((minidumpsFound) =>
@@ -117,7 +117,7 @@ export class SentryMinidump implements Integration {
           details,
         },
       },
-      level: 'fatal',
+      level: Severity.Fatal,
       // The default is javascript
       platform: 'native',
       tags: { 'event.environment': 'native', 'event.process': crashedProcess, event_type: 'native' },
@@ -143,7 +143,7 @@ export class SentryMinidump implements Integration {
       contexts: {
         electron: { details },
       },
-      level: 'fatal',
+      level: Severity.Fatal,
       // The default is javascript
       platform: 'native',
       tags: { 'event.environment': 'native', 'event.process': details.type, event_type: 'native' },

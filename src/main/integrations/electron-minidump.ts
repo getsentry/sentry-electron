@@ -1,6 +1,6 @@
 import { getCurrentHub, Scope } from '@sentry/core';
 import { NodeClient, NodeOptions } from '@sentry/node';
-import { Event, Integration } from '@sentry/types';
+import { Event, Integration, Severity } from '@sentry/types';
 import { forget, logger, makeDsn, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
@@ -161,7 +161,7 @@ export class ElectronMinidump implements Integration {
   /** Builds up an event to send with the native Electron uploader */
   private async _getNativeUploaderEvent(scope: Scope): Promise<Event> {
     const event = mergeEvents(await getEventDefaults(this._customRelease), {
-      level: 'fatal',
+      level: Severity.Fatal,
       platform: 'native',
       tags: { 'event.environment': 'native', event_type: 'native' },
     });

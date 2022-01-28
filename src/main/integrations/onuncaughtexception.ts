@@ -1,6 +1,6 @@
 import { getCurrentHub } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
-import { Event, Integration } from '@sentry/types';
+import { Event, Integration, Severity } from '@sentry/types';
 import { isError } from '@sentry/utils';
 import { dialog } from 'electron';
 
@@ -24,7 +24,7 @@ export class OnUncaughtException implements Integration {
         getCurrentHub().withScope(async (scope) => {
           scope.addEventProcessor(async (event: Event) => ({
             ...event,
-            level: 'fatal',
+            level: Severity.Fatal,
           }));
 
           let theError = error;

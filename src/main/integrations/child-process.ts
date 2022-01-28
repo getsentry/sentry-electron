@@ -1,6 +1,6 @@
 import { addBreadcrumb, captureMessage, getCurrentHub } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
-import { Integration, SeverityLevel } from '@sentry/types';
+import { Integration, Severity } from '@sentry/types';
 
 import { EXIT_REASONS, ExitReason, onChildProcessGone, onRendererProcessGone } from '../electron-normalize';
 import { ElectronMainOptions } from '../sdk';
@@ -18,20 +18,20 @@ const DEFAULT_OPTIONS: ChildProcessOptions = {
 };
 
 /** Gets message and severity */
-function getMessageAndSeverity(reason: ExitReason, proc?: string): { message: string; level: SeverityLevel } {
+function getMessageAndSeverity(reason: ExitReason, proc?: string): { message: string; level: Severity } {
   const message = `'${proc}'' process exited with '${reason}'`;
 
   switch (reason) {
     case 'abnormal-exit':
     case 'killed':
-      return { message, level: 'warning' };
+      return { message, level: Severity.Warning };
     case 'crashed':
     case 'oom':
     case 'launch-failed':
     case 'integrity-failure':
-      return { message, level: 'critical' };
+      return { message, level: Severity.Critical };
     default:
-      return { message, level: 'debug' };
+      return { message, level: Severity.Debug };
   }
 }
 
