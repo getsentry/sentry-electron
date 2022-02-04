@@ -84,7 +84,7 @@ class EmptyIntegration implements Integration {
 }
 
 /** Filters out any EmptyIntegrations that are found */
-export function removeEmptyIntegrations(options: ElectronOptions): void {
+export function removeEmptyIntegrations(options: Partial<ElectronOptions>): void {
   if (Array.isArray(options.integrations)) {
     options.integrations = options.integrations.filter((i) => i.name !== EmptyIntegration.id);
   } else if (typeof options.integrations === 'function') {

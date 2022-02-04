@@ -97,7 +97,7 @@ export { IPCMode } from './common';
  *
  * @see ElectronOptions for documentation on configuration options.
  */
-export function init(options: ElectronOptions): void {
+export function init(options: Partial<ElectronOptions>): void {
   // Filter out any EmptyIntegrations
   removeEmptyIntegrations(options);
 
