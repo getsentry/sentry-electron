@@ -5,6 +5,8 @@ import { fill } from '@sentry/utils';
 import { ClientRequest, ClientRequestConstructorOptions, IncomingMessage, net } from 'electron';
 import * as urlModule from 'url';
 
+import { OrBool, OrFalse } from '../../common/types';
+
 type ShouldTraceFn = (method: string, url: string) => boolean;
 
 interface NetOptions {
