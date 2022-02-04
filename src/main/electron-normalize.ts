@@ -2,6 +2,8 @@ import { parseSemver } from '@sentry/utils';
 import { app, BrowserWindow, crashReporter, WebContents } from 'electron';
 import { basename } from 'path';
 
+import { Optional } from '../common/types';
+
 const parsed = parseSemver(process.versions.electron);
 const version = { major: parsed.major || 0, minor: parsed.minor || 0, patch: parsed.patch || 0 };
 

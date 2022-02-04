@@ -1,9 +1,9 @@
-type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
+export type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 
-type OrBool<T> = {
+export type OrBool<T> = {
   [P in keyof T]: T[P] | boolean;
 };
 
-type OrFalse<T> = {
+export type OrFalse<T> = {
   [P in keyof T]: T[P] | false;
 };

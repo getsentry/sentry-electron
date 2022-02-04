@@ -2,6 +2,7 @@ import { addBreadcrumb, captureMessage, getCurrentHub } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { Integration, Severity } from '@sentry/types';
 
+import { OrBool } from '../../common/types';
 import { EXIT_REASONS, ExitReason, onChildProcessGone, onRendererProcessGone } from '../electron-normalize';
 import { ElectronMainOptions } from '../sdk';
 
