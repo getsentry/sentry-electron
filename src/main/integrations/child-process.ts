@@ -8,13 +8,13 @@ import { ElectronMainOptions } from '../sdk';
 interface ChildProcessOptions {
   /** Child process events that generate breadcrumbs */
   breadcrumbs: Readonly<ExitReason[]>;
-  /** Child process events that capture events */
-  capture: Readonly<ExitReason[]>;
+  /** Child process events that generate Sentry events */
+  events: Readonly<ExitReason[]>;
 }
 
 const DEFAULT_OPTIONS: ChildProcessOptions = {
   breadcrumbs: EXIT_REASONS,
-  capture: ['abnormal-exit', 'launch-failed', 'integrity-failure'],
+  events: ['abnormal-exit', 'launch-failed', 'integrity-failure'],
 };
 
 /** Gets message and severity */
@@ -49,17 +49,17 @@ export class ChildProcess implements Integration {
    * @param _options Integration options
    */
   public constructor(options: Partial<OrBool<ChildProcessOptions>> = {}) {
-    const { breadcrumbs, capture } = options;
+    const { breadcrumbs, events } = options;
     this._options = {
       breadcrumbs: Array.isArray(breadcrumbs) ? breadcrumbs : breadcrumbs == false ? [] : DEFAULT_OPTIONS.breadcrumbs,
-      capture: Array.isArray(capture) ? capture : capture == false ? [] : DEFAULT_OPTIONS.capture,
+      events: Array.isArray(events) ? events : events == false ? [] : DEFAULT_OPTIONS.events,
     };
   }
 
   /** @inheritDoc */
   public setupOnce(): void {
-    const { breadcrumbs, capture } = this._options;
-    const allReasons = Array.from(new Set([...breadcrumbs, ...capture]));
+    const { breadcrumbs, events } = this._options;
+    const allReasons = Array.from(new Set([...breadcrumbs, ...events]));
 
     // only hook these events if we're after more than just the unresponsive event
     if (allReasons.length > 0) {
@@ -69,7 +69,7 @@ export class ChildProcess implements Integration {
         const { reason } = details;
 
         // Capture message first
-        if (capture.includes(reason)) {
+        if (events.includes(reason)) {
           const { message, level } = getMessageAndSeverity(details.reason, details.type);
           captureMessage(message, { level, tags: { 'event.process': details.type } });
         }
@@ -90,7 +90,7 @@ export class ChildProcess implements Integration {
         const name = options?.getRendererName?.(contents) || 'renderer';
 
         // Capture message first
-        if (capture.includes(reason)) {
+        if (events.includes(reason)) {
           const { message, level } = getMessageAndSeverity(details.reason, name);
           captureMessage(message, level);
         }
