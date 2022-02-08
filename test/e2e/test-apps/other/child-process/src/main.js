@@ -7,7 +7,7 @@ init({
   dsn: '__DSN__',
   debug: true,
   autoSessionTracking: false,
-  integrations: [new Integrations.ChildProcess({ capture: ['killed'] })],
+  integrations: [new Integrations.ChildProcess({ events: ['killed'] })],
   onFatalError: () => {},
 });
 
