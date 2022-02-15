@@ -8,13 +8,15 @@ For some advanced technical detail, you may want to check out the relevant
 
 New Features:
 
-- Session tracking enabled by default
+- Session tracking data sent by default. See our
+  [release health docs for more details](https://docs.sentry.io/product/releases/health/). You can opt out of this
+  behaviour by setting `autoSessionTracking: false` during SDK initialization.
+- Performance monitoring of renderer instances using the `BrowserTracing` integration from `@sentry/tracing`
 - Preload script no longer required [for most scenarios](https://github.com/getsentry/sentry-electron/issues/376)
-- Optional relative imports for main/renderer/preload entry points
-- Offline transport support
-- Additional device context
+- Optional relative imports for main/renderer/preload entry points to help with bundlers
+- Offline support for the default transport
+- Additional device context (cpu, screen, memory, language details)
 - Minidumps for GPU crashes
-- Browser Tracing compatible
 
 Major breaking changes:
 
