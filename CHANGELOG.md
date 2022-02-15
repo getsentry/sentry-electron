@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+## 3.0.0
+
+A large refactor and simplification of the SDK moving most of the functionality into integrations used with
+`@sentry/browser` and `@sentry/node`.
+
+- Session tracking enabled by default
+- Compatible with Browser Tracing
+- Preload script no longer required [for most scenarios](https://github.com/getsentry/sentry-electron/issues/376)
+- Optional relative imports for main/renderer/preload entry points to help with bundlers
+- Default transport now supports offline
+- Additional device context
+- Minidumps for GPU crashes
+
+Major breaking changes:
+
+- See [`MIGRATION.md`](./MIGRATION.md)
+
 ## 3.0.0-beta.4
 
 - feat: Adds `ElectronOfflineNetTransport` and makes it the default transport
