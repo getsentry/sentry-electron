@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+## 3.0.0
+
+A large refactor and simplification of the SDK moving most of the functionality into integrations used with
+`@sentry/browser` and `@sentry/node`.
+
+- Session tracking data sent by default. See our [release health docs for more details](https://docs.sentry.io/product/releases/health/). You can opt out of this behaviour by setting `autoSessionTracking: false` during SDK initialization.
+- Performance monitoring of renderer instances using the `BrowserTracing` integration from `@sentry/tracing`
+- Preload script no longer required [for most scenarios](https://github.com/getsentry/sentry-electron/issues/376)
+- Optional relative imports for main/renderer/preload entry points to help with bundlers
+- Offline support for the default transport
+- Additional device context (cpu, screen, memory, language details)
+- Minidumps for GPU crashes
+
+Major breaking changes:
+
+- See [`MIGRATION.md`](./MIGRATION.md)
+
 ## 3.0.0-beta.4
 
 - feat: Adds `ElectronOfflineNetTransport` and makes it the default transport
