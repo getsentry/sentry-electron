@@ -5,7 +5,7 @@ import { forget, isPlainObject, isThenable, logger, SentryError } from '@sentry/
 import { app, crashReporter } from 'electron';
 
 import { CRASH_REASONS, onChildProcessGone, onRendererProcessGone, usesCrashpad } from '../../electron-normalize';
-import { mergeEvents, normalizeUrl } from '../../../common';
+import { mergeEvents } from '../../../common';
 import { ElectronMainOptions } from '../../sdk';
 import { ElectronNetTransport } from '../../transports/electron-net';
 import { BaseUploader } from './base-uploader';
@@ -15,6 +15,7 @@ import { Store } from '../../store';
 import { getEventDefaults } from '../../context';
 import { checkPreviousSession, sessionCrashed } from '../../sessions';
 import { sentryCachePath } from '../../fs';
+import { getRendererState, trackRendererStates } from '../../renderer-state';
 
 /** Sends minidumps via the Sentry uploader */
 export class SentryMinidump implements Integration {
@@ -56,6 +57,8 @@ export class SentryMinidump implements Integration {
     if (!options?.dsn) {
       throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
     }
+
+    trackRendererStates();
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const transport = (client as any)._getBackend().getTransport() as ElectronNetTransport;
@@ -113,7 +116,7 @@ export class SentryMinidump implements Integration {
     const event = mergeEvents(await getEventDefaults(release), {
       contexts: {
         electron: {
-          crashed_url: normalizeUrl(contents.getURL(), app.getAppPath()),
+          crashed_url: getRendererState(contents.id)?.url || 'unknown',
           details,
         },
       },

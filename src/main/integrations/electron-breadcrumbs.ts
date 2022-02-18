@@ -4,6 +4,7 @@ import { Breadcrumb, Integration } from '@sentry/types';
 import { app, autoUpdater, BrowserWindow, powerMonitor, screen, WebContents } from 'electron';
 
 import { onBrowserWindowCreated, onWebContentsCreated, whenAppReady } from '../electron-normalize';
+import { getRendererState, trackRendererStates } from '../renderer-state';
 import { ElectronMainOptions } from '../sdk';
 
 /** A function that returns true if the named event should create breadcrumbs */
@@ -110,6 +111,8 @@ export class ElectronBreadcrumbs implements Integration {
   public setupOnce(): void {
     const initOptions = getCurrentHub().getClient<NodeClient>()?.getOptions() as ElectronMainOptions | undefined;
 
+    trackRendererStates();
+
     void whenAppReady.then(() => {
       // We can't access these until app 'ready'
       if (this._options.screen) {
@@ -164,10 +167,10 @@ export class ElectronBreadcrumbs implements Integration {
         };
 
         if ('id' in emitter && !emitter.isDestroyed()) {
-          breadcrumb.data = {
-            id: emitter.id,
-            title: emitter.getTitle(),
-          };
+          const state = getRendererState(emitter.id);
+          if (state) {
+            breadcrumb.data = state;
+          }
         }
 
         addBreadcrumb(breadcrumb);

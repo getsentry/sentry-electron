@@ -20,7 +20,7 @@ const DEFAULT_OPTIONS: ChildProcessOptions = {
 
 /** Gets message and severity */
 function getMessageAndSeverity(reason: ExitReason, proc?: string): { message: string; level: Severity } {
-  const message = `'${proc}'' process exited with '${reason}'`;
+  const message = `'${proc}' process exited with '${reason}'`;
 
   switch (reason) {
     case 'abnormal-exit':
