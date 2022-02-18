@@ -1,5 +1,6 @@
 import { ChildProcess, spawn, spawnSync } from 'child_process';
 import { rmSync } from 'fs';
+import { homedir } from 'os';
 import { join } from 'path';
 
 import { delay } from '../helpers';
@@ -14,9 +15,9 @@ function getDeleteDirectories(appName: string): string[] {
         join(process.env.LOCALAPPDATA || '', 'Temp', `${appName} Crashes`),
       ];
     case 'darwin':
-      return [join('~/Library/Application Support', appName)];
+      return [join(homedir(), 'Library', 'Application Support', appName)];
     case 'linux':
-      return [join(process.env.XDG_CONFIG_HOME || '~/.config', appName)];
+      return [join(homedir(), '.config', appName)];
   }
 
   throw new Error('Unknown platform');
