@@ -91,7 +91,7 @@
         "timestamp": 0,
         "type": "process",
         "category": "child-process",
-        "message": "'GPU'' process exited with 'killed'",
+        "message": "'GPU' process exited with 'killed'",
         "level": "warning",
         "data": {
           "type": "GPU",

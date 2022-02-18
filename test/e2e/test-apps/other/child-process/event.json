@@ -61,7 +61,7 @@
     },
     "level": "warning",
     "event_id": "{{id}}",
-    "message": "'GPU'' process exited with 'killed'",
+    "message": "'GPU' process exited with 'killed'",
     "platform": "node",
     "timestamp": 0,
     "breadcrumbs": [],
