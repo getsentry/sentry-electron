@@ -27,4 +27,4 @@ app.on('ready', () => {
 
 setTimeout(() => {
   app.quit();
-}, 3000);
+}, 4000);
