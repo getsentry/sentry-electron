@@ -134,15 +134,17 @@ export class ElectronBreadcrumbs implements Integration {
 
     if (this._options.browserWindow) {
       onBrowserWindowCreated((window) => {
+        const id = window.webContents.id;
         const windowName = initOptions?.getRendererName?.(window.webContents) || 'window';
-        this._patchEventEmitter(window, windowName, this._options.browserWindow);
+        this._patchEventEmitter(window, windowName, this._options.browserWindow, id);
       });
     }
 
     if (this._options.webContents) {
       onWebContentsCreated((contents) => {
+        const id = contents.id;
         const webContentsName = initOptions?.getRendererName?.(contents) || 'renderer';
-        this._patchEventEmitter(contents, webContentsName, this._options.webContents);
+        this._patchEventEmitter(contents, webContentsName, this._options.webContents, id);
       });
     }
   }
@@ -154,6 +156,7 @@ export class ElectronBreadcrumbs implements Integration {
     emitter: NodeJS.EventEmitter | WebContents | BrowserWindow,
     category: string,
     shouldCapture: EventFunction | undefined | false,
+    id?: number | undefined,
   ): void {
     const emit = emitter.emit.bind(emitter) as (event: string, ...args: unknown[]) => boolean;
 
@@ -166,8 +169,8 @@ export class ElectronBreadcrumbs implements Integration {
           type: 'ui',
         };
 
-        if ('id' in emitter && !emitter.isDestroyed()) {
-          const state = getRendererState(emitter.id);
+        if (id) {
+          const state = getRendererState(id);
           if (state) {
             breadcrumb.data = state;
           }
