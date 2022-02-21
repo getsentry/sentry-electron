@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.0.1
+
+- fix: Fixes a potential issue on macOS where the window URL is not accessible after crash
+
 ## 3.0.0
 
 A large refactor and simplification of the SDK moving most of the functionality into integrations used with
