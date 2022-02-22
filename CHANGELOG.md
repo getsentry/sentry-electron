@@ -4,7 +4,7 @@
 
 ## 3.0.1
 
-- fix: Fixes a potential issue on macOS where the window URL is not accessible after crash
+- fix: Fixes a potential issue on macOS where the window URL is not accessible after crash (#417)
 
 ## 3.0.0
 
