@@ -4,6 +4,7 @@ import { Breadcrumb, Integration } from '@sentry/types';
 import { app, autoUpdater, BrowserWindow, powerMonitor, screen, WebContents } from 'electron';
 
 import { onBrowserWindowCreated, onWebContentsCreated, whenAppReady } from '../electron-normalize';
+import { getRendererProperties, trackRendererProperties } from '../renderers';
 import { ElectronMainOptions } from '../sdk';
 
 /** A function that returns true if the named event should create breadcrumbs */
@@ -110,6 +111,8 @@ export class ElectronBreadcrumbs implements Integration {
   public setupOnce(): void {
     const initOptions = getCurrentHub().getClient<NodeClient>()?.getOptions() as ElectronMainOptions | undefined;
 
+    trackRendererProperties();
+
     void whenAppReady.then(() => {
       // We can't access these until app 'ready'
       if (this._options.screen) {
@@ -131,15 +134,17 @@ export class ElectronBreadcrumbs implements Integration {
 
     if (this._options.browserWindow) {
       onBrowserWindowCreated((window) => {
+        const id = window.webContents.id;
         const windowName = initOptions?.getRendererName?.(window.webContents) || 'window';
-        this._patchEventEmitter(window, windowName, this._options.browserWindow);
+        this._patchEventEmitter(window, windowName, this._options.browserWindow, id);
       });
     }
 
     if (this._options.webContents) {
       onWebContentsCreated((contents) => {
+        const id = contents.id;
         const webContentsName = initOptions?.getRendererName?.(contents) || 'renderer';
-        this._patchEventEmitter(contents, webContentsName, this._options.webContents);
+        this._patchEventEmitter(contents, webContentsName, this._options.webContents, id);
       });
     }
   }
@@ -151,6 +156,7 @@ export class ElectronBreadcrumbs implements Integration {
     emitter: NodeJS.EventEmitter | WebContents | BrowserWindow,
     category: string,
     shouldCapture: EventFunction | undefined | false,
+    id?: number | undefined,
   ): void {
     const emit = emitter.emit.bind(emitter) as (event: string, ...args: unknown[]) => boolean;
 
@@ -163,11 +169,11 @@ export class ElectronBreadcrumbs implements Integration {
           type: 'ui',
         };
 
-        if ('id' in emitter && !emitter.isDestroyed()) {
-          breadcrumb.data = {
-            id: emitter.id,
-            title: emitter.getTitle(),
-          };
+        if (id) {
+          const state = getRendererProperties(id);
+          if (state) {
+            breadcrumb.data = state;
+          }
         }
 
         addBreadcrumb(breadcrumb);
