@@ -15,7 +15,16 @@ function removePrivateProperties(event: Event): void {
 export function mergeEvents(defaults: Event, event: Event): Event {
   removePrivateProperties(event);
 
-  const newEvent = deepMerge(defaults, event);
+  const newEvent: Event = deepMerge(defaults, event);
+
+  // We need to copy spans across manually
+  //
+  // Spans contain a custom toJSON function for serialization and without
+  // this they are serialised with camelCase properties rather than the
+  // snake_case required by the Sentry API.
+  if (event.spans || defaults.spans) {
+    newEvent.spans = event.spans || defaults.spans;
+  }
 
   // We don't want packages array in sdk to get merged with duplicates
   return {

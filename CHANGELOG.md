@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.0.2
+
+- fix: Fix broken serialization of node transaction spans (#419)
+
 ## 3.0.1
 
 - fix: Fixes a potential issue on macOS where the window URL is not accessible after crash (#417)

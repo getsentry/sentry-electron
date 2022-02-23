@@ -1,5 +1,5 @@
 {
-  "name": "browser-tracing",
+  "name": "custom-tracing",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {
