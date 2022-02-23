@@ -148,11 +148,26 @@ function normalizeEvent(event: Event): Event {
   if (event.spans) {
     for (const span of event.spans) {
       const spanAny = span as any;
-      spanAny.span_id = '{{id}}';
-      spanAny.parent_span_id = '{{id}}';
-      spanAny.start_timestamp = 0;
-      spanAny.timestamp = 0;
-      spanAny.trace_id = '{{id}}';
+
+      if (spanAny.span_id) {
+        spanAny.span_id = '{{id}}';
+      }
+
+      if (spanAny.parent_span_id) {
+        spanAny.parent_span_id = '{{id}}';
+      }
+
+      if (spanAny.start_timestamp) {
+        spanAny.start_timestamp = 0;
+      }
+
+      if (spanAny.timestamp) {
+        spanAny.timestamp = 0;
+      }
+
+      if (spanAny.trace_id) {
+        spanAny.trace_id = '{{id}}';
+      }
     }
   }
 

@@ -1,0 +1,88 @@
+{
+  "method": "envelope",
+  "sentryKey": "37f8a2ee37c0409d8970bc7559c7c7e4",
+  "appId": "277345",
+  "dumpFile": false,
+  "data": {
+    "sdk": {
+      "name": "sentry.javascript.electron",
+      "packages": [
+        {
+          "name": "npm:@sentry/electron",
+          "version": "{{version}}"
+        }
+      ],
+      "version": "{{version}}"
+    },
+    "contexts": {
+      "app": {
+        "app_name": "custom-tracing",
+        "app_version": "1.0.0",
+        "app_start_time": "{{time}}"
+      },
+      "browser": {
+        "name": "Chrome"
+      },
+      "chrome": {
+        "name": "Chrome",
+        "type": "runtime",
+        "version": "{{version}}"
+      },
+      "device": {
+        "arch": "{{arch}}",
+        "family": "Desktop",
+        "memory_size": 0,
+        "free_memory": 0,
+        "processor_count": 0,
+        "processor_frequency": 0,
+        "cpu_description": "{{cpu}}",
+        "screen_resolution": "{{screen}}",
+        "screen_density": 1,
+        "language": "{{language}}"
+      },
+      "node": {
+        "name": "Node",
+        "type": "runtime",
+        "version": "{{version}}"
+      },
+      "os": {
+        "name": "{{platform}}",
+        "version": "{{version}}"
+      },
+      "runtime": {
+        "name": "Electron",
+        "version": "{{version}}"
+      },
+      "trace": {
+        "op": "task",
+        "span_id": "{{id}}",
+        "trace_id": "{{id}}"
+      }
+    },
+    "spans": [
+      {
+        "trace_id": "{{id}}",
+        "span_id": "{{id}}",
+        "start_timestamp": 0,
+        "parent_span_id": "{{id}}",
+        "op": "initializeServices",
+        "timestamp": 0
+      }
+    ],
+    "tags": {
+      "event.origin": "electron",
+      "event.environment": "javascript",
+      "event.process": "browser",
+      "transaction": "InitSequence"
+    },
+    "transaction": "InitSequence",
+    "type": "transaction",
+    "start_timestamp": 0,
+    "timestamp": 0,
+    "release": "custom-tracing@1.0.0",
+    "environment": "development",
+    "event_id": "{{id}}",
+    "platform": "node",
+    "breadcrumbs": []
+  }
+}
