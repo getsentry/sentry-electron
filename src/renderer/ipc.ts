@@ -2,10 +2,12 @@
 /* eslint-disable no-console */
 import { logger } from '@sentry/utils';
 
-import { IPCChannel, IPCInterface, PROTOCOL_SCHEME } from '../common';
+import { ensureProcess, IPCChannel, IPCInterface, PROTOCOL_SCHEME } from '../common';
 
 /** Gets the available IPC implementation */
 function getImplementation(): IPCInterface {
+  ensureProcess('renderer');
+
   // Favour IPC if it's been exposed by a preload script
   if (window.__SENTRY_IPC__) {
     return window.__SENTRY_IPC__;

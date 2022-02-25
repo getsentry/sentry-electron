@@ -1,0 +1,16 @@
+{
+  "name": "error-entry-point",
+  "version": "1.0.0",
+  "main": "dist/main/index.js",
+  "scripts": {
+    "build": "vite build --config vite.config.main.js"
+  },
+  "dependencies": {
+    "electron-squirrel-startup": "^1.0.0",
+    "@sentry/electron": "3.0.0"
+  },
+  "devDependencies": {
+    "vite": "^2.7.10",
+    "electron": "13.1.9"
+  }
+}
