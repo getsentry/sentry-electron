@@ -1,4 +1,4 @@
-description: Error thrown if entry point not found
+description: Error thrown if renderer code loaded in main process
 command: yarn && yarn build
 condition: version.major >= 7
 timeout: 120
