@@ -53,6 +53,21 @@ export interface ElectronOptions extends ElectronMainOptions, BrowserOptions {
 
 export { IPCMode } from './common';
 
+/** Fetches the SDK entry point for the current process */
+function getEntryPoint(): { init: (options: Partial<ElectronOptions>) => void } {
+  try {
+    return process.type === 'browser' ? dynamicRequire(module, './main') : require('./renderer');
+  } catch (e) {
+    throw new Error(`Failed to automatically detect correct SDK entry point.
+
+In the Electron main process you should import via:
+import * as Sentry from '@sentry/electron/main';
+
+In the Electron renderer process you should import via:
+import * as Sentry from '@sentry/electron/renderer';`);
+  }
+}
+
 /**
  * The Sentry Electron SDK Client.
  *
@@ -101,6 +116,5 @@ export function init(options: Partial<ElectronOptions>): void {
   // Filter out any EmptyIntegrations
   removeEmptyIntegrations(options);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-expressions, @typescript-eslint/no-unsafe-member-access
-  process.type === 'browser' ? dynamicRequire(module, './main').init(options) : require('./renderer').init(options);
+  getEntryPoint().init(options);
 }
