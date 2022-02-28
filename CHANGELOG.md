@@ -4,6 +4,7 @@
 
 ## 3.0.3
 
+- fix: Don't add empty breadcrumbs (#425)
 - fix: Delete sdk metadata from event before sending (#424)
 - fix: Improve error messages for incorrectly bundled code (#423)
 
