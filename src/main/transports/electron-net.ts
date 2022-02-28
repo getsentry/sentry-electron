@@ -78,6 +78,9 @@ export class ElectronNetTransport extends Transports.BaseTransport {
       );
     }
 
+    // Delete this metadata as this should not be sent to Sentry.
+    delete event.sdkProcessingMetadata;
+
     const eventPayload = JSON.stringify(event);
     const body = Buffer.from(`${envelopeHeaders}\n${itemHeaders}\n${eventPayload}\n`);
 
