@@ -56,7 +56,10 @@ export function handleScope(options: ElectronMainOptions, jsonScope: string): vo
       scope.setExtras(sentScope._extra);
     }
 
-    scope.addBreadcrumb(sentScope._breadcrumbs.pop(), options?.maxBreadcrumbs || 100);
+    const breadcrumb = sentScope._breadcrumbs.pop();
+    if (breadcrumb) {
+      scope.addBreadcrumb(breadcrumb, options?.maxBreadcrumbs || 100);
+    }
   });
   /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 }
