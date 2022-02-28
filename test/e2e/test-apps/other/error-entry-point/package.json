@@ -6,7 +6,6 @@
     "build": "vite build --config vite.config.main.js"
   },
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.0",
     "@sentry/electron": "3.0.0"
   },
   "devDependencies": {
