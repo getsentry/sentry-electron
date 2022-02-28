@@ -195,7 +195,7 @@ export class ProcessStatus {
     if (process.platform === 'win32') {
       spawnSync('taskkill /F /IM electron.exe', { shell: true });
     } else if (process.platform === 'darwin') {
-      spawnSync(`kill ${pid}`, { shell: true });
+      spawnSync(`kill -9 ${pid}`, { shell: true });
     }
   }
 
