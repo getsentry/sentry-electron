@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 3.0.3
+
+- fix: Delete sdk metadata from event before sending (#424)
+- fix: Improve error messages for incorrectly bundled code (#423)
+
 ## 3.0.2
 
 - fix: Fix broken serialization of node transaction spans (#419)
