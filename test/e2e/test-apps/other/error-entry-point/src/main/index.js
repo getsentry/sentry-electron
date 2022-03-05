@@ -1,17 +1,14 @@
+// ESM import will automatically pick the renderer entry point
+import { init } from '@sentry/electron';
 import { app } from 'electron';
 
-global.process.on('unhandledRejection', (error) => {
+global.process.on('uncaughtException', () => {
   app.quit();
 });
 
-function start() {
-  // We need to do this async otherwise we get a dialog which will break CI
-  //
-  // Because we're using ESM in the main process, this will pick
-  // up the renderer entry point and throw an error
-  import('@sentry/electron').then((_Sentry) => {
-    //
-  });
-}
-
-start();
+init({
+  dsn: '__DSN__',
+  debug: true,
+  autoSessionTracking: false,
+  onFatalError: () => {},
+});
