@@ -2,6 +2,7 @@
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
     "outDir": "esm",
-    "module": "es6"
+    "module": "es6",
+    "esModuleInterop": true,
   }
 }
