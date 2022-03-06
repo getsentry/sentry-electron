@@ -23,5 +23,6 @@ jobs:
           branch: test/new-electron-versions
           delete-branch: true
           title: 'test: New Electron versions'
+          commit-message: 'test: New Electron versions'
           body: |
             Automatically generated PR to test new Electron releases

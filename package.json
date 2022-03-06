@@ -87,7 +87,7 @@
     "electron": "15.3.0",
     "@electron/get": "^1.13.0",
     "electron-mocha": "^11.0.0",
-    "electron-latest-versions": "^0.1.6",
+    "electron-latest-versions": "^0.1.7",
     "extract-zip": "^2.0.1",
     "koa": "^2.13.4",
     "koa-bodyparser": "^4.3.0",
