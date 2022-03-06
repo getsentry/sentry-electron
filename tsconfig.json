@@ -1,8 +1,14 @@
 {
   "extends": "./tsconfig.build.json",
-  "include": ["src/**/*.ts", "test/**/*.ts"],
-  "exclude": ["dist"],
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ],
+  "exclude": [
+    "dist"
+  ],
   "compilerOptions": {
-    "rootDir": "."
+    "rootDir": ".",
+    "esModuleInterop": false,
   }
 }
