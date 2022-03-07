@@ -6,6 +6,7 @@ import {
 } from '@sentry/browser';
 import { logger } from '@sentry/utils';
 
+import { ensureProcess } from '../common';
 import { EventToMain, ScopeToMain } from './integrations';
 
 export const defaultIntegrations = [...defaultBrowserIntegrations, new ScopeToMain(), new EventToMain()];
@@ -14,6 +15,8 @@ export const defaultIntegrations = [...defaultBrowserIntegrations, new ScopeToMa
  * Initialize Sentry in the Electron renderer process
  */
 export function init(options: BrowserOptions = {}): void {
+  ensureProcess('renderer');
+
   // Ensure the browser SDK is only init'ed once.
   if (window?.__SENTRY__RENDERER_INIT__) {
     logger.warn(`The browser SDK has already been initialized.

@@ -2,12 +2,10 @@
 /* eslint-disable no-console */
 import { logger } from '@sentry/utils';
 
-import { ensureProcess, IPCChannel, IPCInterface, PROTOCOL_SCHEME } from '../common';
+import { IPCChannel, IPCInterface, PROTOCOL_SCHEME } from '../common';
 
 /** Gets the available IPC implementation */
 function getImplementation(): IPCInterface {
-  ensureProcess('renderer');
-
   // Favour IPC if it's been exposed by a preload script
   if (window.__SENTRY_IPC__) {
     return window.__SENTRY_IPC__;
@@ -38,10 +36,18 @@ function getImplementation(): IPCInterface {
   };
 }
 
+let cachedInterface: IPCInterface | undefined;
+
 /**
  * Renderer IPC interface
  *
  * Favours IPC if its been exposed via a preload script but will
  * fallback to custom protocol and fetch is IPC is not available
  */
-export const IPC: IPCInterface = getImplementation();
+export function getIPC(): IPCInterface {
+  if (!cachedInterface) {
+    cachedInterface = getImplementation();
+  }
+
+  return cachedInterface;
+}
