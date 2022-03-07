@@ -1,7 +1,7 @@
 import { Event, Session } from '@sentry/types';
 import { readFileSync } from 'fs';
 import { dirname, sep } from 'path';
-import * as YAML from 'yaml';
+import YAML from 'yaml';
 
 import { TestServerEvent } from '../server';
 import { walkSync } from '../utils';

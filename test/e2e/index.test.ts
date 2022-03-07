@@ -1,6 +1,6 @@
 import { should, use } from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
-import * as chaiSubset from 'chai-subset';
+import chaiAsPromised from 'chai-as-promised';
+import chaiSubset from 'chai-subset';
 import { join } from 'path';
 
 import { TestContext } from './context';

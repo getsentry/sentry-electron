@@ -9,6 +9,5 @@
   ],
   "compilerOptions": {
     "rootDir": ".",
-    "esModuleInterop": false,
   }
 }
