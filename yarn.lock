@@ -1085,10 +1085,10 @@ ee-first@1.1.1:
   resolved "https://registry.yarnpkg.com/ee-first/-/ee-first-1.1.1.tgz#590c61156b0ae2f4f0255732a158b266bc56b21d"
   integrity sha1-WQxhFWsK4vTwJVcyoViyZrxWsh0=
 
-electron-latest-versions@^0.1.6:
-  version "0.1.6"
-  resolved "https://registry.yarnpkg.com/electron-latest-versions/-/electron-latest-versions-0.1.6.tgz#8feed891c06f7bf2c19ea1504a73c57a9a372ed5"
-  integrity sha512-/8S0y0o61uRIhoC/tCZDrXkyIhbFPQnaISomPCuuJajxI3uZvljYWv3WUFoWjyDgqnNHDeCns72owOMCm3sjXg==
+electron-latest-versions@^0.1.7:
+  version "0.1.7"
+  resolved "https://registry.yarnpkg.com/electron-latest-versions/-/electron-latest-versions-0.1.7.tgz#f8c3cdc065efc0a11660eb372315d009877ae0bd"
+  integrity sha512-eUbkBwa6rsoh5nWKF2vPPezr3DWlzMgnmrclEneyc0EOUIZESZPtv8uoFX8saEVDMvSNBVZAiXeR2/xMZIjFzQ==
 
 electron-mocha@^11.0.0:
   version "11.0.0"
