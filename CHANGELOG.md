@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 3.0.4
+
+- fix: Use esModuleInterop for deepmerge (#432)
+- fix: Lazily initialise IPC in renderer (#428)
+
 ## 3.0.3
 
 - fix: Don't add empty breadcrumbs (#425)

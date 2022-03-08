@@ -1,8 +1,8 @@
 import { Event, Session } from '@sentry/types';
 import { Server } from 'http';
-import * as Koa from 'koa';
-import * as bodyParser from 'koa-bodyparser';
-import * as Router from 'koa-tree-router';
+import Koa from 'koa';
+import bodyParser from 'koa-bodyparser';
+import Router from 'koa-tree-router';
 import { inspect } from 'util';
 import { eventIsSession } from '../recipe';
 import { createLogger } from '../utils';

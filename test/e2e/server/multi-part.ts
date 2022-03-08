@@ -1,7 +1,7 @@
 import { Event } from '@sentry/types';
-import * as Busboy from 'busboy';
-import * as Koa from 'koa';
-import * as Router from 'koa-tree-router';
+import Busboy from 'busboy';
+import Koa from 'koa';
+import Router from 'koa-tree-router';
 import { createGunzip } from 'zlib';
 
 import { createLogger } from '../utils';
