@@ -49,7 +49,7 @@ export interface ElectronMainOptions extends NodeOptions {
    *
    * Defaults to () => [session.defaultSession]
    */
-  getSessions: () => Session[];
+  getSessions?: () => Session[];
   /**
    * Callback to allow custom naming of renderer processes.
    *
