@@ -137,7 +137,12 @@ export class ElectronNetTransport extends Transports.BaseTransport {
       );
     }
 
-    const options = this._getRequestOptions(new url.URL(request.url));
+    const parsedUrl = new url.URL(request.url);
+    const options = this._getRequestOptions(parsedUrl);
+
+    // Ensure query fallback exists
+    options.path += parsedUrl.search;
+
     options.headers = {
       ...options.headers,
       'Content-Type': 'application/x-sentry-envelope',
