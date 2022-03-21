@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 3.0.5
+
+- fix: Limit retryDelay to avoid integer overflows in setTimeout (#441)
 
 ## 3.0.5
 
