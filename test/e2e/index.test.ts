@@ -5,7 +5,7 @@ import { join } from 'path';
 
 import { TestContext } from './context';
 import { downloadElectron } from './download';
-import { getExampleRecipes, getCategorisedTestRecipes } from './recipe';
+import { getCategorisedTestRecipes, getExampleRecipes } from './recipe';
 import { TestServer } from './server';
 import { clearTestLog, getElectronTestVersions, outputTestLog } from './utils';
 

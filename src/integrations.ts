@@ -1,17 +1,17 @@
 import { Integration } from '@sentry/types';
 import { dynamicRequire } from '@sentry/utils';
-import { ElectronOptions } from './';
 
+import { ElectronOptions } from './';
 import {
-  MainContext,
+  AdditionalContext,
+  ChildProcess,
   ElectronBreadcrumbs,
   ElectronMinidump,
+  MainContext,
+  MainProcessSession,
   OnUncaughtException,
   PreloadInjection,
   SentryMinidump,
-  MainProcessSession,
-  AdditionalContext,
-  ChildProcess,
 } from './main/integrations';
 import { EventToMain, ScopeToMain } from './renderer/integrations';
 

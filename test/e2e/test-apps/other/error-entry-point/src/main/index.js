@@ -1,4 +1,5 @@
 // ESM import will automatically pick the renderer entry point
+// eslint-disable-next-line import/no-unresolved
 import { init } from '@sentry/electron';
 import { app } from 'electron';
 

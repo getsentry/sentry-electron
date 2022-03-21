@@ -1,15 +1,15 @@
+import { expect } from 'chai';
 import { spawnSync } from 'child_process';
 import { mkdirSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
-import { expect } from 'chai';
 
 import { SDK_VERSION } from '../../../src/main/version';
+import { TestContext } from '../context';
 import { ERROR_ID, RATE_LIMIT_ID, SERVER_PORT, TestServer } from '../server';
 import { createLogger, getTestLog, walkSync } from '../utils';
+import { evaluateCondition } from './eval';
 import { eventIsSession, normalize } from './normalize';
 import { parseRecipe, TestRecipe } from './parser';
-import { TestContext } from '../context';
-import { evaluateCondition } from './eval';
 
 export * from './normalize';
 
@@ -71,7 +71,7 @@ export class RecipeRunner {
     return this._recipe.metadata.category;
   }
 
-  private get appName(): string {
+  private get _appName(): string {
     const erStr = 'Recipe needs a package.json with "name" field';
 
     const pkgJson = this._recipe.files['package.json'];
@@ -94,7 +94,7 @@ export class RecipeRunner {
     // macOS runs quite slowly in GitHub actions
     context.timeout(process.platform === 'darwin' ? timeout * 2 : timeout);
 
-    const appPath = join(testBasePath, this.appName);
+    const appPath = join(testBasePath, this._appName);
 
     // Drop all the files
     for (const file of Object.keys(this._recipe.files)) {
@@ -140,7 +140,7 @@ export class RecipeRunner {
       }
     }
 
-    return [appPath, this.appName];
+    return [appPath, this._appName];
   }
 
   public async runTests(context: TestContext, testServer: TestServer): Promise<void> {
