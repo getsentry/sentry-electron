@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 3.0.5
+
+- fix: Limit retryDelay to avoid integer overflows in setTimeout (#441)
 
 ## 3.0.4
 
@@ -26,7 +28,9 @@
 A large refactor and simplification of the SDK moving most of the functionality into integrations used with
 `@sentry/browser` and `@sentry/node`.
 
-- Session tracking data sent by default. See our [release health docs for more details](https://docs.sentry.io/product/releases/health/). You can opt out of this behaviour by setting `autoSessionTracking: false` during SDK initialization.
+- Session tracking data sent by default. See our
+  [release health docs for more details](https://docs.sentry.io/product/releases/health/). You can opt out of this
+  behaviour by setting `autoSessionTracking: false` during SDK initialization.
 - Performance monitoring of renderer instances using the `BrowserTracing` integration from `@sentry/tracing`
 - Preload script no longer required [for most scenarios](https://github.com/getsentry/sentry-electron/issues/376)
 - Optional relative imports for main/renderer/preload entry points to help with bundlers
