@@ -73,7 +73,7 @@ export class ElectronOfflineNetTransport extends ElectronNetTransport {
     }, this._retryDelay);
 
     this._retryDelay *= 3;
-    
+
     // If the delay is bigger than 2^31 (max signed 32-bit int), setTimeout throws
     // an error and falls back to 1 which can cause a huge number of requests.
     if (this._retryDelay > MAX_DELAY) {
