@@ -7,7 +7,7 @@ import { inspect } from 'util';
 
 import { eventIsSession } from '../recipe';
 import { createLogger } from '../utils';
-import { parse_multipart, sentryEventFromFormFields } from './multi-part';
+import { parseMultipart, sentryEventFromFormFields } from './multi-part';
 
 const log = createLogger('Test Server');
 
@@ -106,7 +106,7 @@ export class TestServer {
           return;
         }
 
-        const result = await parse_multipart(ctx);
+        const result = await parseMultipart(ctx);
         const [event, namespacedData] = sentryEventFromFormFields(result);
         const dumpFile = result.files.upload_file_minidump != undefined && result.files.upload_file_minidump > 1024;
 
