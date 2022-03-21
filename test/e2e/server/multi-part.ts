@@ -13,7 +13,7 @@ export interface MultipartResult {
   files: { [key: string]: number };
 }
 
-export function parse_multipart(
+export function parseMultipart(
   ctx: Koa.ParameterizedContext<any, Router.IRouterParamContext<any, any>, any>,
 ): Promise<MultipartResult> {
   return new Promise((resolve) => {

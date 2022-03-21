@@ -38,7 +38,7 @@ export class ElectronOfflineNetTransport extends ElectronNetTransport {
         this._requestSuccess();
         return response;
       } catch (error) {
-        if (error instanceof HTTPError && error.status != 'rate_limit') {
+        if (error instanceof HTTPError && error.status !== 'rate_limit') {
           logger.log('Dropping request');
           // We don't queue HTTP errors that are not rate limited
           throw error;

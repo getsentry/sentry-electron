@@ -44,10 +44,14 @@ export class MainProcessSession implements Integration {
     // Stop the exit so we have time to send the session
     event.preventDefault();
 
-    // End the session
-    await endSession();
+    try {
+      // End the session
+      await endSession();
+    } catch (e) {
+      // Ignore and log any errors which would prevent app exit
+      logger.log('[MainProcessSession] Error ending session', e);
+    }
 
-    // After flush we can safely exit
     app.exit();
   };
 }
