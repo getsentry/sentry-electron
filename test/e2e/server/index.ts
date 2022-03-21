@@ -4,9 +4,9 @@ import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
 import Router from 'koa-tree-router';
 import { inspect } from 'util';
+
 import { eventIsSession } from '../recipe';
 import { createLogger } from '../utils';
-
 import { parse_multipart, sentryEventFromFormFields } from './multi-part';
 
 const log = createLogger('Test Server');
@@ -82,7 +82,7 @@ export class TestServer {
         return;
       }
 
-      const [, _itemHeaders, payload, attachmentHeaders, attachment] = ctx.request.body.toString().split('\n');
+      const [, , payload, attachmentHeaders, attachment] = ctx.request.body.toString().split('\n');
 
       this._addEvent({
         data: JSON.parse(payload),

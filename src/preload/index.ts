@@ -18,6 +18,7 @@ if (window.__SENTRY_IPC__) {
     sendEvent: (eventJson: string) => ipcRenderer.send(IPCChannel.EVENT, eventJson),
   };
 
+  // eslint-disable-next-line no-restricted-globals
   window.__SENTRY_IPC__ = ipcObject;
 
   // We attempt to use contextBridge if it's available

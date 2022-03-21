@@ -4,18 +4,18 @@ import { Event, Integration, Severity } from '@sentry/types';
 import { forget, isPlainObject, isThenable, logger, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
-import { CRASH_REASONS, onChildProcessGone, onRendererProcessGone, usesCrashpad } from '../../electron-normalize';
 import { mergeEvents } from '../../../common';
+import { getEventDefaults } from '../../context';
+import { CRASH_REASONS, onChildProcessGone, onRendererProcessGone, usesCrashpad } from '../../electron-normalize';
+import { sentryCachePath } from '../../fs';
+import { getRendererProperties, trackRendererProperties } from '../../renderers';
 import { ElectronMainOptions } from '../../sdk';
+import { checkPreviousSession, sessionCrashed } from '../../sessions';
+import { Store } from '../../store';
 import { ElectronNetTransport } from '../../transports/electron-net';
 import { BaseUploader } from './base-uploader';
 import { BreakpadUploader } from './breakpad-uploader';
 import { CrashpadUploader } from './crashpad-uploader';
-import { Store } from '../../store';
-import { getEventDefaults } from '../../context';
-import { checkPreviousSession, sessionCrashed } from '../../sessions';
-import { sentryCachePath } from '../../fs';
-import { getRendererProperties, trackRendererProperties } from '../../renderers';
 
 /** Sends minidumps via the Sentry uploader */
 export class SentryMinidump implements Integration {
@@ -231,7 +231,7 @@ export class SentryMinidump implements Integration {
             newEvent = beforeSendResult;
           }
 
-          paths.map((path) => {
+          paths.forEach((path) => {
             forget(uploader.uploadMinidump({ path, event: newEvent || {} }));
           });
         }
