@@ -9,6 +9,7 @@ import { ElectronNetTransport, HTTPError, SentryElectronRequest } from './electr
 import { PersistedRequestQueue } from './queue';
 
 const START_DELAY = 5_000;
+const MAX_DELAY = 2_000_000_000;
 
 /** Returns true is there's a chance we're online */
 function maybeOnline(): boolean {
@@ -72,6 +73,12 @@ export class ElectronOfflineNetTransport extends ElectronNetTransport {
     }, this._retryDelay);
 
     this._retryDelay *= 3;
+    
+    // If the delay is bigger than 2^32 / 2 (max signed 32-bit int), setTimeout
+    // throws an error and falls back to 1 which can cause a huge number of requests.
+    if (this._retryDelay > MAX_DELAY) {
+      this._retryDelay = MAX_DELAY;
+    }
 
     return { status: 'unknown' };
   }
