@@ -11,9 +11,7 @@ module.exports = {
   ignorePatterns: [
     '**/dist/**',
     '/esm/**',
-    '/examples/**',
     '/scripts/**',
-    '/test/integration/**',
     '/preload/**',
     '/main/**',
     '/renderer/**',

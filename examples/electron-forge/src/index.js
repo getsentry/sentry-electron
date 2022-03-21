@@ -1,5 +1,6 @@
-const { app, BrowserWindow } = require('electron');
 const path = require('path');
+
+const { app, BrowserWindow } = require('electron');
 const { init } = require('@sentry/electron');
 
 init({
