@@ -13,7 +13,7 @@ const config = {
     },
   },
   build: {
-    target: `node8`,
+    target: 'node8',
     outDir: 'dist/main',
     assetsDir: '.',
     minify: true,

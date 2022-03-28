@@ -56,7 +56,7 @@ export class ElectronOfflineNetTransport extends ElectronNetTransport {
 
   /** Records successful submission */
   private _requestSuccess(): void {
-    logger.log(`Successfully sent`);
+    logger.log('Successfully sent');
     // Reset the retry delay
     this._retryDelay = START_DELAY;
     // We were successful so check the queue
@@ -65,7 +65,7 @@ export class ElectronOfflineNetTransport extends ElectronNetTransport {
 
   /** Queues a failed request */
   private async _queueRequest(request: SentryElectronRequest): Promise<Response> {
-    logger.log(`Queuing request`);
+    logger.log('Queuing request');
     await this._queue.add(request);
 
     setTimeout(() => {
@@ -87,7 +87,7 @@ export class ElectronOfflineNetTransport extends ElectronNetTransport {
   private _flushQueue(): void {
     void this._queue.pop(this._url).then((found) => {
       if (found) {
-        logger.log(`Found a request in the queue`);
+        logger.log('Found a request in the queue');
         void this.sendRequest(found);
       }
     });

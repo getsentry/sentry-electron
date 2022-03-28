@@ -89,7 +89,7 @@ export class TestServer {
         dumpFile: !!attachmentHeaders && !!attachment && attachment.startsWith('MDMP'),
         appId: ctx.params.id,
         sentryKey: keyMatch[1],
-        method: `envelope`,
+        method: 'envelope',
       });
 
       ctx.status = 200;

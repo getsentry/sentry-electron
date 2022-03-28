@@ -123,7 +123,7 @@ export function sessionCrashed(): void {
   }
 
   if (session.status === 'ok') {
-    logger.log(`Setting session as crashed`);
+    logger.log('Setting session as crashed');
     session.update({ status: 'crashed', errors: (session.errors += 1) });
   } else {
     logger.log('Session already ended');
