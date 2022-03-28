@@ -15,7 +15,7 @@ function ensureOnlyRequiresElectron(code) {
   }
 }
 
-const ipcModule = readFile('../src/common/ipc.ts').replaceAll('export', '');
+const ipcModule = readFile('../src/common/ipc.ts').replace(/export/g, '');
 
 function transpileFile(input, output, esm) {
   const module = esm ? ts.ModuleKind.ES2020 : ts.ModuleKind.CommonJS;
