@@ -19,7 +19,7 @@ export function handleEvent(options: ElectronMainOptions, jsonEvent: string, con
     return;
   }
 
-  const process = contents ? options?.getRendererName?.(contents) || `renderer` : 'renderer';
+  const process = contents ? options?.getRendererName?.(contents) || 'renderer' : 'renderer';
 
   captureEvent(mergeEvents(event, { tags: { 'event.process': process } }));
 }

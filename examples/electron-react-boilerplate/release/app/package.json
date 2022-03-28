@@ -1,0 +1,10 @@
+{
+  "name": "electron-react-boilerplate",
+  "version": "4.5.0",
+  "main": "./dist/main/main.js",
+  "scripts": {
+    "electron-rebuild": "node -r ts-node/register ../../.erb/scripts/electron-rebuild.js",
+    "link-modules": "node -r ts-node/register ../../.erb/scripts/link-modules.ts",
+    "postinstall": "npm run electron-rebuild && npm run link-modules"
+  }
+}

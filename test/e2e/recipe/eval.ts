@@ -33,7 +33,7 @@ export function evaluateCondition(name: string, electronVersion: string, conditi
   if (result == false) {
     log(`Result equals false. Skipping ${name}.`);
   } else {
-    log(`Result equals true.`);
+    log('Result equals true.');
   }
 
   return result;

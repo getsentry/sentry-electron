@@ -94,7 +94,7 @@ export class RecipeRunner {
     // macOS runs quite slowly in GitHub actions
     context.timeout(process.platform === 'darwin' ? timeout * 2 : timeout);
 
-    const appPath = join(testBasePath, this._appName);
+    let appPath = join(testBasePath, this._appName);
 
     // Drop all the files
     for (const file of Object.keys(this._recipe.files)) {
@@ -138,6 +138,10 @@ export class RecipeRunner {
         console.error(result.stderr?.toString());
         throw new Error('Recipe command failed');
       }
+    }
+
+    if (this._recipe.metadata.distPath) {
+      appPath = join(appPath, this._recipe.metadata.distPath);
     }
 
     return [appPath, this._appName];

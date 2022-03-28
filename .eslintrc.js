@@ -15,6 +15,7 @@ module.exports = {
     '/preload/**',
     '/main/**',
     '/renderer/**',
+    '/examples/**',
     '/common/**',
     '/index.*',
     '/integrations.*',

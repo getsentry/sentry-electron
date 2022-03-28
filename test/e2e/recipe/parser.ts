@@ -16,6 +16,7 @@ export interface TestMetadata {
   timeout?: number;
   runTwice?: boolean;
   expectedError?: string;
+  distPath?: string;
 }
 
 export interface TestRecipe {
