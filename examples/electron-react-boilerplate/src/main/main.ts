@@ -8,7 +8,6 @@
  * When running `npm run build` or `npm run build:main`, this file is compiled to
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
-import path from 'path';
 import { app, BrowserWindow } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
@@ -37,9 +36,6 @@ const createWindow = async () => {
     show: false,
     width: 1024,
     height: 728,
-    webPreferences: {
-      preload: app.isPackaged ? path.join(__dirname, 'preload.js') : path.join(__dirname, '../../.erb/dll/preload.js'),
-    },
   });
 
   mainWindow.loadURL(resolveHtmlPath('index.html'));
