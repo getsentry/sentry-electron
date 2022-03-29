@@ -1,5 +1,6 @@
 const { app } = require('electron');
 const { init, startTransaction, getCurrentHub } = require('@sentry/electron');
+require('@sentry/tracing');
 const fetch = require('electron-fetch');
 
 init({

@@ -2,6 +2,7 @@
 
 ## 3.0.6
 
+- fix: Update Sentry SDKs to `6.19.2`
 - fix: Make `getSessions` and `ipcMode` on `ElectronMainOptions` optional (#448)
 - fix: Webpack issue with `electron-react-boilerplate` (#446)
 
