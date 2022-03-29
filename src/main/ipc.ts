@@ -5,12 +5,12 @@ import { app, ipcMain, protocol, WebContents } from 'electron';
 
 import { IPCChannel, IPCMode, mergeEvents, PROTOCOL_SCHEME } from '../common';
 import { supportsFullProtocol, whenAppReady } from './electron-normalize';
-import { ElectronMainOptions } from './sdk';
+import { ElectronMainOptionsInternal } from './sdk';
 
 /**
  * Handle events from the renderer processes
  */
-export function handleEvent(options: ElectronMainOptions, jsonEvent: string, contents?: WebContents): void {
+export function handleEvent(options: ElectronMainOptionsInternal, jsonEvent: string, contents?: WebContents): void {
   let event: Event;
   try {
     event = JSON.parse(jsonEvent) as Event;
@@ -32,7 +32,7 @@ function hasKeys(obj: any): boolean {
 /**
  * Handle scope updates from renderer processes
  */
-export function handleScope(options: ElectronMainOptions, jsonScope: string): void {
+export function handleScope(options: ElectronMainOptionsInternal, jsonScope: string): void {
   let rendererScope: Scope;
   try {
     rendererScope = JSON.parse(jsonScope) as Scope;
@@ -65,7 +65,7 @@ export function handleScope(options: ElectronMainOptions, jsonScope: string): vo
 }
 
 /** Enables Electron protocol handling */
-function configureProtocol(options: ElectronMainOptions): void {
+function configureProtocol(options: ElectronMainOptionsInternal): void {
   if (app.isReady()) {
     throw new SentryError("Sentry SDK should be initialized before the Electron app 'ready' event is fired");
   }
@@ -99,13 +99,13 @@ function configureProtocol(options: ElectronMainOptions): void {
 /**
  * Hooks IPC for communication with the renderer processes
  */
-function configureClassic(options: ElectronMainOptions): void {
+function configureClassic(options: ElectronMainOptionsInternal): void {
   ipcMain.on(IPCChannel.EVENT, ({ sender }, jsonEvent: string) => handleEvent(options, jsonEvent, sender));
   ipcMain.on(IPCChannel.SCOPE, (_, jsonScope: string) => handleScope(options, jsonScope));
 }
 
 /** Sets up communication channels with the renderer */
-export function configureIPC(options: ElectronMainOptions): void {
+export function configureIPC(options: ElectronMainOptionsInternal): void {
   if (!supportsFullProtocol() && options.ipcMode === IPCMode.Protocol) {
     throw new SentryError('IPCMode.Protocol is only supported in Electron >= v5');
   }
