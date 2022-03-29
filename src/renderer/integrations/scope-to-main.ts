@@ -1,7 +1,7 @@
 import { getCurrentHub } from '@sentry/core';
 import { Integration } from '@sentry/types';
+import { normalize } from '@sentry/utils';
 
-import { walk } from '../../common';
 import { getIPC } from '../ipc';
 
 /**
@@ -23,12 +23,12 @@ export class ScopeToMain implements Integration {
    * Sends the scope to the main process when it updates.
    */
   private _setupScopeListener(): void {
-    const ipc = getIPC();
-
     const scope = getCurrentHub().getScope();
     if (scope) {
+      const ipc = getIPC();
+
       scope.addScopeListener((updatedScope) => {
-        ipc.sendScope(JSON.stringify(updatedScope, walk));
+        ipc.sendScope(JSON.stringify(normalize(updatedScope, 20, 2_000)));
         scope.clearBreadcrumbs();
       });
     }
