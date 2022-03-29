@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.0.6
+
+- fix: Make `getSessions` and `ipcMode` on `ElectronMainOptions` optional (#448)
+- fix: Webpack issue with `electron-react-boilerplate` (#446)
+
 ## 3.0.5
 
 - fix: Limit retryDelay to avoid integer overflows in setTimeout (#441)
