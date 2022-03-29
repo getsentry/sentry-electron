@@ -7,7 +7,7 @@ import { existsSync } from 'fs';
 
 import { IPCMode } from '../../common';
 import { rendererRequiresCrashReporterStart } from '../electron-normalize';
-import { ElectronMainOptions } from '../sdk';
+import { ElectronMainOptionsInternal } from '../sdk';
 
 /**
  * Injects the preload script into the provided sessions.
@@ -23,7 +23,7 @@ export class PreloadInjection implements Integration {
 
   /** @inheritDoc */
   public setupOnce(): void {
-    const options = getCurrentHub().getClient<NodeClient>()?.getOptions() as ElectronMainOptions;
+    const options = getCurrentHub().getClient<NodeClient>()?.getOptions() as ElectronMainOptionsInternal;
 
     // If classic IPC mode is disabled, we shouldn't attempt to inject preload scripts
     // eslint-disable-next-line no-bitwise
@@ -39,7 +39,7 @@ export class PreloadInjection implements Integration {
   /**
    * Attempts to add the preload script the the provided sessions
    */
-  private _addPreloadToSessions(options: ElectronMainOptions): void {
+  private _addPreloadToSessions(options: ElectronMainOptionsInternal): void {
     let path = undefined;
     try {
       path = rendererRequiresCrashReporterStart()

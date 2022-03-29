@@ -30,7 +30,7 @@ export const defaultIntegrations: Integration[] = [
   ...defaultNodeIntegrations.filter((integration) => integration.name !== 'OnUncaughtException'),
 ];
 
-export interface ElectronMainOptions extends NodeOptions {
+export interface ElectronMainOptionsInternal extends NodeOptions {
   /**
    * Inter-process communication mode to receive event and scope from renderers
    *
@@ -41,6 +41,7 @@ export interface ElectronMainOptions extends NodeOptions {
    * defaults to IPCMode.Both for maximum compatibility
    */
   ipcMode: IPCMode;
+
   /**
    * A function that returns an array of Electron session objects
    *
@@ -50,6 +51,7 @@ export interface ElectronMainOptions extends NodeOptions {
    * Defaults to () => [session.defaultSession]
    */
   getSessions: () => Session[];
+
   /**
    * Callback to allow custom naming of renderer processes.
    *
@@ -59,7 +61,11 @@ export interface ElectronMainOptions extends NodeOptions {
   getRendererName?: (contents: WebContents) => string | undefined;
 }
 
-const defaultOptions: ElectronMainOptions = {
+// getSessions and ipcMode properties are optional because they have defaults
+export type ElectronMainOptions = Pick<Partial<ElectronMainOptionsInternal>, 'getSessions' | 'ipcMode'> &
+  Omit<ElectronMainOptionsInternal, 'getSessions' | 'ipcMode'>;
+
+const defaultOptions: ElectronMainOptionsInternal = {
   ipcMode: IPCMode.Both,
   getSessions: () => [session.defaultSession],
 };
@@ -67,8 +73,8 @@ const defaultOptions: ElectronMainOptions = {
 /**
  * Initialize Sentry in the Electron main process
  */
-export function init(partialOptions: Partial<ElectronMainOptions>): void {
-  const options: ElectronMainOptions = Object.assign(defaultOptions, partialOptions);
+export function init(userOptions: ElectronMainOptions): void {
+  const options: ElectronMainOptionsInternal = Object.assign(defaultOptions, userOptions);
   const defaults = defaultIntegrations;
 
   // If we don't set a release, @sentry/node will automatically fetch from environment variables
