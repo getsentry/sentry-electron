@@ -39,6 +39,10 @@ export class MainProcessSession implements Integration {
 
   /** Handles the exit */
   private _exitHandler: (event: Electron.Event) => Promise<void> = async (event: Electron.Event) => {
+    if (event.defaultPrevented) {
+      return;
+    }
+
     logger.log('[MainProcessSession] Exit Handler');
 
     // Stop the exit so we have time to send the session
