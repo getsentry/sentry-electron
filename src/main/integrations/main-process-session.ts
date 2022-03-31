@@ -53,7 +53,7 @@ export class MainProcessSession implements Integration {
       await endSession();
     } catch (e) {
       // Ignore and log any errors which would prevent app exit
-      logger.log('[MainProcessSession] Error ending session', e);
+      logger.warn('[MainProcessSession] Error ending session:', e);
     }
 
     app.exit();
