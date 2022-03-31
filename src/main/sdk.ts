@@ -1,8 +1,10 @@
+import { ensureProcess, IPCMode } from '../common';
+ensureProcess('main');
+
 import { defaultIntegrations as defaultNodeIntegrations, init as nodeInit, NodeOptions } from '@sentry/node';
 import { Integration } from '@sentry/types';
 import { Session, session, WebContents } from 'electron';
 
-import { IPCMode } from '../common';
 import { getDefaultEnvironment, getDefaultReleaseName } from './context';
 import {
   AdditionalContext,
