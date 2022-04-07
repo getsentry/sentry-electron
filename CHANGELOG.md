@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.7
+
+- fix: Don't capture window titles by default (#463)
+- fix: Don't throw on HTTP errors (#458)
+- fix: Throw error if main process code is loaded in renderer (#457)
+- fix: Don't exit if preventDefault used in will-quit event (#451)
+
 ## 3.0.6
 
 - fix: Update Sentry SDKs to `6.19.2`

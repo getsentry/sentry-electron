@@ -50,11 +50,11 @@ interface ElectronBreadcrumbsOptions<T> {
   powerMonitor: T;
 
   /**
-   * Whether to include window titles with webContents/browserWindow breadcrumbs
+   * Whether to capture window titles with webContents/browserWindow breadcrumbs
    *
    * default: false
    */
-  includeWindowTitles: boolean;
+  captureWindowTitles: boolean;
 }
 
 const DEFAULT_OPTIONS: ElectronBreadcrumbsOptions<EventFunction> = {
@@ -80,7 +80,7 @@ const DEFAULT_OPTIONS: ElectronBreadcrumbsOptions<EventFunction> = {
     ].includes(name),
   screen: () => true,
   powerMonitor: () => true,
-  includeWindowTitles: false,
+  captureWindowTitles: false,
 };
 
 /** Converts all user supplied options to function | false */
@@ -88,7 +88,7 @@ export function normalizeOptions(
   options: Partial<ElectronBreadcrumbsOptions<EventTypes>>,
 ): Partial<ElectronBreadcrumbsOptions<EventFunction | false>> {
   return (Object.keys(options) as (keyof ElectronBreadcrumbsOptions<EventTypes>)[]).reduce((obj, k) => {
-    if (k === 'includeWindowTitles') {
+    if (k === 'captureWindowTitles') {
       obj[k] = !!options[k];
     } else {
       const val: EventTypes = options[k];
@@ -185,7 +185,7 @@ export class ElectronBreadcrumbs implements Integration {
         if (id) {
           const state = getRendererProperties(id);
 
-          if (!this._options.includeWindowTitles && state?.title) {
+          if (!this._options.captureWindowTitles && state?.title) {
             delete state.title;
           }
 
