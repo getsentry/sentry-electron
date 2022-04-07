@@ -48,6 +48,13 @@ interface ElectronBreadcrumbsOptions<T> {
    * default: all
    */
   powerMonitor: T;
+
+  /**
+   * Whether to include window titles with webContents/browserWindow breadcrumbs
+   *
+   * default: false
+   */
+  includeWindowTitles: boolean;
 }
 
 const DEFAULT_OPTIONS: ElectronBreadcrumbsOptions<EventFunction> = {
@@ -73,6 +80,7 @@ const DEFAULT_OPTIONS: ElectronBreadcrumbsOptions<EventFunction> = {
     ].includes(name),
   screen: () => true,
   powerMonitor: () => true,
+  includeWindowTitles: false,
 };
 
 /** Converts all user supplied options to function | false */
@@ -80,12 +88,17 @@ export function normalizeOptions(
   options: Partial<ElectronBreadcrumbsOptions<EventTypes>>,
 ): Partial<ElectronBreadcrumbsOptions<EventFunction | false>> {
   return (Object.keys(options) as (keyof ElectronBreadcrumbsOptions<EventTypes>)[]).reduce((obj, k) => {
-    const val: EventTypes = options[k];
-    if (Array.isArray(val)) {
-      obj[k] = (name) => val.includes(name);
-    } else if (typeof val === 'function' || val === false) {
-      obj[k] = val;
+    if (k === 'includeWindowTitles') {
+      obj[k] = !!options[k];
+    } else {
+      const val: EventTypes = options[k];
+      if (Array.isArray(val)) {
+        obj[k] = (name) => val.includes(name);
+      } else if (typeof val === 'function' || val === false) {
+        obj[k] = val;
+      }
     }
+
     return obj;
   }, {} as Partial<ElectronBreadcrumbsOptions<EventFunction | false>>);
 }
@@ -171,6 +184,11 @@ export class ElectronBreadcrumbs implements Integration {
 
         if (id) {
           const state = getRendererProperties(id);
+
+          if (!this._options.includeWindowTitles && state?.title) {
+            delete state.title;
+          }
+
           if (state) {
             breadcrumb.data = state;
           }
