@@ -2,6 +2,7 @@
 
 ## 3.0.7
 
+- fix: export map and sideEffects
 - fix: Don't capture window titles by default (#463)
 - fix: Don't throw on HTTP errors (#458)
 - fix: Throw error if main process code is loaded in renderer (#457)
