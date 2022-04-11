@@ -9,17 +9,17 @@
     ".": {
       "node": {
         "require": "./index.js",
-        "module": "./esm/main/index.js"
+        "import": "./esm/main/index.js"
       },
       "default": "./esm/renderer/index.js"
     },
     "./main": {
       "require": "./main/index.js",
-      "module": "./esm/main/index.js"
+      "import": "./esm/main/index.js"
     },
     "./renderer": {
       "require": "./renderer/index.js",
-      "module": "./esm/renderer/index.js"
+      "import": "./esm/renderer/index.js"
     },
     "./preload": "./preload/index.js"
   },
@@ -102,7 +102,6 @@
     "xvfb-maybe": "^0.2.1",
     "yaml": "^1.10.2"
   },
-  "sideEffects": false,
   "volta": {
     "node": "16.14.0",
     "yarn": "1.22.17"
