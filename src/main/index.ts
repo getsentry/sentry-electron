@@ -44,7 +44,7 @@ export {
   withScope,
 } from '@sentry/core';
 
-export { NodeOptions, NodeBackend, NodeClient, lastEventId } from '@sentry/node';
+export { flush, close, NodeOptions, NodeBackend, NodeClient, lastEventId } from '@sentry/node';
 
 export { ElectronNetTransport } from './transports/electron-net';
 export { ElectronOfflineNetTransport } from './transports/electron-offline-net';
