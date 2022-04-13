@@ -205,11 +205,11 @@ export class SentryMinidump implements Integration {
 
       if (paths.length > 0) {
         const hub = getCurrentHub();
-        const enabled = !!hub.getClient()?.getOptions().enabled;
+        const enabled = hub.getClient()?.getOptions().enabled;
 
         // If the SDK is not enabled, we delete the minidump files so they
         // dont accumulate and/or get sent later
-        if (!enabled) {
+        if (enabled === false) {
           paths.forEach((path) => forget(unlinkAsync(path)));
           return false;
         }
