@@ -7,7 +7,7 @@ import { app, crashReporter } from 'electron';
 import { mergeEvents } from '../../../common';
 import { getEventDefaults } from '../../context';
 import { CRASH_REASONS, onChildProcessGone, onRendererProcessGone, usesCrashpad } from '../../electron-normalize';
-import { sentryCachePath } from '../../fs';
+import { sentryCachePath, unlinkAsync } from '../../fs';
 import { getRendererProperties, trackRendererProperties } from '../../renderers';
 import { ElectronMainOptions } from '../../sdk';
 import { checkPreviousSession, sessionCrashed } from '../../sessions';
@@ -202,17 +202,27 @@ export class SentryMinidump implements Integration {
 
     try {
       const paths = await uploader.getNewMinidumps();
-      // We only want to read the scope from disk in case there was a crash last run
+
       if (paths.length > 0) {
-        const currentCloned = Scope.clone(getCurrentHub().getScope());
+        const hub = getCurrentHub();
+        const enabled = hub.getClient()?.getOptions().enabled;
+
+        // If the SDK is not enabled, we delete the minidump files so they
+        // dont accumulate and/or get sent later
+        if (enabled === false) {
+          paths.forEach((path) => forget(unlinkAsync(path)));
+          return false;
+        }
+
+        const currentCloned = Scope.clone(hub.getScope());
         const storedScope = Scope.clone(this._scopeLastRun);
         let newEvent = await storedScope.applyToEvent(event);
 
         if (newEvent) {
           newEvent = await currentCloned.applyToEvent(newEvent);
 
+          // We handle beforeSend and sampleRate manually here because native crashes do not go through @sentry/core
           const { beforeSend, sampleRate } = options;
-
           if (typeof sampleRate === 'number' && Math.random() > sampleRate) {
             logger.warn(
               `Discarding event because it's not included in the random sample (sampling rate = ${sampleRate})`,
