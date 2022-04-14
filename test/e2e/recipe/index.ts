@@ -4,6 +4,7 @@ import { mkdirSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 
 import { SDK_VERSION } from '../../../src/main/version';
+import { delay } from '../../helpers';
 import { TestContext } from '../context';
 import { ERROR_ID, RATE_LIMIT_ID, SERVER_PORT, TestServer } from '../server';
 import { createLogger, getTestLog, walkSync } from '../utils';
@@ -163,6 +164,11 @@ export class RecipeRunner {
       (event) =>
         event.condition === undefined || evaluateCondition('event comparison', this._electronVersion, event.condition),
     );
+
+    // If no events are expected, delay to ensure that none are sent!
+    if (expectedEvents.length === 0) {
+      await delay(2_000);
+    }
 
     await context.waitForEvents(testServer, expectedEvents.length);
 

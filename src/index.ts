@@ -53,8 +53,14 @@ export interface ElectronOptions extends ElectronMainOptions, BrowserOptions {
 
 export { IPCMode } from './common';
 
+interface ProcessEntryPoint {
+  init: (options: Partial<ElectronOptions>) => void;
+  close?: (timeout?: number) => Promise<boolean>;
+  flush?: (timeout?: number) => Promise<boolean>;
+}
+
 /** Fetches the SDK entry point for the current process */
-function getEntryPoint(): { init: (options: Partial<ElectronOptions>) => void } {
+function getEntryPoint(): ProcessEntryPoint {
   try {
     return process.type === 'browser' ? dynamicRequire(module, './main') : require('./renderer');
   } catch (e) {
@@ -117,4 +123,40 @@ export function init(options: Partial<ElectronOptions>): void {
   removeEmptyIntegrations(options);
 
   getEntryPoint().init(options);
+}
+
+/**
+ * Call `close()` on the current client, if there is one. See {@link Client.close}.
+ *
+ * @param timeout Maximum time in ms the client should wait to flush its event queue before shutting down. Omitting this
+ * parameter will cause the client to wait until all events are sent before disabling itself.
+ * @returns A promise which resolves to `true` if the queue successfully drains before the timeout, or `false` if it
+ * doesn't (or if there's no client defined).
+ */
+export async function close(timeout?: number): Promise<boolean> {
+  const entryPoint = getEntryPoint();
+
+  if (entryPoint.close) {
+    return entryPoint.close(timeout);
+  }
+
+  throw new Error('The Electron SDK should be closed from the main process');
+}
+
+/**
+ * Call `flush()` on the current client, if there is one. See {@link Client.flush}.
+ *
+ * @param timeout Maximum time in ms the client should wait to flush its event queue. Omitting this parameter will cause
+ * the client to wait until all events are sent before resolving the promise.
+ * @returns A promise which resolves to `true` if the queue successfully drains before the timeout, or `false` if it
+ * doesn't (or if there's no client defined).
+ */
+export async function flush(timeout?: number): Promise<boolean> {
+  const entryPoint = getEntryPoint();
+
+  if (entryPoint.flush) {
+    return entryPoint.flush(timeout);
+  }
+
+  throw new Error('The Electron SDK should be flushed from the main process');
 }
