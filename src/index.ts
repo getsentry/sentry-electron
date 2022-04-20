@@ -4,7 +4,7 @@ import { getIntegrations, removeEmptyIntegrations } from './integrations';
 import { ElectronMainOptions } from './main';
 import { BrowserOptions } from './renderer';
 
-export {
+export type {
   Breadcrumb,
   BreadcrumbHint,
   Request,
@@ -14,7 +14,6 @@ export {
   EventStatus,
   Exception,
   Response,
-  Severity,
   SeverityLevel,
   StackFrame,
   Stacktrace,

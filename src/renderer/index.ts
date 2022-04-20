@@ -2,7 +2,7 @@ import { Integrations as BrowserIntegrations } from '@sentry/browser';
 
 import * as ElectronRendererIntegrations from './integrations';
 
-export {
+export type {
   Breadcrumb,
   BreadcrumbHint,
   Request,
@@ -12,7 +12,6 @@ export {
   EventStatus,
   Exception,
   Response,
-  Severity,
   SeverityLevel,
   StackFrame,
   Stacktrace,
@@ -41,14 +40,8 @@ export {
   withScope,
 } from '@sentry/core';
 
-export {
-  BrowserOptions,
-  BrowserClient,
-  injectReportDialog,
-  ReportDialogOptions,
-  lastEventId,
-  showReportDialog,
-} from '@sentry/browser';
+export { BrowserClient, injectReportDialog, lastEventId, showReportDialog } from '@sentry/browser';
+export type { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
 
 export const Integrations = { ...ElectronRendererIntegrations, ...BrowserIntegrations };
 export { init, defaultIntegrations } from './sdk';

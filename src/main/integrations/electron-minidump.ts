@@ -1,6 +1,6 @@
 import { getCurrentHub, Scope } from '@sentry/core';
 import { NodeClient, NodeOptions } from '@sentry/node';
-import { Event, Integration, Severity } from '@sentry/types';
+import { Event, Integration } from '@sentry/types';
 import { forget, logger, makeDsn, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
@@ -43,10 +43,10 @@ function getScope(options: NodeOptions): Event {
  * @param dsn Dsn
  */
 export function minidumpUrlFromDsn(dsn: string): string {
-  const { host, path, projectId, port, protocol, user } = makeDsn(dsn);
+  const { host, path, projectId, port, protocol, publicKey } = makeDsn(dsn);
   return `${protocol}://${host}${port !== '' ? `:${port}` : ''}${
     path !== '' ? `/${path}` : ''
-  }/api/${projectId}/minidump/?sentry_key=${user}`;
+  }/api/${projectId}/minidump/?sentry_key=${publicKey}`;
 }
 
 /** Sends minidumps via the Electron built-in uploader. */
@@ -161,7 +161,7 @@ export class ElectronMinidump implements Integration {
   /** Builds up an event to send with the native Electron uploader */
   private async _getNativeUploaderEvent(scope: Scope): Promise<Event> {
     const event = mergeEvents(await getEventDefaults(this._customRelease), {
-      level: Severity.Fatal,
+      level: 'fatal',
       platform: 'native',
       tags: { 'event.environment': 'native', event_type: 'native' },
     });

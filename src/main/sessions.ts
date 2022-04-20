@@ -96,9 +96,7 @@ export async function checkPreviousSession(crashed: boolean): Promise<void> {
 
     logger.log(`Found previous ${status} session`);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const transport = (getCurrentHub().getClient<NodeClient>() as any)
-      ._getBackend()
-      .getTransport() as ElectronNetTransport;
+    const transport = getCurrentHub().getClient<NodeClient>()?.getTransport() as ElectronNetTransport;
 
     await transport.sendSession({ ...previousSession, status, errors: (previousSession.errors || 0) + 1 });
 

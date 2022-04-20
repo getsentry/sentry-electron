@@ -5,7 +5,7 @@ import { Integrations as NodeIntegrations } from '@sentry/node';
 
 import * as ElectronMainIntegrations from './integrations';
 
-export {
+export type {
   Breadcrumb,
   BreadcrumbHint,
   Request,
@@ -15,7 +15,6 @@ export {
   EventStatus,
   Exception,
   Response,
-  Severity,
   SeverityLevel,
   StackFrame,
   Stacktrace,
@@ -44,11 +43,13 @@ export {
   withScope,
 } from '@sentry/core';
 
-export { flush, close, NodeOptions, NodeBackend, NodeClient, lastEventId } from '@sentry/node';
+export type { NodeOptions } from '@sentry/node';
+export { flush, close, NodeClient, lastEventId } from '@sentry/node';
 
 export { ElectronNetTransport } from './transports/electron-net';
 export { ElectronOfflineNetTransport } from './transports/electron-offline-net';
 export const Integrations = { ...ElectronMainIntegrations, ...NodeIntegrations };
 
-export { init, ElectronMainOptions, defaultIntegrations } from './sdk';
+export type { ElectronMainOptions } from './sdk';
+export { init, defaultIntegrations } from './sdk';
 export { IPCMode } from '../common';
