@@ -7,7 +7,9 @@
 
 # Official Sentry SDK for Electron
 
-[![Build & Test](https://github.com/getsentry/sentry-electron/actions/workflows/build.yml/badge.svg)](https://github.com/getsentry/sentry-electron/actions/workflows/build.yml)
+[![Build &
+Test](https://github.com/getsentry/sentry-electron/actions/workflows/build.yml/badge.svg)](https://github.com/getsentry/sentry-electron/actions/workflows/build.yml)
+[![Documentation](https://img.shields.io/badge/documentation-sentry.io-green.svg)](https://docs.sentry.io/platforms/javascript/electron/)
 [![npm version](https://img.shields.io/npm/v/@sentry/electron.svg)](https://www.npmjs.com/package/@sentry/electron)
 [![license](https://img.shields.io/github/license/getsentry/sentry-electron.svg)](https://github.com/getsentry/sentry-electron/blob/master/LICENSE)
 [![Discord](https://img.shields.io/discord/621778831602221064)](https://discord.gg/SugnmRwkmV)
@@ -66,16 +68,3 @@ Sentry.captureEvent({
   ],
 });
 ```
-
-## Deep Dive
-
-- [Configuration](https://docs.sentry.io/platforms/javascript/electron/#configuring-the-client)
-- [JavaScript Usage](https://docs.sentry.io/platforms/javascript/electron/)
-- [Native Usage](https://docs.sentry.io/platforms/javascript/electron/native/)
-- [Source Maps](https://docs.sentry.io/platforms/javascript/electron/sourcemaps/)
-
-## Resources
-
-- [Releases](https://github.com/getsentry/sentry-electron/releases)
-- [Bug Tracker](https://github.com/getsentry/sentry-electron/issues)
-- [Example App](https://github.com/getsentry/sentry-electron/tree/master/example)

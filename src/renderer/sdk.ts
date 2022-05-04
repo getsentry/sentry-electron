@@ -32,6 +32,10 @@ If init has been called in the preload and contextIsolation is disabled, is not 
     options.autoSessionTracking = false;
   }
 
+  // Disable client reports for renderer as the sdk should only send
+  // events using the main process.
+  options.sendClientReports = false;
+
   if (options.defaultIntegrations === undefined) {
     options.defaultIntegrations = defaultIntegrations;
   }
