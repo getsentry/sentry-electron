@@ -12,9 +12,9 @@ export type {
   SdkInfo,
   Event,
   EventHint,
-  EventStatus,
   Exception,
-  Response,
+  // eslint-disable-next-line deprecation/deprecation
+  Severity,
   SeverityLevel,
   StackFrame,
   Stacktrace,
@@ -29,10 +29,13 @@ export {
   captureEvent,
   captureMessage,
   configureScope,
+  createTransport,
   getHubFromCarrier,
   getCurrentHub,
   Hub,
+  makeMain,
   Scope,
+  Session,
   startTransaction,
   setContext,
   setExtra,
@@ -41,13 +44,15 @@ export {
   setTags,
   setUser,
   withScope,
+  FunctionToString,
+  InboundFilters,
 } from '@sentry/core';
 
 export type { NodeOptions } from '@sentry/node';
 export { flush, close, NodeClient, lastEventId } from '@sentry/node';
 
-export { ElectronNetTransport } from './transports/electron-net';
-export { ElectronOfflineNetTransport } from './transports/electron-offline-net';
+export { makeElectronNetTransport } from './transports/electron-net';
+export { makeElectronNetOfflineTransport } from './transports/electron-offline-net';
 export const Integrations = { ...ElectronMainIntegrations, ...NodeIntegrations };
 
 export type { ElectronMainOptions } from './sdk';

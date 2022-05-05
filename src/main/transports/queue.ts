@@ -1,17 +1,19 @@
-import { SentryRequestType } from '@sentry/types';
+import { TransportRequest } from '@sentry/types';
 import { logger, uuid4 } from '@sentry/utils';
 import { join } from 'path';
 
 import { readFileAsync, unlinkAsync, writeFileAsync } from '../fs';
 import { Store } from '../store';
-import { SentryElectronRequest } from './electron-net';
 
 const MILLISECONDS_PER_DAY = 86_400_000;
 
 interface PersistedRequest {
   bodyPath: string;
-  type: SentryRequestType;
   date: Date;
+}
+
+export interface QueuedTransportRequest extends TransportRequest {
+  date?: Date;
 }
 
 /** A request queue that is persisted to disk to survive app restarts */
@@ -25,13 +27,12 @@ export class PersistedRequestQueue {
   ) {}
 
   /** Adds a request to the queue */
-  public async add(request: SentryElectronRequest): Promise<void> {
+  public async add(request: QueuedTransportRequest): Promise<void> {
     const bodyPath = uuid4();
 
     this._queue.update((queue) => {
       queue.push({
         bodyPath,
-        type: request.type,
         date: request.date || new Date(),
       });
 
@@ -52,7 +53,7 @@ export class PersistedRequestQueue {
   }
 
   /** Pops the oldest event from the queue */
-  public async pop(url: string): Promise<SentryElectronRequest | undefined> {
+  public async pop(): Promise<QueuedTransportRequest | undefined> {
     let found: PersistedRequest | undefined;
     const cutOff = Date.now() - MILLISECONDS_PER_DAY * this._maxAgeDays;
 
@@ -75,10 +76,9 @@ export class PersistedRequestQueue {
         void this._removeBody(found.bodyPath);
 
         return {
-          body,
-          date: found.date,
-          type: found.type,
-          url,
+          // TODO: Waiting on https://github.com/getsentry/sentry-javascript/pull/5004
+          body: body.toString(),
+          date: found.date || new Date(),
         };
       } catch (e) {
         // eslint-disable-next-line no-console
@@ -89,7 +89,7 @@ export class PersistedRequestQueue {
     return undefined;
   }
 
-  /** */
+  /** Removes the body of the request */
   private async _removeBody(bodyPath: string): Promise<void> {
     try {
       await unlinkAsync(join(this._queuePath, bodyPath));

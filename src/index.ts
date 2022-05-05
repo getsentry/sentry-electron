@@ -11,9 +11,9 @@ export type {
   SdkInfo,
   Event,
   EventHint,
-  EventStatus,
   Exception,
-  Response,
+  // eslint-disable-next-line deprecation/deprecation
+  Severity,
   SeverityLevel,
   StackFrame,
   Stacktrace,
@@ -28,11 +28,13 @@ export {
   captureEvent,
   captureMessage,
   configureScope,
+  createTransport,
   getHubFromCarrier,
   getCurrentHub,
   Hub,
   makeMain,
   Scope,
+  Session,
   startTransaction,
   setContext,
   setExtra,
@@ -41,6 +43,8 @@ export {
   setTags,
   setUser,
   withScope,
+  FunctionToString,
+  InboundFilters,
 } from '@sentry/core';
 
 export const Integrations = getIntegrations();

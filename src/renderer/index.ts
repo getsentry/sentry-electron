@@ -9,9 +9,9 @@ export type {
   SdkInfo,
   Event,
   EventHint,
-  EventStatus,
   Exception,
-  Response,
+  // eslint-disable-next-line deprecation/deprecation
+  Severity,
   SeverityLevel,
   StackFrame,
   Stacktrace,
@@ -26,10 +26,13 @@ export {
   captureEvent,
   captureMessage,
   configureScope,
+  createTransport,
   getHubFromCarrier,
   getCurrentHub,
   Hub,
+  makeMain,
   Scope,
+  Session,
   startTransaction,
   setContext,
   setExtra,
@@ -38,9 +41,11 @@ export {
   setTags,
   setUser,
   withScope,
+  FunctionToString,
+  InboundFilters,
 } from '@sentry/core';
 
-export { BrowserClient, injectReportDialog, lastEventId, showReportDialog } from '@sentry/browser';
+export { BrowserClient, lastEventId, showReportDialog } from '@sentry/browser';
 export type { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
 
 export const Integrations = { ...ElectronRendererIntegrations, ...BrowserIntegrations };

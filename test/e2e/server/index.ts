@@ -74,7 +74,7 @@ export class TestServer {
         return;
       }
 
-      const auth = (ctx.headers['x-sentry-auth'] as string) || '';
+      const auth = (ctx.headers['x-sentry-auth'] as string) || ctx.url;
       const keyMatch = auth.match(/sentry_key=([a-f0-9]*)/);
       if (!keyMatch) {
         ctx.status = 403;

@@ -18,7 +18,7 @@ import {
   SentryMinidump,
 } from './integrations';
 import { configureIPC } from './ipc';
-import { ElectronOfflineNetTransport } from './transports/electron-offline-net';
+import { makeElectronNetOfflineTransport } from './transports/electron-offline-net';
 
 export const defaultIntegrations: Integration[] = [
   new SentryMinidump(),
@@ -100,7 +100,7 @@ export function init(userOptions: ElectronMainOptions): void {
   setDefaultIntegrations(defaults, options);
 
   if (options.dsn && options.transport === undefined) {
-    options.transport = ElectronOfflineNetTransport;
+    options.transport = makeElectronNetOfflineTransport;
   }
 
   configureIPC(options);
