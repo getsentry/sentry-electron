@@ -231,7 +231,7 @@ export class SentryMinidump implements Integration {
           }
 
           if (newEvent && beforeSend) {
-            const beforeSendResult = await this._ensureBeforeSendRv(beforeSend(event));
+            const beforeSendResult = await this._ensureBeforeSendRv(beforeSend(newEvent));
 
             if (beforeSendResult === null) {
               logger.warn('`beforeSend` returned `null`, will not send event.');
