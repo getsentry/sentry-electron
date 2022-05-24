@@ -76,8 +76,7 @@ export class PersistedRequestQueue {
         void this._removeBody(found.bodyPath);
 
         return {
-          // TODO: Waiting on https://github.com/getsentry/sentry-javascript/pull/5004
-          body: body.toString(),
+          body,
           date: found.date || new Date(),
         };
       } catch (e) {

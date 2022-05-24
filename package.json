@@ -59,6 +59,7 @@
   "dependencies": {
     "@sentry/browser": "next",
     "@sentry/core": "next",
+    "@sentry/hub": "next",
     "@sentry/node": "next",
     "@sentry/types": "next",
     "@sentry/utils": "next",

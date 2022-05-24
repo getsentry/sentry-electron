@@ -13,6 +13,7 @@ export type {
   Event,
   EventHint,
   Exception,
+  Session,
   // eslint-disable-next-line deprecation/deprecation
   Severity,
   SeverityLevel,
@@ -35,7 +36,6 @@ export {
   Hub,
   makeMain,
   Scope,
-  Session,
   startTransaction,
   setContext,
   setExtra,

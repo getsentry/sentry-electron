@@ -1,4 +1,5 @@
 import { Event, Session } from '@sentry/types';
+import { forEachEnvelopeItem } from '@sentry/utils';
 import { Server } from 'http';
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
@@ -7,6 +8,7 @@ import { inspect } from 'util';
 
 import { eventIsSession } from '../recipe';
 import { createLogger } from '../utils';
+import { parseEnvelope } from './envelope';
 import { parseMultipart, sentryEventFromFormFields } from './multi-part';
 
 const log = createLogger('Test Server');
@@ -64,13 +66,13 @@ export class TestServer {
     router.post('/api/:id/envelope/', async (ctx) => {
       if (ctx.params.id === RATE_LIMIT_ID.toString()) {
         ctx.status = 429;
-        ctx.body = 'Not found';
+        ctx.body = 'Rate Limited';
         return;
       }
 
       if (ctx.params.id === ERROR_ID.toString()) {
         ctx.status = 500;
-        ctx.body = 'Not found';
+        ctx.body = 'Server Error';
         return;
       }
 
@@ -82,18 +84,36 @@ export class TestServer {
         return;
       }
 
-      const [, , payload, attachmentHeaders, attachment] = ctx.request.body.toString().split('\n');
+      const envelope = parseEnvelope(ctx.request.body);
+      console.log('ctx.request.body', ctx.request.body);
+      let data: Event | Session | undefined;
+      let dumpFile = false;
 
-      this._addEvent({
-        data: JSON.parse(payload),
-        dumpFile: !!attachmentHeaders && !!attachment && attachment.startsWith('MDMP'),
-        appId: ctx.params.id,
-        sentryKey: keyMatch[1],
-        method: 'envelope',
+      forEachEnvelopeItem(envelope, ([headers, item]) => {
+        if (headers.type === 'event') {
+          data = item as Event | Session;
+        }
+
+        if (headers.type === 'attachment' && headers.attachment_type === 'event.minidump') {
+          dumpFile = true;
+        }
       });
 
-      ctx.status = 200;
-      ctx.body = 'Success';
+      if (data) {
+        this._addEvent({
+          data,
+          dumpFile,
+          appId: ctx.params.id,
+          sentryKey: keyMatch[1],
+          method: 'envelope',
+        });
+
+        ctx.status = 200;
+        ctx.body = 'Success';
+      } else {
+        ctx.status = 500;
+        ctx.body = 'Invalid envelope';
+      }
     });
 
     // Handles the Sentry minidump endpoint

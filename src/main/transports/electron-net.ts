@@ -24,7 +24,7 @@ const GZIP_THRESHOLD = 1024 * 32;
  * Gets a stream from a Buffer or string
  * We don't have Readable.from in earlier versions of node
  */
-function streamFromBody(body: Buffer | string): Readable {
+function streamFromBody(body: string | Uint8Array): Readable {
   return new Readable({
     read() {
       this.push(body);

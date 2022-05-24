@@ -12,6 +12,7 @@ export type {
   Event,
   EventHint,
   Exception,
+  Session,
   // eslint-disable-next-line deprecation/deprecation
   Severity,
   SeverityLevel,
@@ -34,7 +35,6 @@ export {
   Hub,
   makeMain,
   Scope,
-  Session,
   startTransaction,
   setContext,
   setExtra,
@@ -50,7 +50,7 @@ export {
 export const Integrations = getIntegrations();
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface ElectronOptions extends ElectronMainOptions, BrowserOptions {
+export interface ElectronOptions extends ElectronMainOptions, Omit<BrowserOptions, 'transportOptions' | 'transport'> {
   //
 }
 

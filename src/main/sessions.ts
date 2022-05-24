@@ -1,4 +1,5 @@
-import { getCurrentHub, Session } from '@sentry/core';
+import { getCurrentHub } from '@sentry/core';
+import { makeSession, updateSession } from '@sentry/hub';
 import { flush, NodeClient } from '@sentry/node';
 import { SessionContext, SessionStatus } from '@sentry/types';
 import { logger } from '@sentry/utils';
@@ -97,8 +98,8 @@ export async function checkPreviousSession(crashed: boolean): Promise<void> {
 
     logger.log(`Found previous ${status} session`);
 
-    const sesh = new Session(previousSession);
-    sesh.update({ status, errors: (sesh.errors || 0) + 1 });
+    const sesh = makeSession(previousSession);
+    updateSession(sesh, { status, errors: (sesh.errors || 0) + 1 });
     await client.sendSession(sesh);
 
     previousSession = undefined;
@@ -123,7 +124,7 @@ export function sessionCrashed(): void {
 
   if (session.status === 'ok') {
     logger.log('Setting session as crashed');
-    session.update({ status: 'crashed', errors: (session.errors += 1) });
+    updateSession(session, { status: 'crashed', errors: (session.errors += 1) });
   } else {
     logger.log('Session already ended');
   }

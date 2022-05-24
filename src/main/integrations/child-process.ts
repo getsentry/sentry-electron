@@ -30,7 +30,7 @@ function getMessageAndSeverity(reason: ExitReason, proc?: string): { message: st
     case 'oom':
     case 'launch-failed':
     case 'integrity-failure':
-      return { message, level: 'critical' };
+      return { message, level: 'fatal' };
     default:
       return { message, level: 'debug' };
   }

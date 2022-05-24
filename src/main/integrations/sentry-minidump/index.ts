@@ -1,7 +1,7 @@
 import { getCurrentHub, Scope } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { Event, Integration } from '@sentry/types';
-import { logger, SentryError } from '@sentry/utils';
+import { basename, logger, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
 import { mergeEvents } from '../../../common';
@@ -222,23 +222,26 @@ export class SentryMinidump implements Integration {
           return false;
         }
 
-        const hubScope = hub.getScope();
+        const scope = this._scopeLastRun ? Scope.clone(this._scopeLastRun).update(hub.getScope()) : hub.getScope();
 
         for (const minidump of minidumps) {
           const data = await minidump.load();
-          if (!data) continue;
 
-          const clonedScope = Scope.clone(this._scopeLastRun);
-          clonedScope.update(hubScope);
-
-          // TODO: Waiting on https://github.com/getsentry/sentry-javascript/pull/5004
-          // clonedScope.addAttachment({
-          //   attachmentType: 'event.minidump',
-          //   filename: basename(minidump.path),
-          //   data,
-          // });
-
-          client.captureEvent(event, undefined, clonedScope);
+          if (data) {
+            client.captureEvent(
+              event,
+              {
+                attachments: [
+                  {
+                    attachmentType: 'event.minidump',
+                    filename: basename(minidump.path),
+                    data,
+                  },
+                ],
+              },
+              scope,
+            );
+          }
         }
 
         // Unset to recover memory
