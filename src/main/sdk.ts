@@ -19,6 +19,7 @@ import {
 } from './integrations';
 import { configureIPC } from './ipc';
 import { makeElectronNetOfflineTransport } from './transports/electron-offline-net';
+import { SDK_VERSION } from './version';
 
 export const defaultIntegrations: Integration[] = [
   new SentryMinidump(),
@@ -68,6 +69,7 @@ export type ElectronMainOptions = Pick<Partial<ElectronMainOptionsInternal>, 'ge
   Omit<ElectronMainOptionsInternal, 'getSessions' | 'ipcMode'>;
 
 const defaultOptions: ElectronMainOptionsInternal = {
+  _metadata: { sdk: { name: 'npm:@sentry/electron', version: SDK_VERSION } },
   ipcMode: IPCMode.Both,
   getSessions: () => [session.defaultSession],
 };
