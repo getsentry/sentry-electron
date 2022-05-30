@@ -222,26 +222,32 @@ export class SentryMinidump implements Integration {
           return false;
         }
 
-        const scope = this._scopeLastRun ? Scope.clone(this._scopeLastRun).update(hub.getScope()) : hub.getScope();
+        const storedScope = Scope.clone(this._scopeLastRun);
+        let newEvent = await storedScope.applyToEvent(event);
+
+        const hubScope = hub.getScope();
+        newEvent = hubScope ? await hubScope.applyToEvent(event) : event;
+
+        if (!newEvent) {
+          return false;
+        }
 
         for (const minidump of minidumps) {
           const data = await minidump.load();
 
           if (data) {
-            client.captureEvent(
-              event,
-              {
-                attachments: [
-                  {
-                    attachmentType: 'event.minidump',
-                    filename: basename(minidump.path),
-                    data,
-                  },
-                ],
-              },
-              scope,
-            );
+            client.captureEvent(newEvent, {
+              attachments: [
+                {
+                  attachmentType: 'event.minidump',
+                  filename: basename(minidump.path),
+                  data,
+                },
+              ],
+            });
           }
+
+          void deleteMinidump(minidump);
         }
 
         // Unset to recover memory

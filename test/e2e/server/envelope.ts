@@ -27,22 +27,28 @@ export function parseEnvelope(env: string | Uint8Array): Envelope {
       binaryLength = 0;
       items.push([lastItemHeader, bin]);
     } else {
-      const json = JSON.parse(new TextDecoder().decode(buf.slice(0, i + 1)));
+      const jsonStr = new TextDecoder().decode(buf.slice(0, i + 1));
 
-      if (typeof json.length === 'number') {
-        binaryLength = json.length;
-      }
+      try {
+        const json = JSON.parse(jsonStr);
 
-      // First json is always the envelope headers
-      if (!envelopeHeaders) {
-        envelopeHeaders = json;
-      } else {
-        // If there is a type property, assume this is an item header
-        if ('type' in json) {
-          lastItemHeader = json;
-        } else {
-          items.push([lastItemHeader, json]);
+        if (typeof json.length === 'number') {
+          binaryLength = json.length;
         }
+
+        // First json is always the envelope headers
+        if (!envelopeHeaders) {
+          envelopeHeaders = json;
+        } else {
+          // If there is a type property, assume this is an item header
+          if ('type' in json) {
+            lastItemHeader = json;
+          } else {
+            items.push([lastItemHeader, json]);
+          }
+        }
+      } catch (_) {
+        //
       }
     }
 

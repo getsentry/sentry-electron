@@ -6,6 +6,7 @@ import {
   TransportRequest,
   TransportRequestExecutor,
 } from '@sentry/types';
+import { dropUndefinedKeys } from '@sentry/utils';
 import { net } from 'electron';
 import { Readable, Writable } from 'stream';
 import { createGzip } from 'zlib';
@@ -91,14 +92,14 @@ export function createElectronNetRequestExecutor(
 
             // "Key-value pairs of header names and values. Header names are lower-cased."
             // https://nodejs.org/api/http.html#http_message_headers
-            const retryAfterHeader = res.headers['retry-after'] ?? null;
-            const rateLimitsHeader = res.headers['x-sentry-rate-limits'] ?? null;
+            const retryAfterHeader = res.headers['retry-after'] ?? undefined;
+            const rateLimitsHeader = res.headers['x-sentry-rate-limits'] ?? undefined;
 
             resolve({
-              headers: {
+              headers: dropUndefinedKeys({
                 'retry-after': Array.isArray(retryAfterHeader) ? retryAfterHeader[0] : retryAfterHeader,
                 'x-sentry-rate-limits': Array.isArray(rateLimitsHeader) ? rateLimitsHeader[0] : rateLimitsHeader,
-              },
+              }),
             });
           });
 

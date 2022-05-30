@@ -1,7 +1,7 @@
 /* eslint-disable complexity */
-import { Event, Session } from '@sentry/types';
+import { Event, Session, Transaction } from '@sentry/types';
 
-type EventOrSession = Event | Session;
+type EventOrSession = Event | Transaction | Session;
 
 export function normalize(event: EventOrSession): EventOrSession {
   if (eventIsSession(event)) {

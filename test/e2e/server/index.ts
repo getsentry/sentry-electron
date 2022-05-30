@@ -1,4 +1,4 @@
-import { Event, Session } from '@sentry/types';
+import { Event, Session, Transaction } from '@sentry/types';
 import { forEachEnvelopeItem } from '@sentry/utils';
 import { Server } from 'http';
 import Koa from 'koa';
@@ -40,7 +40,7 @@ export interface TestServerEvent<T = unknown> {
  */
 export class TestServer {
   /** All events received by this server instance. */
-  public events: TestServerEvent<Event | Session>[] = [];
+  public events: TestServerEvent<Event | Transaction | Session>[] = [];
   /** The internal HTTP server. */
   private _server?: Server;
 
@@ -67,6 +67,9 @@ export class TestServer {
       if (ctx.params.id === RATE_LIMIT_ID.toString()) {
         ctx.status = 429;
         ctx.body = 'Rate Limited';
+        ctx.set({
+          'x-Sentry-rate-limits': '60::organization, 2700::organization',
+        });
         return;
       }
 
@@ -85,13 +88,13 @@ export class TestServer {
       }
 
       const envelope = parseEnvelope(ctx.request.body);
-      console.log('ctx.request.body', ctx.request.body);
-      let data: Event | Session | undefined;
+
+      let data: Event | Transaction | Session | undefined;
       let dumpFile = false;
 
       forEachEnvelopeItem(envelope, ([headers, item]) => {
-        if (headers.type === 'event') {
-          data = item as Event | Session;
+        if (headers.type === 'event' || headers.type === 'transaction' || headers.type === 'session') {
+          data = item as Event | Transaction | Session;
         }
 
         if (headers.type === 'attachment' && headers.attachment_type === 'event.minidump') {
@@ -203,7 +206,7 @@ export class TestServer {
     });
   }
 
-  private _addEvent(event: TestServerEvent<Event | Session>): void {
+  private _addEvent(event: TestServerEvent<Event | Transaction | Session>): void {
     const type = eventIsSession(event.data) ? 'session' : 'event';
     log(`Received '${type}' on '${event.method}' endpoint`, inspect(event, false, null, true));
     this.events.push(event);

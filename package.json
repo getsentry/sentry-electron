@@ -54,22 +54,22 @@
     "pretest": "yarn build",
     "test": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe electron-mocha --require ts-node/register/transpile-only --timeout 120000 ./test/unit/**/*.ts",
     "pree2e": "rimraf test/e2e/dist/**/node_modules/@sentry/electron/** test/e2e/dist/**/yarn.lock && node scripts/clean-cache.js && yarn build && npm pack",
-    "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only --retries 3 ./test/e2e/*.ts"
+    "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only ./test/e2e/*.ts"
   },
   "dependencies": {
-    "@sentry/browser": "next",
-    "@sentry/core": "next",
-    "@sentry/hub": "next",
-    "@sentry/node": "next",
-    "@sentry/types": "next",
-    "@sentry/utils": "next",
+    "@sentry/browser": "7.0.0",
+    "@sentry/core": "7.0.0",
+    "@sentry/hub": "7.0.0",
+    "@sentry/node": "7.0.0",
+    "@sentry/types": "7.0.0",
+    "@sentry/utils": "7.0.0",
     "deepmerge": "^4.2.2",
     "tslib": "^2.3.1"
   },
   "devDependencies": {
-    "@sentry-internal/eslint-config-sdk": "next",
-    "@sentry-internal/typescript": "next",
-    "@sentry/tracing": "next",
+    "@sentry-internal/eslint-config-sdk": "7.0.0",
+    "@sentry-internal/typescript": "7.0.0",
+    "@sentry/tracing": "7.0.0",
     "@types/busboy": "^0.2.3",
     "@types/chai": "^4.2.10",
     "@types/chai-as-promised": "^7.1.0",

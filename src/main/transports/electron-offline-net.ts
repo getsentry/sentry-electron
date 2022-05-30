@@ -16,6 +16,10 @@ function maybeOnline(): boolean {
   return !('online' in net) || net.online === true;
 }
 
+function isRateLimited(result: TransportMakeRequestResponse): boolean {
+  return !!(result.headers && 'x-sentry-rate-limits' in result.headers);
+}
+
 function noOp(): void {
   //
 }
@@ -57,20 +61,21 @@ export function makeElectronNetOfflineTransport(options: ElectronNetTransportOpt
     return {};
   }
 
-  function requestSuccess(): void {
-    logger.log('Successfully sent');
-    // Reset the retry delay
-    retryDelay = START_DELAY;
-    // We were successful so check the queue
-    flushQueue();
-  }
-
   async function makeRequest(request: TransportRequest): Promise<TransportMakeRequestResponse> {
     if (maybeOnline()) {
       try {
         const result = await netMakeRequest(request);
-        requestSuccess();
-        return result;
+
+        if (isRateLimited(result)) {
+          logger.log('Rate limited', result);
+        } else {
+          logger.log('Successfully sent', result);
+          // Reset the retry delay
+          retryDelay = START_DELAY;
+          // We were successful so check the queue
+          flushQueue();
+          return result;
+        }
       } catch (error) {
         logger.log('Error sending:', error);
       }
