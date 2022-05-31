@@ -10,9 +10,6 @@
     "timestamp": 0,
     "status": "abnormal",
     "errors": 1,
-    "duration": 0,
-    "attrs": {
-      "release": "session-abnormal-exit@1.0.0"
-    }
+    "duration": 0
   }
 }
