@@ -41,10 +41,11 @@ export function parseEnvelope(env: string | Uint8Array): Envelope {
           envelopeHeaders = json;
         } else {
           // If there is a type property, assume this is an item header
-          if ('type' in json) {
-            lastItemHeader = json;
-          } else {
+          if (lastItemHeader) {
             items.push([lastItemHeader, json]);
+            lastItemHeader = undefined;
+          } else {
+            lastItemHeader = json;
           }
         }
       } catch (_) {

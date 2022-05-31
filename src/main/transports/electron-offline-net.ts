@@ -67,9 +67,9 @@ export function makeElectronNetOfflineTransport(options: ElectronNetTransportOpt
         const result = await netMakeRequest(request);
 
         if (isRateLimited(result)) {
-          logger.log('Rate limited', result);
+          logger.log('Rate limited', result.headers);
         } else {
-          logger.log('Successfully sent', result);
+          logger.log('Successfully sent');
           // Reset the retry delay
           retryDelay = START_DELAY;
           // We were successful so check the queue
