@@ -53,8 +53,8 @@
     "fix:eslint": "eslint . --format stylish --fix",
     "pretest": "yarn build",
     "test": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe electron-mocha --require ts-node/register/transpile-only --timeout 120000 ./test/unit/**/*.ts",
-    "pree2e": "rimraf test/e2e/dist/**/node_modules/@sentry/electron/** test/e2e/dist/**/yarn.lock && node scripts/clean-cache.js && yarn build && npm pack",
-    "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only ./test/e2e/*.ts"
+    "pree2e": "rimraf test/e2e/dist/**/node_modules/@sentry/** test/e2e/dist/**/yarn.lock && node scripts/clean-cache.js && yarn build && npm pack",
+    "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only --retries 3 ./test/e2e/*.ts"
   },
   "dependencies": {
     "@sentry/browser": "7.0.0",

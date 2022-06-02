@@ -58,15 +58,17 @@ export function makeElectronNetTransport(options: ElectronNetTransportOptions): 
  */
 export function createElectronNetRequestExecutor(
   url: string,
-  headers: Record<string, string>,
+  baseHeaders: Record<string, string>,
 ): TransportRequestExecutor {
-  headers['Content-Type'] = 'application/x-sentry-envelope';
+  baseHeaders['Content-Type'] = 'application/x-sentry-envelope';
 
   return function makeRequest(request: TransportRequest): Promise<TransportMakeRequestResponse> {
     return whenAppReady.then(
       () =>
         new Promise((resolve, reject) => {
           let bodyStream = streamFromBody(request.body);
+
+          const headers = { ...baseHeaders };
 
           if (request.body.length > GZIP_THRESHOLD) {
             headers['content-encoding'] = 'gzip';
