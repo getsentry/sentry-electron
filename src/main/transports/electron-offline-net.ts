@@ -8,6 +8,10 @@ import { sentryCachePath } from '../fs';
 import { createElectronNetRequestExecutor, ElectronNetTransportOptions } from './electron-net';
 import { PersistedRequestQueue } from './queue';
 
+interface ElectronNetOfflineOptions extends ElectronNetTransportOptions {
+  shouldAttemptSend?: () => boolean;
+}
+
 const START_DELAY = 5_000;
 const MAX_DELAY = 2_000_000_000;
 
@@ -20,12 +24,8 @@ function isRateLimited(result: TransportMakeRequestResponse): boolean {
   return !!(result.headers && 'x-sentry-rate-limits' in result.headers);
 }
 
-function noOp(): void {
-  //
-}
-
-/** */
-export function makeElectronNetOfflineTransport(options: ElectronNetTransportOptions): Transport {
+/** Creates the Electron Offline Transport */
+export function makeElectronNetOfflineTransport(options: ElectronNetOfflineOptions): Transport {
   const netMakeRequest = createElectronNetRequestExecutor(options.url, options.headers || {});
   const queue: PersistedRequestQueue = new PersistedRequestQueue(join(sentryCachePath, 'queue'));
   let retryDelay: number = START_DELAY;
@@ -36,10 +36,14 @@ export function makeElectronNetOfflineTransport(options: ElectronNetTransportOpt
       .then((found) => {
         if (found) {
           logger.log('Found a request in the queue');
-          makeRequest(found).catch(noOp);
+          makeRequest(found).catch(() => {
+            //
+          });
         }
       })
-      .catch(noOp);
+      .catch(() => {
+        //
+      });
   }
 
   async function queueRequest(request: TransportRequest): Promise<TransportMakeRequestResponse> {
@@ -61,8 +65,10 @@ export function makeElectronNetOfflineTransport(options: ElectronNetTransportOpt
     return {};
   }
 
+  const shouldAttemptSend = options.shouldAttemptSend || maybeOnline;
+
   async function makeRequest(request: TransportRequest): Promise<TransportMakeRequestResponse> {
-    if (maybeOnline()) {
+    if (shouldAttemptSend()) {
       try {
         const result = await netMakeRequest(request);
 

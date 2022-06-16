@@ -1,4 +1,4 @@
-import { getCurrentHub, Scope } from '@sentry/core';
+import { captureEvent, getCurrentHub, Scope } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { Event, Integration } from '@sentry/types';
 import { basename, logger, SentryError } from '@sentry/utils';
@@ -103,12 +103,12 @@ export class SentryMinidump implements Integration {
     contents: Electron.WebContents,
     details: Partial<Electron.RenderProcessGoneDetails>,
   ): Promise<void> {
-    const { getRendererName, release } = options;
+    const { getRendererName, release, environment } = options;
     const crashedProcess = getRendererName?.(contents) || 'renderer';
 
     logger.log(`'${crashedProcess}' process '${details.reason}'`);
 
-    const event = mergeEvents(await getEventDefaults(release), {
+    const event = mergeEvents(await getEventDefaults(release, environment), {
       contexts: {
         electron: {
           crashed_url: getRendererProperties(contents.id)?.url || 'unknown',
@@ -141,7 +141,9 @@ export class SentryMinidump implements Integration {
   ): Promise<void> {
     logger.log(`${details.type} process has ${details.reason}`);
 
-    const event = mergeEvents(await getEventDefaults(options.release), {
+    const { release, environment } = options;
+
+    const event = mergeEvents(await getEventDefaults(release, environment), {
       contexts: {
         electron: { details },
       },
@@ -236,7 +238,7 @@ export class SentryMinidump implements Integration {
           const data = await minidump.load();
 
           if (data) {
-            client.captureEvent(newEvent, {
+            captureEvent(newEvent, {
               attachments: [
                 {
                   attachmentType: 'event.minidump',
