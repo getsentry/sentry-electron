@@ -30,9 +30,6 @@ function isRateLimited(result: TransportMakeRequestResponse): boolean {
   return !!(result.headers && 'x-sentry-rate-limits' in result.headers);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-function
-function ignore(): void {}
-
 /**
  * Creates a Transport that uses Electrons net module to send events to Sentry. When they fail to send they are
  * persisted to disk and sent later
@@ -48,10 +45,10 @@ export function makeElectronOfflineTransport(options: ElectronOfflineTransportOp
       .then((found) => {
         if (found) {
           logger.log('Found a request in the queue');
-          makeRequest(found).catch(ignore);
+          makeRequest(found).catch((e) => logger.error(e));
         }
       })
-      .catch(ignore);
+      .catch((e) => logger.error(e));
   }
 
   async function queueRequest(request: TransportRequest): Promise<TransportMakeRequestResponse> {
