@@ -10,6 +10,9 @@ const MILLISECONDS_PER_DAY = 86_400_000;
 interface PersistedRequest {
   bodyPath: string;
   date: Date;
+  // Envelopes were persisted in a different format in v3
+  // If this property exists, we discard this event
+  type?: unknown;
 }
 
 export interface QueuedTransportRequest extends TransportRequest {
@@ -59,7 +62,8 @@ export class PersistedRequestQueue {
 
     this._queue.update((queue) => {
       while ((found = queue.shift())) {
-        if (found.date.getTime() < cutOff) {
+        // We drop events created in v3 of the SDK or before the cut-off
+        if ('type' in found || found.date.getTime() < cutOff) {
           // we're dropping this event so delete the body
           void this._removeBody(found.bodyPath);
           found = undefined;
