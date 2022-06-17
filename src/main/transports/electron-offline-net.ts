@@ -71,29 +71,30 @@ export function makeElectronOfflineTransport(options: ElectronOfflineTransportOp
   }
 
   async function makeRequest(request: TransportRequest): Promise<TransportMakeRequestResponse> {
-    let result = (options.beforeSend || defaultBeforeSend)(request);
+    let action = (options.beforeSend || defaultBeforeSend)(request);
 
-    if (result === 'send') {
+    if (action === 'send') {
       try {
         const result = await netMakeRequest(request);
 
-        if (isRateLimited(result)) {
-          logger.log('Rate limited', result.headers);
-        } else {
+        if (!isRateLimited(result)) {
           logger.log('Successfully sent');
           // Reset the retry delay
           retryDelay = START_DELAY;
           // We were successful so check the queue
           flushQueue();
           return result;
+        } else {
+          logger.log('Rate limited', result.headers);
         }
       } catch (error) {
         logger.log('Error sending:', error);
-        result = 'queue';
       }
+
+      action = 'queue';
     }
 
-    if (result == 'queue') {
+    if (action == 'queue') {
       return await queueRequest(request);
     }
 
