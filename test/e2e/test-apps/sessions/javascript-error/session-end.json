@@ -10,6 +10,9 @@
     "timestamp": 0,
     "status": "exited",
     "errors": 1,
-    "duration": 0
+    "duration": 0,
+    "attrs": {
+      "release": "error-session@1.0.0"
+    }
   }
 }

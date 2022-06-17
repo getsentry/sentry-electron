@@ -11,6 +11,9 @@
     "timestamp": 0,
     "status": "exited",
     "errors": 0,
-    "duration": 0
+    "duration": 0,
+    "attrs": {
+      "release": "session-native-crash-main-electron-uploader@1.0.0"
+    }
   }
 }
