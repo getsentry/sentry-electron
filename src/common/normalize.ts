@@ -53,6 +53,14 @@ export function normalizeEvent(event: Event, basePath: string): Event {
     request.url = normalizeUrl(request.url, basePath);
   }
 
+  event.contexts = {
+    ...event.contexts,
+    runtime: {
+      name: 'Electron',
+      version: process.versions.electron,
+    },
+  };
+
   // The user agent is parsed by Sentry and would overwrite certain context
   // information, which we don't want. Generally remove it, since we know that
   // we are browsing with Chrome.
@@ -60,10 +68,11 @@ export function normalizeEvent(event: Event, basePath: string): Event {
     delete request.headers['User-Agent'];
   }
 
-  // The Node SDK currently adds a default tag for server_name, which contains
+  // The Node SDK includes server_name, which contains
   // the machine name of the computer running Electron. This is not useful
   // information in this case.
   const { tags = {} } = event;
   delete tags.server_name;
+  delete event.server_name;
   return event;
 }
