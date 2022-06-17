@@ -1,8 +1,8 @@
 import { ensureProcess, IPCMode } from '../common';
 ensureProcess('main');
 
-import { defaultIntegrations as defaultNodeIntegrations, init as nodeInit, NodeOptions } from '@sentry/node';
-import { Integration } from '@sentry/types';
+import { defaultIntegrations as defaultNodeIntegrations, init as nodeInit } from '@sentry/node';
+import { Integration, Options } from '@sentry/types';
 import { Session, session, WebContents } from 'electron';
 
 import { getDefaultEnvironment, getDefaultReleaseName } from './context';
@@ -18,7 +18,7 @@ import {
   SentryMinidump,
 } from './integrations';
 import { configureIPC } from './ipc';
-import { makeElectronNetOfflineTransport } from './transports/electron-offline-net';
+import { ElectronOfflineTransportOptions, makeElectronOfflineTransport } from './transports/electron-offline-net';
 import { SDK_VERSION } from './version';
 
 export const defaultIntegrations: Integration[] = [
@@ -33,7 +33,7 @@ export const defaultIntegrations: Integration[] = [
   ...defaultNodeIntegrations.filter((integration) => integration.name !== 'OnUncaughtException'),
 ];
 
-export interface ElectronMainOptionsInternal extends NodeOptions {
+export interface ElectronMainOptionsInternal extends Options<ElectronOfflineTransportOptions> {
   /**
    * Inter-process communication mode to receive event and scope from renderers
    *
@@ -102,7 +102,7 @@ export function init(userOptions: ElectronMainOptions): void {
   setDefaultIntegrations(defaults, options);
 
   if (options.dsn && options.transport === undefined) {
-    options.transport = makeElectronNetOfflineTransport;
+    options.transport = makeElectronOfflineTransport;
   }
 
   configureIPC(options);

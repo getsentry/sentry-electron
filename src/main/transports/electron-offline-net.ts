@@ -8,8 +8,10 @@ import { sentryCachePath } from '../fs';
 import { createElectronNetRequestExecutor, ElectronNetTransportOptions } from './electron-net';
 import { PersistedRequestQueue } from './queue';
 
-interface ElectronNetOfflineOptions extends ElectronNetTransportOptions {
-  shouldAttemptSend?: () => boolean;
+type BeforeSendResponse = 'send' | 'queue' | 'drop';
+
+export interface ElectronOfflineTransportOptions extends ElectronNetTransportOptions {
+  beforeSend?: (request: TransportRequest) => BeforeSendResponse;
 }
 
 const START_DELAY = 5_000;
@@ -20,12 +22,22 @@ function maybeOnline(): boolean {
   return !('online' in net) || net.online === true;
 }
 
+function defaultBeforeSend(_: TransportRequest): BeforeSendResponse {
+  return maybeOnline() ? 'send' : 'queue';
+}
+
 function isRateLimited(result: TransportMakeRequestResponse): boolean {
   return !!(result.headers && 'x-sentry-rate-limits' in result.headers);
 }
 
-/** Creates the Electron Offline Transport */
-export function makeElectronNetOfflineTransport(options: ElectronNetOfflineOptions): Transport {
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+function ignore(): void {}
+
+/**
+ * Creates a Transport that uses Electrons net module to send events to Sentry. When they fail to send they are
+ * persisted to disk and sent later
+ */
+export function makeElectronOfflineTransport(options: ElectronOfflineTransportOptions): Transport {
   const netMakeRequest = createElectronNetRequestExecutor(options.url, options.headers || {});
   const queue: PersistedRequestQueue = new PersistedRequestQueue(join(sentryCachePath, 'queue'));
   let retryDelay: number = START_DELAY;
@@ -36,14 +48,10 @@ export function makeElectronNetOfflineTransport(options: ElectronNetOfflineOptio
       .then((found) => {
         if (found) {
           logger.log('Found a request in the queue');
-          makeRequest(found).catch(() => {
-            //
-          });
+          makeRequest(found).catch(ignore);
         }
       })
-      .catch(() => {
-        //
-      });
+      .catch(ignore);
   }
 
   async function queueRequest(request: TransportRequest): Promise<TransportMakeRequestResponse> {
@@ -65,10 +73,10 @@ export function makeElectronNetOfflineTransport(options: ElectronNetOfflineOptio
     return {};
   }
 
-  const shouldAttemptSend = options.shouldAttemptSend || maybeOnline;
-
   async function makeRequest(request: TransportRequest): Promise<TransportMakeRequestResponse> {
-    if (shouldAttemptSend()) {
+    let result = (options.beforeSend || defaultBeforeSend)(request);
+
+    if (result === 'send') {
       try {
         const result = await netMakeRequest(request);
 
@@ -84,12 +92,16 @@ export function makeElectronNetOfflineTransport(options: ElectronNetOfflineOptio
         }
       } catch (error) {
         logger.log('Error sending:', error);
+        result = 'queue';
       }
-    } else {
-      logger.log('Not sending, currently Offline.');
     }
 
-    return await queueRequest(request);
+    if (result == 'queue') {
+      return await queueRequest(request);
+    }
+
+    logger.log('Dropping request');
+    return {};
   }
 
   flushQueue();

@@ -51,8 +51,8 @@ export {
 export type { NodeOptions } from '@sentry/node';
 export { flush, close, NodeClient, lastEventId } from '@sentry/node';
 
-export { makeElectronNetTransport } from './transports/electron-net';
-export { makeElectronNetOfflineTransport } from './transports/electron-offline-net';
+export { makeElectronTransport } from './transports/electron-net';
+export { makeElectronOfflineTransport } from './transports/electron-offline-net';
 export const Integrations = { ...ElectronMainIntegrations, ...NodeIntegrations };
 
 export type { ElectronMainOptions } from './sdk';

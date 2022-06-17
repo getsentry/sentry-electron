@@ -47,9 +47,9 @@ function getRequestOptions(url: string): Electron.ClientRequestConstructorOption
 }
 
 /**
- * Creates a Transport that uses native the native 'http' and 'https' modules to send events to Sentry.
+ * Creates a Transport that uses Electrons net module to send events to Sentry.
  */
-export function makeElectronNetTransport(options: ElectronNetTransportOptions): Transport {
+export function makeElectronTransport(options: ElectronNetTransportOptions): Transport {
   return createTransport(options, createElectronNetRequestExecutor(options.url, options.headers || {}));
 }
 

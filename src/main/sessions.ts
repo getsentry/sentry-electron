@@ -1,7 +1,7 @@
 import { getCurrentHub } from '@sentry/core';
 import { makeSession, updateSession } from '@sentry/hub';
 import { flush, NodeClient } from '@sentry/node';
-import { SessionContext, SessionStatus } from '@sentry/types';
+import { SerializedSession, SessionContext, SessionStatus } from '@sentry/types';
 import { logger } from '@sentry/utils';
 
 import { sentryCachePath } from './fs';
@@ -99,7 +99,17 @@ export async function checkPreviousSession(crashed: boolean): Promise<void> {
     logger.log(`Found previous ${status} session`);
 
     const sesh = makeSession(previousSession);
-    updateSession(sesh, { status, errors: (sesh.errors || 0) + 1 });
+
+    updateSession(sesh, {
+      status,
+      errors: (sesh.errors || 0) + 1,
+      release: (previousSession as unknown as SerializedSession).attrs?.release,
+      environment: (previousSession as unknown as SerializedSession).attrs?.environment,
+    });
+
+    // eslint-disable-next-line no-console
+    console.log('previousSession', sesh);
+
     await client.sendSession(sesh);
 
     previousSession = undefined;
