@@ -156,7 +156,10 @@ function breakpadMinidumpLoader(): MinidumpLoader {
 
         return {
           path,
-          load: async () => minidumpFromBreakpadMultipart(await readFileAsync(path)),
+          load: async () => {
+            const file = await readFileAsync(path);
+            return minidumpFromBreakpadMultipart(file) || file;
+          },
         };
       })
       .filter((m) => !!m);
