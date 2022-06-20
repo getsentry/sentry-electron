@@ -9,6 +9,7 @@ import {
 import { dropUndefinedKeys } from '@sentry/utils';
 import { net } from 'electron';
 import { Readable, Writable } from 'stream';
+import { URL } from 'url';
 import { createGzip } from 'zlib';
 
 import { whenAppReady } from '../electron-normalize';
