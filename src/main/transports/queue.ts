@@ -84,7 +84,6 @@ export class PersistedRequestQueue {
           date: found.date || new Date(),
         };
       } catch (e) {
-        // eslint-disable-next-line no-console
         logger.warn('Filed to read queued request body', e);
       }
     }

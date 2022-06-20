@@ -107,9 +107,6 @@ export async function checkPreviousSession(crashed: boolean): Promise<void> {
       environment: (previousSession as unknown as SerializedSession).attrs?.environment,
     });
 
-    // eslint-disable-next-line no-console
-    console.log('previousSession', sesh);
-
     await client.sendSession(sesh);
 
     previousSession = undefined;

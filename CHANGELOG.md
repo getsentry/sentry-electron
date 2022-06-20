@@ -2,7 +2,21 @@
 
 ## Unreleased
 
+## 4.0.0-beta.1
+
+Updating the underlying Sentry JavaScript SDK's to v7 forces a major version bump due to minor breaking changes in user
+facing APIs. Be sure to check out the [migration doc](./MIGRATION.md).
+
+Upgrading to v7 of the Sentry JavaScript SDKs (#471):
+
+- Minor internal changes due to API changes and deprecations
+- Rewrite transports to use new functional API
+- Simplify minidump submission since the underlying SDKs now support attachments
+
+- feat: Add ability to explicitly control offline mode (#489)
 - feat: Allow closing of SDK (#467)
+- fix: Ensure environment is overridden for minidumps (#497)
+- fix: Pass correct event to beforeSend (#481)
 
 ## 3.0.7
 
