@@ -1,7 +1,7 @@
 import { getCurrentHub, Scope } from '@sentry/core';
 import { NodeClient, NodeOptions } from '@sentry/node';
-import { Event, Integration, Severity } from '@sentry/types';
-import { forget, logger, makeDsn, SentryError } from '@sentry/utils';
+import { Event, Integration } from '@sentry/types';
+import { logger, makeDsn, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
 import { mergeEvents, normalizeEvent } from '../../common';
@@ -43,10 +43,10 @@ function getScope(options: NodeOptions): Event {
  * @param dsn Dsn
  */
 export function minidumpUrlFromDsn(dsn: string): string {
-  const { host, path, projectId, port, protocol, user } = makeDsn(dsn);
+  const { host, path, projectId, port, protocol, publicKey } = makeDsn(dsn);
   return `${protocol}://${host}${port !== '' ? `:${port}` : ''}${
     path !== '' ? `/${path}` : ''
-  }/api/${projectId}/minidump/?sentry_key=${user}`;
+  }/api/${projectId}/minidump/?sentry_key=${publicKey}`;
 }
 
 /** Sends minidumps via the Electron built-in uploader. */
@@ -98,7 +98,7 @@ export class ElectronMinidump implements Integration {
     // Check if last crash report was likely to have been unreported in the last session
     const previousSessionCrashed = unreportedDuringLastSession(crashReporter.getLastCrashReport()?.date);
     // Check if a previous session was not closed
-    forget(checkPreviousSession(previousSessionCrashed));
+    checkPreviousSession(previousSessionCrashed).catch((error) => logger.error(error));
   }
 
   /**
@@ -145,8 +145,8 @@ export class ElectronMinidump implements Integration {
     this._updateEpoch += 1;
     const currentEpoch = this._updateEpoch;
 
-    forget(
-      this._getNativeUploaderEvent(scope).then((event) => {
+    this._getNativeUploaderEvent(scope)
+      .then((event) => {
         if (currentEpoch !== this._updateEpoch) return;
 
         // Update the extra parameters in the main process
@@ -154,14 +154,14 @@ export class ElectronMinidump implements Integration {
         for (const key of Object.keys(mainParams)) {
           crashReporter.addExtraParameter(key, mainParams[key]);
         }
-      }),
-    );
+      })
+      .catch((error) => logger.error(error));
   }
 
   /** Builds up an event to send with the native Electron uploader */
   private async _getNativeUploaderEvent(scope: Scope): Promise<Event> {
     const event = mergeEvents(await getEventDefaults(this._customRelease), {
-      level: Severity.Fatal,
+      level: 'fatal',
       platform: 'native',
       tags: { 'event.environment': 'native', event_type: 'native' },
     });

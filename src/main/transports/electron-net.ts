@@ -1,47 +1,32 @@
-import { getEnvelopeEndpointWithUrlEncodedAuth } from '@sentry/core';
-import { Transports } from '@sentry/node';
+import { createTransport } from '@sentry/core';
 import {
-  Event,
-  EventStatus,
-  Response,
-  SentryRequest,
-  SentryRequestType,
-  SessionAggregates,
-  SessionContext,
-  TransportOptions,
+  BaseTransportOptions,
+  Transport,
+  TransportMakeRequestResponse,
+  TransportRequest,
+  TransportRequestExecutor,
 } from '@sentry/types';
-import { eventStatusFromHttpCode, logger, makePromiseBuffer, PromiseBuffer } from '@sentry/utils';
+import { dropUndefinedKeys } from '@sentry/utils';
 import { net } from 'electron';
 import { Readable, Writable } from 'stream';
-import * as url from 'url';
+import { URL } from 'url';
 import { createGzip } from 'zlib';
 
-import { getSdkInfo } from '../context';
 import { whenAppReady } from '../electron-normalize';
+
+export interface ElectronNetTransportOptions extends BaseTransportOptions {
+  /** Define custom headers */
+  headers?: Record<string, string>;
+}
 
 // Estimated maximum size for reasonable standalone event
 const GZIP_THRESHOLD = 1024 * 32;
-
-/** Wraps HTTP errors and includes the status */
-export class HTTPError extends Error {
-  public constructor(public readonly status: EventStatus, message: string) {
-    super(message);
-  }
-}
-
-/**
- * SentryElectronRequest
- */
-export interface SentryElectronRequest extends Omit<SentryRequest, 'body'> {
-  body: string | Buffer;
-  date?: Date;
-}
 
 /**
  * Gets a stream from a Buffer or string
  * We don't have Readable.from in earlier versions of node
  */
-function streamFromBody(body: Buffer | string): Readable {
+function streamFromBody(body: string | Uint8Array): Readable {
   return new Readable({
     read() {
       this.push(body);
@@ -50,155 +35,82 @@ function streamFromBody(body: Buffer | string): Readable {
   });
 }
 
-/** Using net module of Electron */
-export class ElectronNetTransport extends Transports.BaseTransport {
-  /** A simple buffer holding all requests. */
-  protected readonly _buffer: PromiseBuffer<Response> = makePromiseBuffer(30);
+function getRequestOptions(url: string): Electron.ClientRequestConstructorOptions {
+  const { hostname, pathname, port, protocol, search } = new URL(url);
 
-  /** Create a new instance */
-  public constructor(public options: TransportOptions) {
-    super(options);
-  }
+  return {
+    method: 'POST',
+    hostname,
+    path: `${pathname}${search}`,
+    port: parseInt(port, 10),
+    protocol,
+  };
+}
 
-  /**
-   * @inheritDoc
-   */
-  public async sendEvent(event: Event): Promise<Response> {
-    const envelopeHeaders = JSON.stringify({
-      event_id: event.event_id,
-      sent_at: new Date().toISOString(),
-    });
-    const type = event.type || 'event';
-    const itemHeaders = JSON.stringify({ type });
+/**
+ * Creates a Transport that uses Electrons net module to send events to Sentry.
+ */
+export function makeElectronTransport(options: ElectronNetTransportOptions): Transport {
+  return createTransport(options, createElectronNetRequestExecutor(options.url, options.headers || {}));
+}
 
-    if (this._isRateLimited(type)) {
-      throw new HTTPError(
-        'rate_limit',
-        `Transport locked till ${JSON.stringify(this._rateLimits, null, 2)} due to too many requests.`,
-      );
-    }
+/**
+ * Creates a RequestExecutor to be used with `createTransport`.
+ */
+export function createElectronNetRequestExecutor(
+  url: string,
+  baseHeaders: Record<string, string>,
+): TransportRequestExecutor {
+  baseHeaders['Content-Type'] = 'application/x-sentry-envelope';
 
-    // Delete this metadata as this should not be sent to Sentry.
-    delete event.sdkProcessingMetadata;
-
-    const eventPayload = JSON.stringify(event);
-    const body = Buffer.from(`${envelopeHeaders}\n${itemHeaders}\n${eventPayload}\n`);
-
-    return this.sendRequest({
-      url: getEnvelopeEndpointWithUrlEncodedAuth(this._api.dsn),
-      body,
-      type,
-    });
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public sendSession(session: SessionContext | SessionAggregates): Promise<Response> {
-    const { name, version } = getSdkInfo();
-
-    const envelopeHeaders = JSON.stringify({
-      sent_at: new Date().toISOString(),
-      sdk: { name, version },
-    });
-
-    // I know this is hacky but we don't want to add `session` to request type since it's never rate limited
-    const type = 'aggregates' in session ? ('sessions' as SentryRequestType) : 'session';
-    const itemHeaders = JSON.stringify({ type });
-    const sessionPayload = JSON.stringify(session);
-    const body = Buffer.from(`${envelopeHeaders}\n${itemHeaders}\n${sessionPayload}\n`);
-
-    return this.sendRequest({
-      url: getEnvelopeEndpointWithUrlEncodedAuth(this._api.dsn),
-      body,
-      type,
-    });
-  }
-
-  /**
-   * Checks if a category is rate-limited
-   */
-  public isRateLimited(category: SentryRequestType): boolean {
-    return this._isRateLimited(category);
-  }
-
-  /**
-   * Dispatches a Request to Sentry. Only handles SentryRequest
-   */
-  public async sendRequest(request: SentryElectronRequest): Promise<Response> {
-    logger.log(`Sending '${request.type}' request`);
-
-    if (this._isRateLimited(request.type)) {
-      throw new HTTPError(
-        'rate_limit',
-        `Transport for ${request.type} requests locked till ${this._disabledUntil(
-          request.type,
-        )} due to too many requests.`,
-      );
-    }
-
-    const options = this._getRequestOptions(new url.URL(request.url));
-    options.headers = {
-      ...options.headers,
-      'Content-Type': 'application/x-sentry-envelope',
-    };
-
-    let bodyStream = streamFromBody(request.body);
-
-    if (request.body.length > GZIP_THRESHOLD) {
-      options.headers['Content-Encoding'] = 'gzip';
-      bodyStream = bodyStream.pipe(createGzip());
-    }
-
-    await whenAppReady;
-
-    return this._buffer.add(
+  return function makeRequest(request: TransportRequest): Promise<TransportMakeRequestResponse> {
+    return whenAppReady.then(
       () =>
-        new Promise<Response>((resolve, reject) => {
-          const req = net.request(options as Electron.ClientRequestConstructorOptions);
-          req.on('error', reject);
-          req.on('response', (res: Electron.IncomingMessage) => {
+        new Promise((resolve, reject) => {
+          let bodyStream = streamFromBody(request.body);
+
+          const headers = { ...baseHeaders };
+
+          if (request.body.length > GZIP_THRESHOLD) {
+            headers['content-encoding'] = 'gzip';
+            bodyStream = bodyStream.pipe(createGzip());
+          }
+
+          const req = net.request(getRequestOptions(url));
+
+          for (const header of Object.keys(headers)) {
+            req.setHeader(header, headers[header]);
+          }
+
+          req.on('response', (res) => {
             res.on('error', reject);
 
-            const status = eventStatusFromHttpCode(res.statusCode);
-            if (status === 'success') {
-              resolve({ status });
-            } else {
-              if (status === 'rate_limit') {
-                let retryAfterHeader = res.headers ? res.headers['retry-after'] : '';
-                retryAfterHeader = (Array.isArray(retryAfterHeader) ? retryAfterHeader[0] : retryAfterHeader) as string;
-
-                let rlHeader = res.headers ? res.headers['x-sentry-rate-limits'] : '';
-                rlHeader = (Array.isArray(rlHeader) ? rlHeader[0] : rlHeader) as string;
-
-                if (this._handleRateLimit({ 'x-sentry-rate-limits': rlHeader, 'retry-after': retryAfterHeader })) {
-                  logger.warn(`Too many requests, backing off until: ${this._disabledUntil(request.type)}`);
-                }
-              }
-
-              if (res.headers && res.headers['x-sentry-error']) {
-                let reason: string | string[] = res.headers['x-sentry-error'];
-                if (Array.isArray(reason)) {
-                  reason = reason.join(', ');
-                }
-
-                reject(new HTTPError(status, `HTTP Error (${res.statusCode}): ${reason}`));
-              } else {
-                reject(new HTTPError(status, `HTTP Error (${res.statusCode})`));
-              }
-            }
-            // force the socket to drain
             res.on('data', () => {
-              // Drain
+              // Drain socket
             });
+
             res.on('end', () => {
-              // Drain
+              // Drain socket
+            });
+
+            // "Key-value pairs of header names and values. Header names are lower-cased."
+            // https://nodejs.org/api/http.html#http_message_headers
+            const retryAfterHeader = res.headers['retry-after'] ?? undefined;
+            const rateLimitsHeader = res.headers['x-sentry-rate-limits'] ?? undefined;
+
+            resolve({
+              headers: dropUndefinedKeys({
+                'retry-after': Array.isArray(retryAfterHeader) ? retryAfterHeader[0] : retryAfterHeader,
+                'x-sentry-rate-limits': Array.isArray(rateLimitsHeader) ? rateLimitsHeader[0] : rateLimitsHeader,
+              }),
             });
           });
+
+          req.on('error', reject);
 
           // The docs say that ClientRequest is Writable but the types don't match exactly
           bodyStream.pipe(req as unknown as Writable);
         }),
     );
-  }
+  };
 }

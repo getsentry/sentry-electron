@@ -1,11 +1,11 @@
 import { getCurrentHub } from '@sentry/core';
+import { makeSession, updateSession } from '@sentry/hub';
 import { flush, NodeClient } from '@sentry/node';
-import { SessionContext, SessionStatus } from '@sentry/types';
+import { SerializedSession, SessionContext, SessionStatus } from '@sentry/types';
 import { logger } from '@sentry/utils';
 
 import { sentryCachePath } from './fs';
 import { Store } from './store';
-import { ElectronNetTransport } from './transports/electron-net';
 
 const PERSIST_INTERVAL_MS = 60_000;
 
@@ -85,7 +85,9 @@ export function unreportedDuringLastSession(crashDate: Date | undefined): boolea
 
 /** Checks if the previous session needs sending as crashed or abnormal  */
 export async function checkPreviousSession(crashed: boolean): Promise<void> {
-  if (previousSession) {
+  const client = getCurrentHub().getClient<NodeClient>();
+
+  if (previousSession && client) {
     // Ignore if the previous session is already ended
     if (previousSession.status !== 'ok') {
       previousSession = undefined;
@@ -95,12 +97,17 @@ export async function checkPreviousSession(crashed: boolean): Promise<void> {
     const status: SessionStatus = crashed ? 'crashed' : 'abnormal';
 
     logger.log(`Found previous ${status} session`);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const transport = (getCurrentHub().getClient<NodeClient>() as any)
-      ._getBackend()
-      .getTransport() as ElectronNetTransport;
 
-    await transport.sendSession({ ...previousSession, status, errors: (previousSession.errors || 0) + 1 });
+    const sesh = makeSession(previousSession);
+
+    updateSession(sesh, {
+      status,
+      errors: (sesh.errors || 0) + 1,
+      release: (previousSession as unknown as SerializedSession).attrs?.release,
+      environment: (previousSession as unknown as SerializedSession).attrs?.environment,
+    });
+
+    await client.sendSession(sesh);
 
     previousSession = undefined;
   }
@@ -124,7 +131,7 @@ export function sessionCrashed(): void {
 
   if (session.status === 'ok') {
     logger.log('Setting session as crashed');
-    session.update({ status: 'crashed', errors: (session.errors += 1) });
+    updateSession(session, { status: 'crashed', errors: (session.errors += 1) });
   } else {
     logger.log('Session already ended');
   }

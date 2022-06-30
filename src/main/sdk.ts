@@ -1,8 +1,8 @@
 import { ensureProcess, IPCMode } from '../common';
 ensureProcess('main');
 
-import { defaultIntegrations as defaultNodeIntegrations, init as nodeInit, NodeOptions } from '@sentry/node';
-import { Integration } from '@sentry/types';
+import { defaultIntegrations as defaultNodeIntegrations, init as nodeInit } from '@sentry/node';
+import { Integration, Options } from '@sentry/types';
 import { Session, session, WebContents } from 'electron';
 
 import { getDefaultEnvironment, getDefaultReleaseName } from './context';
@@ -18,7 +18,8 @@ import {
   SentryMinidump,
 } from './integrations';
 import { configureIPC } from './ipc';
-import { ElectronOfflineNetTransport } from './transports/electron-offline-net';
+import { ElectronOfflineTransportOptions, makeElectronOfflineTransport } from './transports/electron-offline-net';
+import { SDK_VERSION } from './version';
 
 export const defaultIntegrations: Integration[] = [
   new SentryMinidump(),
@@ -32,7 +33,7 @@ export const defaultIntegrations: Integration[] = [
   ...defaultNodeIntegrations.filter((integration) => integration.name !== 'OnUncaughtException'),
 ];
 
-export interface ElectronMainOptionsInternal extends NodeOptions {
+export interface ElectronMainOptionsInternal extends Options<ElectronOfflineTransportOptions> {
   /**
    * Inter-process communication mode to receive event and scope from renderers
    *
@@ -68,6 +69,7 @@ export type ElectronMainOptions = Pick<Partial<ElectronMainOptionsInternal>, 'ge
   Omit<ElectronMainOptionsInternal, 'getSessions' | 'ipcMode'>;
 
 const defaultOptions: ElectronMainOptionsInternal = {
+  _metadata: { sdk: { name: 'sentry.javascript.electron', version: SDK_VERSION } },
   ipcMode: IPCMode.Both,
   getSessions: () => [session.defaultSession],
 };
@@ -100,7 +102,7 @@ export function init(userOptions: ElectronMainOptions): void {
   setDefaultIntegrations(defaults, options);
 
   if (options.dsn && options.transport === undefined) {
-    options.transport = ElectronOfflineNetTransport;
+    options.transport = makeElectronOfflineTransport;
   }
 
   configureIPC(options);

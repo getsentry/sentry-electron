@@ -295,11 +295,11 @@ export function getDefaultEnvironment(): string {
  * runtimes, limited device information, operating system context and defaults
  * for the release and environment.
  */
-async function _getEventDefaults(release?: string): Promise<Event> {
+async function _getEventDefaults(release?: string, environment?: string): Promise<Event> {
   return {
     sdk: getSdkInfo(),
     contexts: await getContexts(),
-    environment: getDefaultEnvironment(),
+    environment: environment || getDefaultEnvironment(),
     release: release || getDefaultReleaseName(),
     user: { ip_address: '{{auto}}' },
     tags: {
@@ -322,12 +322,12 @@ let cachedDefaultsPromise: Promise<Event>;
  * runtimes, limited device information, operating system context and defaults
  * for the release and environment.
  */
-export async function getEventDefaults(release?: string): Promise<Event> {
+export async function getEventDefaults(release?: string, environment?: string): Promise<Event> {
   // The event defaults are cached as long as the app is running. We create the
   // promise here synchronously to avoid multiple events computing them at the
   // same time.
   if (!cachedDefaultsPromise) {
-    cachedDefaultsPromise = _getEventDefaults(release);
+    cachedDefaultsPromise = _getEventDefaults(release, environment);
   }
 
   return await cachedDefaultsPromise;

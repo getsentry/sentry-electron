@@ -40,7 +40,7 @@ describe('E2E Tests', () => {
         this.timeout(10_000);
         await testContext?.stop();
 
-        if (this.currentTest?.state === 'failed') {
+        if (process.env.FAILURE_LOG && this.currentTest?.state === 'failed') {
           outputTestLog();
         }
 

@@ -4,7 +4,7 @@
   "main": "src/main.js",
   "dependencies": {
     "@sentry/electron": "3.0.0",
-    "@sentry/tracing": "6.19.2",
+    "@sentry/tracing": "^7.3.1",
     "electron-fetch": "1.7.4"
   }
 }

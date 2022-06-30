@@ -20,10 +20,8 @@ export class MainContext implements Integration {
 
     addGlobalEventProcessor(async (event: Event) => {
       const normalized = normalizeEvent(event, app.getAppPath());
-      const defaults = await getEventDefaults(options?.release);
-      const fullEvent = mergeEvents(defaults, normalized);
-
-      return fullEvent;
+      const defaults = await getEventDefaults(options?.release, options?.environment);
+      return mergeEvents(defaults, normalized);
     });
   }
 }

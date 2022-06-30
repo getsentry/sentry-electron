@@ -7,6 +7,7 @@ init({
   dsn: '__DSN__',
   debug: true,
   release: 'custom-name',
+  environment: 'custom-env',
   autoSessionTracking: false,
   onFatalError: () => {},
 });

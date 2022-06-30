@@ -55,7 +55,7 @@
       }
     },
     "release": "custom-name",
-    "environment": "development",
+    "environment": "custom-env",
     "user": {
       "ip_address": "{{auto}}"
     },

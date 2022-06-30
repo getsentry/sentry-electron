@@ -1,3 +1,8 @@
+# Upgrading from 3.x to 4.x
+
+All the breaking changes in v4 are due to changes in the underlying Sentry JavaScript SDKs so be sure to check the
+[JavaScript migration docs](https://github.com/getsentry/sentry-javascript/blob/master/MIGRATION.md#upgrading-from-6x-to-7x).
+
 # Upgrading from 2.x to 3.x
 
 v3 of the Electron SDK includes significant changes to simplify usage, improve maintainability and bundler support.

@@ -1,21 +1,18 @@
-import { getCurrentHub, Scope } from '@sentry/core';
+import { captureEvent, getCurrentHub, Scope } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
-import { Event, Integration, Severity } from '@sentry/types';
-import { forget, isPlainObject, isThenable, logger, SentryError } from '@sentry/utils';
+import { Event, Integration } from '@sentry/types';
+import { basename, logger, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
 import { mergeEvents } from '../../../common';
 import { getEventDefaults } from '../../context';
-import { CRASH_REASONS, onChildProcessGone, onRendererProcessGone, usesCrashpad } from '../../electron-normalize';
-import { sentryCachePath, unlinkAsync } from '../../fs';
+import { CRASH_REASONS, onChildProcessGone, onRendererProcessGone } from '../../electron-normalize';
+import { sentryCachePath } from '../../fs';
 import { getRendererProperties, trackRendererProperties } from '../../renderers';
 import { ElectronMainOptions } from '../../sdk';
 import { checkPreviousSession, sessionCrashed } from '../../sessions';
 import { Store } from '../../store';
-import { ElectronNetTransport } from '../../transports/electron-net';
-import { BaseUploader } from './base-uploader';
-import { BreakpadUploader } from './breakpad-uploader';
-import { CrashpadUploader } from './crashpad-uploader';
+import { deleteMinidump, getMinidumpLoader, MinidumpLoader } from './minidump-loader';
 
 /** Sends minidumps via the Sentry uploader */
 export class SentryMinidump implements Integration {
@@ -31,8 +28,7 @@ export class SentryMinidump implements Integration {
   /** Temp store for the scope of last run */
   private _scopeLastRun?: Scope;
 
-  /** Uploader for minidump files. */
-  private _uploader?: BaseUploader;
+  private _minidumpLoader?: MinidumpLoader;
 
   /** @inheritDoc */
   public setupOnce(): void {
@@ -60,29 +56,28 @@ export class SentryMinidump implements Integration {
 
     trackRendererProperties();
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const transport = (client as any)._getBackend().getTransport() as ElectronNetTransport;
-
-    this._uploader = usesCrashpad()
-      ? new CrashpadUploader(options, transport)
-      : new BreakpadUploader(options, transport);
+    this._minidumpLoader = getMinidumpLoader();
 
     onRendererProcessGone(CRASH_REASONS, (contents, details) => this._sendRendererCrash(options, contents, details));
     onChildProcessGone(CRASH_REASONS, (details) => this._sendChildProcessCrash(options, details));
 
     // Start to submit recent minidump crashes. This will load breadcrumbs and
     // context information that was cached on disk prior to the crash.
-    forget(
-      this._sendNativeCrashes(options, {
-        level: Severity.Fatal,
-        platform: 'native',
-        tags: { 'event.environment': 'native', 'event.process': 'browser', event_type: 'native' },
-      }).then((minidumpsFound) =>
+    this._sendNativeCrashes({
+      level: 'fatal',
+      platform: 'native',
+      tags: {
+        'event.environment': 'native',
+        'event.process': 'browser',
+        event_type: 'native',
+      },
+    })
+      .then((minidumpsFound) =>
         // Check for previous uncompleted session. If a previous session exists
         // and no minidumps were found, its likely an abnormal exit
         checkPreviousSession(minidumpsFound),
-      ),
-    );
+      )
+      .catch((error) => logger.error(error));
   }
 
   /** Starts the native crash reporter */
@@ -108,25 +103,29 @@ export class SentryMinidump implements Integration {
     contents: Electron.WebContents,
     details: Partial<Electron.RenderProcessGoneDetails>,
   ): Promise<void> {
-    const { getRendererName, release } = options;
+    const { getRendererName, release, environment } = options;
     const crashedProcess = getRendererName?.(contents) || 'renderer';
 
     logger.log(`'${crashedProcess}' process '${details.reason}'`);
 
-    const event = mergeEvents(await getEventDefaults(release), {
+    const event = mergeEvents(await getEventDefaults(release, environment), {
       contexts: {
         electron: {
           crashed_url: getRendererProperties(contents.id)?.url || 'unknown',
           details,
         },
       },
-      level: Severity.Fatal,
+      level: 'fatal',
       // The default is javascript
       platform: 'native',
-      tags: { 'event.environment': 'native', 'event.process': crashedProcess, event_type: 'native' },
+      tags: {
+        'event.environment': 'native',
+        'event.process': crashedProcess,
+        event_type: 'native',
+      },
     });
 
-    const found = await this._sendNativeCrashes(options, event);
+    const found = await this._sendNativeCrashes(event);
 
     if (found) {
       sessionCrashed();
@@ -142,17 +141,23 @@ export class SentryMinidump implements Integration {
   ): Promise<void> {
     logger.log(`${details.type} process has ${details.reason}`);
 
-    const event = mergeEvents(await getEventDefaults(options.release), {
+    const { release, environment } = options;
+
+    const event = mergeEvents(await getEventDefaults(release, environment), {
       contexts: {
         electron: { details },
       },
-      level: Severity.Fatal,
+      level: 'fatal',
       // The default is javascript
       platform: 'native',
-      tags: { 'event.environment': 'native', 'event.process': details.type, event_type: 'native' },
+      tags: {
+        'event.environment': 'native',
+        'event.process': details.type,
+        event_type: 'native',
+      },
     });
 
-    const found = await this._sendNativeCrashes(options, event);
+    const found = await this._sendNativeCrashes(event);
 
     if (found) {
       sessionCrashed();
@@ -182,7 +187,7 @@ export class SentryMinidump implements Integration {
    *
    * Returns true if one or more minidumps were found
    */
-  private async _sendNativeCrashes(options: ElectronMainOptions, event: Event): Promise<boolean> {
+  private async _sendNativeCrashes(event: Event): Promise<boolean> {
     // Whenever we are called, assume that the crashes we are going to load down
     // below have occurred recently. This means, we can use the same event data
     // for all minidumps that we load now. There are two conditions:
@@ -195,56 +200,58 @@ export class SentryMinidump implements Integration {
     //     about it. Just use the breadcrumbs and context information we have
     //     right now and hope that the delay was not too long.
 
-    const uploader = this._uploader;
-    if (uploader === undefined) {
+    if (this._minidumpLoader === undefined) {
       throw new SentryError('Invariant violation: Native crashes not enabled');
     }
 
     try {
-      const paths = await uploader.getNewMinidumps();
+      const minidumps = await this._minidumpLoader();
 
-      if (paths.length > 0) {
+      if (minidumps.length > 0) {
         const hub = getCurrentHub();
-        const enabled = hub.getClient()?.getOptions().enabled;
+        const client = hub.getClient();
+
+        if (!client) {
+          return true;
+        }
+
+        const enabled = client.getOptions().enabled;
 
         // If the SDK is not enabled, we delete the minidump files so they
         // dont accumulate and/or get sent later
         if (enabled === false) {
-          paths.forEach((path) => forget(unlinkAsync(path)));
+          minidumps.forEach(deleteMinidump);
           return false;
         }
 
-        const currentCloned = Scope.clone(hub.getScope());
         const storedScope = Scope.clone(this._scopeLastRun);
         let newEvent = await storedScope.applyToEvent(event);
 
-        if (newEvent) {
-          newEvent = await currentCloned.applyToEvent(newEvent);
+        const hubScope = hub.getScope();
+        newEvent = hubScope ? await hubScope.applyToEvent(event) : event;
 
-          // We handle beforeSend and sampleRate manually here because native crashes do not go through @sentry/core
-          const { beforeSend, sampleRate } = options;
-          if (typeof sampleRate === 'number' && Math.random() > sampleRate) {
-            logger.warn(
-              `Discarding event because it's not included in the random sample (sampling rate = ${sampleRate})`,
-            );
-            return true;
-          }
-
-          if (newEvent && beforeSend) {
-            const beforeSendResult = await this._ensureBeforeSendRv(beforeSend(newEvent));
-
-            if (beforeSendResult === null) {
-              logger.warn('`beforeSend` returned `null`, will not send event.');
-              return true;
-            }
-
-            newEvent = beforeSendResult;
-          }
-
-          paths.forEach((path) => {
-            forget(uploader.uploadMinidump({ path, event: newEvent || {} }));
-          });
+        if (!newEvent) {
+          return false;
         }
+
+        for (const minidump of minidumps) {
+          const data = await minidump.load();
+
+          if (data) {
+            captureEvent(newEvent, {
+              attachments: [
+                {
+                  attachmentType: 'event.minidump',
+                  filename: basename(minidump.path),
+                  data,
+                },
+              ],
+            });
+          }
+
+          void deleteMinidump(minidump);
+        }
+
         // Unset to recover memory
         this._scopeLastRun = undefined;
         return true;
@@ -254,30 +261,5 @@ export class SentryMinidump implements Integration {
     }
 
     return false;
-  }
-
-  /**
-   * Verifies that return value of configured `beforeSend` is of expected type.
-   *
-   * Copied from @sentry/core
-   */
-  private _ensureBeforeSendRv(rv: PromiseLike<Event | null> | Event | null): PromiseLike<Event | null> | Event | null {
-    const nullErr = '`beforeSend` method has to return `null` or a valid event.';
-    if (isThenable(rv)) {
-      return (rv as PromiseLike<Event | null>).then(
-        (event) => {
-          if (!(isPlainObject(event) || event === null)) {
-            throw new SentryError(nullErr);
-          }
-          return event;
-        },
-        (e) => {
-          throw new SentryError(`beforeSend rejected with ${e}`);
-        },
-      );
-    } else if (!(isPlainObject(rv) || rv === null)) {
-      throw new SentryError(nullErr);
-    }
-    return rv;
   }
 }

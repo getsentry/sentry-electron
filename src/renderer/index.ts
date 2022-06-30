@@ -2,16 +2,16 @@ import { Integrations as BrowserIntegrations } from '@sentry/browser';
 
 import * as ElectronRendererIntegrations from './integrations';
 
-export {
+export type {
   Breadcrumb,
   BreadcrumbHint,
   Request,
   SdkInfo,
   Event,
   EventHint,
-  EventStatus,
   Exception,
-  Response,
+  Session,
+  // eslint-disable-next-line deprecation/deprecation
   Severity,
   SeverityLevel,
   StackFrame,
@@ -27,9 +27,11 @@ export {
   captureEvent,
   captureMessage,
   configureScope,
+  createTransport,
   getHubFromCarrier,
   getCurrentHub,
   Hub,
+  makeMain,
   Scope,
   startTransaction,
   setContext,
@@ -39,16 +41,12 @@ export {
   setTags,
   setUser,
   withScope,
+  FunctionToString,
+  InboundFilters,
 } from '@sentry/core';
 
-export {
-  BrowserOptions,
-  BrowserClient,
-  injectReportDialog,
-  ReportDialogOptions,
-  lastEventId,
-  showReportDialog,
-} from '@sentry/browser';
+export { BrowserClient, lastEventId, showReportDialog } from '@sentry/browser';
+export type { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
 
 export const Integrations = { ...ElectronRendererIntegrations, ...BrowserIntegrations };
 export { init, defaultIntegrations } from './sdk';

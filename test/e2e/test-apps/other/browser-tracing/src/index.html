@@ -6,11 +6,11 @@
   <body>
     <script>
       const { init } = require('@sentry/electron');
-      const { Integrations } = require('@sentry/tracing');
+      const { BrowserTracing } = require('@sentry/tracing');
 
       init({
         debug: true,
-        integrations: [new Integrations.BrowserTracing()],
+        integrations: [new BrowserTracing()],
         tracesSampleRate: 1,
       });
     </script>

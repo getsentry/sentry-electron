@@ -1,6 +1,6 @@
 import { captureEvent, configureScope, Scope } from '@sentry/core';
 import { Event } from '@sentry/types';
-import { forget, logger, SentryError } from '@sentry/utils';
+import { logger, SentryError } from '@sentry/utils';
 import { app, ipcMain, protocol, WebContents } from 'electron';
 
 import { IPCChannel, IPCMode, mergeEvents, PROTOCOL_SCHEME } from '../common';
@@ -77,8 +77,8 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
     },
   ]);
 
-  forget(
-    whenAppReady.then(() => {
+  whenAppReady
+    .then(() => {
       for (const sesh of options.getSessions()) {
         sesh.protocol.registerStringProtocol(PROTOCOL_SCHEME, (request, callback) => {
           const data = request.uploadData?.[0]?.bytes.toString();
@@ -92,8 +92,8 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
           callback('');
         });
       }
-    }),
-  );
+    })
+    .catch((error) => logger.error(error));
 }
 
 /**

@@ -1,12 +1,18 @@
-import { getEnvelopeEndpointWithUrlEncodedAuth } from '@sentry/core';
-import { Response, TransportOptions } from '@sentry/types';
+import { createTransport } from '@sentry/core';
+import { Transport, TransportMakeRequestResponse, TransportRequest } from '@sentry/types';
 import { logger } from '@sentry/utils';
 import { net } from 'electron';
 import { join } from 'path';
 
 import { sentryCachePath } from '../fs';
-import { ElectronNetTransport, HTTPError, SentryElectronRequest } from './electron-net';
+import { createElectronNetRequestExecutor, ElectronNetTransportOptions } from './electron-net';
 import { PersistedRequestQueue } from './queue';
+
+type BeforeSendResponse = 'send' | 'queue' | 'drop';
+
+export interface ElectronOfflineTransportOptions extends ElectronNetTransportOptions {
+  beforeSend?: (request: TransportRequest) => BeforeSendResponse;
+}
 
 const START_DELAY = 5_000;
 const MAX_DELAY = 2_000_000_000;
@@ -16,80 +22,87 @@ function maybeOnline(): boolean {
   return !('online' in net) || net.online === true;
 }
 
-/** Using net module of Electron */
-export class ElectronOfflineNetTransport extends ElectronNetTransport {
-  private _queue: PersistedRequestQueue = new PersistedRequestQueue(join(sentryCachePath, 'queue'));
-  private _url: string = getEnvelopeEndpointWithUrlEncodedAuth(this._api.dsn);
-  private _retryDelay: number = START_DELAY;
+function defaultBeforeSend(_: TransportRequest): BeforeSendResponse {
+  return maybeOnline() ? 'send' : 'queue';
+}
 
-  /** Create a new instance  */
-  public constructor(public options: TransportOptions) {
-    super(options);
+function isRateLimited(result: TransportMakeRequestResponse): boolean {
+  return !!(result.headers && 'x-sentry-rate-limits' in result.headers);
+}
 
-    this._flushQueue();
-  }
+/**
+ * Creates a Transport that uses Electrons net module to send events to Sentry. When they fail to send they are
+ * persisted to disk and sent later
+ */
+export function makeElectronOfflineTransport(options: ElectronOfflineTransportOptions): Transport {
+  const netMakeRequest = createElectronNetRequestExecutor(options.url, options.headers || {});
+  const queue: PersistedRequestQueue = new PersistedRequestQueue(join(sentryCachePath, 'queue'));
+  let retryDelay: number = START_DELAY;
 
-  /**
-   * @inheritDoc
-   */
-  public async sendRequest(request: SentryElectronRequest): Promise<Response> {
-    if (maybeOnline()) {
-      try {
-        const response = await super.sendRequest(request);
-        this._requestSuccess();
-        return response;
-      } catch (error) {
-        if (error instanceof HTTPError && error.status !== 'rate_limit') {
-          // We don't queue HTTP errors that are not rate limited
-          logger.warn('Dropping request:', error);
-          return { status: 'failed' };
-        } else {
-          logger.log('Error sending:', error);
+  function flushQueue(): void {
+    queue
+      .pop()
+      .then((found) => {
+        if (found) {
+          logger.log('Found a request in the queue');
+          makeRequest(found).catch((e) => logger.error(e));
         }
-      }
-    } else {
-      logger.log(`Currently Offline. Not sending '${request.type}' request. `);
-    }
-
-    return await this._queueRequest(request);
+      })
+      .catch((e) => logger.error(e));
   }
 
-  /** Records successful submission */
-  private _requestSuccess(): void {
-    logger.log('Successfully sent');
-    // Reset the retry delay
-    this._retryDelay = START_DELAY;
-    // We were successful so check the queue
-    this._flushQueue();
-  }
-
-  /** Queues a failed request */
-  private async _queueRequest(request: SentryElectronRequest): Promise<Response> {
+  async function queueRequest(request: TransportRequest): Promise<TransportMakeRequestResponse> {
     logger.log('Queuing request');
-    await this._queue.add(request);
+    await queue.add(request);
 
     setTimeout(() => {
-      this._flushQueue();
-    }, this._retryDelay);
+      flushQueue();
+    }, retryDelay);
 
-    this._retryDelay *= 3;
+    retryDelay *= 3;
 
     // If the delay is bigger than 2^31 (max signed 32-bit int), setTimeout throws
     // an error and falls back to 1 which can cause a huge number of requests.
-    if (this._retryDelay > MAX_DELAY) {
-      this._retryDelay = MAX_DELAY;
+    if (retryDelay > MAX_DELAY) {
+      retryDelay = MAX_DELAY;
     }
 
-    return { status: 'unknown' };
+    return {};
   }
 
-  /** Attempts to send the first event in the queue if one is found */
-  private _flushQueue(): void {
-    void this._queue.pop(this._url).then((found) => {
-      if (found) {
-        logger.log('Found a request in the queue');
-        void this.sendRequest(found);
+  async function makeRequest(request: TransportRequest): Promise<TransportMakeRequestResponse> {
+    let action = (options.beforeSend || defaultBeforeSend)(request);
+
+    if (action === 'send') {
+      try {
+        const result = await netMakeRequest(request);
+
+        if (!isRateLimited(result)) {
+          logger.log('Successfully sent');
+          // Reset the retry delay
+          retryDelay = START_DELAY;
+          // We were successful so check the queue
+          flushQueue();
+          return result;
+        } else {
+          logger.log('Rate limited', result.headers);
+        }
+      } catch (error) {
+        logger.log('Error sending:', error);
       }
-    });
+
+      action = 'queue';
+    }
+
+    if (action == 'queue') {
+      return await queueRequest(request);
+    }
+
+    logger.log('Dropping request');
+    return {};
   }
+
+  flushQueue();
+
+  return createTransport(options, makeRequest);
 }

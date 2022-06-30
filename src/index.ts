@@ -4,16 +4,16 @@ import { getIntegrations, removeEmptyIntegrations } from './integrations';
 import { ElectronMainOptions } from './main';
 import { BrowserOptions } from './renderer';
 
-export {
+export type {
   Breadcrumb,
   BreadcrumbHint,
   Request,
   SdkInfo,
   Event,
   EventHint,
-  EventStatus,
   Exception,
-  Response,
+  Session,
+  // eslint-disable-next-line deprecation/deprecation
   Severity,
   SeverityLevel,
   StackFrame,
@@ -29,6 +29,7 @@ export {
   captureEvent,
   captureMessage,
   configureScope,
+  createTransport,
   getHubFromCarrier,
   getCurrentHub,
   Hub,
@@ -42,12 +43,14 @@ export {
   setTags,
   setUser,
   withScope,
+  FunctionToString,
+  InboundFilters,
 } from '@sentry/core';
 
 export const Integrations = getIntegrations();
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface ElectronOptions extends ElectronMainOptions, BrowserOptions {
+export interface ElectronOptions extends ElectronMainOptions, Omit<BrowserOptions, 'transportOptions' | 'transport'> {
   //
 }
 
