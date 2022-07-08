@@ -169,6 +169,8 @@ export class ElectronMinidump implements Integration {
     // Apply the scope to the event
     await scope.applyToEvent(event);
 
+    delete event.sdkProcessingMetadata;
+
     // Normalise paths
     return normalizeEvent(event, app.getAppPath());
   }
