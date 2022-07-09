@@ -1,5 +1,5 @@
 import { parseSemver } from '@sentry/utils';
-import { app, BrowserWindow, crashReporter, NativeImage, Rectangle, WebContents } from 'electron';
+import { app, BrowserWindow, crashReporter, NativeImage, WebContents } from 'electron';
 import { basename } from 'path';
 
 import { Optional } from '../common/types';
@@ -190,17 +190,17 @@ export function getCrashesDirectory(): string {
 }
 
 interface OlderBrowserWindow extends Omit<BrowserWindow, 'capturePage'> {
-  capturePage(rect?: Rectangle, callback?: (i: NativeImage) => void): void;
+  capturePage(callback?: (i: NativeImage) => void): void;
 }
 
 /** Captures a NativeImage from a BrowserWindow */
-export function capturePage(window: BrowserWindow, rect?: Rectangle): Promise<NativeImage> {
+export function capturePage(window: BrowserWindow): Promise<NativeImage> {
   // Pre-Electron 5, BrowserWindow.capturePage() uses callbacks
   if (version.major < 5) {
     return new Promise<NativeImage>((resolve) => {
-      (window as OlderBrowserWindow).capturePage(rect, resolve);
+      (window as OlderBrowserWindow).capturePage(resolve);
     });
   }
 
-  return window.capturePage(rect);
+  return window.capturePage();
 }

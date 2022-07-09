@@ -66,6 +66,8 @@ export interface ElectronMainOptionsInternal extends Options<ElectronOfflineTran
   getRendererName?: (contents: WebContents) => string | undefined;
 
   /**
+   * Screenshots may contain PII and is an opt-in feature
+   *
    * If set to true, screenshots will be captured and included for all events.
    */
   attachScreenshot?: boolean;

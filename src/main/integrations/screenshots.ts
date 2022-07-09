@@ -1,6 +1,7 @@
 import { getCurrentHub } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { Event, EventHint, EventProcessor, Integration } from '@sentry/types';
+import { logger } from '@sentry/utils';
 import { BrowserWindow } from 'electron';
 
 import { capturePage } from '../electron-normalize';
@@ -32,18 +33,16 @@ export class Screenshots implements Integration {
 
             try {
               if (!window.isDestroyed()) {
+                const filename = count === 1 ? 'screenshot.png' : `screenshot-${count}.png`;
                 const screenshot = (await capturePage(window)).toPNG();
 
-                hint.attachments.push({
-                  filename: count === 1 ? 'screenshot.png' : `screenshot-${count}.png`,
-                  data: screenshot,
-                  contentType: 'image/png',
-                });
+                hint.attachments.push({ filename, data: screenshot, contentType: 'image/png' });
 
                 count += 1;
               }
-            } catch (_) {
+            } catch (e) {
               // Ignore all errors so we don't break event submission if something goes wrong
+              logger.error('Error capturing screenshot', e);
             }
           }
         }
