@@ -3,6 +3,7 @@ import { NodeClient } from '@sentry/node';
 import { Event, EventHint, EventProcessor, Integration } from '@sentry/types';
 import { BrowserWindow } from 'electron';
 
+import { capturePage } from '../electron-normalize';
 import { ElectronMainOptions } from '../sdk';
 
 /** Adds Screenshots to events */
@@ -31,7 +32,7 @@ export class Screenshots implements Integration {
 
             try {
               if (!window.isDestroyed()) {
-                const screenshot = (await window.capturePage()).toPNG();
+                const screenshot = (await capturePage(window)).toPNG();
 
                 hint.attachments.push({
                   filename: count === 1 ? 'screenshot.png' : `screenshot-${count}.png`,

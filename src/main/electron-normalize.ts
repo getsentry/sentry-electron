@@ -1,5 +1,5 @@
 import { parseSemver } from '@sentry/utils';
-import { app, BrowserWindow, crashReporter, WebContents } from 'electron';
+import { app, BrowserWindow, crashReporter, NativeImage, Rectangle, WebContents } from 'electron';
 import { basename } from 'path';
 
 import { Optional } from '../common/types';
@@ -187,4 +187,20 @@ export function getCrashesDirectory(): string {
     ? app.getPath('crashDumps')
     : // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       (crashReporter as any).getCrashesDirectory();
+}
+
+interface OlderBrowserWindow extends Omit<BrowserWindow, 'capturePage'> {
+  capturePage(rect?: Rectangle, callback?: (i: NativeImage) => void): void;
+}
+
+/** Captures a NativeImage from a BrowserWindow */
+export function capturePage(window: BrowserWindow, rect?: Rectangle): Promise<NativeImage> {
+  // Pre-Electron 5, BrowserWindow.capturePage() uses callbacks
+  if (version.major < 5) {
+    return new Promise<NativeImage>((resolve) => {
+      (window as OlderBrowserWindow).capturePage(rect, resolve);
+    });
+  }
+
+  return window.capturePage(rect);
 }
