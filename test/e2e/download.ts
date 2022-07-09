@@ -1,4 +1,4 @@
-import { download as electronDownload } from '@electron/get';
+import { downloadArtifact as electronDownload } from '@electron/get';
 import electronExtract = require('extract-zip');
 import { existsSync } from 'fs';
 import { join } from 'path';
@@ -33,7 +33,7 @@ export async function downloadElectron(version: string): Promise<string> {
   const dir = join(cacheDir, `${version}-x64`);
 
   if (!existsSync(dir)) {
-    const zipPath = await electronDownload(version, { cacheRoot: cacheDir, downloadOptions: { arch: 'x64' } });
+    const zipPath = await electronDownload({ version, arch: 'x64', artifactName: 'electron' });
     await electronExtract(zipPath, { dir });
   }
 
