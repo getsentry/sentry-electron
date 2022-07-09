@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix: Correctly parse mixed Chrome/node stack traces in the renderer (#509)
+
 ## 4.0.0-beta.1
 
 Updating the underlying Sentry JavaScript SDK's to v7 forces a major version bump due to minor breaking changes in user
