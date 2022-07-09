@@ -15,7 +15,7 @@
     },
     "contexts": {
       "app": {
-        "app_name": "javascript-renderer-unhandledrejection",
+        "app_name": "javascript-screenshots",
         "app_version": "1.0.0",
         "app_start_time": "{{time}}"
       },
@@ -53,7 +53,7 @@
         "version": "{{version}}"
       }
     },
-    "release": "javascript-renderer-unhandledrejection@1.0.0",
+    "release": "javascript-screenshots@1.0.0",
     "environment": "development",
     "user": {
       "ip_address": "{{auto}}"
@@ -62,7 +62,7 @@
       "values": [
         {
           "type": "Error",
-          "value": "Unhanded promise rejection in renderer process",
+          "value": "Some renderer error",
           "stacktrace": {
             "frames": [
               {
@@ -75,8 +75,8 @@
             ]
           },
           "mechanism": {
-            "handled": false,
-            "type": "onunhandledrejection"
+            "handled": true,
+            "type": "generic"
           }
         }
       ]
@@ -95,5 +95,11 @@
       "event.process": "renderer",
       "event_type": "javascript"
     }
-  }
+  },
+  "attachments": [
+    {
+      "filename": "screenshot.png",
+      "content_type": "image/png"
+    }
+  ]
 }

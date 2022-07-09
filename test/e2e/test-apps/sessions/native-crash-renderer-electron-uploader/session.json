@@ -2,7 +2,6 @@
   "appId": "277345",
   "sentryKey": "37f8a2ee37c0409d8970bc7559c7c7e4",
   "method": "envelope",
-  "dumpFile": false,
   "data": {
     "sid": "{{id}}",
     "init": true,

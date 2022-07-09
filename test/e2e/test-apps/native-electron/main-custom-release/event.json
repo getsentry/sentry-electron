@@ -11,7 +11,6 @@
   },
   "sentryKey": "37f8a2ee37c0409d8970bc7559c7c7e4",
   "appId": "277345",
-  "dumpFile": true,
   "data": {
     "sdk": {
       "name": "sentry.javascript.electron",
@@ -70,5 +69,6 @@
       "event.process": "browser",
       "event_type": "native"
     }
-  }
+  },
+  "attachments": [ { "attachment_type": "event.minidump" } ]
 }
