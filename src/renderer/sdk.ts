@@ -8,6 +8,7 @@ import { logger } from '@sentry/utils';
 
 import { ensureProcess } from '../common';
 import { EventToMain, ScopeToMain } from './integrations';
+import { electronRendererStackParser } from './stack-parse';
 
 export const defaultIntegrations = [...defaultBrowserIntegrations, new ScopeToMain(), new EventToMain()];
 
@@ -38,6 +39,10 @@ If init has been called in the preload and contextIsolation is disabled, is not 
 
   if (options.defaultIntegrations === undefined) {
     options.defaultIntegrations = defaultIntegrations;
+  }
+
+  if (options.stackParser === undefined) {
+    options.stackParser = electronRendererStackParser;
   }
 
   if (options.dsn === undefined) {
