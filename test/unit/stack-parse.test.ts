@@ -6,8 +6,8 @@ import { electronRendererStackParser } from '../../src/renderer/stack-parse';
 should();
 use(chaiAsPromised);
 
-describe('Parse mixed renderer stacks', () => {
-  it.only('Electron v2', () => {
+describe('Parse mixed renderer stack traces', () => {
+  it('Electron v2', () => {
     const stack = `Error: ENOENT: no such file or directory, open '/does-not-exist'
     at Object.fs.openSync (fs.js:646:18)
     at Object.module.(anonymous function) [as openSync] (ELECTRON_ASAR.js:166:20)
@@ -20,7 +20,7 @@ describe('Parse mixed renderer stacks', () => {
 
     const frames = electronRendererStackParser(stack);
 
-    expect(frames).to.equal([
+    expect(frames).to.eql([
       {
         filename:
           'file:///Users/tim/Documents/Repositories/sentry-electron/test/e2e/dist/javascript-renderer/src/index.html',
@@ -89,7 +89,7 @@ describe('Parse mixed renderer stacks', () => {
 
     const frames = electronRendererStackParser(stack);
 
-    expect(frames).to.equal([
+    expect(frames).to.eql([
       {
         filename:
           'file:///Users/tim/Documents/Repositories/sentry-electron/test/e2e/dist/javascript-renderer/src/index.html',
