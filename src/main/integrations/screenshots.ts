@@ -1,5 +1,4 @@
 import { getCurrentHub } from '@sentry/core';
-import { NodeClient } from '@sentry/node';
 import { Event, EventHint, EventProcessor, Integration } from '@sentry/types';
 import { logger } from '@sentry/utils';
 import { BrowserWindow } from 'electron';
@@ -17,8 +16,7 @@ export class Screenshots implements Integration {
 
   /** @inheritDoc */
   public setupOnce(addGlobalEventProcessor: (callback: EventProcessor) => void): void {
-    const attachScreenshot = !!(getCurrentHub().getClient<NodeClient>()?.getOptions() as ElectronMainOptions)
-      .attachScreenshot;
+    const attachScreenshot = !!(getCurrentHub().getClient()?.getOptions() as ElectronMainOptions).attachScreenshot;
 
     if (attachScreenshot) {
       addGlobalEventProcessor(async (event: Event, hint: EventHint) => {
@@ -41,7 +39,7 @@ export class Screenshots implements Integration {
                 count += 1;
               }
             } catch (e) {
-              // Ignore all errors so we don't break event submission if something goes wrong
+              // Catch all errors so we don't break event submission if something goes wrong
               logger.error('Error capturing screenshot', e);
             }
           }

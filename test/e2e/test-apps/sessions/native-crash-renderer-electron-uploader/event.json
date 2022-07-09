@@ -15,9 +15,5 @@
     "event_id": "{{id}}",
     "timestamp": 0
   },
-  "attachments": [
-    {
-      "attachment_type": "event.minidump"
-    }
-  ]
+  "attachments": [ { "attachment_type": "event.minidump" } ]
 }

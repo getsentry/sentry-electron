@@ -68,9 +68,5 @@
       "event_type": "native"
     }
   },
-  "attachments": [
-    {
-      "attachment_type": "event.minidump"
-    }
-  ]
+  "attachments": [ { "attachment_type": "event.minidump" } ]
 }
