@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat: Optionally attach screenshots (#510)
 - fix: Correctly parse mixed Chrome/node stack traces in the renderer (#509)
 
 ## 4.0.0-beta.1
