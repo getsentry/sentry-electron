@@ -30,11 +30,11 @@ export class Screenshots implements Integration {
             }
 
             try {
-              if (!window.isDestroyed()) {
+              if (!window.isDestroyed() && window.isVisible()) {
                 const filename = count === 1 ? 'screenshot.png' : `screenshot-${count}.png`;
-                const screenshot = (await capturePage(window)).toPNG();
+                const image = await capturePage(window);
 
-                hint.attachments.push({ filename, data: screenshot, contentType: 'image/png' });
+                hint.attachments.push({ filename, data: image.toPNG(), contentType: 'image/png' });
 
                 count += 1;
               }

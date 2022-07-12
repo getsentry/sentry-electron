@@ -68,7 +68,9 @@ export interface ElectronMainOptionsInternal extends Options<ElectronOfflineTran
   /**
    * Screenshots may contain PII and is an opt-in feature
    *
-   * If set to true, screenshots will be captured and included for all events.
+   * If set to true, screenshots will be captured and included with all JavaScript events.
+   * Screenshots are not included for native crashes since it's not possible to capture images of crashed Electron
+   * renderers.
    */
   attachScreenshot?: boolean;
 }

@@ -13,7 +13,7 @@ init({
 
 app.on('ready', () => {
   const mainWindow = new BrowserWindow({
-    show: false,
+    show: true,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
