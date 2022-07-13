@@ -17,6 +17,12 @@ export const SERVER_PORT = 8123;
 export const RATE_LIMIT_ID = 666;
 export const ERROR_ID = 999;
 
+interface Attachment {
+  filename?: string;
+  content_type?: string;
+  attachment_type?: string;
+}
+
 /** Event payload that has been submitted to the test server. */
 export interface TestServerEvent<T = unknown> {
   /** Request ID (UUID) */
@@ -27,8 +33,8 @@ export interface TestServerEvent<T = unknown> {
   data: T;
   /** Extra namespaced form data */
   namespacedData?: Record<string, any>;
-  /** An optional minidump file, if included in the event. */
-  dumpFile?: boolean;
+  /** Attachments */
+  attachments?: Attachment[];
   /** API method used for submission */
   method: 'envelope' | 'minidump' | 'store';
 }
@@ -90,22 +96,22 @@ export class TestServer {
       const envelope = parseEnvelope(ctx.request.body);
 
       let data: Event | Transaction | Session | undefined;
-      let dumpFile = false;
+      const attachments: Attachment[] = [];
 
       forEachEnvelopeItem(envelope, ([headers, item]) => {
         if (headers.type === 'event' || headers.type === 'transaction' || headers.type === 'session') {
           data = item as Event | Transaction | Session;
         }
 
-        if (headers.type === 'attachment' && headers.attachment_type === 'event.minidump') {
-          dumpFile = true;
+        if (headers.type === 'attachment') {
+          attachments.push(headers);
         }
       });
 
       if (data) {
         this._addEvent({
           data,
-          dumpFile,
+          attachments,
           appId: ctx.params.id,
           sentryKey: keyMatch[1],
           method: 'envelope',
@@ -133,10 +139,12 @@ export class TestServer {
         const [event, namespacedData] = sentryEventFromFormFields(result);
         const dumpFile = result.files.upload_file_minidump != undefined && result.files.upload_file_minidump > 1024;
 
+        const attachments = dumpFile ? [{ attachment_type: 'event.minidump' }] : [];
+
         this._addEvent({
           data: event,
           namespacedData,
-          dumpFile,
+          attachments,
           appId: ctx.params.id,
           sentryKey: keyMatch[1],
           method: 'minidump',
@@ -165,7 +173,6 @@ export class TestServer {
         appId: ctx.params.id,
         sentryKey: keyMatch[1],
         method: 'store',
-        dumpFile: false,
       });
 
       ctx.headers['Content-Type'] = 'text/plain; charset=utf-8';

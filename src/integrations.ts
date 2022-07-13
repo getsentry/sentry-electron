@@ -11,6 +11,7 @@ import {
   MainProcessSession,
   OnUncaughtException,
   PreloadInjection,
+  Screenshots,
   SentryMinidump,
 } from './main/integrations';
 import { EventToMain, ScopeToMain } from './renderer/integrations';
@@ -27,6 +28,7 @@ export interface Integrations {
   MainProcessSession: MainProcessSession;
   AdditionalContext: AdditionalContext;
   ChildProcess: ChildProcess;
+  Screenshots: Screenshots;
   // For renderer process
   ScopeToMain: ScopeToMain;
   EventToMain: EventToMain;
@@ -53,6 +55,7 @@ export function getIntegrations(): Integrations {
         MainProcessSession: EmptyIntegration,
         AdditionalContext: EmptyIntegration,
         ChildProcess: EmptyIntegration,
+        Screenshots: EmptyIntegration,
       };
 }
 

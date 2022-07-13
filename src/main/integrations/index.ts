@@ -8,3 +8,4 @@ export { MainProcessSession } from './main-process-session';
 export { AdditionalContext } from './additional-context';
 export { Net } from './net-breadcrumbs';
 export { ChildProcess } from './child-process';
+export { Screenshots } from './screenshots';

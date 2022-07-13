@@ -15,6 +15,7 @@ import {
   Net,
   OnUncaughtException,
   PreloadInjection,
+  Screenshots,
   SentryMinidump,
 } from './integrations';
 import { configureIPC } from './ipc';
@@ -30,6 +31,7 @@ export const defaultIntegrations: Integration[] = [
   new OnUncaughtException(),
   new PreloadInjection(),
   new AdditionalContext(),
+  new Screenshots(),
   ...defaultNodeIntegrations.filter((integration) => integration.name !== 'OnUncaughtException'),
 ];
 
@@ -62,6 +64,15 @@ export interface ElectronMainOptionsInternal extends Options<ElectronOfflineTran
    * scheme is used.
    */
   getRendererName?: (contents: WebContents) => string | undefined;
+
+  /**
+   * Screenshots may contain PII and is an opt-in feature
+   *
+   * If set to true, screenshots will be captured and included with all JavaScript events.
+   * Screenshots are not included for native crashes since it's not possible to capture images of crashed Electron
+   * renderers.
+   */
+  attachScreenshot?: boolean;
 }
 
 // getSessions and ipcMode properties are optional because they have defaults
