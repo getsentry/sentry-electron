@@ -2,9 +2,6 @@
 
 ## Unreleased
 
-- feat: Optionally attach screenshots (#510)
-- fix: Correctly parse mixed Chrome/node stack traces in the renderer (#509)
-
 ## 4.0.0-beta.1
 
 Updating the underlying Sentry JavaScript SDK's to v7 forces a major version bump due to minor breaking changes in user
@@ -20,6 +17,8 @@ Upgrading to v7 of the Sentry JavaScript SDKs (#471):
 - feat: Allow closing of SDK (#467)
 - fix: Ensure environment is overridden for minidumps (#497)
 - fix: Pass correct event to beforeSend (#481)
+- feat: Optionally attach screenshots (#510)
+- fix: Correctly parse mixed Chrome/node stack traces in the renderer (#509)
 
 ## 3.0.7
 
