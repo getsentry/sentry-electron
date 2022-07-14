@@ -13,11 +13,14 @@ Upgrading to v7 of the Sentry JavaScript SDKs (#471):
 - Rewrite transports to use new functional API
 - Simplify minidump submission since the underlying SDKs now support attachments
 
+Other additions and fixes:
+
 - feat: Add ability to explicitly control offline mode (#489)
 - feat: Allow closing of SDK (#467)
+- feat: Optionally attach screenshots (#510)
+  - **Disabled by default - Screenshots may contain PII**
 - fix: Ensure environment is overridden for minidumps (#497)
 - fix: Pass correct event to beforeSend (#481)
-- feat: Optionally attach screenshots (#510)
 - fix: Correctly parse mixed Chrome/node stack traces in the renderer (#509)
 
 ## 3.0.7
