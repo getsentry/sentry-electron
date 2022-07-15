@@ -11,7 +11,7 @@ import { PersistedRequestQueue } from './queue';
 type BeforeSendResponse = 'send' | 'queue' | 'drop';
 
 export interface ElectronOfflineTransportOptions extends ElectronNetTransportOptions {
-  beforeSend?: (request: TransportRequest) => BeforeSendResponse;
+  beforeSend?: (request: TransportRequest) => BeforeSendResponse | Promise<BeforeSendResponse>;
 }
 
 const START_DELAY = 5_000;
@@ -72,6 +72,10 @@ export function makeElectronOfflineTransport(options: ElectronOfflineTransportOp
 
   async function makeRequest(request: TransportRequest): Promise<TransportMakeRequestResponse> {
     let action = (options.beforeSend || defaultBeforeSend)(request);
+
+    if (action instanceof Promise) {
+      action = await action;
+    }
 
     if (action === 'send') {
       try {
