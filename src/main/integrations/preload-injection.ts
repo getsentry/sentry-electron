@@ -4,6 +4,7 @@ import { Integration } from '@sentry/types';
 import { logger } from '@sentry/utils';
 import { app } from 'electron';
 import { existsSync } from 'fs';
+import { isAbsolute } from 'path';
 
 import { IPCMode } from '../../common';
 import { rendererRequiresCrashReporterStart } from '../electron-normalize';
@@ -49,7 +50,7 @@ export class PreloadInjection implements Integration {
       //
     }
 
-    if (path && typeof path === 'string' && existsSync(path)) {
+    if (path && typeof path === 'string' && isAbsolute(path) && existsSync(path)) {
       for (const sesh of options.getSessions()) {
         // Fetch any existing preloads so we don't overwrite them
         const existing = sesh.getPreloads();
