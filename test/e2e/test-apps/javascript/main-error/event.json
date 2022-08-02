@@ -69,6 +69,7 @@
                 "colno": 0,
                 "filename": "app:///src/main.js",
                 "function": "{{function}}",
+                "module": "main",
                 "in_app": true,
                 "lineno": 0
               }
