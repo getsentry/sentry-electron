@@ -2,16 +2,36 @@
 
 ## Unreleased
 
-## 4.0.0-beta.1
+## 4.0.0
 
 Updating the underlying Sentry JavaScript SDK's to v7 forces a major version bump due to minor breaking changes in user
 facing APIs. Be sure to check out the [migration doc](./MIGRATION.md).
+
+Upgrading to v7.8.1 of the Sentry JavaScript SDKs (#471 and #527):
+
+- Minor internal changes due to API changes and deprecations
+- Rewrite transports to use new functional API
+- Simplify minidump submission since the underlying SDK now supports attachments
+
+Other additions and fixes:
+
+- feat: Add ability to explicitly control offline mode (#489)
+- feat: Allow closing of SDK (#467)
+- feat: Optionally attach screenshots (#510)
+  - **Disabled by default - Screenshots may contain PII**
+- fix: Ensure environment is overridden for minidumps (#497)
+- fix: Pass correct event to beforeSend (#481)
+- fix: Correctly parse mixed Chrome/node stack traces in the renderer (#509)
+- fix: Check for absolute paths for preload scripts (#516)
+- fix: Allow async `beforeSend` in offline transport (#514)
+
+## 4.0.0-beta.1
 
 Upgrading to v7 of the Sentry JavaScript SDKs (#471):
 
 - Minor internal changes due to API changes and deprecations
 - Rewrite transports to use new functional API
-- Simplify minidump submission since the underlying SDKs now support attachments
+- Simplify minidump submission since the underlying SDK now supports attachments
 
 Other additions and fixes:
 
