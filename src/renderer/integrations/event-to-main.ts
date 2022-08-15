@@ -1,4 +1,4 @@
-import { Event, EventProcessor, Hub, Integration } from '@sentry/types';
+import { EventProcessor, Hub, Integration } from '@sentry/types';
 import { normalize } from '@sentry/utils';
 
 import { getIPC } from '../ipc';
