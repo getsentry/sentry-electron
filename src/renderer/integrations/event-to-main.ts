@@ -1,4 +1,4 @@
-import { Event, EventProcessor, Integration } from '@sentry/types';
+import { Event, EventProcessor, Hub, Integration } from '@sentry/types';
 import { normalize } from '@sentry/utils';
 
 import { getIPC } from '../ipc';
@@ -14,17 +14,24 @@ export class EventToMain implements Integration {
   public name: string = EventToMain.id;
 
   /** @inheritDoc */
-  public setupOnce(addGlobalEventProcessor: (callback: EventProcessor) => void): void {
+  public setupOnce(addGlobalEventProcessor: (callback: EventProcessor) => void, getCurrentHub: () => Hub): void {
     const ipc = getIPC();
 
-    addGlobalEventProcessor((event: Event) => {
-      // Ensure breadcrumbs is not `undefined` as `walk` translates it into a string
-      event.breadcrumbs = event.breadcrumbs || [];
+    const beforeSend = getCurrentHub().getClient()?.getOptions().beforeSend || ((e) => e);
 
-      // Remove the environment as it defaults to 'production' and overwrites the main process environment
-      delete event.environment;
+    addGlobalEventProcessor(async (ev, hint) => {
+      const event = await beforeSend(ev, hint);
 
-      ipc.sendEvent(JSON.stringify(normalize(event, 20, 2_000)));
+      if (event) {
+        // Ensure breadcrumbs is not `undefined` as `walk` translates it into a string
+        event.breadcrumbs = event.breadcrumbs || [];
+
+        // Remove the environment as it defaults to 'production' and overwrites the main process environment
+        delete event.environment;
+
+        ipc.sendEvent(JSON.stringify(normalize(event, 20, 2_000)));
+      }
+
       // Events are handled and sent from the main process so we return null here so nothing is sent from the renderer
       return null;
     });
