@@ -29,7 +29,7 @@ export class EventToMain implements Integration {
         // Remove the environment as it defaults to 'production' and overwrites the main process environment
         delete event.environment;
 
-        ipc.sendEvent(JSON.stringify(normalize(event, 20, 2_000)));
+        ipc.sendEvent(JSON.stringify(normalize([event, hint], 20, 2_000)));
       }
 
       // Events are handled and sent from the main process so we return null here so nothing is sent from the renderer

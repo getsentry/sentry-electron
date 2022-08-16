@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <script>
+      const { init, configureScope } = require('@sentry/electron');
+
+      init({
+        debug: true,
+        beforeSend: (event, hint) => {
+          hint.attachments = [{ filename: 'file.txt', data: '0123456789' }];
+          return event;
+        },
+      });
+
+      setTimeout(() => {
+        throw new Error('Some renderer error');
+      }, 1000);
+    </script>
+  </body>
+</html>

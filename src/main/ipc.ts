@@ -1,5 +1,5 @@
 import { captureEvent, configureScope, Scope } from '@sentry/core';
-import { Event } from '@sentry/types';
+import { Event, EventHint } from '@sentry/types';
 import { logger, SentryError } from '@sentry/utils';
 import { app, ipcMain, protocol, WebContents } from 'electron';
 
@@ -7,21 +7,27 @@ import { IPCChannel, IPCMode, mergeEvents, PROTOCOL_SCHEME } from '../common';
 import { supportsFullProtocol, whenAppReady } from './electron-normalize';
 import { ElectronMainOptionsInternal } from './sdk';
 
+function parse<T>(ty: string, json: string): T | undefined {
+  try {
+    return JSON.parse(json) as T;
+  } catch {
+    logger.warn(`sentry-electron received an invalid ${ty} message`);
+    return;
+  }
+}
+
 /**
  * Handle events from the renderer processes
  */
-export function handleEvent(options: ElectronMainOptionsInternal, jsonEvent: string, contents?: WebContents): void {
-  let event: Event;
-  try {
-    event = JSON.parse(jsonEvent) as Event;
-  } catch {
-    logger.warn('sentry-electron received an invalid event message');
-    return;
+export function handleEvent(options: ElectronMainOptionsInternal, json: string, contents?: WebContents): void {
+  const eventAndHint = parse<[Event, EventHint]>('event', json);
+
+  if (eventAndHint) {
+    const process = contents ? options?.getRendererName?.(contents) || 'renderer' : 'renderer';
+
+    const [event, hint] = eventAndHint;
+    captureEvent(mergeEvents(event, { tags: { 'event.process': process } }), hint);
   }
-
-  const process = contents ? options?.getRendererName?.(contents) || 'renderer' : 'renderer';
-
-  captureEvent(mergeEvents(event, { tags: { 'event.process': process } }));
 }
 
 /** Is object defined and has keys */
@@ -32,14 +38,8 @@ function hasKeys(obj: any): boolean {
 /**
  * Handle scope updates from renderer processes
  */
-export function handleScope(options: ElectronMainOptionsInternal, jsonScope: string): void {
-  let rendererScope: Scope;
-  try {
-    rendererScope = JSON.parse(jsonScope) as Scope;
-  } catch {
-    logger.warn('sentry-electron received an invalid scope message');
-    return;
-  }
+export function handleScope(options: ElectronMainOptionsInternal, json: string): void {
+  const rendererScope = parse<Scope>('scope', json);
 
   const sentScope = Scope.clone(rendererScope) as any;
   /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -100,8 +100,8 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
  * Hooks IPC for communication with the renderer processes
  */
 function configureClassic(options: ElectronMainOptionsInternal): void {
-  ipcMain.on(IPCChannel.EVENT, ({ sender }, jsonEvent: string) => handleEvent(options, jsonEvent, sender));
-  ipcMain.on(IPCChannel.SCOPE, (_, jsonScope: string) => handleScope(options, jsonScope));
+  ipcMain.on(IPCChannel.EVENT, ({ sender }, json: string) => handleEvent(options, json, sender));
+  ipcMain.on(IPCChannel.SCOPE, (_, json: string) => handleScope(options, json));
 }
 
 /** Sets up communication channels with the renderer */
