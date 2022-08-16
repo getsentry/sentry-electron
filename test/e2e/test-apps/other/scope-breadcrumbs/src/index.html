@@ -13,6 +13,7 @@
 
       configureScope((scope) => {
         scope.setTag('renderer-tag', 'another-value');
+        scope.addAttachment({ filename: 'attachment.txt', data: 'Some content' });
       });
 
       console.log('Some logging from the renderer process');

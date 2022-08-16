@@ -118,5 +118,6 @@
     "extra": {
       "some-extra": "extra-value"
     }
-  }
+  },
+  "attachments": [ { "type": "attachment", "length": 12, "filename": "attachment.txt" } ]
 }
