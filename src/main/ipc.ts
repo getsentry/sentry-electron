@@ -56,6 +56,10 @@ export function handleScope(options: ElectronMainOptionsInternal, jsonScope: str
       scope.setExtras(sentScope._extra);
     }
 
+    for (const attachment of sentScope._attachments || []) {
+      scope.addAttachment(attachment);
+    }
+
     const breadcrumb = sentScope._breadcrumbs.pop();
     if (breadcrumb) {
       scope.addBreadcrumb(breadcrumb, options?.maxBreadcrumbs || 100);
