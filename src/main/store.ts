@@ -1,8 +1,7 @@
 import { logger } from '@sentry/utils';
-import { existsSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 
-import { mkdirpSync } from './fs';
+import { mkdirpSync, readFileAsync, statAsync, unlinkAsync, writeFileAsync } from './fs';
 
 const dateFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.*\d{0,10}Z$/;
 
@@ -48,16 +47,16 @@ export class Store<T> {
    * @param next New data to replace the previous one.
    * @param forceFlush Forces the write to be flushed to disk immediately
    */
-  public set(next: T, forceFlush: boolean = false): void {
+  public async set(next: T, forceFlush: boolean = false): Promise<void> {
     this._data = next;
 
     if (!this._flushing) {
       this._flushing = true;
       if (forceFlush) {
-        this._flush();
+        await this._flush();
       } else {
         setImmediate(() => {
-          this._flush();
+          void this._flush();
         });
       }
     }
@@ -67,8 +66,8 @@ export class Store<T> {
    * Updates data by passing it through the given function.
    * @param fn A function receiving the current data and returning new one.
    */
-  public update(fn: (current: T) => T): void {
-    this.set(fn(this.get()));
+  public async update(fn: (current: T) => T): Promise<void> {
+    await this.set(fn(await this.get()));
   }
 
   /**
@@ -78,12 +77,10 @@ export class Store<T> {
    * from disk. If the file does not exist, the initial value provided to the
    * constructor is used.
    */
-  public get(): T {
+  public async get(): Promise<T> {
     if (this._data === undefined) {
       try {
-        this._data = existsSync(this._path)
-          ? (JSON.parse(readFileSync(this._path, 'utf8'), dateReviver) as T)
-          : this._initial;
+        this._data = JSON.parse(await readFileAsync(this._path, 'utf8'), dateReviver) as T;
       } catch (e) {
         this._data = this._initial;
       }
@@ -93,27 +90,31 @@ export class Store<T> {
   }
 
   /** Returns store to its initial state */
-  public clear(): void {
-    this.set(this._initial);
+  public async clear(): Promise<void> {
+    await this.set(this._initial);
   }
 
   /** Gets the Date that the file was last modified */
-  public getModifiedDate(): Date | undefined {
+  public async getModifiedDate(): Promise<Date | undefined> {
     try {
-      return statSync(this._path)?.mtime;
+      return (await statAsync(this._path))?.mtime;
     } catch (_) {
       return undefined;
     }
   }
 
   /** Serializes the current data into the JSON file. */
-  private _flush(): void {
+  private async _flush(): Promise<void> {
     try {
       if (this._data === undefined) {
-        unlinkSync(this._path);
+        try {
+          await unlinkAsync(this._path);
+        } catch (_) {
+          //
+        }
       } else {
         mkdirpSync(dirname(this._path));
-        writeFileSync(this._path, JSON.stringify(this._data));
+        await writeFileAsync(this._path, JSON.stringify(this._data));
       }
     } catch (e) {
       logger.warn('Failed to flush store', e);
