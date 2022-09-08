@@ -26,7 +26,7 @@ export class SentryMinidump implements Integration {
   private _scopeStore?: Store<Scope>;
 
   /** Temp store for the scope of last run */
-  private _scopeLastRun?: Scope;
+  private _scopeLastRun?: Promise<Scope>;
 
   private _minidumpLoader?: MinidumpLoader;
 
@@ -170,14 +170,14 @@ export class SentryMinidump implements Integration {
   private _setupScopeListener(): void {
     const hubScope = getCurrentHub().getScope();
     if (hubScope) {
-      hubScope.addScopeListener((updatedScope) => {
+      hubScope.addScopeListener(async (updatedScope) => {
         const scope = Scope.clone(updatedScope);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         (scope as any)._eventProcessors = [];
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         (scope as any)._scopeListeners = [];
 
-        this._scopeStore?.set(scope);
+        await this._scopeStore?.set(scope);
       });
     }
   }
@@ -224,7 +224,7 @@ export class SentryMinidump implements Integration {
           return false;
         }
 
-        const storedScope = Scope.clone(this._scopeLastRun);
+        const storedScope = Scope.clone(await this._scopeLastRun);
         let newEvent = await storedScope.applyToEvent(event);
 
         const hubScope = hub.getScope();
