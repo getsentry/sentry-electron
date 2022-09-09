@@ -32,7 +32,9 @@ export const defaultIntegrations: Integration[] = [
   new PreloadInjection(),
   new AdditionalContext(),
   new Screenshots(),
-  ...defaultNodeIntegrations.filter((integration) => integration.name !== 'OnUncaughtException'),
+  ...defaultNodeIntegrations.filter(
+    (integration) => integration.name !== 'OnUncaughtException' && integration.name !== 'Context',
+  ),
 ];
 
 export interface ElectronMainOptionsInternal extends Options<ElectronOfflineTransportOptions> {

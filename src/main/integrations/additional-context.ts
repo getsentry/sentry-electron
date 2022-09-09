@@ -1,4 +1,4 @@
-import { Event, EventProcessor, Integration } from '@sentry/types';
+import { DeviceContext, Event, EventProcessor, Integration } from '@sentry/types';
 import { app, screen as electronScreen } from 'electron';
 import { CpuInfo, cpus } from 'os';
 
@@ -19,21 +19,6 @@ const DEFAULT_OPTIONS: AdditionalContextOptions = {
   language: true,
 };
 
-interface LazyDeviceContext {
-  language?: string;
-  screen_resolution?: string;
-  screen_density?: number;
-}
-
-interface AdditionalDeviceContext extends LazyDeviceContext {
-  memory_size?: number;
-  free_memory?: number;
-  processor_count?: number;
-  cpu_description?: string;
-  processor_frequency?: number;
-  machine_arch?: string;
-}
-
 /** Adds Electron context to events and normalises paths. */
 export class AdditionalContext implements Integration {
   /** @inheritDoc */
@@ -43,7 +28,7 @@ export class AdditionalContext implements Integration {
   public name: string = AdditionalContext.id;
 
   private readonly _options: AdditionalContextOptions;
-  private _lazyDeviceContext: LazyDeviceContext = {};
+  private _lazyDeviceContext: DeviceContext = {};
 
   public constructor(options: Partial<AdditionalContextOptions> = {}) {
     this._options = {
@@ -76,7 +61,7 @@ export class AdditionalContext implements Integration {
 
   /** Adds additional context to event */
   private _addAdditionalContext(event: Event): Event {
-    const device: AdditionalDeviceContext = this._lazyDeviceContext;
+    const device: DeviceContext = this._lazyDeviceContext;
 
     const { memory, cpu } = this._options;
 
@@ -101,7 +86,7 @@ export class AdditionalContext implements Integration {
       }
     }
 
-    return mergeEvents(event, { contexts: { device: device as Record<string, string | number> } });
+    return mergeEvents(event, { contexts: { device } });
   }
 
   /** Sets the display info */
