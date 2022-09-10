@@ -15,6 +15,7 @@ import { parseRecipe, TestRecipe } from './parser';
 export * from './normalize';
 
 const SENTRY_KEY = '37f8a2ee37c0409d8970bc7559c7c7e4';
+const TRACING_VERSION = require('../../../package.json').devDependencies['@sentry/tracing'];
 
 const log = createLogger('Recipe Runner');
 
@@ -113,13 +114,15 @@ export class RecipeRunner {
         .replace('__RATE_LIMIT_DSN__', `http://${SENTRY_KEY}@localhost:${SERVER_PORT}/${RATE_LIMIT_ID}`)
         .replace('__ERROR_DSN__', `http://${SENTRY_KEY}@localhost:${SERVER_PORT}/${ERROR_ID}`);
 
-      // We replace the @sentry/electron dependency in package.json with
-      // the path to the tarball
       if (file.endsWith('package.json')) {
-        content = content.replace(
-          /"@sentry\/electron": ".*"/,
-          `"@sentry/electron": "file:./../../../../sentry-electron-${SDK_VERSION}.tgz"`,
-        );
+        content = content
+          // We replace the @sentry/electron dependency in package.json with the path to the tarball
+          .replace(
+            /"@sentry\/electron": ".*"/,
+            `"@sentry/electron": "file:./../../../../sentry-electron-${SDK_VERSION}.tgz"`,
+          )
+          // We replace the @sentry/tracing dependency version to match that of @sentry/electron
+          .replace(/"@sentry\/tracing": ".*"/, `"@sentry/tracing": "${TRACING_VERSION}"`);
       }
 
       writeFileSync(path, content);
