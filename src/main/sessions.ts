@@ -1,7 +1,7 @@
 import { getCurrentHub } from '@sentry/core';
 import { makeSession, updateSession } from '@sentry/hub';
 import { flush, NodeClient } from '@sentry/node';
-import { SerializedSession, Session, SessionContext, SessionStatus } from '@sentry/types';
+import { SerializedSession, SessionContext, SessionStatus } from '@sentry/types';
 import { logger } from '@sentry/utils';
 
 import { sentryCachePath } from './fs';
@@ -13,21 +13,22 @@ const PERSIST_INTERVAL_MS = 60_000;
 const sessionStore = new Store<SessionContext | undefined>(sentryCachePath, 'session', undefined);
 
 /** Previous session that did not exit cleanly */
-let previousSession: Promise<Partial<Session> | undefined> | undefined = sessionStore.get();
+let previousSession = sessionStore.get();
+const previousSessionModified = sessionStore.getModifiedDate();
 
 let persistTimer: NodeJS.Timer | undefined;
 
 /** Starts a session */
-export async function startSession(): Promise<void> {
+export function startSession(): void {
   const hub = getCurrentHub();
-  await sessionStore.set(hub.startSession(), true);
+  sessionStore.set(hub.startSession());
 
   // Every PERSIST_INTERVAL, write the session to disk
-  persistTimer = setInterval(async () => {
+  persistTimer = setInterval(() => {
     const currentSession = hub.getScope()?.getSession();
     // Only bother saving if it hasn't already ended
     if (currentSession && currentSession.status === 'ok') {
-      await sessionStore.set(currentSession);
+      sessionStore.set(currentSession);
     }
   }, PERSIST_INTERVAL_MS);
 }
@@ -53,20 +54,19 @@ export async function endSession(): Promise<void> {
     logger.log('No session');
   }
 
-  await sessionStore.set(undefined, true);
+  sessionStore.set(undefined, true);
 
   await flush();
 }
 
 /** Determines if a Date is likely to have occurred in the previous uncompleted session */
-export async function unreportedDuringLastSession(crashDate: Date | undefined): Promise<boolean> {
+export function unreportedDuringLastSession(crashDate: Date | undefined): boolean {
   if (!crashDate) {
     return false;
   }
 
-  const previousSessionModified = await sessionStore.getModifiedDate();
   // There is no previous session
-  if (previousSessionModified == undefined) {
+  if (!previousSessionModified) {
     return false;
   }
 
@@ -87,11 +87,9 @@ export async function unreportedDuringLastSession(crashDate: Date | undefined): 
 export async function checkPreviousSession(crashed: boolean): Promise<void> {
   const client = getCurrentHub().getClient<NodeClient>();
 
-  const previous = await previousSession;
-
-  if (previous && client) {
+  if (previousSession && client) {
     // Ignore if the previous session is already ended
-    if (previous.status !== 'ok') {
+    if (previousSession.status !== 'ok') {
       previousSession = undefined;
       return;
     }
@@ -100,13 +98,13 @@ export async function checkPreviousSession(crashed: boolean): Promise<void> {
 
     logger.log(`Found previous ${status} session`);
 
-    const sesh = makeSession(previous);
+    const sesh = makeSession(previousSession);
 
     updateSession(sesh, {
       status,
       errors: (sesh.errors || 0) + 1,
-      release: (previous as unknown as SerializedSession).attrs?.release,
-      environment: (previous as unknown as SerializedSession).attrs?.environment,
+      release: (previousSession as unknown as SerializedSession).attrs?.release,
+      environment: (previousSession as unknown as SerializedSession).attrs?.environment,
     });
 
     await client.sendSession(sesh);
