@@ -33,7 +33,7 @@ export class PersistedRequestQueue {
   public async add(request: QueuedTransportRequest): Promise<void> {
     const bodyPath = uuid4();
 
-    await this._queue.update((queue) => {
+    this._queue.update((queue) => {
       queue.push({
         bodyPath,
         date: request.date || new Date(),
@@ -60,7 +60,7 @@ export class PersistedRequestQueue {
     let found: PersistedRequest | undefined;
     const cutOff = Date.now() - MILLISECONDS_PER_DAY * this._maxAgeDays;
 
-    await this._queue.update((queue) => {
+    this._queue.update((queue) => {
       while ((found = queue.shift())) {
         // We drop events created in v3 of the SDK or before the cut-off
         if ('type' in found || found.date.getTime() < cutOff) {

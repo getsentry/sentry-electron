@@ -96,10 +96,9 @@ export class ElectronMinidump implements Integration {
     }
 
     // Check if last crash report was likely to have been unreported in the last session
-    void unreportedDuringLastSession(crashReporter.getLastCrashReport()?.date).then((crashed) => {
-      // Check if a previous session was not closed
-      checkPreviousSession(crashed).catch((error) => logger.error(error));
-    });
+    const previousSessionCrashed = unreportedDuringLastSession(crashReporter.getLastCrashReport()?.date);
+    // Check if a previous session was not closed
+    checkPreviousSession(previousSessionCrashed).catch((error) => logger.error(error));
   }
 
   /**

@@ -14,7 +14,7 @@ export class MainProcessSession implements Integration {
 
   /** @inheritDoc */
   public setupOnce(): void {
-    void startSession();
+    startSession();
 
     // We track sessions via the 'will-quit' event which is the last event emitted before close.
     //
