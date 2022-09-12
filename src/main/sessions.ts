@@ -20,7 +20,7 @@ let persistTimer: NodeJS.Timer | undefined;
 /** Starts a session */
 export async function startSession(): Promise<void> {
   const hub = getCurrentHub();
-  await sessionStore.set(hub.startSession(), true);
+  await sessionStore.set(hub.startSession());
 
   // Every PERSIST_INTERVAL, write the session to disk
   persistTimer = setInterval(async () => {
@@ -53,7 +53,7 @@ export async function endSession(): Promise<void> {
     logger.log('No session');
   }
 
-  await sessionStore.set(undefined, true);
+  await sessionStore.clear();
 
   await flush();
 }

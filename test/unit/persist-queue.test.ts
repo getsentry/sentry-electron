@@ -10,8 +10,8 @@ should();
 use(chaiAsPromised);
 
 async function expectFilesInDirectory(dir: string, count: number): Promise<void> {
-  // We delay because store flushing is async and not waited on
-  await delay(500);
+  // We delay because store flushing to disk is throttled
+  await delay(1000);
 
   const found = Array.from(walkSync(dir)).length;
   expect(found, 'files in directory').to.equal(count);

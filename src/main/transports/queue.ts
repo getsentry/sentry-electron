@@ -3,7 +3,7 @@ import { logger, uuid4 } from '@sentry/utils';
 import { join } from 'path';
 
 import { readFileAsync, unlinkAsync, writeFileAsync } from '../fs';
-import { Store } from '../store';
+import { ThrottledStore } from '../store';
 
 const MILLISECONDS_PER_DAY = 86_400_000;
 
@@ -21,7 +21,7 @@ export interface QueuedTransportRequest extends TransportRequest {
 
 /** A request queue that is persisted to disk to survive app restarts */
 export class PersistedRequestQueue {
-  private readonly _queue: Store<PersistedRequest[]> = new Store(this._queuePath, 'queue', []);
+  private readonly _queue: ThrottledStore<PersistedRequest[]> = new ThrottledStore(this._queuePath, 'queue', []);
 
   public constructor(
     private readonly _queuePath: string,
