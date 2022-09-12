@@ -183,14 +183,10 @@ export class ElectronBreadcrumbs implements Integration {
         };
 
         if (id) {
-          const state = getRendererProperties(id);
+          breadcrumb.data = { ...getRendererProperties(id) };
 
-          if (!this._options.captureWindowTitles && state?.title) {
-            delete state.title;
-          }
-
-          if (state) {
-            breadcrumb.data = state;
+          if (!this._options.captureWindowTitles && breadcrumb.data?.title) {
+            delete breadcrumb.data?.title;
           }
         }
 
