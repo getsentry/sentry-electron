@@ -2,12 +2,15 @@
 
 ## Unreleased
 
+## 4.0.2
+
+This patch contains no changes. It has been made to make sure the `4.x` set of versions have the `latest` tag on npm.
+
 ## 4.0.1
 
 - fix: Page titles in breadcrumbs should not change (#551)
 - feat: Update to v7.12.1 of JavaScript SDKs (#548)
 - fix: Pass attachments from renderer to main (#536)
-
 
 ## 4.0.0
 
