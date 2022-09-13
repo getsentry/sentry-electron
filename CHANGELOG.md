@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.8
+
+- fix: Page titles in breadcrumbs should not change (#551)
+
 ## 3.0.7
 
 - fix: export map and sideEffects
