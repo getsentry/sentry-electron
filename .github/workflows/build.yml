@@ -32,7 +32,7 @@ jobs:
           path: |
             ${{ github.workspace }}/*.tgz
       - id: set-matrix
-        run: echo "::set-output name=matrix::$(cat ./test/e2e/versions.json)"
+        run: echo "::set-output name=matrix::$(node ./scripts/e2e-test-versions.js)"
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
 
