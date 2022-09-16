@@ -3,19 +3,10 @@ import chaiAsPromised = require('chai-as-promised');
 import * as tmp from 'tmp';
 
 import { PersistedRequestQueue, QueuedTransportRequest } from '../../src/main/transports/queue';
-import { walkSync } from '../e2e/utils';
-import { delay } from '../helpers';
+import { delay, expectFilesInDirectory } from '../helpers';
 
 should();
 use(chaiAsPromised);
-
-async function expectFilesInDirectory(dir: string, count: number): Promise<void> {
-  // We delay because store flushing to disk is throttled
-  await delay(1000);
-
-  const found = Array.from(walkSync(dir)).length;
-  expect(found, 'files in directory').to.equal(count);
-}
 
 describe('PersistedRequestQueue', () => {
   let tempDir: tmp.DirResult;
@@ -34,9 +25,8 @@ describe('PersistedRequestQueue', () => {
     await expectFilesInDirectory(tempDir.name, 0);
 
     await queue.add({ body: 'just a string' });
-    await expectFilesInDirectory(tempDir.name, 2);
-
     await delay(1_000);
+    await expectFilesInDirectory(tempDir.name, 2);
 
     // We create a new queue to force reading from serialized store
     const queue2 = new PersistedRequestQueue(tempDir.name);
@@ -46,6 +36,7 @@ describe('PersistedRequestQueue', () => {
     expect(popped?.body).to.not.be.undefined;
     expect(popped?.body.toString()).to.equal('just a string');
 
+    await delay(1_000);
     await expectFilesInDirectory(tempDir.name, 1);
   });
 
@@ -60,6 +51,7 @@ describe('PersistedRequestQueue', () => {
     await queue.add({ body: '6' });
     await queue.add({ body: '7' });
 
+    await delay(1_000);
     await expectFilesInDirectory(tempDir.name, 6);
 
     const popped: QueuedTransportRequest[] = [];
@@ -71,6 +63,7 @@ describe('PersistedRequestQueue', () => {
     expect(popped.length).to.equal(5);
     expect(popped.map((p) => p.body.toString()).join('')).to.equal('34567');
 
+    await delay(1_000);
     await expectFilesInDirectory(tempDir.name, 1);
   });
 
@@ -82,6 +75,7 @@ describe('PersistedRequestQueue', () => {
     await queue.add({ body: 'so old 3', date: new Date(Date.now() - 100_000_000) });
     await queue.add({ body: 'so old 4' });
 
+    await delay(1_000);
     await expectFilesInDirectory(tempDir.name, 5);
 
     const pop = await queue.pop();
@@ -89,6 +83,7 @@ describe('PersistedRequestQueue', () => {
     const pop2 = await queue.pop();
     expect(pop2).to.be.undefined;
 
+    await delay(1_000);
     await expectFilesInDirectory(tempDir.name, 1);
   });
 });
