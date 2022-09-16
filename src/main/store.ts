@@ -1,7 +1,7 @@
 import { logger } from '@sentry/utils';
-import { Mutex } from 'async-mutex';
 import { dirname, join } from 'path';
 
+import { Mutex } from '../common/mutex';
 import { mkdirp, readFileAsync, statAsync, unlinkAsync, writeFileAsync } from './fs';
 
 const dateFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.*\d{0,10}Z$/;
@@ -77,7 +77,7 @@ export class Store<T> {
    * constructor is used.
    */
   public async get(): Promise<T> {
-    return this._lock.runExclusive(async () => {
+    return await this._lock.runExclusive(async () => {
       if (this._data === undefined) {
         try {
           this._data = JSON.parse(await readFileAsync(this._path, 'utf8'), dateReviver) as T;
@@ -140,9 +140,9 @@ export class ThrottledStore<T> extends Store<T> {
     this._data = data;
 
     this._pendingWrite = {
-      // Overwrite with the latest data
+      // We overwrite the data for the pending write so that the latest data is written in the next flush
       data,
-      // If there is already a pending timeout, we leave keep than rather than starting the timeout again
+      // If there is already a pending timeout, we keep that rather than starting the timeout again
       timeout: this._pendingWrite?.timeout || setTimeout(() => this._writePending(), this._throttleTime),
     };
   }

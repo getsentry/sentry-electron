@@ -63,7 +63,6 @@
     "@sentry/node": "7.12.1",
     "@sentry/types": "7.12.1",
     "@sentry/utils": "7.12.1",
-    "async-mutex":"0.4.0",
     "deepmerge": "4.2.2",
     "tslib": "^2.3.1"
   },
