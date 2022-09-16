@@ -1,4 +1,4 @@
-name: Release
+name: Prepare Release
 on:
   workflow_dispatch:
     inputs:
@@ -7,6 +7,9 @@ on:
         required: true
       force:
         description: Force a release even when there are release-blockers (optional)
+        required: false
+      merge_target:
+        description: Target branch to merge into. Uses the default branch as a fallback (optional)
         required: false
 jobs:
   release:
@@ -24,3 +27,4 @@ jobs:
         with:
           version: ${{ github.event.inputs.version }}
           force: ${{ github.event.inputs.force }}
+          merge_target: ${{ github.event.inputs.merge_target }}
