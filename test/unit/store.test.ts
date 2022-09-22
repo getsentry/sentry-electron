@@ -4,7 +4,7 @@ import { join } from 'path';
 import * as tmp from 'tmp';
 
 import { readFileAsync } from '../../src/main/fs';
-import { Store, BufferedWriteStore } from '../../src/main/store';
+import { BufferedWriteStore, Store } from '../../src/main/store';
 import { delay, expectFilesInDirectory } from '../helpers';
 
 should();
