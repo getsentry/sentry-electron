@@ -11,7 +11,7 @@ import { sentryCachePath } from '../../fs';
 import { getRendererProperties, trackRendererProperties } from '../../renderers';
 import { ElectronMainOptions } from '../../sdk';
 import { checkPreviousSession, sessionCrashed } from '../../sessions';
-import { ThrottledStore } from '../../store';
+import { BufferedWriteStore } from '../../store';
 import { deleteMinidump, getMinidumpLoader, MinidumpLoader } from './minidump-loader';
 
 /** Sends minidumps via the Sentry uploader */
@@ -23,7 +23,7 @@ export class SentryMinidump implements Integration {
   public name: string = SentryMinidump.id;
 
   /** Store to persist context information beyond application crashes. */
-  private _scopeStore?: ThrottledStore<Scope>;
+  private _scopeStore?: BufferedWriteStore<Scope>;
 
   /** Temp store for the scope of last run */
   private _scopeLastRun?: Promise<Scope>;
@@ -41,7 +41,7 @@ export class SentryMinidump implements Integration {
 
     this._startCrashReporter();
 
-    this._scopeStore = new ThrottledStore<Scope>(sentryCachePath, 'scope_v2', new Scope());
+    this._scopeStore = new BufferedWriteStore<Scope>(sentryCachePath, 'scope_v2', new Scope());
     // We need to store the scope in a variable here so it can be attached to minidumps
     this._scopeLastRun = this._scopeStore.get();
 

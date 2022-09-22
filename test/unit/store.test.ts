@@ -4,7 +4,7 @@ import { join } from 'path';
 import * as tmp from 'tmp';
 
 import { readFileAsync } from '../../src/main/fs';
-import { Store, ThrottledStore } from '../../src/main/store';
+import { Store, BufferedWriteStore } from '../../src/main/store';
 import { delay, expectFilesInDirectory } from '../helpers';
 
 should();
@@ -50,7 +50,7 @@ describe('Store', () => {
   });
 
   it('Throttled store', async () => {
-    const store = new ThrottledStore<TestType | undefined>(tempDir.name, 'test-store', undefined);
+    const store = new BufferedWriteStore<TestType | undefined>(tempDir.name, 'test-store', undefined);
     await expectFilesInDirectory(tempDir.name, 0);
 
     await store.set({ num: 990, str: 'just a string' });
@@ -77,7 +77,7 @@ describe('Store', () => {
     expect(contents3).to.equal('{"num":5000,"str":"just a string"}');
 
     // Load a new store instance so it's forced to read from disk
-    const store2 = new ThrottledStore<TestType | undefined>(tempDir.name, 'test-store', undefined);
+    const store2 = new BufferedWriteStore<TestType | undefined>(tempDir.name, 'test-store', undefined);
     const value = await store2.get();
 
     expect(value).to.eql({ num: 5_000, str: 'just a string' });

@@ -116,7 +116,7 @@ export class Store<T> {
 /**
  * Extends Store to throttle writes.
  */
-export class ThrottledStore<T> extends Store<T> {
+export class BufferedWriteStore<T> extends Store<T> {
   /** The minimum time between writes */
   private readonly _throttleTime?: number;
   /** A write that hasn't been written to disk yet */
