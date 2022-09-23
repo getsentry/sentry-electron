@@ -63,6 +63,7 @@ export class TestContext {
 
     if (!options.secondRun) {
       env.APP_FIRST_RUN = true;
+      this._clearAppUserData();
     }
 
     const childProcess = spawn(this._electronPath, [this._appPath], { env });
@@ -110,9 +111,7 @@ export class TestContext {
     await this.mainProcess.kill();
 
     if (!options.retainData) {
-      for (const dir of getDeleteDirectories(this._appName)) {
-        rmSync(dir, { recursive: true, force: true });
-      }
+      this._clearAppUserData();
     }
 
     log('Test app stopped');
@@ -176,6 +175,12 @@ export class TestContext {
 
   public get isStarted(): boolean {
     return this._started;
+  }
+
+  private _clearAppUserData() {
+    for (const dir of getDeleteDirectories(this._appName)) {
+      rmSync(dir, { recursive: true, force: true });
+    }
   }
 }
 

@@ -11,7 +11,7 @@ import { sentryCachePath } from '../../fs';
 import { getRendererProperties, trackRendererProperties } from '../../renderers';
 import { ElectronMainOptions } from '../../sdk';
 import { checkPreviousSession, sessionCrashed } from '../../sessions';
-import { Store } from '../../store';
+import { BufferedWriteStore } from '../../store';
 import { deleteMinidump, getMinidumpLoader, MinidumpLoader } from './minidump-loader';
 
 /** Sends minidumps via the Sentry uploader */
@@ -23,10 +23,10 @@ export class SentryMinidump implements Integration {
   public name: string = SentryMinidump.id;
 
   /** Store to persist context information beyond application crashes. */
-  private _scopeStore?: Store<Scope>;
+  private _scopeStore?: BufferedWriteStore<Scope>;
 
   /** Temp store for the scope of last run */
-  private _scopeLastRun?: Scope;
+  private _scopeLastRun?: Promise<Scope>;
 
   private _minidumpLoader?: MinidumpLoader;
 
@@ -41,7 +41,7 @@ export class SentryMinidump implements Integration {
 
     this._startCrashReporter();
 
-    this._scopeStore = new Store<Scope>(sentryCachePath, 'scope_v2', new Scope());
+    this._scopeStore = new BufferedWriteStore<Scope>(sentryCachePath, 'scope_v2', new Scope());
     // We need to store the scope in a variable here so it can be attached to minidumps
     this._scopeLastRun = this._scopeStore.get();
 
@@ -170,14 +170,14 @@ export class SentryMinidump implements Integration {
   private _setupScopeListener(): void {
     const hubScope = getCurrentHub().getScope();
     if (hubScope) {
-      hubScope.addScopeListener((updatedScope) => {
+      hubScope.addScopeListener(async (updatedScope) => {
         const scope = Scope.clone(updatedScope);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         (scope as any)._eventProcessors = [];
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         (scope as any)._scopeListeners = [];
 
-        this._scopeStore?.set(scope);
+        await this._scopeStore?.set(scope);
       });
     }
   }
@@ -224,7 +224,7 @@ export class SentryMinidump implements Integration {
           return false;
         }
 
-        const storedScope = Scope.clone(this._scopeLastRun);
+        const storedScope = Scope.clone(await this._scopeLastRun);
         let newEvent = await storedScope.applyToEvent(event);
 
         const hubScope = hub.getScope();
