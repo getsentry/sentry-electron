@@ -1,7 +1,7 @@
 import { ensureProcess, IPCMode } from '../common';
 ensureProcess('main');
 
-import { defaultIntegrations as defaultNodeIntegrations, init as nodeInit } from '@sentry/node';
+import { defaultIntegrations as defaultNodeIntegrations, init as nodeInit, NodeOptions } from '@sentry/node';
 import { Integration, Options } from '@sentry/types';
 import { Session, session, WebContents } from 'electron';
 
@@ -79,7 +79,8 @@ export interface ElectronMainOptionsInternal extends Options<ElectronOfflineTran
 
 // getSessions and ipcMode properties are optional because they have defaults
 export type ElectronMainOptions = Pick<Partial<ElectronMainOptionsInternal>, 'getSessions' | 'ipcMode'> &
-  Omit<ElectronMainOptionsInternal, 'getSessions' | 'ipcMode'>;
+  Omit<ElectronMainOptionsInternal, 'getSessions' | 'ipcMode'> &
+  NodeOptions;
 
 const defaultOptions: ElectronMainOptionsInternal = {
   _metadata: { sdk: { name: 'sentry.javascript.electron', version: SDK_VERSION } },
