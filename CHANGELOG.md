@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 4.0.3
+
+- fix: `ElectronMainOptions` type should be a union with `NodeOptions`
+
 ## 4.0.2
 
 This patch contains no changes. It has been made to make sure the `4.x` set of versions have the `latest` tag on npm.
