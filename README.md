@@ -36,6 +36,15 @@ init({
   // ...
 });
 ```
+If you are using a JavaScript bundler, you may need to use the process specific imports to ensure the correct code is loaded for
+each process:
+```javascript
+// In the Electron main process
+import { init } from '@sentry/electron/main';
+
+// In the Electron renderer processes
+import { init } from '@sentry/electron/renderer';
+```
 
 To set context information or send manual events, use the exported functions of `@sentry/electron`. Note that these
 functions will not perform any action before you have called `init()`:
