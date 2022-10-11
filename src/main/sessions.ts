@@ -1,5 +1,4 @@
-import { getCurrentHub } from '@sentry/core';
-import { makeSession, updateSession } from '@sentry/hub';
+import { getCurrentHub, makeSession, updateSession } from '@sentry/core';
 import { flush, NodeClient } from '@sentry/node';
 import { SerializedSession, Session, SessionContext, SessionStatus } from '@sentry/types';
 import { logger } from '@sentry/utils';
