@@ -14,8 +14,14 @@ export const defaultIntegrations = [...defaultBrowserIntegrations, new ScopeToMa
 
 /**
  * Initialize Sentry in the Electron renderer process
+ * @param options SDK options
+ * @param originalInit Optional init function for a specific framework SDK
+ * @returns
  */
-export function init(options: BrowserOptions = {}): void {
+export function init<O extends BrowserOptions>(
+  options: BrowserOptions & O = {} as BrowserOptions & O,
+  originalInit: (options: O) => void = browserInit,
+): void {
   ensureProcess('renderer');
 
   // Ensure the browser SDK is only init'ed once.
@@ -53,5 +59,5 @@ If init has been called in the preload and contextIsolation is disabled, is not 
   // We only handle initialScope in the main process otherwise it can cause race conditions over IPC
   delete options.initialScope;
 
-  browserInit(options);
+  originalInit(options);
 }
