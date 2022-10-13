@@ -1,4 +1,5 @@
 import { join } from 'path';
+import vue from '@vitejs/plugin-vue';
 
 const PACKAGE_ROOT = __dirname;
 
@@ -16,6 +17,7 @@ const config = {
       strict: true,
     },
   },
+  plugins: [vue()],
   build: {
     sourcemap: true,
     target: `chrome61`,

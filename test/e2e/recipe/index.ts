@@ -15,7 +15,7 @@ import { parseRecipe, TestRecipe } from './parser';
 export * from './normalize';
 
 const SENTRY_KEY = '37f8a2ee37c0409d8970bc7559c7c7e4';
-const TRACING_VERSION = require('../../../package.json').devDependencies['@sentry/tracing'];
+const JS_VERSION = require('../../../package.json').dependencies['@sentry/core'];
 
 const log = createLogger('Recipe Runner');
 
@@ -121,8 +121,10 @@ export class RecipeRunner {
             /"@sentry\/electron": ".*"/,
             `"@sentry/electron": "file:./../../../../sentry-electron-${SDK_VERSION}.tgz"`,
           )
-          // We replace the @sentry/tracing dependency version to match that of @sentry/electron
-          .replace(/"@sentry\/tracing": ".*"/, `"@sentry/tracing": "${TRACING_VERSION}"`);
+          // We replace the Sentry JavaScript dependency versions to match that of @sentry/electron
+          .replace(/"@sentry\/tracing": ".*"/, `"@sentry/tracing": "${JS_VERSION}"`)
+          .replace(/"@sentry\/react": ".*"/, `"@sentry/react": "${JS_VERSION}"`)
+          .replace(/"@sentry\/vue": ".*"/, `"@sentry/vue": "${JS_VERSION}"`);
       }
 
       writeFileSync(path, content);

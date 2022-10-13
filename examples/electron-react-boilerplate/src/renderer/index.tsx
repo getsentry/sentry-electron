@@ -1,8 +1,9 @@
 import { render } from 'react-dom';
 import App from './App';
-import * as Sentry from '@sentry/electron/renderer';
+import { init } from '@sentry/electron/renderer';
+import { init as reactInit } from '@sentry/react';
 
-Sentry.init();
+init({ debug: true }, reactInit);
 
 setTimeout(() => {
   throw new Error('Some renderer error');
