@@ -47,7 +47,7 @@ import { init } from '@sentry/electron/renderer';
 ```
 
 If you are using a framework specific Sentry SDK, you can pass that `init` function as the second parameter in the
-renderer and the two SDKs functionality will be combined:
+renderer and the two SDKs functionalities will be combined:
 ```javascript
 import { init } from '@sentry/electron/renderer';
 import { init as reactInit } from '@sentry/react';
