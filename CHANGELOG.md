@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 4.1.0
+
+- feat: Support passing JavaScript framework specific SDK init as second init parameter (#575)
+- feat: Update JavaScript SDKs to 7.15.0 (#572)
+- fix: Include `sentry_key` in IPC Ping URL so it does not create breadcrumbs (#576)
+
 ## 4.0.3
 
 - fix: `ElectronMainOptions` type should be a union with `NodeOptions`
