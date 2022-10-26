@@ -12,6 +12,7 @@ type BeforeSendResponse = 'send' | 'queue' | 'drop';
 
 export interface ElectronOfflineTransportOptions extends ElectronNetTransportOptions {
   beforeSend?: (request: TransportRequest) => BeforeSendResponse | Promise<BeforeSendResponse>;
+  queuedCountChanged?: (queued: number) => void;
 }
 
 const START_DELAY = 5_000;
@@ -38,14 +39,26 @@ export function makeElectronOfflineTransport(options: ElectronOfflineTransportOp
   const netMakeRequest = createElectronNetRequestExecutor(options.url, options.headers || {});
   const queue: PersistedRequestQueue = new PersistedRequestQueue(join(sentryCachePath, 'queue'));
   let retryDelay: number = START_DELAY;
+  let lastPendingCount = -1;
+
+  function pendingCountChanged(queuedEvents: number): void {
+    if (options.queuedCountChanged && queuedEvents !== lastPendingCount) {
+      lastPendingCount = queuedEvents;
+      options.queuedCountChanged(queuedEvents);
+    }
+  }
 
   function flushQueue(): void {
     queue
       .pop()
       .then((found) => {
         if (found) {
+          // We have pendingCount plus the current request
+          pendingCountChanged(found.pendingCount + 1);
           logger.log('Found a request in the queue');
-          makeRequest(found).catch((e) => logger.error(e));
+          makeRequest(found.request).catch((e) => logger.error(e));
+        } else {
+          pendingCountChanged(0);
         }
       })
       .catch((e) => logger.error(e));
@@ -53,7 +66,7 @@ export function makeElectronOfflineTransport(options: ElectronOfflineTransportOp
 
   async function queueRequest(request: TransportRequest): Promise<TransportMakeRequestResponse> {
     logger.log('Queuing request');
-    await queue.add(request);
+    pendingCountChanged(await queue.add(request));
 
     setTimeout(() => {
       flushQueue();
