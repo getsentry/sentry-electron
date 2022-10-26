@@ -11,8 +11,19 @@ import { PersistedRequestQueue } from './queue';
 type BeforeSendResponse = 'send' | 'queue' | 'drop';
 
 export interface ElectronOfflineTransportOptions extends ElectronNetTransportOptions {
+  /**
+   * Called before attempting to send an event to Sentry.
+   *
+   * Return 'send' to attempt to send the event.
+   * Return 'queue' to queue and persist the event for sending later.
+   * Return 'drop' to drop the event.
+   */
   beforeSend?: (request: TransportRequest) => BeforeSendResponse | Promise<BeforeSendResponse>;
-  queuedCountChanged?: (queued: number) => void;
+
+  /**
+   * Called every time the number of queued requests changes.
+   */
+  queuedCountChanged?: (count: number) => void;
 }
 
 const START_DELAY = 5_000;
