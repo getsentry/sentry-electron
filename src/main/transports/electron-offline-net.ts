@@ -12,7 +12,7 @@ type BeforeSendResponse = 'send' | 'queue' | 'drop';
 
 export interface ElectronOfflineTransportOptions extends ElectronNetTransportOptions {
   /**
-   * The maximum number of days to keep events in the queue.
+   * The maximum number of days to keep an event in the queue.
    */
   maxQueueAgeDays?: number;
 
@@ -22,6 +22,11 @@ export interface ElectronOfflineTransportOptions extends ElectronNetTransportOpt
   maxQueueCount?: number;
 
   /**
+   * Called every time the number of requests in the queue changes.
+   */
+  queuedLengthChanged?: (length: number) => void;
+
+  /**
    * Called before attempting to send an event to Sentry.
    *
    * Return 'send' to attempt to send the event.
@@ -29,11 +34,6 @@ export interface ElectronOfflineTransportOptions extends ElectronNetTransportOpt
    * Return 'drop' to drop the event.
    */
   beforeSend?: (request: TransportRequest) => BeforeSendResponse | Promise<BeforeSendResponse>;
-
-  /**
-   * Called every time the number of queued requests changes.
-   */
-  queuedCountChanged?: (count: number) => void;
 }
 
 const START_DELAY = 5_000;
@@ -63,13 +63,16 @@ export function makeElectronOfflineTransport(options: ElectronOfflineTransportOp
     options.maxQueueAgeDays,
     options.maxQueueCount,
   );
+
+  const beforeSend = options.beforeSend || defaultBeforeSend;
+
   let retryDelay: number = START_DELAY;
   let lastPendingCount = -1;
 
-  function queueCountChanged(queuedEvents: number): void {
-    if (options.queuedCountChanged && queuedEvents !== lastPendingCount) {
+  function queueLengthChanged(queuedEvents: number): void {
+    if (options.queuedLengthChanged && queuedEvents !== lastPendingCount) {
       lastPendingCount = queuedEvents;
-      options.queuedCountChanged(queuedEvents);
+      options.queuedLengthChanged(queuedEvents);
     }
   }
 
@@ -78,12 +81,12 @@ export function makeElectronOfflineTransport(options: ElectronOfflineTransportOp
       .pop()
       .then((found) => {
         if (found) {
-          // We have pendingCount plus the current request
-          queueCountChanged(found.pendingCount + 1);
+          // We have pendingCount plus found.request
+          queueLengthChanged(found.pendingCount + 1);
           logger.log('Found a request in the queue');
           makeRequest(found.request).catch((e) => logger.error(e));
         } else {
-          queueCountChanged(0);
+          queueLengthChanged(0);
         }
       })
       .catch((e) => logger.error(e));
@@ -91,7 +94,7 @@ export function makeElectronOfflineTransport(options: ElectronOfflineTransportOp
 
   async function queueRequest(request: TransportRequest): Promise<TransportMakeRequestResponse> {
     logger.log('Queuing request');
-    queueCountChanged(await queue.add(request));
+    queueLengthChanged(await queue.add(request));
 
     setTimeout(() => {
       flushQueue();
@@ -109,7 +112,7 @@ export function makeElectronOfflineTransport(options: ElectronOfflineTransportOp
   }
 
   async function makeRequest(request: TransportRequest): Promise<TransportMakeRequestResponse> {
-    let action = (options.beforeSend || defaultBeforeSend)(request);
+    let action = beforeSend(request);
 
     if (action instanceof Promise) {
       action = await action;
