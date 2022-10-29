@@ -12,6 +12,16 @@ type BeforeSendResponse = 'send' | 'queue' | 'drop';
 
 export interface ElectronOfflineTransportOptions extends ElectronNetTransportOptions {
   /**
+   * The maximum number of days to keep events in the queue.
+   */
+  maxQueueAgeDays?: number;
+
+  /**
+   * The maximum number of events to keep in the queue.
+   */
+  maxQueueCount?: number;
+
+  /**
    * Called before attempting to send an event to Sentry.
    *
    * Return 'send' to attempt to send the event.
@@ -48,11 +58,15 @@ function isRateLimited(result: TransportMakeRequestResponse): boolean {
  */
 export function makeElectronOfflineTransport(options: ElectronOfflineTransportOptions): Transport {
   const netMakeRequest = createElectronNetRequestExecutor(options.url, options.headers || {});
-  const queue: PersistedRequestQueue = new PersistedRequestQueue(join(sentryCachePath, 'queue'));
+  const queue: PersistedRequestQueue = new PersistedRequestQueue(
+    join(sentryCachePath, 'queue'),
+    options.maxQueueAgeDays,
+    options.maxQueueCount,
+  );
   let retryDelay: number = START_DELAY;
   let lastPendingCount = -1;
 
-  function pendingCountChanged(queuedEvents: number): void {
+  function queueCountChanged(queuedEvents: number): void {
     if (options.queuedCountChanged && queuedEvents !== lastPendingCount) {
       lastPendingCount = queuedEvents;
       options.queuedCountChanged(queuedEvents);
@@ -65,11 +79,11 @@ export function makeElectronOfflineTransport(options: ElectronOfflineTransportOp
       .then((found) => {
         if (found) {
           // We have pendingCount plus the current request
-          pendingCountChanged(found.pendingCount + 1);
+          queueCountChanged(found.pendingCount + 1);
           logger.log('Found a request in the queue');
           makeRequest(found.request).catch((e) => logger.error(e));
         } else {
-          pendingCountChanged(0);
+          queueCountChanged(0);
         }
       })
       .catch((e) => logger.error(e));
@@ -77,7 +91,7 @@ export function makeElectronOfflineTransport(options: ElectronOfflineTransportOp
 
   async function queueRequest(request: TransportRequest): Promise<TransportMakeRequestResponse> {
     logger.log('Queuing request');
-    pendingCountChanged(await queue.add(request));
+    queueCountChanged(await queue.add(request));
 
     setTimeout(() => {
       flushQueue();
