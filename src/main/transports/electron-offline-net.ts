@@ -67,11 +67,11 @@ export function makeElectronOfflineTransport(options: ElectronOfflineTransportOp
   const beforeSend = options.beforeSend || defaultBeforeSend;
 
   let retryDelay: number = START_DELAY;
-  let lastPendingCount = -1;
+  let lastQueueLength = -1;
 
   function queueLengthChanged(queuedEvents: number): void {
-    if (options.queuedLengthChanged && queuedEvents !== lastPendingCount) {
-      lastPendingCount = queuedEvents;
+    if (options.queuedLengthChanged && queuedEvents !== lastQueueLength) {
+      lastQueueLength = queuedEvents;
       options.queuedLengthChanged(queuedEvents);
     }
   }
