@@ -28,8 +28,8 @@
     }
   },
   "devDependencies": {
-    "@electron-forge/cli": "^6.0.0-beta.63",
-    "@electron-forge/plugin-webpack": "^6.0.0-beta.63",
+    "@electron-forge/cli": "6.0.0-beta.63",
+    "@electron-forge/plugin-webpack": "6.0.0-beta.63",
     "@vercel/webpack-asset-relocator-loader": "1.6.0",
     "electron": "15.2.0",
     "node-loader": "^2.0.0"
