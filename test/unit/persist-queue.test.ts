@@ -32,12 +32,27 @@ describe('PersistedRequestQueue', () => {
     const queue2 = new PersistedRequestQueue(tempDir.name);
     const popped = await queue2.pop();
     expect(popped).to.not.be.undefined;
-    expect(popped?.date).to.be.instanceOf(Date);
-    expect(popped?.body).to.not.be.undefined;
-    expect(popped?.body.toString()).to.equal('just a string');
+    expect(popped?.request?.date).to.be.instanceOf(Date);
+    expect(popped?.request?.body).to.not.be.undefined;
+    expect(popped?.request?.body.toString()).to.equal('just a string');
 
     await delay(1_000);
     await expectFilesInDirectory(tempDir.name, 1);
+  });
+
+  it('Correctly returns pending request count', async () => {
+    const queue = new PersistedRequestQueue(tempDir.name);
+
+    const r1 = await queue.add({ body: 'just a string' });
+    expect(r1).to.equal(1);
+    const r2 = await queue.add({ body: 'just another string' });
+    expect(r2).to.equal(2);
+
+    const r3 = await queue.pop();
+    expect(r3?.pendingCount).to.equal(1);
+
+    const r4 = await queue.pop();
+    expect(r4?.pendingCount).to.equal(0);
   });
 
   it('Drops requests when full', async () => {
@@ -55,9 +70,9 @@ describe('PersistedRequestQueue', () => {
     await expectFilesInDirectory(tempDir.name, 6);
 
     const popped: QueuedTransportRequest[] = [];
-    let pop: QueuedTransportRequest | undefined;
+    let pop: { request: QueuedTransportRequest } | undefined;
     while ((pop = await queue.pop())) {
-      popped.push(pop);
+      popped.push(pop.request);
     }
 
     expect(popped.length).to.equal(5);

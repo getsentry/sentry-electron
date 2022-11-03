@@ -15,6 +15,11 @@ interface PersistedRequest {
   type?: unknown;
 }
 
+interface PopResult {
+  request: QueuedTransportRequest;
+  pendingCount: number;
+}
+
 export interface QueuedTransportRequest extends TransportRequest {
   date?: Date;
 }
@@ -34,8 +39,9 @@ export class PersistedRequestQueue {
   ) {}
 
   /** Adds a request to the queue */
-  public async add(request: QueuedTransportRequest): Promise<void> {
+  public async add(request: QueuedTransportRequest): Promise<number> {
     const bodyPath = uuid4();
+    let queuedEvents = 0;
 
     await this._queue.update((queue) => {
       queue.push({
@@ -49,6 +55,8 @@ export class PersistedRequestQueue {
           void this._removeBody(removed.bodyPath);
         }
       }
+
+      queuedEvents = queue.length;
       return queue;
     });
 
@@ -57,11 +65,14 @@ export class PersistedRequestQueue {
     } catch (_) {
       //
     }
+
+    return queuedEvents;
   }
 
   /** Pops the oldest event from the queue */
-  public async pop(): Promise<QueuedTransportRequest | undefined> {
+  public async pop(): Promise<PopResult | undefined> {
     let found: PersistedRequest | undefined;
+    let pendingCount = 0;
     const cutOff = Date.now() - MILLISECONDS_PER_DAY * this._maxAgeDays;
 
     await this._queue.update((queue) => {
@@ -72,6 +83,7 @@ export class PersistedRequestQueue {
           void this._removeBody(found.bodyPath);
           found = undefined;
         } else {
+          pendingCount = queue.length;
           break;
         }
       }
@@ -84,8 +96,11 @@ export class PersistedRequestQueue {
         void this._removeBody(found.bodyPath);
 
         return {
-          body,
-          date: found.date || new Date(),
+          request: {
+            body,
+            date: found.date || new Date(),
+          },
+          pendingCount,
         };
       } catch (e) {
         logger.warn('Filed to read queued request body', e);

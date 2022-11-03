@@ -11,6 +11,28 @@ import { PersistedRequestQueue } from './queue';
 type BeforeSendResponse = 'send' | 'queue' | 'drop';
 
 export interface ElectronOfflineTransportOptions extends ElectronNetTransportOptions {
+  /**
+   * The maximum number of days to keep an event in the queue.
+   */
+  maxQueueAgeDays?: number;
+
+  /**
+   * The maximum number of events to keep in the queue.
+   */
+  maxQueueCount?: number;
+
+  /**
+   * Called every time the number of requests in the queue changes.
+   */
+  queuedLengthChanged?: (length: number) => void;
+
+  /**
+   * Called before attempting to send an event to Sentry.
+   *
+   * Return 'send' to attempt to send the event.
+   * Return 'queue' to queue and persist the event for sending later.
+   * Return 'drop' to drop the event.
+   */
   beforeSend?: (request: TransportRequest) => BeforeSendResponse | Promise<BeforeSendResponse>;
 }
 
@@ -36,16 +58,35 @@ function isRateLimited(result: TransportMakeRequestResponse): boolean {
  */
 export function makeElectronOfflineTransport(options: ElectronOfflineTransportOptions): Transport {
   const netMakeRequest = createElectronNetRequestExecutor(options.url, options.headers || {});
-  const queue: PersistedRequestQueue = new PersistedRequestQueue(join(sentryCachePath, 'queue'));
+  const queue: PersistedRequestQueue = new PersistedRequestQueue(
+    join(sentryCachePath, 'queue'),
+    options.maxQueueAgeDays,
+    options.maxQueueCount,
+  );
+
+  const beforeSend = options.beforeSend || defaultBeforeSend;
+
   let retryDelay: number = START_DELAY;
+  let lastQueueLength = -1;
+
+  function queueLengthChanged(queuedEvents: number): void {
+    if (options.queuedLengthChanged && queuedEvents !== lastQueueLength) {
+      lastQueueLength = queuedEvents;
+      options.queuedLengthChanged(queuedEvents);
+    }
+  }
 
   function flushQueue(): void {
     queue
       .pop()
       .then((found) => {
         if (found) {
+          // We have pendingCount plus found.request
+          queueLengthChanged(found.pendingCount + 1);
           logger.log('Found a request in the queue');
-          makeRequest(found).catch((e) => logger.error(e));
+          makeRequest(found.request).catch((e) => logger.error(e));
+        } else {
+          queueLengthChanged(0);
         }
       })
       .catch((e) => logger.error(e));
@@ -53,7 +94,7 @@ export function makeElectronOfflineTransport(options: ElectronOfflineTransportOp
 
   async function queueRequest(request: TransportRequest): Promise<TransportMakeRequestResponse> {
     logger.log('Queuing request');
-    await queue.add(request);
+    queueLengthChanged(await queue.add(request));
 
     setTimeout(() => {
       flushQueue();
@@ -71,7 +112,7 @@ export function makeElectronOfflineTransport(options: ElectronOfflineTransportOp
   }
 
   async function makeRequest(request: TransportRequest): Promise<TransportMakeRequestResponse> {
-    let action = (options.beforeSend || defaultBeforeSend)(request);
+    let action = beforeSend(request);
 
     if (action instanceof Promise) {
       action = await action;
