@@ -20,7 +20,7 @@ export const defaultIntegrations = [...defaultBrowserIntegrations, new ScopeToMa
  */
 export function init<O extends BrowserOptions>(
   options: BrowserOptions & O = {} as BrowserOptions & O,
-  originalInit: (options: O) => void = browserInit,
+  originalInit: (if_you_get_a_typescript_error_ensure_sdks_use_version_v7_16_0: O) => void = browserInit,
 ): void {
   ensureProcess('renderer');
 
