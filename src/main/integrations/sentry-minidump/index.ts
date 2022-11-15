@@ -6,7 +6,7 @@ import { app, crashReporter } from 'electron';
 
 import { mergeEvents } from '../../../common';
 import { getEventDefaults } from '../../context';
-import { CRASH_REASONS, onChildProcessGone, onRendererProcessGone } from '../../electron-normalize';
+import { EXIT_REASONS, onChildProcessGone, onRendererProcessGone } from '../../electron-normalize';
 import { sentryCachePath } from '../../fs';
 import { getRendererProperties, trackRendererProperties } from '../../renderers';
 import { ElectronMainOptions } from '../../sdk';
@@ -58,8 +58,8 @@ export class SentryMinidump implements Integration {
 
     this._minidumpLoader = getMinidumpLoader();
 
-    onRendererProcessGone(CRASH_REASONS, (contents, details) => this._sendRendererCrash(options, contents, details));
-    onChildProcessGone(CRASH_REASONS, (details) => this._sendChildProcessCrash(options, details));
+    onRendererProcessGone(EXIT_REASONS, (contents, details) => this._sendRendererCrash(options, contents, details));
+    onChildProcessGone(EXIT_REASONS, (details) => this._sendChildProcessCrash(options, details));
 
     // Start to submit recent minidump crashes. This will load breadcrumbs and
     // context information that was cached on disk prior to the crash.
@@ -121,6 +121,7 @@ export class SentryMinidump implements Integration {
       tags: {
         'event.environment': 'native',
         'event.process': crashedProcess,
+        'exit.reason': details.reason,
         event_type: 'native',
       },
     });
@@ -153,6 +154,7 @@ export class SentryMinidump implements Integration {
       tags: {
         'event.environment': 'native',
         'event.process': details.type,
+        'exit.reason': details.reason,
         event_type: 'native',
       },
     });
