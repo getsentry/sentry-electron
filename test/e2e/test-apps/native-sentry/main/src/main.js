@@ -1,13 +1,17 @@
 const path = require('path');
 
 const { app, BrowserWindow } = require('electron');
-const { init } = require('@sentry/electron');
+const { init, configureScope } = require('@sentry/electron');
 
 init({
   dsn: '__DSN__',
   debug: true,
   autoSessionTracking: false,
   onFatalError: () => {},
+});
+
+configureScope((scope) => {
+  scope.setTag('app-run', process.env.APP_FIRST_RUN ? 'first' : 'second');
 });
 
 app.on('ready', () => {
