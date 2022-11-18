@@ -94,6 +94,7 @@ function crashpadMinidumpLoader(): MinidumpLoader {
     await deleteCrashpadMetadataFile(crashesDirectory).catch((error) => logger.error(error));
 
     const dumpDirectory = join(crashesDirectory, crashpadSubDirectory);
+    const pendingDirectory = join(crashesDirectory, 'pending');
 
     return (await readDirAsync(dumpDirectory))
       .filter((file) => file.endsWith('.dmp'))
@@ -104,7 +105,19 @@ function crashpadMinidumpLoader(): MinidumpLoader {
           path,
           load: () => readFileAsync(path),
         };
-      });
+      })
+      .concat(
+        (await readDirAsync(pendingDirectory))
+          .filter((file) => file.endsWith('.dmp'))
+          .map((file) => {
+            const path = join(pendingDirectory, file);
+
+            return {
+              path,
+              load: () => readFileAsync(path),
+            };
+          }),
+      );
   });
 }
 
