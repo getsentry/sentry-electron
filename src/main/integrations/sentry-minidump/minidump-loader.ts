@@ -86,6 +86,14 @@ async function deleteCrashpadMetadataFile(crashesDirectory: string, waitMs: numb
   }
 }
 
+async function readDirAsyncIfExists(path: string): Promise<string[]> {
+  try {
+    return await readDirAsync(path);
+  } catch (_) {
+    return [];
+  }
+}
+
 function crashpadMinidumpLoader(): MinidumpLoader {
   const crashesDirectory: string = getCrashesDirectory();
   const crashpadSubDirectory = process.platform === 'win32' ? 'reports' : 'completed';
@@ -96,7 +104,7 @@ function crashpadMinidumpLoader(): MinidumpLoader {
     const dumpDirectory = join(crashesDirectory, crashpadSubDirectory);
     const pendingDirectory = join(crashesDirectory, 'pending');
 
-    return (await readDirAsync(dumpDirectory))
+    return (await readDirAsyncIfExists(dumpDirectory))
       .filter((file) => file.endsWith('.dmp'))
       .map((file) => {
         const path = join(dumpDirectory, file);
@@ -107,7 +115,7 @@ function crashpadMinidumpLoader(): MinidumpLoader {
         };
       })
       .concat(
-        (await readDirAsync(pendingDirectory))
+        (await readDirAsyncIfExists(pendingDirectory))
           .filter((file) => file.endsWith('.dmp'))
           .map((file) => {
             const path = join(pendingDirectory, file);

@@ -51,12 +51,6 @@
       "runtime": {
         "name": "Electron",
         "version": "{{version}}"
-      },
-      "electron": {
-        "crashed_url": "unknown",
-        "details": {
-          "reason": "killed"
-        }
       }
     },
     "release": "native-sentry-renderer-force-crash@1.0.0",
@@ -71,8 +65,7 @@
       "event.environment": "native",
       "event.origin": "electron",
       "event.process": "renderer",
-      "event_type": "native",
-      "exit.reason": "killed"
+      "event_type": "native"
     }
   },
   "attachments": [
