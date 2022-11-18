@@ -1,3 +1,4 @@
 description: Native Renderer forcefullyCrashRenderer
 category: Native (Sentry Uploader)
 command: yarn
+condition: usesCrashpad && version.major >= 12
