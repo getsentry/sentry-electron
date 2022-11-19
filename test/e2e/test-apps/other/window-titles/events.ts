@@ -8,7 +8,7 @@ export async function execute(events: TestServerEvent<Event>[]): Promise<void> {
 
   const event = events[0];
 
-  expect(event.data.breadcrumbs?.length).to.be.greaterThan(7);
+  expect(event.data.breadcrumbs?.length).to.be.greaterThan(5);
 
   for (const breadcrumb of event.data.breadcrumbs || []) {
     expect(breadcrumb?.data?.title).to.be.undefined;
