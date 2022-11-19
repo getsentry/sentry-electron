@@ -1,3 +1,4 @@
+import { Event } from '@sentry/types';
 import { expect } from 'chai';
 import { spawnSync } from 'child_process';
 import { mkdirSync, writeFileSync } from 'fs';
@@ -6,7 +7,7 @@ import { dirname, join } from 'path';
 import { SDK_VERSION } from '../../../src/main/version';
 import { delay } from '../../helpers';
 import { TestContext } from '../context';
-import { ERROR_ID, RATE_LIMIT_ID, SERVER_PORT, TestServer } from '../server';
+import { ERROR_ID, RATE_LIMIT_ID, SERVER_PORT, TestServer, TestServerEvent } from '../server';
 import { createLogger, getTestLog, walkSync } from '../utils';
 import { evaluateCondition } from './eval';
 import { eventIsSession, normalize } from './normalize';
@@ -16,6 +17,8 @@ export * from './normalize';
 
 const SENTRY_KEY = '37f8a2ee37c0409d8970bc7559c7c7e4';
 const JS_VERSION = require('../../../package.json').dependencies['@sentry/core'];
+
+type CustomScript = { execute(events: TestServerEvent<Event>[]): Promise<void> };
 
 const log = createLogger('Recipe Runner');
 
@@ -175,9 +178,11 @@ export class RecipeRunner {
       await delay(2_000);
     }
 
-    await context.waitForEvents(testServer, expectedEvents.length);
+    const totalEvents = expectedEvents.length + (this._recipe.customScriptPath ? 1 : 0);
 
-    if (expectedEvents.length !== testServer.events.length) {
+    await context.waitForEvents(testServer, totalEvents);
+
+    if (totalEvents !== testServer.events.length) {
       throw new Error(`Expected ${expectedEvents.length} events but server has ${testServer.events.length} events`);
     }
 
@@ -190,6 +195,13 @@ export class RecipeRunner {
 
       const log = getTestLog().join(' ');
       expect(log).to.include(this._recipe.metadata.expectedError);
+    }
+
+    if (this._recipe.customScriptPath) {
+      log('Loading custom script', this._recipe.customScriptPath);
+      const script: CustomScript = await import(this._recipe.customScriptPath);
+      await script.execute(testServer.events as TestServerEvent<Event>[]);
+      return;
     }
 
     for (const event of testServer.events) {

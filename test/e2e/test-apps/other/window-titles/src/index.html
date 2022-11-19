@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <script>
+      const { init } = require('@sentry/electron');
+
+      init({
+        debug: true,
+      });
+
+      setInterval(() => {
+        document.title = `This is the new page title: ${Math.random()}`;
+      }, 10);
+    </script>
+  </body>
+</html>
