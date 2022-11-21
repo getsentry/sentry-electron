@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 4.1.2
+
+- fix: Ensure the scope writes do not beat the initial async scope read (#593)
+- fix: Also check crashpad pending directory on macOS when renderer process exits (#592)
+
 ## 4.1.1
 
 - feat: Add additional options and queue status callback to offline transport (#580)
