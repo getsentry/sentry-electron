@@ -65,7 +65,8 @@
       "event.environment": "native",
       "event.origin": "electron",
       "event.process": "browser",
-      "event_type": "native"
+      "event_type": "native",
+      "app-run": "first"
     }
   },
   "attachments": [ { "attachment_type": "event.minidump" } ]

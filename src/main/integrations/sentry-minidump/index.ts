@@ -172,14 +172,18 @@ export class SentryMinidump implements Integration {
   private _setupScopeListener(): void {
     const hubScope = getCurrentHub().getScope();
     if (hubScope) {
-      hubScope.addScopeListener(async (updatedScope) => {
+      hubScope.addScopeListener((updatedScope) => {
         const scope = Scope.clone(updatedScope);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         (scope as any)._eventProcessors = [];
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         (scope as any)._scopeListeners = [];
 
-        await this._scopeStore?.set(scope);
+        // Since the initial scope read is async, we need to ensure that any writes do not beat that
+        // https://github.com/getsentry/sentry-electron/issues/585
+        setImmediate(() => {
+          void this._scopeStore?.set(scope);
+        });
       });
     }
   }
