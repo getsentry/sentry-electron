@@ -112,7 +112,8 @@ function crashpadMinidumpLoader(): MinidumpLoader {
   return createMinidumpLoader(async () => {
     await deleteCrashpadMetadataFile(crashesDirectory).catch((error) => logger.error(error));
 
-    return (await readDirsAsync(dumpDirectories))
+    const files = await readDirsAsync(dumpDirectories);
+    return files
       .filter((file) => file.endsWith('.dmp'))
       .map((path) => {
         return {
