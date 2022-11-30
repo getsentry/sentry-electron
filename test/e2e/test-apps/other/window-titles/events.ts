@@ -10,7 +10,15 @@ export async function execute(events: TestServerEvent<Event>[]): Promise<void> {
 
   expect(event.data.breadcrumbs?.length).to.be.greaterThan(5);
 
+  let withData = 0;
+
   for (const breadcrumb of event.data.breadcrumbs || []) {
+    if (breadcrumb?.data?.id) {
+      withData += 1;
+    }
+
     expect(breadcrumb?.data?.title).to.be.undefined;
   }
+
+  expect(withData).to.be.greaterThanOrEqual(2);
 }
