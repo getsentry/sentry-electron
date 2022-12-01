@@ -1,6 +1,6 @@
 import { Event, Session } from '@sentry/types';
-import { readFileSync } from 'fs';
-import { dirname, sep } from 'path';
+import { readdirSync, readFileSync } from 'fs';
+import { dirname, join, sep } from 'path';
 import YAML from 'yaml';
 
 import { TestServerEvent } from '../server';
@@ -25,6 +25,7 @@ export interface TestRecipe {
   metadata: TestMetadata;
   files: Record<string, string>;
   expectedEvents: ConditionalTestServerEvent[];
+  customScriptPath?: string;
 }
 
 function isEventOrSession(path: string): boolean {
@@ -35,6 +36,12 @@ function getEventsAndSessions(rootDir: string): ConditionalTestServerEvent[] {
   return Array.from(walkSync(rootDir))
     .filter((path) => isEventOrSession(path))
     .map((path) => JSON.parse(readFileSync(path, { encoding: 'utf-8' })) as ConditionalTestServerEvent);
+}
+
+function getCustomScript(rootDir: string): string | undefined {
+  return readdirSync(rootDir)
+    .map((path) => join(rootDir, path))
+    .find((path) => path.endsWith('.ts'));
 }
 
 function getFiles(rootDir: string): Record<string, string> {
@@ -56,5 +63,6 @@ export function parseRecipe(ymlPath: string): TestRecipe {
     metadata: YAML.parse(readFileSync(ymlPath, { encoding: 'utf8' })),
     files: getFiles(rootPath),
     expectedEvents: getEventsAndSessions(rootPath),
+    customScriptPath: getCustomScript(rootPath),
   };
 }
