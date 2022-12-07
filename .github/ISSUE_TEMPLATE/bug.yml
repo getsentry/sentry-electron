@@ -1,0 +1,83 @@
+name: 🐞 Bug Report
+description: Tell us about something that's not working the way we (probably) intend.
+labels: ["Type: Bug"]
+body:
+  - type: checkboxes
+    attributes:
+      label: Is there an existing issue for this?
+      description: Please search to see if an issue already exists for the bug you encountered.
+      options:
+        - label: I have checked for existing issues https://github.com/getsentry/sentry-javascript/issues
+          required: true
+        - label: I have reviewed the documentation https://docs.sentry.io/
+          required: true
+        - label: I am using the latest SDK release https://github.com/getsentry/sentry-javascript/releases
+          required: true
+  - type: dropdown
+    id: type
+    attributes:
+      label: How do you use Sentry?
+      options:
+        - Sentry Saas (sentry.io)
+        - Self-hosted/on-premise
+    validations:
+      required: true
+  - type: input
+    id: sdk-version
+    attributes:
+      label: Electron SDK Version
+      description: What version of the Electron SDK are you using?
+      placeholder: ex. 4.1.2
+    validations:
+      required: true
+  - type: input
+    id: electron-version
+    attributes:
+      label: Electron Version
+      description: What version of the Electron are you using?
+      placeholder: ex. 22.0.0
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: What platform are you using?
+      options:
+        - "Linux"
+        - "MacOS"
+        - "Windows"
+        - "Other"
+  - type: input
+    id: link-to-sentry
+    attributes:
+      label: Link to Sentry event
+      description: If applicable, provide a link to the affected event from your Sentry account. The event will only be viewable by Sentry staff.
+      placeholder: https://sentry.io/organizations/<org-slug>/issues/<issue-id>/events/<event-id>/?project=<project-id>
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to Reproduce
+      description: How can we see what you're seeing? Specific is terrific.
+      placeholder: |-
+        1. What
+        2. you
+        3. did.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Result
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Result
+      description: Logs? Screenshots? Yes, please.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |-
+        ## Thanks 🙏
