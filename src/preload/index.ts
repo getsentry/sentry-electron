@@ -16,6 +16,7 @@ if (window.__SENTRY_IPC__) {
   const ipcObject = {
     sendScope: (scopeJson: string) => ipcRenderer.send(IPCChannel.SCOPE, scopeJson),
     sendEvent: (eventJson: string) => ipcRenderer.send(IPCChannel.EVENT, eventJson),
+    sendEnvelope: (envelope: Uint8Array | string) => ipcRenderer.send(IPCChannel.ENVELOPE, envelope),
   };
 
   // eslint-disable-next-line no-restricted-globals

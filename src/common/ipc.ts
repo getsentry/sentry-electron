@@ -5,13 +5,16 @@ export enum IPCChannel {
   PING = 'sentry-electron.ping',
   /** IPC to send a captured event to Sentry. */
   EVENT = 'sentry-electron.event',
-  /** IPC to capture scope globally. */
+  /** IPC to pass scope changes to main process. */
   SCOPE = 'sentry-electron.scope',
+  /** IPC to pass envelopes to the main process. */
+  ENVELOPE = 'sentry-electron.envelope',
 }
 
 export interface IPCInterface {
   sendScope: (scope: string) => void;
   sendEvent: (event: string) => void;
+  sendEnvelope: (evn: Uint8Array | string) => void;
 }
 
 /**

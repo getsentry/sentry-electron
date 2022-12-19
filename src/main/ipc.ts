@@ -1,16 +1,36 @@
-import { captureEvent, configureScope, Scope } from '@sentry/core';
-import { Event } from '@sentry/types';
+import { captureEvent, configureScope, getCurrentHub, Scope } from '@sentry/core';
+import { Attachment, Event } from '@sentry/types';
 import { logger, SentryError } from '@sentry/utils';
 import { app, ipcMain, protocol, WebContents } from 'electron';
 
 import { IPCChannel, IPCMode, mergeEvents, PROTOCOL_SCHEME } from '../common';
 import { supportsFullProtocol, whenAppReady } from './electron-normalize';
+import { getEventOrTransaction, parseEnvelope } from './envelope';
 import { ElectronMainOptionsInternal } from './sdk';
 
-/**
- * Handle events from the renderer processes
- */
-export function handleEvent(options: ElectronMainOptionsInternal, jsonEvent: string, contents?: WebContents): void {
+function captureEventFromRenderer(
+  options: ElectronMainOptionsInternal,
+  event: Event,
+  attachments: Attachment[],
+  contents?: WebContents,
+): void {
+  const process = contents ? options?.getRendererName?.(contents) || 'renderer' : 'renderer';
+
+  // Ensure breadcrumbs are empty as they sent via scope updates
+  event.breadcrumbs = event.breadcrumbs || [];
+
+  // Remove the environment as it defaults to 'production' and overwrites the main process environment
+  delete event.environment;
+
+  // Remove the SDK info as we want the Electron SDK to be the one reporting the event
+  delete event.sdk?.name;
+  delete event.sdk?.version;
+  delete event.sdk?.packages;
+
+  captureEvent(mergeEvents(event, { tags: { 'event.process': process } }), { attachments });
+}
+
+function handleEvent(options: ElectronMainOptionsInternal, jsonEvent: string, contents?: WebContents): void {
   let event: Event;
   try {
     event = JSON.parse(jsonEvent) as Event;
@@ -19,9 +39,20 @@ export function handleEvent(options: ElectronMainOptionsInternal, jsonEvent: str
     return;
   }
 
-  const process = contents ? options?.getRendererName?.(contents) || 'renderer' : 'renderer';
+  captureEventFromRenderer(options, event, [], contents);
+}
 
-  captureEvent(mergeEvents(event, { tags: { 'event.process': process } }));
+function handleEnvelope(options: ElectronMainOptionsInternal, env: Uint8Array | string, contents?: WebContents): void {
+  const envelope = parseEnvelope(env);
+
+  const eventAndAttachments = getEventOrTransaction(envelope);
+  if (eventAndAttachments) {
+    const [event, attachments] = eventAndAttachments;
+    captureEventFromRenderer(options, event, attachments, contents);
+  } else {
+    // Pass other types of envelope straight to the transport
+    void getCurrentHub().getClient()?.getTransport()?.send(envelope);
+  }
 }
 
 /** Is object defined and has keys */
@@ -32,7 +63,7 @@ function hasKeys(obj: any): boolean {
 /**
  * Handle scope updates from renderer processes
  */
-export function handleScope(options: ElectronMainOptionsInternal, jsonScope: string): void {
+function handleScope(options: ElectronMainOptionsInternal, jsonScope: string): void {
   let rendererScope: Scope;
   try {
     rendererScope = JSON.parse(jsonScope) as Scope;
@@ -85,12 +116,14 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
     .then(() => {
       for (const sesh of options.getSessions()) {
         sesh.protocol.registerStringProtocol(PROTOCOL_SCHEME, (request, callback) => {
-          const data = request.uploadData?.[0]?.bytes.toString();
+          const data = request.uploadData?.[0]?.bytes;
 
           if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.EVENT}`) && data) {
-            handleEvent(options, data);
+            handleEvent(options, data.toString());
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.SCOPE}`) && data) {
-            handleScope(options, data);
+            handleScope(options, data.toString());
+          } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.ENVELOPE}`) && data) {
+            handleEnvelope(options, data);
           }
 
           callback('');
@@ -106,6 +139,7 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
 function configureClassic(options: ElectronMainOptionsInternal): void {
   ipcMain.on(IPCChannel.EVENT, ({ sender }, jsonEvent: string) => handleEvent(options, jsonEvent, sender));
   ipcMain.on(IPCChannel.SCOPE, (_, jsonScope: string) => handleScope(options, jsonScope));
+  ipcMain.on(IPCChannel.ENVELOPE, ({ sender }, env: Uint8Array | string) => handleEnvelope(options, env, sender));
 }
 
 /** Sets up communication channels with the renderer */

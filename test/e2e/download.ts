@@ -1,7 +1,17 @@
 import { downloadArtifact as electronDownload } from '@electron/get';
 import electronExtract = require('extract-zip');
+import { spawnSync } from 'child_process';
 import { existsSync } from 'fs';
 import { join } from 'path';
+
+function isMacArm64(): boolean {
+  if (process.platform !== 'darwin') {
+    return false;
+  }
+
+  const output = spawnSync('sysctl', ['hw.cputype']).output?.toString();
+  return output?.includes('16777228');
+}
 
 /** Gets the users home directory */
 function getHomDir(): string {
@@ -29,11 +39,14 @@ function getExecutablePath(): string {
  * @returns Path to the Electron executable
  */
 export async function downloadElectron(version: string): Promise<string> {
+  // We override the arch on Mac arm64 when we're running on node x64 because Crashpad doesn't work on x64 Electron
+  // running in Rosetta...
+  const arch = isMacArm64() ? 'arm64' : 'x64';
   const cacheDir = join(process.env.ELECTRON_CACHE_DIR ?? getHomDir(), '.cache');
-  const dir = join(cacheDir, `${version}-x64`);
+  const dir = join(cacheDir, `${version}-${arch}`);
 
   if (!existsSync(dir)) {
-    const zipPath = await electronDownload({ version, arch: 'x64', artifactName: 'electron' });
+    const zipPath = await electronDownload({ version, arch, artifactName: 'electron' });
     await electronExtract(zipPath, { dir });
   }
 

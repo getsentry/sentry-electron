@@ -23,13 +23,18 @@ function getImplementation(): IPCInterface {
   // We include sentry_key in the URL so these dont end up in fetch breadcrumbs
   // https://github.com/getsentry/sentry-javascript/blob/a3f70d8869121183bec037571a3ee78efaf26b0b/packages/browser/src/integrations/breadcrumbs.ts#L240
   return {
-    sendScope: (scope) => {
-      fetch(`${PROTOCOL_SCHEME}://${IPCChannel.SCOPE}/sentry_key`, { method: 'POST', body: scope }).catch(() => {
+    sendScope: (body) => {
+      fetch(`${PROTOCOL_SCHEME}://${IPCChannel.SCOPE}/sentry_key`, { method: 'POST', body }).catch(() => {
         // ignore
       });
     },
-    sendEvent: (event) => {
-      fetch(`${PROTOCOL_SCHEME}://${IPCChannel.EVENT}/sentry_key`, { method: 'POST', body: event }).catch(() => {
+    sendEvent: (body) => {
+      fetch(`${PROTOCOL_SCHEME}://${IPCChannel.EVENT}/sentry_key`, { method: 'POST', body }).catch(() => {
+        // ignore
+      });
+    },
+    sendEnvelope: (body) => {
+      fetch(`${PROTOCOL_SCHEME}://${IPCChannel.ENVELOPE}/sentry_key`, { method: 'POST', body }).catch(() => {
         // ignore
       });
     },
