@@ -1,11 +1,11 @@
 import { captureEvent, configureScope, getCurrentHub, Scope } from '@sentry/core';
-import { Attachment, Event } from '@sentry/types';
-import { logger, SentryError } from '@sentry/utils';
+import { Attachment, AttachmentItem, Envelope, Event, EventItem } from '@sentry/types';
+import { forEachEnvelopeItem, logger, parseEnvelope, SentryError } from '@sentry/utils';
 import { app, ipcMain, protocol, WebContents } from 'electron';
+import { TextDecoder, TextEncoder } from 'util';
 
 import { IPCChannel, IPCMode, mergeEvents, PROTOCOL_SCHEME } from '../common';
 import { supportsFullProtocol, whenAppReady } from './electron-normalize';
-import { getEventOrTransaction, parseEnvelope } from './envelope';
 import { ElectronMainOptionsInternal } from './sdk';
 
 function captureEventFromRenderer(
@@ -42,10 +42,32 @@ function handleEvent(options: ElectronMainOptionsInternal, jsonEvent: string, co
   captureEventFromRenderer(options, event, [], contents);
 }
 
-function handleEnvelope(options: ElectronMainOptionsInternal, env: Uint8Array | string, contents?: WebContents): void {
-  const envelope = parseEnvelope(env);
+function eventOrTransactionFromEnvelope(envelope: Envelope): [Event, Attachment[]] | undefined {
+  let eventOrTransaction: Event | undefined;
+  const attachments: Attachment[] = [];
 
-  const eventAndAttachments = getEventOrTransaction(envelope);
+  forEachEnvelopeItem(envelope, (item, type) => {
+    if (type === 'event' || type === 'transaction') {
+      eventOrTransaction = Array.isArray(item) ? (item as EventItem)[1] : undefined;
+    } else if (type === 'attachment') {
+      const [headers, bin] = item as AttachmentItem;
+
+      attachments.push({
+        filename: headers.filename,
+        attachmentType: headers.attachment_type,
+        contentType: headers.content_type,
+        data: bin,
+      });
+    }
+  });
+
+  return eventOrTransaction ? [eventOrTransaction, attachments] : undefined;
+}
+
+function handleEnvelope(options: ElectronMainOptionsInternal, env: Uint8Array | string, contents?: WebContents): void {
+  const envelope = parseEnvelope(env, new TextEncoder(), new TextDecoder());
+
+  const eventAndAttachments = eventOrTransactionFromEnvelope(envelope);
   if (eventAndAttachments) {
     const [event, attachments] = eventAndAttachments;
     captureEventFromRenderer(options, event, attachments, contents);

@@ -1,14 +1,13 @@
 import { Event, Session, Transaction } from '@sentry/types';
-import { forEachEnvelopeItem } from '@sentry/utils';
+import { forEachEnvelopeItem, parseEnvelope } from '@sentry/utils';
 import { Server } from 'http';
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
 import Router from 'koa-tree-router';
 import { Readable } from 'stream';
-import { inspect } from 'util';
+import { inspect, TextDecoder, TextEncoder } from 'util';
 import { gunzipSync } from 'zlib';
 
-import { parseEnvelope } from '../../../src/main/envelope';
 import { eventIsSession } from '../recipe';
 import { createLogger } from '../utils';
 import { parseMultipart, sentryEventFromFormFields } from './multi-part';
@@ -113,7 +112,7 @@ export class TestServer {
         return;
       }
 
-      const envelope = parseEnvelope(await getRequestBody(ctx));
+      const envelope = parseEnvelope(await getRequestBody(ctx), new TextEncoder(), new TextDecoder());
 
       let data: Event | Transaction | Session | undefined;
       const attachments: Attachment[] = [];
