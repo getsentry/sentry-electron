@@ -42,13 +42,13 @@ function handleEvent(options: ElectronMainOptionsInternal, jsonEvent: string, co
   captureEventFromRenderer(options, event, [], contents);
 }
 
-function eventOrTransactionFromEnvelope(envelope: Envelope): [Event, Attachment[]] | undefined {
-  let eventOrTransaction: Event | undefined;
+function eventFromEnvelope(envelope: Envelope): [Event, Attachment[]] | undefined {
+  let event: Event | undefined;
   const attachments: Attachment[] = [];
 
   forEachEnvelopeItem(envelope, (item, type) => {
     if (type === 'event' || type === 'transaction') {
-      eventOrTransaction = Array.isArray(item) ? (item as EventItem)[1] : undefined;
+      event = Array.isArray(item) ? (item as EventItem)[1] : undefined;
     } else if (type === 'attachment') {
       const [headers, bin] = item as AttachmentItem;
 
@@ -61,13 +61,13 @@ function eventOrTransactionFromEnvelope(envelope: Envelope): [Event, Attachment[
     }
   });
 
-  return eventOrTransaction ? [eventOrTransaction, attachments] : undefined;
+  return event ? [event, attachments] : undefined;
 }
 
 function handleEnvelope(options: ElectronMainOptionsInternal, env: Uint8Array | string, contents?: WebContents): void {
   const envelope = parseEnvelope(env, new TextEncoder(), new TextDecoder());
 
-  const eventAndAttachments = eventOrTransactionFromEnvelope(envelope);
+  const eventAndAttachments = eventFromEnvelope(envelope);
   if (eventAndAttachments) {
     const [event, attachments] = eventAndAttachments;
     captureEventFromRenderer(options, event, attachments, contents);
