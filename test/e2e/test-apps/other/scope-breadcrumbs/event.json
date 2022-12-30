@@ -35,7 +35,7 @@
         "processor_count": 0,
         "processor_frequency": 0,
         "cpu_description": "{{cpu}}",
-        "screen_resolution":"{{screen}}",
+        "screen_resolution": "{{screen}}",
         "screen_density": 1,
         "language": "{{language}}"
       },
@@ -94,10 +94,12 @@
         "timestamp": 0
       },
       {
-       "timestamp": 0,
-       "category": "console",
-       "data": {
-          "arguments": [ "Some logging from the renderer process" ],
+        "timestamp": 0,
+        "category": "console",
+        "data": {
+          "arguments": [
+            "Some logging from the renderer process"
+          ],
           "logger": "console"
         },
         "level": "log",
@@ -119,5 +121,16 @@
       "some-extra": "extra-value"
     }
   },
-  "attachments": [ { "type": "attachment", "length": 12, "filename": "attachment.txt" } ]
+  "attachments": [
+    {
+      "type": "attachment",
+      "length": 15,
+      "filename": "screenshot.png"
+    },
+    {
+      "type": "attachment",
+      "length": 12,
+      "filename": "attachment.txt"
+    }
+  ]
 }

@@ -9,6 +9,10 @@
 
       init({
         debug: true,
+        beforeSend: (event, hint) => {
+          hint.attachments = [{ filename: 'screenshot.png', data: 'captureScreen()' }, ...(hint.attachments || [])];
+          return event;
+        },
       });
 
       configureScope((scope) => {
