@@ -42,7 +42,7 @@ let cachedInterface: IPCInterface | undefined;
  * Renderer IPC interface
  *
  * Favours IPC if its been exposed via a preload script but will
- * fallback to custom protocol and fetch is IPC is not available
+ * fallback to custom protocol and fetch if IPC is not available
  */
 export function getIPC(): IPCInterface {
   if (!cachedInterface) {
