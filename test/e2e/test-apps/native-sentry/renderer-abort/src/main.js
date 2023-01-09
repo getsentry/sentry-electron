@@ -3,6 +3,8 @@ const path = require('path');
 const { app, BrowserWindow } = require('electron');
 const { init } = require('@sentry/electron');
 
+app.commandLine.appendSwitch('enable-crashpad');
+
 init({
   dsn: '__DSN__',
   debug: true,
