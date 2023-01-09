@@ -12,11 +12,7 @@ import { getRendererProperties, trackRendererProperties } from '../../renderers'
 import { ElectronMainOptions } from '../../sdk';
 import { checkPreviousSession, sessionCrashed } from '../../sessions';
 import { BufferedWriteStore } from '../../store';
-import { deleteMinidump, getMinidumpLoader, MinidumpFile, MinidumpLoader } from './minidump-loader';
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+import { deleteMinidump, getMinidumpLoader, MinidumpLoader } from './minidump-loader';
 
 /** Sends minidumps via the Sentry uploader */
 export class SentryMinidump implements Integration {
@@ -215,18 +211,7 @@ export class SentryMinidump implements Integration {
     }
 
     try {
-      let minidumps: MinidumpFile[] = [];
-      let retryCount = 10;
-
-      while (retryCount > 0) {
-        minidumps = await this._minidumpLoader();
-        if (minidumps.length > 0) {
-          break;
-        }
-
-        retryCount -= 1;
-        await delay(100);
-      }
+      const minidumps = await this._minidumpLoader();
 
       if (minidumps.length > 0) {
         const hub = getCurrentHub();
