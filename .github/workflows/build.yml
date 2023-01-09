@@ -8,6 +8,7 @@ on:
 env:
   ELECTRON_CACHE_DIR: ${{ github.workspace }}
   FAILURE_LOG: true
+  ELECTRON_ENABLE_LOGGING: true
 
 jobs:
   build:
