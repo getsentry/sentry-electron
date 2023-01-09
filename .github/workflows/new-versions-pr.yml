@@ -10,9 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '14'
+      - uses: volta-cli/action@v3
       - run: yarn install
       - name: Update Versions
         run: yarn update-electron-versions
