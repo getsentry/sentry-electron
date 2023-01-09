@@ -179,7 +179,11 @@ export class TestContext {
 
   private _clearAppUserData() {
     for (const dir of getDeleteDirectories(this._appName)) {
-      rmSync(dir, { recursive: true, force: true });
+      try {
+        rmSync(dir, { recursive: true, force: true });
+      } catch (_) {
+        //
+      }
     }
   }
 }
