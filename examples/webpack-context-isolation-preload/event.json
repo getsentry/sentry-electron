@@ -84,7 +84,7 @@
           },
           "mechanism": {
             "handled": true,
-            "type": "generic"
+            "type": "instrument"
           }
         }
       ]

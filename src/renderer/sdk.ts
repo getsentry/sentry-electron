@@ -7,10 +7,11 @@ import {
 import { logger } from '@sentry/utils';
 
 import { ensureProcess } from '../common';
-import { EventToMain, ScopeToMain } from './integrations';
+import { ScopeToMain } from './integrations';
 import { electronRendererStackParser } from './stack-parse';
+import { makeRendererTransport } from './transport';
 
-export const defaultIntegrations = [...defaultBrowserIntegrations, new ScopeToMain(), new EventToMain()];
+export const defaultIntegrations = [...defaultBrowserIntegrations, new ScopeToMain()];
 
 /**
  * Initialize Sentry in the Electron renderer process
@@ -55,6 +56,10 @@ If init has been called in the preload and contextIsolation is disabled, is not 
   if (options.dsn === undefined) {
     // Events are sent via the main process but browser SDK wont start without dsn
     options.dsn = 'https://12345@dummy.dsn/12345';
+  }
+
+  if (options.transport === undefined) {
+    options.transport = makeRendererTransport;
   }
 
   // We only handle initialScope in the main process otherwise it can cause race conditions over IPC

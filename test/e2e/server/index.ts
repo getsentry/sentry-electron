@@ -1,14 +1,15 @@
 import { Event, Session, Transaction } from '@sentry/types';
-import { forEachEnvelopeItem } from '@sentry/utils';
+import { forEachEnvelopeItem, parseEnvelope } from '@sentry/utils';
 import { Server } from 'http';
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
 import Router from 'koa-tree-router';
-import { inspect } from 'util';
+import { Readable } from 'stream';
+import { inspect, TextDecoder, TextEncoder } from 'util';
+import { gunzipSync } from 'zlib';
 
 import { eventIsSession } from '../recipe';
 import { createLogger } from '../utils';
-import { parseEnvelope } from './envelope';
 import { parseMultipart, sentryEventFromFormFields } from './multi-part';
 
 const log = createLogger('Test Server');
@@ -39,6 +40,25 @@ export interface TestServerEvent<T = unknown> {
   method: 'envelope' | 'minidump' | 'store';
 }
 
+function stream2buffer(stream: Readable): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const buf: Buffer[] = [];
+    stream.on('data', (chunk) => buf.push(chunk));
+    stream.on('end', () => resolve(Buffer.concat(buf)));
+    stream.on('error', (err) => reject(err));
+  });
+}
+
+async function getRequestBody(ctx: Koa.ParameterizedContext): Promise<Buffer> {
+  let buf = await stream2buffer(ctx.req);
+
+  if (ctx.request.headers['content-encoding'] === 'gzip') {
+    buf = gunzipSync(buf);
+  }
+
+  return buf;
+}
+
 /**
  * A mock Sentry server.
  *
@@ -59,9 +79,6 @@ export class TestServer {
     app.use(
       bodyParser({
         enableTypes: ['text'],
-        extendTypes: {
-          text: ['application/x-sentry-envelope'],
-        },
         textLimit: '200mb',
       }),
     );
@@ -93,7 +110,7 @@ export class TestServer {
         return;
       }
 
-      const envelope = parseEnvelope(ctx.request.body);
+      const envelope = parseEnvelope(await getRequestBody(ctx), new TextEncoder(), new TextDecoder());
 
       let data: Event | Transaction | Session | undefined;
       const attachments: Attachment[] = [];
