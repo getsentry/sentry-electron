@@ -1,0 +1,4 @@
+description: Native Renderer Abort
+category: Native (Sentry Uploader)
+condition: version.major >= 8
+command: yarn
