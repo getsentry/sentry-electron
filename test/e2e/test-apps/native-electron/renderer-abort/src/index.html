@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <script>
+      const { init } = require('@sentry/electron');
+      const { raiseAbort } = require('sadness-generator');
+
+      init({
+        debug: true,
+      });
+
+      setTimeout(() => {
+        raiseAbort();
+      }, 500);
+    </script>
+  </body>
+</html>
