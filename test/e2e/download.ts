@@ -9,6 +9,7 @@ function isMacArm64(): boolean {
     return false;
   }
 
+  // Check if this machine is Apple silicone. This cputype might only match M1 for now...
   const output = spawnSync('sysctl', ['hw.cputype']).output?.toString();
   return output?.includes('16777228');
 }

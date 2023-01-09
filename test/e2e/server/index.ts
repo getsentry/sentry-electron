@@ -49,9 +49,7 @@ function stream2buffer(stream: Readable): Promise<Buffer> {
   });
 }
 
-async function getRequestBody(
-  ctx: Koa.ParameterizedContext<any, Router.IRouterParamContext<any, any>, any>,
-): Promise<Buffer> {
+async function getRequestBody(ctx: Koa.ParameterizedContext): Promise<Buffer> {
   let buf = await stream2buffer(ctx.req);
 
   if (ctx.request.headers['content-encoding'] === 'gzip') {

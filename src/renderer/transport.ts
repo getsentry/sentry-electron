@@ -11,6 +11,7 @@ export function makeRendererTransport(options: BaseTransportOptions): Transport 
 
   return createTransport(options, async (request: TransportRequest): Promise<TransportMakeRequestResponse> => {
     ipc.sendEnvelope(request.body);
+    // Since the main process handles sending of envelopes and rate limiting, we always return 200 OK to the renderers.
     return { statusCode: 200 };
   });
 }
