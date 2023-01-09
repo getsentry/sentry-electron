@@ -2,8 +2,14 @@
   "name": "native-electron-renderer-abort",
   "version": "1.0.0",
   "main": "src/main.js",
+  "scripts": {
+    "build": "node-gyp configure build"
+  },
   "dependencies": {
     "@sentry/electron": "3.0.0",
     "sadness-generator": "0.0.2"
+  },
+  "devDependencies": {
+    "node-gyp": "9.3.1"
   }
 }

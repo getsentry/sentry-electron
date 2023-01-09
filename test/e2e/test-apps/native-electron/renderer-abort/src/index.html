@@ -6,14 +6,14 @@
   <body>
     <script>
       const { init } = require('@sentry/electron');
-      const { raiseAbort } = require('sadness-generator');
+      const { abort } = require('../build/Release/addon.node');
 
       init({
         debug: true,
       });
 
       setTimeout(() => {
-        raiseAbort();
+        abort();
       }, 500);
     </script>
   </body>

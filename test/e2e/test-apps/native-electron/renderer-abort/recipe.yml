@@ -1,4 +1,0 @@
-description: Native Renderer Abort
-category: Native (Electron Uploader)
-command: yarn
-condition: usesCrashpad && version.major >= 8
