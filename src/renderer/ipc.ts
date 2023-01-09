@@ -13,7 +13,7 @@ function getImplementation(): IPCInterface {
 
   logger.log('IPC was not configured in preload script, falling back to custom protocol and fetch');
 
-  fetch(`${PROTOCOL_SCHEME}://${IPCChannel.PING}/sentry_key`).catch(() =>
+  fetch(`${PROTOCOL_SCHEME}://${IPCChannel.PING}/sentry_key`, { method: 'POST', body: '' }).catch(() =>
     console.error(`Sentry SDK failed to establish connection with the Electron main process.
  - Ensure you have initialized the SDK in the main process
  - If your renderers use custom sessions, be sure to set 'getSessions' in the main process options
@@ -47,7 +47,7 @@ let cachedInterface: IPCInterface | undefined;
  * Renderer IPC interface
  *
  * Favours IPC if its been exposed via a preload script but will
- * fallback to custom protocol and fetch is IPC is not available
+ * fallback to custom protocol and fetch if IPC is not available
  */
 export function getIPC(): IPCInterface {
   if (!cachedInterface) {
