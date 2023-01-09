@@ -1,4 +1,4 @@
 description: Native Renderer Abort
 category: Native (Sentry Uploader)
-condition: usesCrashpad && version.major >= 8
-command: yarn
+condition: usesCrashpad && version.major >= 20
+command: yarn && yarn build
