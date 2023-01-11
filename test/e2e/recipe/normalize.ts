@@ -1,5 +1,5 @@
 /* eslint-disable complexity */
-import { Event, Session, Transaction } from '@sentry/types';
+import { Event, ReplayEvent, Session, Transaction } from '@sentry/types';
 
 type EventOrSession = Event | Transaction | Session;
 
@@ -7,7 +7,7 @@ export function normalize(event: EventOrSession): EventOrSession {
   if (eventIsSession(event)) {
     return normalizeSession(event as Session);
   } else {
-    return normalizeEvent(event as Event);
+    return normalizeEvent(event as Event & ReplayEvent);
   }
 }
 
@@ -47,13 +47,13 @@ function normalizeSession(session: Session): Session {
  * All properties that are timestamps, versions, ids or variables that may vary
  * by platform are replaced with placeholder strings
  */
-function normalizeEvent(event: Event): Event {
+function normalizeEvent(event: Event & ReplayEvent): Event {
   if (event.sdk?.version) {
     event.sdk.version = '{{version}}';
   }
 
   if (event?.sdk?.packages) {
-    for (const pkg of event?.sdk?.packages) {
+    for (const pkg of event?.sdk?.packages || []) {
       if (pkg.version) {
         pkg.version = '{{version}}';
       }
@@ -126,12 +126,28 @@ function normalizeEvent(event: Event): Event {
     delete event.contexts.trace.tags;
   }
 
+  if (event?.tags?.replayId) {
+    event.tags.replayId = '{{replay_id}}';
+  }
+
+  if (event.replay_id) {
+    event.replay_id = '{{id}}';
+  }
+
+  if ((event as any).replay_start_timestamp) {
+    (event as any).replay_start_timestamp = 0;
+  }
+
+  if (Array.isArray(event.error_ids) && event.error_ids.length > 0) {
+    event.error_ids = ['{{id}}'];
+  }
+
   if (event.start_timestamp) {
     event.start_timestamp = 0;
   }
 
   if (event.exception?.values?.[0].stacktrace?.frames) {
-    for (const frame of event.exception?.values?.[0].stacktrace?.frames) {
+    for (const frame of event.exception?.values?.[0].stacktrace?.frames || []) {
       frame.colno = 0;
       frame.lineno = 0;
       frame.function = '{{function}}';

@@ -1,4 +1,4 @@
-import { Event, Session, Transaction } from '@sentry/types';
+import { Event, ReplayEvent, Session, Transaction } from '@sentry/types';
 import { forEachEnvelopeItem, parseEnvelope } from '@sentry/utils';
 import { Server } from 'http';
 import Koa from 'koa';
@@ -112,12 +112,20 @@ export class TestServer {
 
       const envelope = parseEnvelope(await getRequestBody(ctx), new TextEncoder(), new TextDecoder());
 
-      let data: Event | Transaction | Session | undefined;
+      let data: Event | Transaction | Session | ReplayEvent | undefined;
       const attachments: Attachment[] = [];
 
       forEachEnvelopeItem(envelope, ([headers, item]) => {
         if (headers.type === 'event' || headers.type === 'transaction' || headers.type === 'session') {
           data = item as Event | Transaction | Session;
+        }
+
+        if (headers.type === 'replay_event') {
+          const replayItem = item as ReplayEvent;
+          // We only want to capture replay events that link up to errors as there may be others we don't care about
+          if (Array.isArray(replayItem.error_ids) && replayItem.error_ids.length > 0) {
+            data = replayItem;
+          }
         }
 
         if (headers.type === 'attachment') {
@@ -230,8 +238,13 @@ export class TestServer {
     });
   }
 
-  private _addEvent(event: TestServerEvent<Event | Transaction | Session>): void {
-    const type = eventIsSession(event.data) ? 'session' : 'event';
+  private _addEvent(event: TestServerEvent<Event | Transaction | Session | ReplayEvent>): void {
+    const type = eventIsSession(event.data)
+      ? 'session'
+      : (event.data as ReplayEvent)?.type === 'replay_event'
+      ? 'replay'
+      : 'event';
+
     log(`Received '${type}' on '${event.method}' endpoint`, inspect(event, false, null, true));
     this.events.push(event);
   }
