@@ -3,6 +3,7 @@
 ## Unreleased
 
 ## 4.2.0
+
 - feat: Update JavaScript SDKs to 7.30.0 and add support for Replay in renderers (#618)
 - feat: Use a transport to send events to main process rather than via integration (#610)
 - test: Add test to ensure window titles don't end up in breadcrumbs when disabled (#594)
