@@ -66,7 +66,14 @@ export class TestContext {
       this._clearAppUserData();
     }
 
-    const childProcess = spawn(this._electronPath, [this._appPath], { env });
+    const args = [this._appPath];
+
+    // Older versions of Electron no longer work correctly on 'ubuntu-latest' with sandbox
+    if (process.platform === 'linux') {
+      args.push('--no-sandbox');
+    }
+
+    const childProcess = spawn(this._electronPath, args, { env });
 
     function logLinesWithoutEmpty(input: string): void {
       input
