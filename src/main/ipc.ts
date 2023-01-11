@@ -4,7 +4,7 @@ import { forEachEnvelopeItem, logger, parseEnvelope, SentryError } from '@sentry
 import { app, ipcMain, protocol, WebContents } from 'electron';
 import { TextDecoder, TextEncoder } from 'util';
 
-import { IPCChannel, IPCMode, mergeEvents, PROTOCOL_SCHEME } from '../common';
+import { IPCChannel, IPCMode, mergeEvents, normalizeUrlsInReplayEnvelope, PROTOCOL_SCHEME } from '../common';
 import { supportsFullProtocol, whenAppReady } from './electron-normalize';
 import { ElectronMainOptionsInternal } from './sdk';
 
@@ -50,13 +50,13 @@ function eventFromEnvelope(envelope: Envelope): [Event, Attachment[]] | undefine
     if (type === 'event' || type === 'transaction') {
       event = Array.isArray(item) ? (item as EventItem)[1] : undefined;
     } else if (type === 'attachment') {
-      const [headers, bin] = item as AttachmentItem;
+      const [headers, data] = item as AttachmentItem;
 
       attachments.push({
         filename: headers.filename,
         attachmentType: headers.attachment_type,
         contentType: headers.content_type,
-        data: bin,
+        data,
       });
     }
   });
@@ -72,8 +72,9 @@ function handleEnvelope(options: ElectronMainOptionsInternal, env: Uint8Array | 
     const [event, attachments] = eventAndAttachments;
     captureEventFromRenderer(options, event, attachments, contents);
   } else {
+    const normalizedEnvelope = normalizeUrlsInReplayEnvelope(envelope, app.getAppPath());
     // Pass other types of envelope straight to the transport
-    void getCurrentHub().getClient()?.getTransport()?.send(envelope);
+    void getCurrentHub().getClient()?.getTransport()?.send(normalizedEnvelope);
   }
 }
 

@@ -1,4 +1,5 @@
-import { Event } from '@sentry/types';
+import { Envelope, Event, ReplayEvent } from '@sentry/types';
+import { addItemToEnvelope, createEnvelope, forEachEnvelopeItem } from '@sentry/utils';
 
 /**
  * Normalizes URLs in exceptions and stacktraces so Sentry can fingerprint
@@ -75,4 +76,32 @@ export function normalizeEvent(event: Event, basePath: string): Event {
   delete tags.server_name;
   delete event.server_name;
   return event;
+}
+
+/** Normalizes URLs in any replay_event items found in an envelope */
+export function normalizeUrlsInReplayEnvelope(envelope: Envelope, basePath: string): Envelope {
+  let modifiedEnvelope = createEnvelope(envelope[0]);
+
+  let isReplay = false;
+
+  forEachEnvelopeItem(envelope, (item, type) => {
+    if (type === 'replay_event') {
+      isReplay = true;
+      const [headers, event] = item as [{ type: 'replay_event' }, ReplayEvent];
+
+      if (Array.isArray(event.urls)) {
+        event.urls = event.urls.map((url) => normalizeUrl(url, basePath));
+      }
+
+      if (event?.request?.url) {
+        event.request.url = normalizeUrl(event.request.url, basePath);
+      }
+
+      modifiedEnvelope = addItemToEnvelope(modifiedEnvelope, [headers, event]);
+    } else if (type === 'replay_recording') {
+      modifiedEnvelope = addItemToEnvelope(modifiedEnvelope, item);
+    }
+  });
+
+  return isReplay ? modifiedEnvelope : envelope;
 }

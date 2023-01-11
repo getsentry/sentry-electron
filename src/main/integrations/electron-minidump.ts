@@ -206,8 +206,8 @@ export class ElectronMinidump implements Integration {
       if (i < 0) i = buf.indexOf(32, maxBytes);
       // We couldn't find any space or quote chars so split at maxBytes and hope for the best 🤷‍♂️
       if (i < 0) i = maxBytes;
-      chunks.push(buf.slice(0, i + 1).toString());
-      buf = buf.slice(i + 1);
+      chunks.push(buf.subarray(0, i + 1).toString());
+      buf = buf.subarray(i + 1);
     }
 
     return chunks.reduce((acc, cur, i) => {
