@@ -43,7 +43,7 @@ export const EXIT_REASONS = [
   'launch-failed',
   'integrity-failure',
 ] as const;
-export type ExitReason = typeof EXIT_REASONS[number];
+export type ExitReason = (typeof EXIT_REASONS)[number];
 export const CRASH_REASONS: Readonly<ExitReason[]> = ['crashed', 'oom'] as const;
 
 /** Same as the Electron interface but with optional exitCode */

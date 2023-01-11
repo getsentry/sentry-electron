@@ -32,6 +32,7 @@ module.exports = {
       rules: {
         'no-console': 'off',
         '@typescript-eslint/no-unsafe-member-access': 'off',
+        '@typescript-eslint/member-ordering': 'off',
       },
     },
   ],

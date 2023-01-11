@@ -132,7 +132,7 @@ function minidumpFromBreakpadMultipart(file: Buffer): Buffer | undefined {
     const dumpEnd = file.lastIndexOf('----------------------------');
 
     if (dumpStart > 0 && dumpEnd > 0 && dumpEnd > dumpStart) {
-      return file.slice(dumpStart, dumpEnd);
+      return file.subarray(dumpStart, dumpEnd);
     }
   }
 
