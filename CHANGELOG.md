@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 4.2.0
+
+- feat: Update JavaScript SDKs to 7.30.0 and add support for Replay in renderers (#618)
+- feat: Use a transport to send events to main process rather than via integration (#610)
+- test: Add test to ensure window titles don't end up in breadcrumbs when disabled (#594)
+- fix: Use POST for main process ping so it does not result in fetch breadcrumb (#612)
+- CI: Use volta-cli/action to use the correct node version (#609)
+- CI: Auto-generate PRs for JavaScript SDK updates (#608)
+
 ## 4.1.2
 
 - fix: Ensure the scope writes do not beat the initial async scope read (#593)
