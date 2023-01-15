@@ -14,7 +14,7 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: volta-cli/action@v3
       - name: Install
         run: yarn install
@@ -23,7 +23,7 @@ jobs:
       - name: Pack
         run: yarn pack
       - name: Archive Artifacts
-        uses: actions/upload-artifact@v3.1.1
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ github.sha }}
           path: |
@@ -37,7 +37,7 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: volta-cli/action@v3
       - run: yarn install
       - name: Run Linter
@@ -48,12 +48,12 @@ jobs:
     needs: build
     runs-on: ${{ matrix.os }}
     strategy:
-      # we want that the matrix keeps running, default is to cancel them if it fails.
+      # we want that the matrix keeps running, default is to cancel all if one fails.
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: volta-cli/action@v3
       - run: yarn install
       - name: Run Unit Tests
@@ -71,13 +71,8 @@ jobs:
     env:
       ELECTRON_VERSION: ${{ matrix.electron }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: volta-cli/action@v3
-      - uses: actions/cache@v2
-        with:
-          path: |
-            **/.cache/**/*.zip
-          key: ${{ runner.os }}-${{ matrix.electron }}
       - run: yarn install
       - name: Run E2E Tests
         run: yarn e2e
