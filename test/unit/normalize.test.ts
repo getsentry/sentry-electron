@@ -61,4 +61,10 @@ describe('Normalize URLs', () => {
       normalizeUrl('/home/haza/Desktop/foo/app/webpack:/electron/src/common/models/ipc-request.ts', base),
     ).to.equal('app:///electron/src/common/models/ipc-request.ts');
   });
+
+  it('Only modifies file URLS', () => {
+    const base = 'c:/Users/Username/sentry-electron/example';
+    expect(normalizeUrl('https://some.host/index.html', base)).to.equal('https://some.host/index.html');
+    expect(normalizeUrl('http://localhost:43288/index.html', base)).to.equal('http://localhost:43288/index.html');
+  });
 });

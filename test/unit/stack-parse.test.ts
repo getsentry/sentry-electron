@@ -144,4 +144,29 @@ describe('Parse mixed renderer stack traces', () => {
       },
     ]);
   });
+
+  it('Electron localhost', () => {
+    const stack = `Error: ENOENT: no such file or directory, open '/does-not-exist'
+    at two (http://localhost:12345/src/index.html:17:11)
+    at one (http://localhost:12345/src/index.html:24:9)`;
+
+    const frames = electronRendererStackParser(stack);
+
+    expect(frames).to.eql([
+      {
+        filename: 'http://localhost:12345/src/index.html',
+        function: 'one',
+        in_app: false,
+        lineno: 24,
+        colno: 9,
+      },
+      {
+        filename: 'http://localhost:12345/src/index.html',
+        function: 'two',
+        in_app: false,
+        lineno: 17,
+        colno: 11,
+      },
+    ]);
+  });
 });
