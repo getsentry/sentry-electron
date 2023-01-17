@@ -40,5 +40,6 @@ module.exports = {
     '@typescript-eslint/no-var-requires': 'off',
     '@sentry-internal/sdk/no-async-await': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/consistent-type-imports': 'off',
   },
 };
