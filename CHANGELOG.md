@@ -3,10 +3,9 @@
 ## Unreleased
 
 ## 4.3.0
+
 - feat: Update Sentry SDKs to 7.35.0 (#631)
 - fix: Replay should be re-exported (#633)
-- test: Test localhost URLs are not modified and stack traces are correctly parsed (#626)
-- CI: A few CI updates and fixes (#625)
 
 ## 4.2.0
 
