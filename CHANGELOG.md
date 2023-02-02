@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 4.3.0
+
+- feat: Update Sentry SDKs to 7.35.0 (#631)
+- fix: Replay should be re-exported (#633)
+
 ## 4.2.0
 
 - feat: Update JavaScript SDKs to 7.30.0 and add support for Replay in renderers (#618)
