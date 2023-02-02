@@ -45,7 +45,7 @@ export {
   InboundFilters,
 } from '@sentry/core';
 
-export { BrowserClient, lastEventId, showReportDialog } from '@sentry/browser';
+export { BrowserClient, lastEventId, showReportDialog, Replay } from '@sentry/browser';
 export type { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
 
 export const Integrations = { ...ElectronRendererIntegrations, ...BrowserIntegrations };
