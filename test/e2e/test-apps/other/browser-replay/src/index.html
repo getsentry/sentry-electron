@@ -5,8 +5,7 @@
   </head>
   <body>
     <script>
-      const { init } = require('@sentry/electron');
-      const { Replay } = require('@sentry/replay');
+      const { init, Replay } = require('@sentry/electron/renderer');
 
       init({
         debug: true,
