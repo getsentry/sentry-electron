@@ -7,7 +7,7 @@ import { dirname, join } from 'path';
 import { SDK_VERSION } from '../../../src/main/version';
 import { delay } from '../../helpers';
 import { TestContext } from '../context';
-import { ERROR_ID, RATE_LIMIT_ID, SERVER_PORT, TestServer, TestServerEvent } from '../server';
+import { ERROR_ID, HANG_ID, RATE_LIMIT_ID, SERVER_PORT, TestServer, TestServerEvent } from '../server';
 import { createLogger, getTestLog, walkSync } from '../utils';
 import { evaluateCondition } from './eval';
 import { eventIsSession, normalize } from './normalize';
@@ -115,7 +115,8 @@ export class RecipeRunner {
         .replace('__DSN__', `http://${SENTRY_KEY}@localhost:${SERVER_PORT}/277345`)
         .replace('__INCORRECT_DSN__', `http://${SENTRY_KEY}@localhost:9999/277345`)
         .replace('__RATE_LIMIT_DSN__', `http://${SENTRY_KEY}@localhost:${SERVER_PORT}/${RATE_LIMIT_ID}`)
-        .replace('__ERROR_DSN__', `http://${SENTRY_KEY}@localhost:${SERVER_PORT}/${ERROR_ID}`);
+        .replace('__ERROR_DSN__', `http://${SENTRY_KEY}@localhost:${SERVER_PORT}/${ERROR_ID}`)
+        .replace('__HANG_DSN__', `http://${SENTRY_KEY}@localhost:${SERVER_PORT}/${HANG_ID}`);
 
       if (file.endsWith('package.json')) {
         content = content

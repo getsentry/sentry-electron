@@ -1,0 +1,3 @@
+description: App close flush timeout
+command: yarn
+expectedError: Some console output
