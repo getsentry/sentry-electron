@@ -4,7 +4,9 @@
 
 ## 4.3.0
 
-- feat: Update Sentry SDKs to 7.35.0 (#631)
+- fix: Add 2 second timeout to session flushing (#644)
+- feat: Update dependencies (#640)
+- feat: Update Sentry SDKs to 7.37.1 (#636)
 - fix: Replay should be re-exported (#633)
 
 ## 4.2.0
