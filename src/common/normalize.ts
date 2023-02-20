@@ -74,7 +74,7 @@ export function normalizeEvent(event: Event, basePath: string): Event {
   }
 
   // The Node SDK includes server_name, which contains the machine name of the computer running Electron.
-  // In this case this is likely to be PII.
+  // In this case this is likely to include PII.
   const { tags = {} } = event;
   delete tags.server_name;
   delete event.server_name;
