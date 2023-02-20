@@ -8,6 +8,7 @@ import { Readable } from 'stream';
 import { inspect, TextDecoder, TextEncoder } from 'util';
 import { gunzipSync } from 'zlib';
 
+import { delay } from '../../helpers';
 import { eventIsSession } from '../recipe';
 import { createLogger } from '../utils';
 import { parseMultipart, sentryEventFromFormFields } from './multi-part';
@@ -17,6 +18,7 @@ const log = createLogger('Test Server');
 export const SERVER_PORT = 8123;
 export const RATE_LIMIT_ID = 666;
 export const ERROR_ID = 999;
+export const HANG_ID = 777;
 
 interface Attachment {
   filename?: string;
@@ -99,6 +101,11 @@ export class TestServer {
       if (ctx.params.id === ERROR_ID.toString()) {
         ctx.status = 500;
         ctx.body = 'Server Error';
+        return;
+      }
+
+      if (ctx.params.id === HANG_ID.toString()) {
+        await delay(10_000);
         return;
       }
 

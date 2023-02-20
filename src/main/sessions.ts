@@ -54,7 +54,7 @@ export async function endSession(): Promise<void> {
 
   await sessionStore.clear();
 
-  await flush();
+  await flush(2_000);
 }
 
 /** Determines if a Date is likely to have occurred in the previous uncompleted session */
