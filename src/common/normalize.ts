@@ -42,6 +42,10 @@ export function normalizeEvent(event: Event, basePath: string): Event {
       if (frame.filename) {
         frame.filename = normalizeUrl(frame.filename, basePath);
       }
+
+      if (frame.abs_path) {
+        frame.abs_path = normalizeUrl(frame.abs_path, basePath);
+      }
     }
   }
 
@@ -69,9 +73,8 @@ export function normalizeEvent(event: Event, basePath: string): Event {
     delete request.headers['User-Agent'];
   }
 
-  // The Node SDK includes server_name, which contains
-  // the machine name of the computer running Electron. This is not useful
-  // information in this case.
+  // The Node SDK includes server_name, which contains the machine name of the computer running Electron.
+  // In this case this is likely to include PII.
   const { tags = {} } = event;
   delete tags.server_name;
   delete event.server_name;
