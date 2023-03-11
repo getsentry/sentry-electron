@@ -16,12 +16,18 @@ export class Screenshots implements Integration {
 
   /** @inheritDoc */
   public setupOnce(addGlobalEventProcessor: (callback: EventProcessor) => void): void {
-    const attachScreenshot = !!(getCurrentHub().getClient()?.getOptions() as ElectronMainOptions).attachScreenshot;
+    const attachScreenshot = (getCurrentHub().getClient()?.getOptions() as ElectronMainOptions).attachScreenshot;
 
     if (attachScreenshot) {
       addGlobalEventProcessor(async (event: Event, hint: EventHint) => {
         // We don't capture screenshots for transactions or native crashes
         if (!event.transaction && event.platform !== 'native') {
+          if (typeof attachScreenshot === 'function') {
+            if (attachScreenshot(event, hint) === false) {
+              return event;
+            }
+          }
+
           let count = 1;
 
           for (const window of BrowserWindow.getAllWindows()) {

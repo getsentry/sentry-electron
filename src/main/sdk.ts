@@ -2,7 +2,7 @@ import { ensureProcess, IPCMode } from '../common';
 ensureProcess('main');
 
 import { defaultIntegrations as defaultNodeIntegrations, init as nodeInit, NodeOptions } from '@sentry/node';
-import { Integration, Options } from '@sentry/types';
+import { Event, EventHint, Integration, Options } from '@sentry/types';
 import { Session, session, WebContents } from 'electron';
 
 import { getDefaultEnvironment, getDefaultReleaseName } from './context';
@@ -36,6 +36,8 @@ export const defaultIntegrations: Integration[] = [
     (integration) => integration.name !== 'OnUncaughtException' && integration.name !== 'Context',
   ),
 ];
+
+type ShouldEvent = (event: Event, hint: EventHint) => boolean;
 
 export interface ElectronMainOptionsInternal extends Options<ElectronOfflineTransportOptions> {
   /**
@@ -74,7 +76,7 @@ export interface ElectronMainOptionsInternal extends Options<ElectronOfflineTran
    * Screenshots are not included for native crashes since it's not possible to capture images of crashed Electron
    * renderers.
    */
-  attachScreenshot?: boolean;
+  attachScreenshot?: boolean | ShouldEvent;
 }
 
 // getSessions and ipcMode properties are optional because they have defaults
