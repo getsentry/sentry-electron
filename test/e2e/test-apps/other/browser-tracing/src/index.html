@@ -5,8 +5,7 @@
   </head>
   <body>
     <script>
-      const { init } = require('@sentry/electron');
-      const { BrowserTracing } = require('@sentry/tracing');
+      const { init, BrowserTracing } = require('@sentry/electron/renderer');
 
       init({
         debug: true,
