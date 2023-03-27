@@ -2,6 +2,8 @@ import { chromeStackLineParser } from '@sentry/browser';
 import { StackFrame, StackParser } from '@sentry/types';
 import { dropUndefinedKeys, nodeStackLineParser, stripSentryFramesAndReverse } from '@sentry/utils';
 
+const STACKTRACE_FRAME_LIMIT = 50;
+
 const [, chrome] = chromeStackLineParser;
 const [, node] = nodeStackLineParser();
 
@@ -20,6 +22,10 @@ export const electronRendererStackParser: StackParser = (stack: string, skipFirs
       frames.push(chromeFrame);
     } else if (nodeFrame) {
       frames.push(dropUndefinedKeys(nodeFrame));
+    }
+
+    if (frames.length >= STACKTRACE_FRAME_LIMIT) {
+      break;
     }
   }
 
