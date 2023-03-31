@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 4.4.0
+
+- feat: Update to v7.46.0 of JavaScript SDKs (#657)
+
 ## 4.3.0
 
 - fix: Add 2 second timeout to session flushing (#644)
