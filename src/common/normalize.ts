@@ -42,10 +42,6 @@ export function normalizeEvent(event: Event, basePath: string): Event {
       if (frame.filename) {
         frame.filename = normalizeUrl(frame.filename, basePath);
       }
-
-      if (frame.abs_path) {
-        frame.abs_path = normalizeUrl(frame.abs_path, basePath);
-      }
     }
   }
 

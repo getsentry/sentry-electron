@@ -22,8 +22,6 @@ describe('Parse mixed renderer stack traces', () => {
 
     expect(frames).to.eql([
       {
-        abs_path:
-          'file:///Users/tim/Documents/Repositories/sentry-electron/test/e2e/dist/javascript-renderer/src/index.html',
         filename:
           'file:///Users/tim/Documents/Repositories/sentry-electron/test/e2e/dist/javascript-renderer/src/index.html',
         function: 'global.setTimeout',
@@ -32,8 +30,6 @@ describe('Parse mixed renderer stack traces', () => {
         colno: 9,
       },
       {
-        abs_path:
-          'file:///Users/tim/Documents/Repositories/sentry-electron/test/e2e/dist/javascript-renderer/src/index.html',
         filename:
           'file:///Users/tim/Documents/Repositories/sentry-electron/test/e2e/dist/javascript-renderer/src/index.html',
         function: 'one',
@@ -42,8 +38,6 @@ describe('Parse mixed renderer stack traces', () => {
         colno: 9,
       },
       {
-        abs_path:
-          'file:///Users/tim/Documents/Repositories/sentry-electron/test/e2e/dist/javascript-renderer/src/index.html',
         filename:
           'file:///Users/tim/Documents/Repositories/sentry-electron/test/e2e/dist/javascript-renderer/src/index.html',
         function: 'two',
@@ -97,8 +91,6 @@ describe('Parse mixed renderer stack traces', () => {
 
     expect(frames).to.eql([
       {
-        abs_path:
-          'file:///Users/tim/Documents/Repositories/sentry-electron/test/e2e/dist/javascript-renderer/src/index.html',
         filename:
           'file:///Users/tim/Documents/Repositories/sentry-electron/test/e2e/dist/javascript-renderer/src/index.html',
         function: '?',
@@ -107,8 +99,6 @@ describe('Parse mixed renderer stack traces', () => {
         colno: 9,
       },
       {
-        abs_path:
-          'file:///Users/tim/Documents/Repositories/sentry-electron/test/e2e/dist/javascript-renderer/src/index.html',
         filename:
           'file:///Users/tim/Documents/Repositories/sentry-electron/test/e2e/dist/javascript-renderer/src/index.html',
         function: 'one',
@@ -117,8 +107,6 @@ describe('Parse mixed renderer stack traces', () => {
         colno: 9,
       },
       {
-        abs_path:
-          'file:///Users/tim/Documents/Repositories/sentry-electron/test/e2e/dist/javascript-renderer/src/index.html',
         filename:
           'file:///Users/tim/Documents/Repositories/sentry-electron/test/e2e/dist/javascript-renderer/src/index.html',
         function: 'two',
