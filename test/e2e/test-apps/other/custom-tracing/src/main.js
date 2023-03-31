@@ -2,7 +2,6 @@
 const { app } = require('electron');
 
 const Sentry = require('@sentry/electron');
-require('@sentry/tracing');
 
 Sentry.init({
   dsn: '__DSN__',

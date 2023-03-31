@@ -30,6 +30,7 @@ export {
   captureMessage,
   configureScope,
   createTransport,
+  getActiveTransaction,
   getHubFromCarrier,
   getCurrentHub,
   Hub,
@@ -45,6 +46,7 @@ export {
   withScope,
   FunctionToString,
   InboundFilters,
+  trace,
 } from '@sentry/core';
 
 export const Integrations = getIntegrations();

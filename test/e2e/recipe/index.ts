@@ -127,7 +127,6 @@ export class RecipeRunner {
           )
           // We replace the Sentry JavaScript dependency versions to match that of @sentry/electron
           .replace(/"@sentry\/replay": ".*"/, `"@sentry/replay": "${JS_VERSION}"`)
-          .replace(/"@sentry\/tracing": ".*"/, `"@sentry/tracing": "${JS_VERSION}"`)
           .replace(/"@sentry\/react": ".*"/, `"@sentry/react": "${JS_VERSION}"`)
           .replace(/"@sentry\/vue": ".*"/, `"@sentry/vue": "${JS_VERSION}"`);
       }
