@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 4.5.0
+- feat: Update to [v7.48.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.48.0) of JavaScript SDKs
+  (#662)
+- fix: IPC protocol should be registered as secure (#664)
+
 ## 4.4.0
 
 - feat: Update to [v7.46.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.46.0) of JavaScript SDKs (#657)
