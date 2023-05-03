@@ -12,7 +12,7 @@
     ],
     "replay_id": "{{id}}",
     "segment_id": 0,
-    "replay_type": "error",
+    "replay_type": "buffer",
     "event_id": "{{id}}",
     "environment": "production",
     "sdk": {
