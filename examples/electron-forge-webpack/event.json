@@ -58,14 +58,6 @@
     "user": {
       "ip_address": "{{auto}}"
     },
-    "debug_meta": {
-      "images": [
-        {
-          "code_file": "app:///.webpack/renderer/main_window/index.js",
-          "type": "sourcemap"
-        }
-      ]
-    },
     "exception": {
       "values": [
         {
