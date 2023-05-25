@@ -19,6 +19,9 @@ module.exports = {
       sourcemaps: {
         assets: [], // no assets to upload - we just care about injecting debug IDs
       },
+      release: {
+        inject: false,
+      },
       errorHandler() {
         // do nothing on errors :)
         // They will happen because of the invalid auth token
