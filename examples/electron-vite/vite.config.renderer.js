@@ -44,6 +44,11 @@ const config = {
     assetsDir: '.',
     emptyOutDir: true,
     brotliSize: false,
+    rollupOptions: {
+      output: {
+        entryFileNames: '[name].js',
+      },
+    },
   },
 };
 

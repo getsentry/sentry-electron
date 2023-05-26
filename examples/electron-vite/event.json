@@ -61,7 +61,7 @@
     "debug_meta": {
       "images": [
         {
-          "code_file": "app:///dist/renderer.js",
+          "code_file": "app:///dist/renderer/index.js",
           "type": "sourcemap"
         }
       ]
