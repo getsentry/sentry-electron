@@ -30,6 +30,6 @@ app.on('ready', () => {
   if (process.env.APP_FIRST_RUN) {
     setTimeout(() => {
       process.crash();
-    }, 500);
+    }, 1000);
   }
 });
