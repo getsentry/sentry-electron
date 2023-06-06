@@ -117,8 +117,6 @@ export class Store<T> {
  * Extends Store to throttle writes.
  */
 export class BufferedWriteStore<T> extends Store<T> {
-  /** The minimum time between writes */
-  private readonly _throttleTime?: number;
   /** A write that hasn't been written to disk yet */
   private _pendingWrite: { data: T; timeout: NodeJS.Timeout } | undefined;
 
@@ -129,15 +127,27 @@ export class BufferedWriteStore<T> extends Store<T> {
    * @param id A unique filename to store this data.
    * @param initial An initial value to initialize data with.
    * @param throttleTime The minimum time between writes
+   * @param immediateFirstWrite Whether to write the first set immediately
    */
-  public constructor(path: string, id: string, initial: T, throttleTime: number = 500) {
+  public constructor(
+    path: string,
+    id: string,
+    initial: T,
+    private readonly _throttleTime: number = 500,
+    private _immediateFirstWrite = true,
+  ) {
     super(path, id, initial);
-    this._throttleTime = throttleTime;
   }
 
   /** @inheritdoc */
   public override async set(data: T): Promise<void> {
     this._data = data;
+
+    // If this is the first write, we write immediately
+    if (this._immediateFirstWrite) {
+      this._immediateFirstWrite = false;
+      return super.set(data);
+    }
 
     this._pendingWrite = {
       // We overwrite the data for the pending write so that the latest data is written in the next flush
