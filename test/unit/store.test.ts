@@ -54,11 +54,7 @@ describe('Store', () => {
     await expectFilesInDirectory(tempDir.name, 0);
 
     await store.set({ num: 990, str: 'just a string' });
-    // File should not be written after 100ms!
-    await delay(100);
-    await expectFilesInDirectory(tempDir.name, 0);
-    // Should have been written after 1 more second
-    await delay(1_000);
+    // Initial write should be immediate
     await expectFilesInDirectory(tempDir.name, 1);
 
     const contents = await readFileAsync(join(tempDir.name, 'test-store.json'), 'utf-8');
