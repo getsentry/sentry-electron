@@ -156,14 +156,14 @@ describe('Parse mixed renderer stack traces', () => {
       {
         filename: 'http://localhost:12345/src/index.html',
         function: 'one',
-        in_app: false,
+        in_app: true,
         lineno: 24,
         colno: 9,
       },
       {
         filename: 'http://localhost:12345/src/index.html',
         function: 'two',
-        in_app: false,
+        in_app: true,
         lineno: 17,
         colno: 11,
       },
