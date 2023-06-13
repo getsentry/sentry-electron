@@ -42,8 +42,12 @@ function getScope(options: NodeOptions): Event {
  * Returns the minidump endpoint in Sentry
  * @param dsn Dsn
  */
-export function minidumpUrlFromDsn(dsn: string): string {
-  const { host, path, projectId, port, protocol, publicKey } = makeDsn(dsn);
+export function minidumpUrlFromDsn(dsn: string): string | undefined {
+  const dsnComponents = makeDsn(dsn);
+  if (!dsnComponents) {
+    return undefined;
+  }
+  const { host, path, projectId, port, protocol, publicKey } = dsnComponents;
   return `${protocol}://${host}${port !== '' ? `:${port}` : ''}${
     path !== '' ? `/${path}` : ''
   }/api/${projectId}/minidump/?sentry_key=${publicKey}`;
@@ -106,6 +110,12 @@ export class ElectronMinidump implements Integration {
    * Starts the native crash reporter
    */
   private _startCrashReporter(options: NodeOptions): void {
+    const submitURL = minidumpUrlFromDsn(options.dsn || '');
+    if (!submitURL) {
+      logger.log('Invalid DSN. Cannot start Electron crashReporter');
+      return;
+    }
+
     // We don't add globalExtra when Breakpad is in use because it doesn't support JSON like strings:
     // https://github.com/electron/electron/issues/29711
     const globalExtra = usesCrashpad() ? { sentry___initialScope: JSON.stringify(getScope(options)) } : undefined;
@@ -116,7 +126,7 @@ export class ElectronMinidump implements Integration {
       companyName: '',
       ignoreSystemCrashHandler: true,
       productName: app.name || app.getName(),
-      submitURL: minidumpUrlFromDsn(options.dsn || ''),
+      submitURL,
       uploadToServer: true,
       compress: true,
       globalExtra,
