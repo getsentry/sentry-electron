@@ -45,6 +45,13 @@ export function normalizeEvent(event: Event, basePath: string): Event {
     }
   }
 
+  // We need to normalize debug ID images the same way as the stack frames for symbolicator to match them correctly
+  for (const debugImage of event.debug_meta?.images || []) {
+    if (debugImage.type === 'sourcemap') {
+      debugImage.code_file = normalizeUrl(debugImage.code_file, basePath);
+    }
+  }
+
   if (event.transaction) {
     event.transaction = normalizeUrl(event.transaction, basePath);
   }
