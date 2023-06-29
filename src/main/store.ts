@@ -77,7 +77,7 @@ export class Store<T> {
    * constructor is used.
    */
   public async get(): Promise<T> {
-    return await this._lock.runExclusive(async () => {
+    return this._lock.runExclusive(async () => {
       if (this._data === undefined) {
         try {
           this._data = JSON.parse(await readFileAsync(this._path, 'utf8'), dateReviver) as T;
