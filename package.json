@@ -1,7 +1,7 @@
 {
   "name": "@sentry/electron",
   "description": "Official Sentry SDK for Electron",
-  "version": "4.6.0",
+  "version": "4.7.0",
   "main": "./index.js",
   "module": "./esm/main/index.js",
   "browser": "./esm/renderer/index.js",
