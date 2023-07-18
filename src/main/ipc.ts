@@ -138,6 +138,7 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
   whenAppReady
     .then(() => {
       for (const sesh of options.getSessions()) {
+        // eslint-disable-next-line deprecation/deprecation
         sesh.protocol.registerStringProtocol(PROTOCOL_SCHEME, (request, callback) => {
           const data = request.uploadData?.[0]?.bytes;
 
