@@ -64,6 +64,7 @@
     "@sentry/types": "7.58.0",
     "@sentry/utils": "7.58.0",
     "deepmerge": "4.3.0",
+    "lru_map": "^0.3.3",
     "tslib": "^2.5.0"
   },
   "devDependencies": {
@@ -83,7 +84,7 @@
     "chai-as-promised": "^7.1.1",
     "chai-subset": "^1.6.0",
     "cross-env": "^7.0.3",
-    "electron": "23.0.0",
+    "electron": "25.3.0",
     "electron-latest-versions": "^0.2.0",
     "electron-mocha": "^11.0.2",
     "eslint": "7.32.0",
