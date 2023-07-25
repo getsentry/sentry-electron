@@ -5,7 +5,7 @@ import { app, ipcMain, protocol, WebContents } from 'electron';
 import { TextDecoder, TextEncoder } from 'util';
 
 import { IPCChannel, IPCMode, mergeEvents, normalizeUrlsInReplayEnvelope, PROTOCOL_SCHEME } from '../common';
-import { supportsFullProtocol, whenAppReady } from './electron-normalize';
+import { registerProtocol, supportsFullProtocol, whenAppReady } from './electron-normalize';
 import { ElectronMainOptionsInternal } from './sdk';
 
 function captureEventFromRenderer(
@@ -138,8 +138,8 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
   whenAppReady
     .then(() => {
       for (const sesh of options.getSessions()) {
-        sesh.protocol.registerStringProtocol(PROTOCOL_SCHEME, (request, callback) => {
-          const data = request.uploadData?.[0]?.bytes;
+        registerProtocol(sesh.protocol, PROTOCOL_SCHEME, (request) => {
+          const data = request.body;
 
           if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.EVENT}`) && data) {
             handleEvent(options, data.toString());
@@ -148,8 +148,6 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.ENVELOPE}`) && data) {
             handleEnvelope(options, data);
           }
-
-          callback('');
         });
       }
     })

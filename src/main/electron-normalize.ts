@@ -204,3 +204,47 @@ export function capturePage(window: BrowserWindow): Promise<NativeImage> {
 
   return window.capturePage();
 }
+
+/**
+ * Electron >= 25 support `protocol.handle`
+ */
+function supportsProtocolHandle(): boolean {
+  return version.major >= 25;
+}
+
+interface InternalRequest {
+  url: string;
+  body?: Buffer;
+}
+
+/**
+ * Registers a custom protocol to receive events from the renderer
+ *
+ * Uses `protocol.handle` if available, otherwise falls back to `protocol.registerStringProtocol`
+ */
+export function registerProtocol(
+  protocol: Electron.Protocol,
+  scheme: string,
+  callback: (request: InternalRequest) => void,
+): void {
+  if (supportsProtocolHandle()) {
+    protocol.handle(scheme, async (request) => {
+      callback({
+        url: request.url,
+        body: Buffer.from(await request.arrayBuffer()),
+      });
+
+      return new Response('');
+    });
+  } else {
+    // eslint-disable-next-line deprecation/deprecation
+    protocol.registerStringProtocol(scheme, (request, complete) => {
+      callback({
+        url: request.url,
+        body: request.uploadData?.[0]?.bytes,
+      });
+
+      complete('');
+    });
+  }
+}
