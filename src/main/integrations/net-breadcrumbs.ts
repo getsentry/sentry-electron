@@ -1,7 +1,14 @@
 /* eslint-disable deprecation/deprecation */
+import { getDynamicSamplingContextFromClient } from '@sentry/core';
 import { getCurrentHub } from '@sentry/node';
 import { EventProcessor, Hub, Integration, Span, TracePropagationTargets } from '@sentry/types';
-import { fill, stringMatchesSomePattern } from '@sentry/utils';
+import {
+  dynamicSamplingContextToSentryBaggageHeader,
+  fill,
+  generateSentryTraceHeader,
+  logger,
+  stringMatchesSomePattern,
+} from '@sentry/utils';
 import { ClientRequest, ClientRequestConstructorOptions, IncomingMessage, net } from 'electron';
 import { LRUMap } from 'lru_map';
 import * as urlModule from 'url';
@@ -201,6 +208,24 @@ function createWrappedRequestFactory(
 
           if (shouldAttachTraceData(method, url)) {
             request.setHeader('sentry-trace', span.toTraceparent());
+          }
+        } else {
+          if (shouldAttachTraceData(method, url)) {
+            const { traceId, sampled, dsc } = scope.getPropagationContext();
+            const sentryTraceHeader = generateSentryTraceHeader(traceId, undefined, sampled);
+
+            logger.log(`[Tracing] Adding sentry-trace header ${sentryTraceHeader} to outgoing request to "${url}": `);
+
+            const client = hub.getClient();
+            const dynamicSamplingContext =
+              dsc || (client ? getDynamicSamplingContextFromClient(traceId, client, scope) : undefined);
+
+            request.setHeader('sentry-trace', sentryTraceHeader);
+
+            const sentryBaggageHeader = dynamicSamplingContextToSentryBaggageHeader(dynamicSamplingContext);
+            if (sentryBaggageHeader) {
+              request.setHeader('baggage', sentryBaggageHeader);
+            }
           }
         }
       }

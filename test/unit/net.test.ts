@@ -1,7 +1,7 @@
 import { expect, should, use } from 'chai';
 import * as http from 'http';
 import chaiAsPromised = require('chai-as-promised');
-import { setAsyncContextStrategy, Span } from '@sentry/core';
+import { getActiveTransaction, setAsyncContextStrategy, Span } from '@sentry/core';
 import { createTransport, Hub, NodeClient } from '@sentry/node';
 import { ClientOptions, Transaction, TransactionContext } from '@sentry/types';
 import { resolvedSyncPromise } from '@sentry/utils';
@@ -53,10 +53,7 @@ function mockAsyncContextStrategy(getHub: () => Hub): void {
   setAsyncContextStrategy({ getCurrentHub, runWithAsyncContext });
 }
 
-function createTransactionOnScope(
-  customOptions: Partial<ClientOptions> = {},
-  customContext?: Partial<TransactionContext>,
-): [Transaction, Hub] {
+function createHubOnScope(customOptions: Partial<ClientOptions> = {}): Hub {
   const hub = new Hub();
   mockAsyncContextStrategy(() => hub);
 
@@ -77,6 +74,15 @@ function createTransactionOnScope(
       segment: 'segmentA',
     }),
   );
+
+  return hub;
+}
+
+function createTransactionOnScope(
+  customOptions: Partial<ClientOptions> = {},
+  customContext?: Partial<TransactionContext>,
+): [Transaction, Hub] {
+  const hub = createHubOnScope(customOptions);
 
   const transaction = hub.startTransaction({
     name: 'dogpark',
@@ -215,6 +221,20 @@ describe.skip('net integration', () => {
       expect(spans[1].op).to.equal('http.client');
 
       expect(headers['sentry-trace']).to.be.undefined;
+    });
+  });
+
+  describe('tracing without performance', () => {
+    it('adds headers without transaction', async () => {
+      createHubOnScope({
+        tracePropagationTargets: ['localhost'],
+        integrations: [new Net()],
+      });
+      const headers = await makeRequest();
+      const transaction = getActiveTransaction();
+
+      expect(transaction).to.be.undefined;
+      expect(headers['sentry-trace']).not.to.be.empty;
     });
   });
 });
