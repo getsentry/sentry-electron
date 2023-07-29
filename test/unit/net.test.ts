@@ -93,6 +93,7 @@ function getSpans(transaction: Transaction): Span[] {
   return (transaction as unknown as Span).spanRecorder?.spans as Span[];
 }
 
+// eslint-disable-next-line jest/no-disabled-tests
 describe.skip('net integration', () => {
   let server: http.Server<any, any> | undefined;
 
