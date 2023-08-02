@@ -1,0 +1,4 @@
+description: Webpack app with error in main process
+command: yarn && yarn build
+condition: supportsContextIsolation && supportsSandbox
+timeout: 120

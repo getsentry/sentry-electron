@@ -19,6 +19,7 @@ import {
   SentryMinidump,
 } from './integrations';
 import { configureIPC } from './ipc';
+import { defaultStackParser } from './stack-parse';
 import { ElectronOfflineTransportOptions, makeElectronOfflineTransport } from './transports/electron-offline-net';
 import { SDK_VERSION } from './version';
 
@@ -111,6 +112,10 @@ export function init(userOptions: ElectronMainOptions): void {
     defaults.push(new MainProcessSession());
     // We don't want nodejs autoSessionTracking
     options.autoSessionTracking = false;
+  }
+
+  if (options.stackParser === undefined) {
+    options.stackParser = defaultStackParser;
   }
 
   setDefaultIntegrations(defaults, options);

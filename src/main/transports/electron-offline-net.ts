@@ -140,7 +140,7 @@ export function makeElectronOfflineTransport(options: ElectronOfflineTransportOp
     }
 
     if (action == 'queue') {
-      return await queueRequest(request);
+      return queueRequest(request);
     }
 
     logger.log('Dropping request');

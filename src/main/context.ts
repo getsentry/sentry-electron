@@ -330,5 +330,5 @@ export async function getEventDefaults(release?: string, environment?: string): 
     cachedDefaultsPromise = _getEventDefaults(release, environment);
   }
 
-  return await cachedDefaultsPromise;
+  return cachedDefaultsPromise;
 }
