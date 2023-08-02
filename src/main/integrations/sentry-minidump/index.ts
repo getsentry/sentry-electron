@@ -5,7 +5,7 @@ import { basename, logger, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
 import { mergeEvents } from '../../../common';
-import { getEventDefaults } from '../../context';
+import { getDefaultEnvironment, getDefaultReleaseName, getEventDefaults } from '../../context';
 import { EXIT_REASONS, onChildProcessGone, onRendererProcessGone } from '../../electron-normalize';
 import { sentryCachePath } from '../../fs';
 import { getRendererProperties, trackRendererProperties } from '../../renderers';
@@ -13,6 +13,11 @@ import { ElectronMainOptions } from '../../sdk';
 import { checkPreviousSession, sessionCrashed } from '../../sessions';
 import { BufferedWriteStore } from '../../store';
 import { deleteMinidump, getMinidumpLoader, MinidumpLoader } from './minidump-loader';
+
+interface PreviousRun {
+  scope: Scope;
+  event?: Event;
+}
 
 /** Sends minidumps via the Sentry uploader */
 export class SentryMinidump implements Integration {
@@ -23,10 +28,10 @@ export class SentryMinidump implements Integration {
   public name: string = SentryMinidump.id;
 
   /** Store to persist context information beyond application crashes. */
-  private _scopeStore?: BufferedWriteStore<Scope>;
+  private _scopeStore?: BufferedWriteStore<PreviousRun>;
 
   /** Temp store for the scope of last run */
-  private _scopeLastRun?: Promise<Scope>;
+  private _scopeLastRun?: Promise<PreviousRun>;
 
   private _minidumpLoader?: MinidumpLoader;
 
@@ -41,14 +46,21 @@ export class SentryMinidump implements Integration {
 
     this._startCrashReporter();
 
-    this._scopeStore = new BufferedWriteStore<Scope>(sentryCachePath, 'scope_v2', new Scope());
+    this._scopeStore = new BufferedWriteStore<PreviousRun>(sentryCachePath, 'scope_v3', {
+      scope: new Scope(),
+    });
+
     // We need to store the scope in a variable here so it can be attached to minidumps
     this._scopeLastRun = this._scopeStore.get();
 
-    this._setupScopeListener();
-
-    const client = getCurrentHub().getClient<NodeClient>();
+    const hub = getCurrentHub();
+    const client = hub.getClient<NodeClient>();
     const options = client?.getOptions() as ElectronMainOptions;
+
+    const currentRelease = options?.release || getDefaultReleaseName();
+    const currentEnvironment = options?.environment || getDefaultEnvironment();
+
+    this._setupScopeListener(currentRelease, currentEnvironment);
 
     if (!options?.dsn) {
       throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
@@ -169,22 +181,31 @@ export class SentryMinidump implements Integration {
   /**
    * Adds a scope listener to persist changes to disk.
    */
-  private _setupScopeListener(): void {
-    const hubScope = getCurrentHub().getScope();
-    if (hubScope) {
-      hubScope.addScopeListener((updatedScope) => {
-        const scope = Scope.clone(updatedScope);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        (scope as any)._eventProcessors = [];
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        (scope as any)._scopeListeners = [];
+  private _setupScopeListener(currentRelease: string, currentEnvironment: string): void {
+    const scopeChanged = (updatedScope: Scope): void => {
+      const scope = Scope.clone(updatedScope);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      (scope as any)._eventProcessors = [];
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      (scope as any)._scopeListeners = [];
 
-        // Since the initial scope read is async, we need to ensure that any writes do not beat that
-        // https://github.com/getsentry/sentry-electron/issues/585
-        setImmediate(() => {
-          void this._scopeStore?.set(scope);
+      // Since the initial scope read is async, we need to ensure that any writes do not beat that
+      // https://github.com/getsentry/sentry-electron/issues/585
+      setImmediate(async () => {
+        const event = await getEventDefaults(currentRelease, currentEnvironment);
+        void this._scopeStore?.set({
+          scope,
+          event,
         });
       });
+    };
+
+    const scope = getCurrentHub().getScope();
+
+    if (scope) {
+      scope.addScopeListener(scopeChanged);
+      // Ensure at least one event is written to disk
+      scopeChanged(scope);
     }
   }
 
@@ -193,7 +214,7 @@ export class SentryMinidump implements Integration {
    *
    * Returns true if one or more minidumps were found
    */
-  private async _sendNativeCrashes(event: Event): Promise<boolean> {
+  private async _sendNativeCrashes(eventIn: Event): Promise<boolean> {
     // Whenever we are called, assume that the crashes we are going to load down
     // below have occurred recently. This means, we can use the same event data
     // for all minidumps that we load now. There are two conditions:
@@ -205,6 +226,8 @@ export class SentryMinidump implements Integration {
     //  2. A renderer process crashed recently and we have just been notified
     //     about it. Just use the breadcrumbs and context information we have
     //     right now and hope that the delay was not too long.
+
+    let event: Event | null = eventIn;
 
     if (this._minidumpLoader === undefined) {
       throw new SentryError('Invariant violation: Native crashes not enabled');
@@ -224,19 +247,30 @@ export class SentryMinidump implements Integration {
         const enabled = client.getOptions().enabled;
 
         // If the SDK is not enabled, we delete the minidump files so they
-        // dont accumulate and/or get sent later
+        // don't accumulate and/or get sent later
         if (enabled === false) {
           minidumps.forEach(deleteMinidump);
           return false;
         }
 
-        const storedScope = Scope.clone(await this._scopeLastRun);
-        let newEvent = await storedScope.applyToEvent(event);
+        // If this is a native main process crash, we need to apply the scope and context from the previous run
+        if (event?.tags?.['event.process'] === 'browser') {
+          const previousRun = await this._scopeLastRun;
+
+          const storedScope = Scope.clone(previousRun?.scope);
+          event = await storedScope.applyToEvent(event);
+
+          if (event && previousRun) {
+            event.release = previousRun.event?.release || event.release;
+            event.environment = previousRun.event?.environment || event.environment;
+            event.contexts = previousRun.event?.contexts || event.contexts;
+          }
+        }
 
         const hubScope = hub.getScope();
-        newEvent = hubScope ? await hubScope.applyToEvent(event) : event;
+        event = hubScope && event ? await hubScope.applyToEvent(event) : event;
 
-        if (!newEvent) {
+        if (!event) {
           return false;
         }
 
@@ -244,7 +278,7 @@ export class SentryMinidump implements Integration {
           const data = await minidump.load();
 
           if (data) {
-            captureEvent(newEvent, {
+            captureEvent(event, {
               attachments: [
                 {
                   attachmentType: 'event.minidump',

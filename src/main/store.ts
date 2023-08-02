@@ -117,8 +117,6 @@ export class Store<T> {
  * Extends Store to throttle writes.
  */
 export class BufferedWriteStore<T> extends Store<T> {
-  /** The minimum time between writes */
-  private readonly _throttleTime?: number;
   /** A write that hasn't been written to disk yet */
   private _pendingWrite: { data: T; timeout: NodeJS.Timeout } | undefined;
 
@@ -130,9 +128,8 @@ export class BufferedWriteStore<T> extends Store<T> {
    * @param initial An initial value to initialize data with.
    * @param throttleTime The minimum time between writes
    */
-  public constructor(path: string, id: string, initial: T, throttleTime: number = 500) {
+  public constructor(path: string, id: string, initial: T, private readonly _throttleTime: number = 500) {
     super(path, id, initial);
-    this._throttleTime = throttleTime;
   }
 
   /** @inheritdoc */
