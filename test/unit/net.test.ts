@@ -235,6 +235,7 @@ describe.skip('net integration', () => {
 
       expect(transaction).to.be.undefined;
       expect(headers['sentry-trace']).not.to.be.empty;
+      expect(headers['baggage']).not.to.be.empty;
     });
   });
 });
