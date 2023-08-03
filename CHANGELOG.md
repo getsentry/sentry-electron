@@ -8,7 +8,7 @@
 - feat: Tracing without performance (#710)
 - feat: Deprecate `tracingOrigins` for `tracePropagationTargets` (#703)
 - feat: Use `protocol.handle` on Electron >= v25 (#704)
-- test: Update from [v7.58.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.58.0) to [v7.60.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.60.0) of JavaScript SDKs (#706)
+- test: Update from [v7.58.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.58.0) to [v7.61.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.61.0) of JavaScript SDKs (#709)
 
 ## 4.8.0
 
