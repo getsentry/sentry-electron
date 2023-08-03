@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 4.9.0
+
+- fix: Ensure context from previous run is used for native main crashes (#683)
+- feat: Tracing without performance (#710)
+- feat: Deprecate `tracingOrigins` for `tracePropagationTargets` (#703)
+- feat: Use `protocol.handle` on Electron >= v25 (#704)
+- test: Update from [v7.58.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.58.0) to [v7.61.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.61.0) of JavaScript SDKs (#709)
+
 ## 4.8.0
 
 - feat: Update to [v7.58.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.58.0) of JavaScript SDKs
