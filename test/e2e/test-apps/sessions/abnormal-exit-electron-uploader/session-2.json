@@ -4,14 +4,15 @@
   "method": "envelope",
   "data": {
     "sid": "{{id}}",
-    "init": true,
+    "did": "some_user",
+    "init": false,
     "started": 0,
     "timestamp": 0,
-    "status": "crashed",
+    "status": "abnormal",
     "errors": 1,
     "duration": 0,
     "attrs": {
-      "release": "session-native-crash-renderer-electron-uploader@1.0.0"
+      "release": "session-abnormal-exit-electron-uploader@1.0.0"
     }
   }
 }

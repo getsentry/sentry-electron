@@ -17,9 +17,15 @@ let previousSession: Promise<Partial<Session> | undefined> | undefined = session
 let persistTimer: NodeJS.Timer | undefined;
 
 /** Starts a session */
-export async function startSession(): Promise<void> {
+export async function startSession(sendOnCreate: boolean): Promise<void> {
   const hub = getCurrentHub();
-  await sessionStore.set(hub.startSession());
+  const session = hub.startSession();
+
+  if (sendOnCreate) {
+    hub.captureSession();
+  }
+
+  await sessionStore.set(session);
 
   // Every PERSIST_INTERVAL, write the session to disk
   persistTimer = setInterval(async () => {

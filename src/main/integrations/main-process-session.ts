@@ -4,6 +4,11 @@ import { app } from 'electron';
 
 import { endSession, startSession } from '../sessions';
 
+interface Options {
+  /** Whether sessions should be sent immediately on creation */
+  sendOnCreate?: boolean;
+}
+
 /** Tracks sessions as the main process lifetime. */
 export class MainProcessSession implements Integration {
   /** @inheritDoc */
@@ -12,9 +17,11 @@ export class MainProcessSession implements Integration {
   /** @inheritDoc */
   public name: string = MainProcessSession.id;
 
+  public constructor(private readonly _options: Options = {}) {}
+
   /** @inheritDoc */
   public setupOnce(): void {
-    void startSession();
+    void startSession(!!this._options.sendOnCreate);
 
     // We track sessions via the 'will-quit' event which is the last event emitted before close.
     //

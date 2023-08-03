@@ -7,11 +7,11 @@
     "init": false,
     "started": 0,
     "timestamp": 0,
-    "status": "ok",
+    "status": "crashed",
     "errors": 1,
     "duration": 0,
     "attrs": {
-      "release": "error-session@1.0.0"
+      "release": "session-native-crash-renderer@1.0.0"
     }
   }
 }
