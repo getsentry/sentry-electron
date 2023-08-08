@@ -27,9 +27,9 @@ app.on('ready', () => {
 if (process.env.APP_FIRST_RUN) {
   setTimeout(() => {
     process.crash();
-  }, 1000);
+  }, 2000);
 } else {
   setTimeout(() => {
     app.quit();
-  }, 2000);
+  }, 4000);
 }
