@@ -1,11 +1,12 @@
 const path = require('path');
 
 const { app, BrowserWindow } = require('electron');
-const { init } = require('@sentry/electron');
+const { init, Integrations } = require('@sentry/electron');
 
 init({
   dsn: '__DSN__',
   debug: true,
+  integrations: [new Integrations.MainProcessSession({ sendOnCreate: true })],
   onFatalError: () => {},
 });
 
@@ -26,9 +27,9 @@ app.on('ready', () => {
 if (process.env.APP_FIRST_RUN) {
   setTimeout(() => {
     process.exit();
-  }, 1000);
+  }, 2000);
 } else {
   setTimeout(() => {
     app.quit();
-  }, 2000);
+  }, 4000);
 }

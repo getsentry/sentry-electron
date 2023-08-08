@@ -1,11 +1,12 @@
 const path = require('path');
 
 const { app, BrowserWindow } = require('electron');
-const { init } = require('@sentry/electron');
+const { init, Integrations } = require('@sentry/electron');
 
 init({
   dsn: '__DSN__',
   debug: true,
+  integrations: [new Integrations.MainProcessSession({ sendOnCreate: true })],
   onFatalError: () => {},
 });
 

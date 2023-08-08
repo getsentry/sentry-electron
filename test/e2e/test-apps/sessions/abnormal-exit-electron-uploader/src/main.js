@@ -8,7 +8,11 @@ app.commandLine.appendSwitch('enable-crashpad');
 init({
   dsn: '__DSN__',
   debug: true,
-  integrations: (defaults) => [new Integrations.ElectronMinidump(), ...defaults],
+  integrations: (defaults) => [
+    new Integrations.ElectronMinidump(),
+    new Integrations.MainProcessSession({ sendOnCreate: true }),
+    ...defaults,
+  ],
   initialScope: { user: { username: 'some_user' } },
   onFatalError: () => {},
 });
@@ -30,9 +34,9 @@ app.on('ready', () => {
 if (process.env.APP_FIRST_RUN) {
   setTimeout(() => {
     process.exit();
-  }, 1000);
+  }, 2000);
 } else {
   setTimeout(() => {
     app.quit();
-  }, 2000);
+  }, 4000);
 }
