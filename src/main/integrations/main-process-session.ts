@@ -5,7 +5,11 @@ import { app } from 'electron';
 import { endSession, startSession } from '../sessions';
 
 interface Options {
-  /** Whether sessions should be sent immediately on creation */
+  /**
+   * Whether sessions should be sent immediately on creation
+   *
+   * @default false
+   */
   sendOnCreate?: boolean;
 }
 
