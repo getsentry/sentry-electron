@@ -59,12 +59,17 @@ export class ElectronMinidump implements Integration {
   public static id: string = 'ElectronMinidump';
 
   /** @inheritDoc */
-  public name: string = ElectronMinidump.id;
+  public readonly name: string;
 
   /** Counter used to ensure no race condition when updating extra params */
-  private _updateEpoch: number = 0;
+  private _updateEpoch: number;
 
   private _customRelease: string | undefined;
+
+  public constructor() {
+    this.name = ElectronMinidump.id;
+    this._updateEpoch = 0;
+  }
 
   /** @inheritDoc */
   public setupOnce(): void {

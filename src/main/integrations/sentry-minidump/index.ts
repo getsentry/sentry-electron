@@ -25,7 +25,7 @@ export class SentryMinidump implements Integration {
   public static id: string = 'SentryMinidump';
 
   /** @inheritDoc */
-  public name: string = SentryMinidump.id;
+  public readonly name: string;
 
   /** Store to persist context information beyond application crashes. */
   private _scopeStore?: BufferedWriteStore<PreviousRun>;
@@ -34,6 +34,10 @@ export class SentryMinidump implements Integration {
   private _scopeLastRun?: Promise<PreviousRun>;
 
   private _minidumpLoader?: MinidumpLoader;
+
+  public constructor() {
+    this.name = SentryMinidump.id;
+  }
 
   /** @inheritDoc */
   public setupOnce(): void {

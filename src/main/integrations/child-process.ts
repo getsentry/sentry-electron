@@ -42,7 +42,7 @@ export class ChildProcess implements Integration {
   public static id: string = 'ChildProcess';
 
   /** @inheritDoc */
-  public name: string = ChildProcess.id;
+  public readonly name: string;
 
   private readonly _options: ChildProcessOptions;
 
@@ -50,6 +50,7 @@ export class ChildProcess implements Integration {
    * @param _options Integration options
    */
   public constructor(options: Partial<OrBool<ChildProcessOptions>> = {}) {
+    this.name = ChildProcess.id;
     const { breadcrumbs, events } = options;
     this._options = {
       breadcrumbs: Array.isArray(breadcrumbs) ? breadcrumbs : breadcrumbs == false ? [] : DEFAULT_OPTIONS.breadcrumbs,

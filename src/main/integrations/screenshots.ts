@@ -12,7 +12,11 @@ export class Screenshots implements Integration {
   public static id: string = 'Screenshots';
 
   /** @inheritDoc */
-  public name: string = Screenshots.id;
+  public readonly name: string;
+
+  public constructor() {
+    this.name = Screenshots.id;
+  }
 
   /** @inheritDoc */
   public setupOnce(addGlobalEventProcessor: (callback: EventProcessor) => void): void {

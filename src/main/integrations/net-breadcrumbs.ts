@@ -46,10 +46,12 @@ export class Net implements Integration {
   public static id: string = 'Net';
 
   /** @inheritDoc */
-  public name: string = Net.id;
+  public readonly name: string;
 
   /** @inheritDoc */
-  public constructor(private readonly _options: NetOptions = {}) {}
+  public constructor(private readonly _options: NetOptions = {}) {
+    this.name = Net.id;
+  }
 
   /** @inheritDoc */
   public setupOnce(_addGlobalEventProcessor: (callback: EventProcessor) => void, getCurrentHub: () => Hub): void {

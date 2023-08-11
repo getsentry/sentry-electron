@@ -26,17 +26,15 @@ export interface QueuedTransportRequest extends TransportRequest {
 
 /** A request queue that is persisted to disk to survive app restarts */
 export class PersistedRequestQueue {
-  private readonly _queue: BufferedWriteStore<PersistedRequest[]> = new BufferedWriteStore(
-    this._queuePath,
-    'queue',
-    [],
-  );
+  private readonly _queue: BufferedWriteStore<PersistedRequest[]>;
 
   public constructor(
     private readonly _queuePath: string,
     private readonly _maxAgeDays: number = 30,
     private readonly _maxCount: number = 30,
-  ) {}
+  ) {
+    this._queue = new BufferedWriteStore(this._queuePath, 'queue', []);
+  }
 
   /** Adds a request to the queue */
   public async add(request: QueuedTransportRequest): Promise<number> {

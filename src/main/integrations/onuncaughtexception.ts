@@ -9,7 +9,11 @@ export class OnUncaughtException implements Integration {
   public static id: string = 'OnUncaughtException';
 
   /** @inheritDoc */
-  public name: string = OnUncaughtException.id;
+  public readonly name: string;
+
+  public constructor() {
+    this.name = OnUncaughtException.id;
+  }
 
   /**
    * @inheritDoc
