@@ -25,12 +25,14 @@ export class AdditionalContext implements Integration {
   public static id: string = 'AdditionalContext';
 
   /** @inheritDoc */
-  public name: string = AdditionalContext.id;
+  public readonly name: string;
 
   private readonly _options: AdditionalContextOptions;
-  private _lazyDeviceContext: DeviceContext = {};
+  private readonly _lazyDeviceContext: DeviceContext;
 
   public constructor(options: Partial<AdditionalContextOptions> = {}) {
+    this._lazyDeviceContext = {};
+    this.name = AdditionalContext.id;
     this._options = {
       ...DEFAULT_OPTIONS,
       ...options,

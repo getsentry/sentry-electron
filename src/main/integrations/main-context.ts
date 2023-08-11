@@ -12,7 +12,11 @@ export class MainContext implements Integration {
   public static id: string = 'MainContext';
 
   /** @inheritDoc */
-  public name: string = MainContext.id;
+  public readonly name: string;
+
+  public constructor() {
+    this.name = MainContext.id;
+  }
 
   /** @inheritDoc */
   public setupOnce(addGlobalEventProcessor: (callback: EventProcessor) => void): void {

@@ -35,9 +35,15 @@ interface QueueEntry {
 
 /** An async mutex that queues up tasks for a shared resource */
 export class Mutex {
-  private _entries: Array<QueueEntry> = [];
-  private _waiters: Array<Releaser> = [];
-  private _value: number = 1;
+  private readonly _entries: Array<QueueEntry>;
+  private _waiters: Array<Releaser>;
+  private _value: number;
+
+  public constructor() {
+    this._entries = [];
+    this._waiters = [];
+    this._value = 1;
+  }
 
   /** Run a task when all pending tasks are complete */
   public async runExclusive<T>(task: () => Promise<T> | T): Promise<T> {

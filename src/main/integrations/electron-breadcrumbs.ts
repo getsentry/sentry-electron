@@ -109,7 +109,7 @@ export class ElectronBreadcrumbs implements Integration {
   public static id: string = 'ElectronBreadcrumbs';
 
   /** @inheritDoc */
-  public name: string = ElectronBreadcrumbs.id;
+  public readonly name: string;
 
   private readonly _options: ElectronBreadcrumbsOptions<EventFunction | false>;
 
@@ -117,6 +117,7 @@ export class ElectronBreadcrumbs implements Integration {
    * @param _options Integration options
    */
   public constructor(options: Partial<ElectronBreadcrumbsOptions<EventTypes>> = {}) {
+    this.name = ElectronBreadcrumbs.id;
     this._options = { ...DEFAULT_OPTIONS, ...normalizeOptions(options) };
   }
 

@@ -20,7 +20,11 @@ export class PreloadInjection implements Integration {
   public static id: string = 'PreloadInjection';
 
   /** @inheritDoc */
-  public name: string = PreloadInjection.id;
+  public readonly name: string;
+
+  public constructor() {
+    this.name = PreloadInjection.id;
+  }
 
   /** @inheritDoc */
   public setupOnce(): void {

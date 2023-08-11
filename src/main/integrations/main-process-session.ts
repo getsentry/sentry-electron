@@ -19,9 +19,11 @@ export class MainProcessSession implements Integration {
   public static id: string = 'MainProcessSession';
 
   /** @inheritDoc */
-  public name: string = MainProcessSession.id;
+  public readonly name: string;
 
-  public constructor(private readonly _options: Options = {}) {}
+  public constructor(private readonly _options: Options = {}) {
+    this.name = MainProcessSession.id;
+  }
 
   /** @inheritDoc */
   public setupOnce(): void {

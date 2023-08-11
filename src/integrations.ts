@@ -78,7 +78,11 @@ class EmptyIntegration implements Integration {
   public static id: string = 'EmptyIntegration';
 
   /** @inheritDoc */
-  public name: string = EmptyIntegration.id;
+  public readonly name: string;
+
+  public constructor() {
+    this.name = EmptyIntegration.id;
+  }
 
   /** @inheritDoc */
   public setupOnce(): void {

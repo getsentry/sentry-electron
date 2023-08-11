@@ -11,7 +11,11 @@ export class EventToMain implements Integration {
   public static id: string = 'EventToMain';
 
   /** @inheritDoc */
-  public name: string = EventToMain.id;
+  public readonly name: string;
+
+  public constructor() {
+    this.name = EventToMain.id;
+  }
 
   /** @inheritDoc */
   public setupOnce(addGlobalEventProcessor: (callback: EventProcessor) => void): void {

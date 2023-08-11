@@ -12,7 +12,11 @@ export class ScopeToMain implements Integration {
   public static id: string = 'ScopeToMain';
 
   /** @inheritDoc */
-  public name: string = ScopeToMain.id;
+  public readonly name: string;
+
+  public constructor() {
+    this.name = ScopeToMain.id;
+  }
 
   /** @inheritDoc */
   public setupOnce(): void {

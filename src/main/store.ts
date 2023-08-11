@@ -27,7 +27,7 @@ export class Store<T> {
   /** Value used to initialize data for the first time. */
   private readonly _initial: T;
   /** A mutex to ensure that there aren't races while reading and writing files */
-  private _lock: Mutex = new Mutex();
+  private readonly _lock: Mutex;
 
   /**
    * Creates a new store.
@@ -37,6 +37,7 @@ export class Store<T> {
    * @param initial An initial value to initialize data with.
    */
   public constructor(path: string, id: string, initial: T) {
+    this._lock = new Mutex();
     this._path = join(path, `${id}.json`);
     this._initial = initial;
   }
