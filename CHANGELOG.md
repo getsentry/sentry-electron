@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 4.10.0
+
+- feat: Optionally send sessions when they're created (#715)
+- feat: Update from [v7.61.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.61.0) to [v7.63.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.63.0) of JavaScript SDKs (#719)
+
 ## 4.9.0
 
 - fix: Ensure context from previous run is used for native main crashes (#683)
