@@ -6,7 +6,7 @@ const { init, Integrations } = require('@sentry/electron');
 init({
   dsn: '__DSN__',
   debug: true,
-  integrations: [new Integrations.BrowserWindowSession({ noFocusSecondsTimeout: 1 })],
+  integrations: [new Integrations.BrowserWindowSession({ backgroundTimeoutSeconds: 1 })],
   onFatalError: () => {},
 });
 
