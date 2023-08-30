@@ -54,7 +54,7 @@ export class BrowserWindowSession implements Integration {
       this._state = 'active';
     } else {
       if (this._state === 'active') {
-        const timeout = (this._options.noFocusSecondsTimeout ?? 10) * 1_000;
+        const timeout = (this._options.noFocusSecondsTimeout ?? 30) * 1_000;
 
         const timer = setTimeout(() => {
           // if we're still waiting for the timeout, end the session
