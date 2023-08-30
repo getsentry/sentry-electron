@@ -128,21 +128,32 @@ export function init(userOptions: ElectronMainOptions): void {
   nodeInit(options);
 }
 
-/** Sets the default integrations and ensures that multiple minidump integrations are not enabled */
+/** A list of integrations which cause default integrations to be removed */
+const INTEGRATION_OVERRIDES = [
+  { override: 'ElectronMinidump', remove: 'SentryMinidump' },
+  { override: 'BrowserWindowSession', remove: 'MainProcessSession' },
+];
+
+/** Sets the default integrations and ensures that multiple minidump or session integrations are not enabled */
 function setDefaultIntegrations(defaults: Integration[], options: ElectronMainOptions): void {
   if (options.defaultIntegrations === undefined) {
-    // If ElectronMinidump has been included, automatically remove SentryMinidump
-    if (Array.isArray(options.integrations) && options.integrations.some((i) => i.name === 'ElectronMinidump')) {
-      options.defaultIntegrations = defaults.filter((integration) => integration.name !== 'SentryMinidump');
+    const removeDefaultsMatching = (user: Integration[], defaults: Integration[]): Integration[] => {
+      const toRemove = INTEGRATION_OVERRIDES.filter(({ override }) => user.some((i) => i.name === override)).map(
+        ({ remove }) => remove,
+      );
+
+      return defaults.filter((i) => !toRemove.includes(i.name));
+    };
+
+    if (Array.isArray(options.integrations)) {
+      options.defaultIntegrations = removeDefaultsMatching(options.integrations, defaults);
       return;
     } else if (typeof options.integrations === 'function') {
       const originalFn = options.integrations;
 
       options.integrations = (integrations) => {
-        const userIntegrations = originalFn(integrations);
-        return userIntegrations.some((i) => i.name === 'ElectronMinidump')
-          ? userIntegrations.filter((integration) => integration.name !== 'SentryMinidump')
-          : userIntegrations;
+        const resultIntegrations = originalFn(integrations);
+        return removeDefaultsMatching(resultIntegrations, resultIntegrations);
       };
     }
 
