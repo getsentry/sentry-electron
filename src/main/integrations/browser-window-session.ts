@@ -1,6 +1,7 @@
 import { Integration } from '@sentry/types';
 import { app, BrowserWindow } from 'electron';
 
+import { ELECTRON_MAJOR_VERSION } from '../electron-normalize';
 import { endSession, endSessionOnExit, startSession } from '../sessions';
 
 interface Options {
@@ -14,7 +15,11 @@ interface Options {
 
 type SessionState = 'active' | 'inactive' | { timer: NodeJS.Timeout };
 
-/** Tracks sessions as BrowserWindows focused. */
+/**
+ * Tracks sessions as BrowserWindows focused.
+ *
+ * Supports Electron >= v12
+ */
 export class BrowserWindowSession implements Integration {
   /** @inheritDoc */
   public static id: string = 'BrowserWindowSession';
@@ -25,25 +30,38 @@ export class BrowserWindowSession implements Integration {
   private _state: SessionState;
 
   public constructor(private readonly _options: Options = {}) {
+    if (ELECTRON_MAJOR_VERSION < 12) {
+      throw new Error('BrowserWindowSession requires Electron >= v12');
+    }
+
     this.name = BrowserWindowSession.id;
     this._state = 'inactive';
   }
 
   /** @inheritDoc */
   public setupOnce(): void {
-    app.on('browser-window-blur', () => this._windowStateChanged());
-    app.on('browser-window-focus', () => this._windowStateChanged());
+    app.on('browser-window-created', (_event, window) => {
+      window.on('focus', this._windowStateChanged);
+      window.on('blur', this._windowStateChanged);
+      window.on('show', this._windowStateChanged);
+      window.on('hide', this._windowStateChanged);
 
-    this._windowStateChanged();
+      window.once('closed', () => {
+        window.removeListener('focus', this._windowStateChanged);
+        window.removeListener('blur', this._windowStateChanged);
+        window.removeListener('show', this._windowStateChanged);
+        window.removeListener('hide', this._windowStateChanged);
+      });
+    });
 
     endSessionOnExit();
   }
 
   /**  */
-  private _windowStateChanged(): void {
-    const appHasFocus = !!BrowserWindow.getFocusedWindow();
+  private _windowStateChanged = (): void => {
+    const aWindowIsActive = BrowserWindow.getAllWindows().some((window) => window.isVisible() && window.isFocused());
 
-    if (appHasFocus) {
+    if (aWindowIsActive) {
       if (this._state === 'inactive') {
         void startSession(true);
       } else if (typeof this._state !== 'string') {
@@ -69,5 +87,5 @@ export class BrowserWindowSession implements Integration {
         this._state = { timer };
       }
     }
-  }
+  };
 }

@@ -7,6 +7,8 @@ import { Optional } from '../common/types';
 const parsed = parseSemver(process.versions.electron);
 const version = { major: parsed.major || 0, minor: parsed.minor || 0, patch: parsed.patch || 0 };
 
+export const ELECTRON_MAJOR_VERSION = version.major;
+
 /** Returns if the app is packaged. Copied from Electron to support < v3 */
 export const isPackaged = (() => {
   const execFile = basename(process.execPath).toLowerCase();
