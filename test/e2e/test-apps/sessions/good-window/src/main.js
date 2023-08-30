@@ -28,7 +28,7 @@ app.on('ready', () => {
       mainWindow.restore();
 
       setTimeout(() => {
-        app.exit();
+        app.quit();
       }, 2000);
     }, 2000);
   }, 2000);
