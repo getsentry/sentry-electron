@@ -57,7 +57,6 @@ export class BrowserWindowSession implements Integration {
     endSessionOnExit();
   }
 
-  /**  */
   private _windowStateChanged = (): void => {
     const aWindowIsActive = BrowserWindow.getAllWindows().some((window) => window.isVisible() && window.isFocused());
 
