@@ -22,10 +22,10 @@ app.on('ready', () => {
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
 
   setTimeout(() => {
-    mainWindow.blur();
+    mainWindow.hide();
 
     setTimeout(() => {
-      mainWindow.focus();
+      mainWindow.show();
 
       setTimeout(() => {
         app.quit();
