@@ -13,6 +13,7 @@ interface Options {
   backgroundTimeoutSeconds?: number;
 }
 
+// The state can be, active, inactive, or waiting for a timeout
 type SessionState = 'active' | 'inactive' | { timer: NodeJS.Timeout };
 
 /**
@@ -46,6 +47,7 @@ export class BrowserWindowSession implements Integration {
       window.on('show', this._windowStateChanged);
       window.on('hide', this._windowStateChanged);
 
+      // when the window is closed we need to remove the listeners
       window.once('closed', () => {
         window.removeListener('focus', this._windowStateChanged);
         window.removeListener('blur', this._windowStateChanged);
@@ -54,14 +56,18 @@ export class BrowserWindowSession implements Integration {
       });
     });
 
+    // if the app exits while the session is active, end the session
     endSessionOnExit();
   }
 
   private _windowStateChanged = (): void => {
+    // We need to test all windows for visibility AND focus
     const aWindowIsActive = BrowserWindow.getAllWindows().some((window) => window.isVisible() && window.isFocused());
 
     if (aWindowIsActive) {
+      // We are now active
       if (this._state === 'inactive') {
+        // If we were inactive, start a new session
         void startSession(true);
       } else if (typeof this._state !== 'string') {
         // Clear the timeout since the app has become active again
@@ -71,10 +77,11 @@ export class BrowserWindowSession implements Integration {
       this._state = 'active';
     } else {
       if (this._state === 'active') {
+        // We have become inactive, start the timeout
         const timeout = (this._options.backgroundTimeoutSeconds ?? 30) * 1_000;
 
         const timer = setTimeout(() => {
-          // if we're still waiting for the timeout, end the session
+          // if the state says we're still waiting for the timeout, end the session
           if (typeof this._state !== 'string') {
             this._state = 'inactive';
             void endSession();
