@@ -14,7 +14,7 @@ interface Options {
 }
 
 // The state can be, active, inactive, or waiting for a timeout
-type SessionState = 'active' | 'inactive' | { timer: NodeJS.Timeout };
+type SessionState = { name: 'active' } | { name: 'inactive' } | { name: 'timeout'; timer: NodeJS.Timeout };
 
 /**
  * Tracks sessions as BrowserWindows focused.
@@ -36,7 +36,7 @@ export class BrowserWindowSession implements Integration {
     }
 
     this.name = BrowserWindowSession.id;
-    this._state = 'inactive';
+    this._state = { name: 'inactive' };
   }
 
   /** @inheritDoc */
@@ -61,36 +61,35 @@ export class BrowserWindowSession implements Integration {
   }
 
   private _windowStateChanged = (): void => {
-    // We need to test all windows for visibility AND focus
-    const aWindowIsActive = BrowserWindow.getAllWindows().some((window) => window.isVisible() && window.isFocused());
+    const aWindowIsActive = !!BrowserWindow.getFocusedWindow();
 
     if (aWindowIsActive) {
       // We are now active
-      if (this._state === 'inactive') {
+      if (this._state.name === 'inactive') {
         // If we were inactive, start a new session
         void startSession(true);
-      } else if (typeof this._state !== 'string') {
+      } else if (this._state.name === 'timeout') {
         // Clear the timeout since the app has become active again
         clearTimeout(this._state.timer);
       }
 
-      this._state = 'active';
+      this._state = { name: 'active' };
     } else {
-      if (this._state === 'active') {
+      if (this._state.name === 'active') {
         // We have become inactive, start the timeout
         const timeout = (this._options.backgroundTimeoutSeconds ?? 30) * 1_000;
 
         const timer = setTimeout(() => {
           // if the state says we're still waiting for the timeout, end the session
-          if (typeof this._state !== 'string') {
-            this._state = 'inactive';
+          if (this._state.name === 'timeout') {
+            this._state = { name: 'inactive' };
             void endSession();
           }
         }, timeout)
           // unref so this timer doesn't block app exit
           .unref();
 
-        this._state = { timer };
+        this._state = { name: 'timeout', timer };
       }
     }
   };
