@@ -85,7 +85,7 @@
             ]
           },
           "mechanism": {
-            "handled": true,
+            "handled": false,
             "type": "generic"
           }
         }
