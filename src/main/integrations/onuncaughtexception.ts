@@ -31,7 +31,19 @@ export class OnUncaughtException implements Integration {
           }));
 
           const nodeClient = getCurrentHub().getClient() as NodeClient;
-          nodeClient.captureException(error, { originalException: error }, getCurrentHub().getScope());
+          nodeClient.captureException(
+            error,
+            {
+              originalException: error,
+              data: {
+                mechanism: {
+                  handled: false,
+                  type: 'generic',
+                },
+              },
+            },
+            getCurrentHub().getScope(),
+          );
           await nodeClient.flush(nodeClient.getOptions().shutdownTimeout || 2000);
 
           if (options?.onFatalError) {

@@ -76,7 +76,7 @@
             ]
           },
           "mechanism": {
-            "handled": true,
+            "handled": false,
             "type": "instrument"
           }
         }
