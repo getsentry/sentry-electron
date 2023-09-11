@@ -2,6 +2,7 @@ import { getCurrentHub, makeSession, updateSession } from '@sentry/core';
 import { flush, NodeClient } from '@sentry/node';
 import { SerializedSession, Session, SessionContext, SessionStatus } from '@sentry/types';
 import { logger } from '@sentry/utils';
+import { app } from 'electron';
 
 import { sentryCachePath } from './fs';
 import { Store } from './store';
@@ -11,7 +12,7 @@ const PERSIST_INTERVAL_MS = 60_000;
 /** Stores the app session in case of termination due to main process crash or app killed */
 const sessionStore = new Store<SessionContext | undefined>(sentryCachePath, 'session', undefined);
 
-/** Previous session that did not exit cleanly */
+/** Previous session if it did not exit cleanly */
 let previousSession: Promise<Partial<Session> | undefined> | undefined = sessionStore.get();
 
 let persistTimer: NodeJS.Timer | undefined;
@@ -145,3 +146,41 @@ export function sessionCrashed(): void {
 
   hub.captureSession();
 }
+
+/**
+ * End the current session on app exit
+ */
+export function endSessionOnExit(): void {
+  // 'before-quit' is always called before 'will-quit' so we listen there and ensure our 'will-quit' handler is still
+  // the last listener
+  app.on('before-quit', () => {
+    // We track the end of sessions via the 'will-quit' event which is the last event emitted before close.
+    //
+    // We need to be the last 'will-quit' listener so as not to interfere with any user defined listeners which may
+    // call `event.preventDefault()` to abort the exit.
+    app.removeListener('will-quit', exitHandler);
+    app.on('will-quit', exitHandler);
+  });
+}
+
+/** Handles the exit */
+const exitHandler: (event: Electron.Event) => Promise<void> = async (event: Electron.Event) => {
+  if (event.defaultPrevented) {
+    return;
+  }
+
+  logger.log('[Session] Exit Handler');
+
+  // Stop the exit so we have time to send the session
+  event.preventDefault();
+
+  try {
+    // End the session
+    await endSession();
+  } catch (e) {
+    // Ignore and log any errors which would prevent app exit
+    logger.warn('[Session] Error ending session:', e);
+  }
+
+  app.exit();
+};
