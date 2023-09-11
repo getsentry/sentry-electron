@@ -11,6 +11,6 @@
   },
   "devDependencies": {
     "@electron-forge/cli": "6.0.0-beta.63",
-    "electron": "23.0.0"
+    "electron": "23.3.13"
   }
 }
