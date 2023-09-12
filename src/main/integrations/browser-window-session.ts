@@ -7,6 +7,8 @@ import { endSession, endSessionOnExit, startSession } from '../sessions';
 function focusedWindow(): boolean {
   for (const window of BrowserWindow.getAllWindows()) {
     if (!window.isDestroyed() && window.webContents && !window.webContents.isDestroyed()) {
+      // It's important to test both isVisible and isFocused, since
+      // Electron v12-13 do not report hidden as a loss of focus
       if (window.isFocused() && window.isVisible()) {
         return true;
       }
