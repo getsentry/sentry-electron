@@ -7,7 +7,7 @@
     "init": false,
     "started": 0,
     "timestamp": 0,
-    "status": "ok",
+    "status": "crashed",
     "errors": 1,
     "duration": 0,
     "attrs": {
