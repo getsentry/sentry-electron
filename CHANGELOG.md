@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+## 4.11.0
+
+- feat: Add optional `BrowserWindowSession` to track sessions as window in foreground (#725)
+- feat: Update from [v7.63.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.63.0) to
+  [v7.68.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.68.0) of JavaScript SDKs (#738)
+- **feat: Mark errors caught by the SDK as unhandled**
+
+As per the changes in the JavaScript SDKs [for
+v7.67.0](https://github.com/getsentry/sentry-javascript/blob/develop/CHANGELOG.md#7670), this release fixes inconsistent
+behaviour of when our SDKs classify captured errors as unhandled. Previously, some of our instrumentations correctly set
+unhandled, while others set handled.
+
+Going forward, all errors caught automatically from our SDKs will be marked as unhandled.
+If you manually capture errors (e.g. by calling `Sentry.captureException`), your errors will continue to be reported as handled.
+
+This change might lead to a decrease in reported crash-free sessions and consequently in your release health score.
+If you have concerns about this, feel free to open an issue.
+
+
+
 ## 4.10.0
 
 - feat: Optionally send sessions when they're created (#715)
