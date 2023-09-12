@@ -20,8 +20,6 @@ If you manually capture errors (e.g. by calling `Sentry.captureException`), your
 This change might lead to a decrease in reported crash-free sessions and consequently in your release health score.
 If you have concerns about this, feel free to open an issue.
 
-
-
 ## 4.10.0
 
 - feat: Optionally send sessions when they're created (#715)
