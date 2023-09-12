@@ -19,7 +19,7 @@ type SessionState = { name: 'active' } | { name: 'inactive' } | { name: 'timeout
 /**
  * Tracks sessions as BrowserWindows focused.
  *
- * Supports Electron >= v12
+ * Supports Electron >= v14
  */
 export class BrowserWindowSession implements Integration {
   /** @inheritDoc */
@@ -31,8 +31,8 @@ export class BrowserWindowSession implements Integration {
   private _state: SessionState;
 
   public constructor(private readonly _options: Options = {}) {
-    if (ELECTRON_MAJOR_VERSION < 12) {
-      throw new Error('BrowserWindowSession requires Electron >= v12');
+    if (ELECTRON_MAJOR_VERSION < 14) {
+      throw new Error('BrowserWindowSession requires Electron >= v14');
     }
 
     this.name = BrowserWindowSession.id;
