@@ -4,6 +4,19 @@ import { app, BrowserWindow } from 'electron';
 import { ELECTRON_MAJOR_VERSION } from '../electron-normalize';
 import { endSession, endSessionOnExit, startSession } from '../sessions';
 
+function focusedWindow(): boolean {
+  for (const window of BrowserWindow.getAllWindows()) {
+    if (!window.isDestroyed() && window.webContents && !window.webContents.isDestroyed()) {
+      // It's important to test both isVisible and isFocused, since
+      // Electron v12-13 do not report hidden as a loss of focus
+      if (window.isFocused() && window.isVisible()) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 interface Options {
   /**
    * Number of seconds to wait before ending a session after the app loses focus.
@@ -61,9 +74,9 @@ export class BrowserWindowSession implements Integration {
   }
 
   private _windowStateChanged = (): void => {
-    const aWindowIsActive = !!BrowserWindow.getFocusedWindow();
+    const hasFocusedWindow = focusedWindow();
 
-    if (aWindowIsActive) {
+    if (hasFocusedWindow) {
       // We are now active
       if (this._state.name === 'inactive') {
         // If we were inactive, start a new session
