@@ -50,10 +50,18 @@ function createMinidumpLoader(fetchMinidumpsImpl: MinidumpLoader): MinidumpLoade
       // remove it from the file system.
       knownPaths.push(dump.path);
 
+      const stats = await statAsync(dump.path);
+
       // We do not want to upload minidumps that have been generated before a
       // certain threshold. Those old files can be deleted immediately.
-      const stats = await statAsync(dump.path);
-      if (stats.birthtimeMs < oldestMs) {
+      const tooOld = stats.birthtimeMs < oldestMs;
+      const tooSmall = stats.size < 1024;
+
+      if (tooSmall) {
+        logger.log('Minidump too small to be valid', dump.path);
+      }
+
+      if (tooOld || tooSmall) {
         await deleteMinidump(dump);
         knownPaths.splice(knownPaths.indexOf(dump.path), 1);
         return false;
