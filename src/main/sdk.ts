@@ -1,9 +1,14 @@
 import { ensureProcess, IPCMode } from '../common';
 ensureProcess('main');
 
-import { defaultIntegrations as defaultNodeIntegrations, init as nodeInit, NodeOptions } from '@sentry/node';
+import {
+  defaultIntegrations as defaultNodeIntegrations,
+  enableAnrDetection as enableNodeAnrDetection,
+  init as nodeInit,
+  NodeOptions,
+} from '@sentry/node';
 import { Integration, Options } from '@sentry/types';
-import { Session, session, WebContents } from 'electron';
+import { app, Session, session, WebContents } from 'electron';
 
 import { getDefaultEnvironment, getDefaultReleaseName } from './context';
 import {
@@ -96,6 +101,11 @@ export function init(userOptions: ElectronMainOptions): void {
   const options: ElectronMainOptionsInternal = Object.assign(defaultOptions, userOptions);
   const defaults = defaultIntegrations;
 
+  if (process.env.SENTRY_ANR_CHILD_PROCESS) {
+    options.autoSessionTracking = false;
+    options.tracesSampleRate = 0;
+  }
+
   // If we don't set a release, @sentry/node will automatically fetch from environment variables
   if (options.release === undefined) {
     options.release = getDefaultReleaseName();
@@ -159,4 +169,42 @@ function setDefaultIntegrations(defaults: Integration[], options: ElectronMainOp
 
     options.defaultIntegrations = defaults;
   }
+}
+
+type AnrOptions = Parameters<typeof enableNodeAnrDetection>[0];
+
+/**
+ * **Note** This feature is still in beta so there may be breaking changes in future releases.
+ *
+ * Starts a child process that detects Application Not Responding (ANR) errors.
+ *
+ * It's important to await on the returned promise before your app code to ensure this code does not run in the ANR
+ * child process.
+ *
+ * ```js
+ * import { init, enableAnrDetection } from '@sentry/electron';
+ *
+ * init({ dsn: "__DSN__" });
+ *
+ * // with ESM + Node 14+
+ * await enableAnrDetection({ captureStackTrace: true });
+ * runApp();
+ *
+ * // with CJS or Node 10+
+ * enableAnrDetection({ captureStackTrace: true }).then(() => {
+ *   runApp();
+ * });
+ * ```
+ */
+export async function enableAnrDetection(options: AnrOptions): Promise<void> {
+  // We need to override the entryScript option to make it work with Electron which doesn't get passed a script in
+  // the process.argv when the app is packaged
+
+  // With CJS, we can get the entry script from process.mainModule
+  if (options.entryScript === undefined) {
+    // eslint-disable-next-line deprecation/deprecation
+    options.entryScript = app.getAppPath();
+  }
+
+  return enableNodeAnrDetection(options);
 }

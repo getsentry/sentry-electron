@@ -56,5 +56,5 @@ export { makeElectronOfflineTransport } from './transports/electron-offline-net'
 export const Integrations = { ...ElectronMainIntegrations, ...NodeIntegrations };
 
 export type { ElectronMainOptions } from './sdk';
-export { init, defaultIntegrations } from './sdk';
+export { init, defaultIntegrations, enableAnrDetection } from './sdk';
 export { IPCMode } from '../common';

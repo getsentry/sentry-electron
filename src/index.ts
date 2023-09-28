@@ -49,6 +49,8 @@ export {
   trace,
 } from '@sentry/core';
 
+import type { enableAnrDetection as enableNodeAnrDetection } from '@sentry/node';
+
 export const Integrations = getIntegrations();
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -62,6 +64,7 @@ interface ProcessEntryPoint {
   init: (options: Partial<ElectronOptions>) => void;
   close?: (timeout?: number) => Promise<boolean>;
   flush?: (timeout?: number) => Promise<boolean>;
+  enableAnrDetection?(options: Parameters<typeof enableNodeAnrDetection>[0]): Promise<void>;
 }
 
 /** Fetches the SDK entry point for the current process */
@@ -164,4 +167,37 @@ export async function flush(timeout?: number): Promise<boolean> {
   }
 
   throw new Error('The Electron SDK should be flushed from the main process');
+}
+
+/**
+ * **Note** This feature is still in beta so there may be breaking changes in future releases.
+ *
+ * Starts a child process that detects Application Not Responding (ANR) errors.
+ *
+ * It's important to await on the returned promise before your app code to ensure this code does not run in the ANR
+ * child process.
+ *
+ * ```js
+ * import { init, enableAnrDetection } from '@sentry/electron';
+ *
+ * init({ dsn: "__DSN__" });
+ *
+ * // with ESM + Node 14+
+ * await enableAnrDetection({ captureStackTrace: true });
+ * runApp();
+ *
+ * // with CJS or Node 10+
+ * enableAnrDetection({ captureStackTrace: true }).then(() => {
+ *   runApp();
+ * });
+ * ```
+ */
+export async function enableAnrDetection(options: Parameters<typeof enableNodeAnrDetection>[0]): Promise<void> {
+  const entryPoint = getEntryPoint();
+
+  if (entryPoint.enableAnrDetection) {
+    return entryPoint.enableAnrDetection(options);
+  }
+
+  throw new Error('ANR detection should be started in the main process');
 }
