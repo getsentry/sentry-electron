@@ -182,11 +182,11 @@ export async function flush(timeout?: number): Promise<boolean> {
  *
  * init({ dsn: "__DSN__" });
  *
- * // with ESM + Node 14+
+ * // with ESM + Electron v28+
  * await enableAnrDetection({ captureStackTrace: true });
  * runApp();
  *
- * // with CJS or Node 10+
+ * // with CJS
  * enableAnrDetection({ captureStackTrace: true }).then(() => {
  *   runApp();
  * });
