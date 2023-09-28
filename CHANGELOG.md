@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 4.11.1
+
+fix: Don't send minidumps that are too small to be valid (#748)
+
 ## 4.11.0
 
 - feat: Add optional `BrowserWindowSession` to track sessions as window in foreground (#725)
