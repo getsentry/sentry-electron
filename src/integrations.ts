@@ -31,6 +31,7 @@ export interface Integrations {
   Screenshots: Screenshots;
   // For renderer process
   ScopeToMain: ScopeToMain;
+  // eslint-disable-next-line deprecation/deprecation
   EventToMain: EventToMain;
 }
 
