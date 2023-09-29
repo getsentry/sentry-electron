@@ -34,7 +34,7 @@ app.on('ready', () => {
 if (process.env.APP_FIRST_RUN) {
   setTimeout(() => {
     process.exit();
-  }, 2000);
+  }, 4000);
 } else {
   setTimeout(() => {
     app.quit();
