@@ -4,8 +4,9 @@ const { resolve } = require('path');
 const typescript = require('@rollup/plugin-typescript');
 
 const dependencies = Object.keys(require(resolve(process.cwd(), 'package.json')).dependencies || {});
+const external = [...builtinModules, 'electron', ...dependencies];
 
-const commonOutputOptions = {
+const outputOptions = {
   sourcemap: true,
   strict: false,
   freeze: false,
@@ -20,7 +21,7 @@ function transpileFiles(format, input, outDir) {
   return {
     input,
     output: {
-      ...commonOutputOptions,
+      ...outputOptions,
       format,
       dir: outDir,
       preserveModules: true,
@@ -32,7 +33,7 @@ function transpileFiles(format, input, outDir) {
         tsconfig: './tsconfig.build.json',
       }),
     ],
-    external: [...builtinModules, 'electron', ...dependencies],
+    external,
   };
 }
 
@@ -40,7 +41,7 @@ function bundlePreload(format, input, output) {
   return {
     input,
     output: {
-      ...commonOutputOptions,
+      ...outputOptions,
       format,
       file: output,
     },
@@ -49,7 +50,7 @@ function bundlePreload(format, input, output) {
         tsconfig: './tsconfig.preload.json',
       }),
     ],
-    external: [...builtinModules, 'electron', ...dependencies],
+    external,
   };
 }
 
