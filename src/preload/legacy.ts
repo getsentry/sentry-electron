@@ -1,7 +1,5 @@
 /**
  * This preload script may be used with sandbox mode enabled which means regular require is not available.
- *
- * npm script `build:preload` calls `node ./scripts/build-preload.js` which inlines ipc and transpiles to JavaScript
  */
 
 import { contextBridge, crashReporter, ipcRenderer } from 'electron';

@@ -1,9 +1,9 @@
 import { app } from 'electron';
-import { mkdir, readdir, readFile, rename, stat, statSync, unlink, writeFile } from 'fs';
+import { mkdir, readdir, readFile, stat, statSync, unlink, writeFile } from 'fs';
 import { dirname, join, resolve } from 'path';
 import { promisify } from 'util';
 
-export const sentryCachePath = join(app.getPath('userData'), 'sentry');
+export const sentryCachePath = join(app ? app.getPath('userData') : '', 'sentry');
 
 export const writeFileAsync = promisify(writeFile);
 export const readFileAsync = promisify(readFile);
@@ -11,7 +11,6 @@ export const mkdirAsync = promisify(mkdir);
 export const statAsync = promisify(stat);
 export const unlinkAsync = promisify(unlink);
 export const readDirAsync = promisify(readdir);
-export const renameAsync = promisify(rename);
 
 // mkdir with recursive was only added in Node 10+
 
