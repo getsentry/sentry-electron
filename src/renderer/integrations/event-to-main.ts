@@ -4,6 +4,8 @@ import { normalize } from '@sentry/utils';
 import { getIPC } from '../ipc';
 
 /**
+ * @deprecated Events are now sent to the main process via a custom transport.
+ *
  * Passes events to the main process.
  */
 export class EventToMain implements Integration {
@@ -14,6 +16,7 @@ export class EventToMain implements Integration {
   public readonly name: string;
 
   public constructor() {
+    // eslint-disable-next-line deprecation/deprecation
     this.name = EventToMain.id;
   }
 
