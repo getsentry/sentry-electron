@@ -24,12 +24,10 @@ app.on('ready', () => {
 
 // We only exit abnormally on the first run
 // The second run is where the session is uploaded
-if (process.env.APP_FIRST_RUN) {
-  setTimeout(() => {
+setTimeout(() => {
+  if (process.env.APP_FIRST_RUN) {
     process.exit();
-  }, 4000);
-} else {
-  setTimeout(() => {
+  } else {
     app.quit();
-  }, 4000);
-}
+  }
+}, 2000);
