@@ -269,10 +269,10 @@ export class SentryMinidump implements Integration {
     const deleteAll = client.getOptions().enabled === false;
 
     let minidumpSent = false;
-    for await (const attachment of this._minidumpLoader(deleteAll)) {
-      captureEvent(event, { attachments: [attachment] });
+    await this._minidumpLoader(deleteAll, (attachment) => {
+      captureEvent(event as Event, { attachments: [attachment] });
       minidumpSent = true;
-    }
+    });
 
     // Unset to recover memory
     this._scopeLastRun = undefined;

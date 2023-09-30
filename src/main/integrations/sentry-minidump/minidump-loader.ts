@@ -15,7 +15,7 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export type MinidumpLoader = (deleteAll: boolean) => AsyncGenerator<Attachment>;
+export type MinidumpLoader = (deleteAll: boolean, callback: (attachment: Attachment) => void) => Promise<void>;
 
 /** Creates a minidump loader */
 export function createMinidumpLoader(
@@ -36,8 +36,7 @@ export function createMinidumpLoader(
     }
   }
 
-  /** The generator function */
-  async function* getMinidumps(deleteAll: boolean): AsyncGenerator<Attachment> {
+  return async (deleteAll, callback) => {
     for (const path of await getMinidumpPaths()) {
       try {
         // Ignore non-minidump files
@@ -86,11 +85,11 @@ export function createMinidumpLoader(
 
             logger.log('Sending minidump');
 
-            yield {
+            callback({
               attachmentType: 'event.minidump',
               filename: basename(path),
               data,
-            };
+            });
 
             break;
           }
@@ -110,9 +109,7 @@ export function createMinidumpLoader(
         await cleanup(path);
       }
     }
-  }
-
-  return getMinidumps;
+  };
 }
 
 /** Attempts to remove the metadata file so Crashpad doesn't output `failed to stat report` errors to the console */
