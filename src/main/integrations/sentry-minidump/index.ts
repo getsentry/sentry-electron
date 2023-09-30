@@ -1,7 +1,7 @@
 import { captureEvent, getCurrentHub, Scope } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { Event, Integration } from '@sentry/types';
-import { basename, logger, SentryError } from '@sentry/utils';
+import { logger, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
 import { mergeEvents } from '../../../common';
@@ -12,7 +12,7 @@ import { getRendererProperties, trackRendererProperties } from '../../renderers'
 import { ElectronMainOptions } from '../../sdk';
 import { checkPreviousSession, sessionCrashed } from '../../sessions';
 import { BufferedWriteStore } from '../../store';
-import { deleteMinidump, getMinidumpLoader, MinidumpLoader } from './minidump-loader';
+import { getMinidumpLoader, MinidumpLoader } from './minidump-loader';
 
 interface PreviousRun {
   scope: Scope;
@@ -231,79 +231,51 @@ export class SentryMinidump implements Integration {
     //     about it. Just use the breadcrumbs and context information we have
     //     right now and hope that the delay was not too long.
 
-    let event: Event | null = eventIn;
-
     if (this._minidumpLoader === undefined) {
       throw new SentryError('Invariant violation: Native crashes not enabled');
     }
 
-    try {
-      const minidumps = await this._minidumpLoader();
+    const hub = getCurrentHub();
+    const client = hub.getClient();
 
-      if (minidumps.length > 0) {
-        const hub = getCurrentHub();
-        const client = hub.getClient();
-
-        if (!client) {
-          return true;
-        }
-
-        const enabled = client.getOptions().enabled;
-
-        // If the SDK is not enabled, we delete the minidump files so they
-        // don't accumulate and/or get sent later
-        if (enabled === false) {
-          minidumps.forEach(deleteMinidump);
-          return false;
-        }
-
-        // If this is a native main process crash, we need to apply the scope and context from the previous run
-        if (event?.tags?.['event.process'] === 'browser') {
-          const previousRun = await this._scopeLastRun;
-
-          const storedScope = Scope.clone(previousRun?.scope);
-          event = await storedScope.applyToEvent(event);
-
-          if (event && previousRun) {
-            event.release = previousRun.event?.release || event.release;
-            event.environment = previousRun.event?.environment || event.environment;
-            event.contexts = previousRun.event?.contexts || event.contexts;
-          }
-        }
-
-        const hubScope = hub.getScope();
-        event = hubScope && event ? await hubScope.applyToEvent(event) : event;
-
-        if (!event) {
-          return false;
-        }
-
-        for (const minidump of minidumps) {
-          const data = await minidump.load();
-
-          if (data) {
-            captureEvent(event, {
-              attachments: [
-                {
-                  attachmentType: 'event.minidump',
-                  filename: basename(minidump.path),
-                  data,
-                },
-              ],
-            });
-          }
-
-          void deleteMinidump(minidump);
-        }
-
-        // Unset to recover memory
-        this._scopeLastRun = undefined;
-        return true;
-      }
-    } catch (_oO) {
-      logger.error('Error while sending native crash.');
+    if (!client) {
+      return true;
     }
 
-    return false;
+    let event: Event | null = eventIn;
+
+    // If this is a native main process crash, we need to apply the scope and context from the previous run
+    if (event.tags?.['event.process'] === 'browser') {
+      const previousRun = await this._scopeLastRun;
+
+      const storedScope = Scope.clone(previousRun?.scope);
+      event = await storedScope.applyToEvent(event);
+
+      if (event && previousRun) {
+        event.release = previousRun.event?.release || event.release;
+        event.environment = previousRun.event?.environment || event.environment;
+        event.contexts = previousRun.event?.contexts || event.contexts;
+      }
+    }
+
+    const hubScope = hub.getScope();
+    event = hubScope && event ? await hubScope.applyToEvent(event) : event;
+
+    if (!event) {
+      return false;
+    }
+
+    // If the SDK is not enabled, tell the loader to delete all minidumps
+    const deleteAll = client.getOptions().enabled === false;
+
+    let minidumpSent = false;
+    for await (const attachment of this._minidumpLoader(deleteAll)) {
+      captureEvent(event, { attachments: [attachment] });
+      minidumpSent = true;
+    }
+
+    // Unset to recover memory
+    this._scopeLastRun = undefined;
+    return minidumpSent;
   }
 }

@@ -1,4 +1,5 @@
-import { logger } from '@sentry/utils';
+import { Attachment } from '@sentry/types';
+import { basename, logger } from '@sentry/utils';
 import { join } from 'path';
 
 import { getCrashesDirectory, usesCrashpad } from '../../electron-normalize';
@@ -6,70 +7,112 @@ import { readDirAsync, readFileAsync, statAsync, unlinkAsync } from '../../fs';
 
 /** Maximum number of days to keep a minidump before deleting it. */
 const MAX_AGE = 30;
+/** Minimum number of seconds a minidump should not be modified for before we assume writing is complete */
+const MIN_NOT_MODIFIED = 2;
+const MINIDUMP_HEADER = 'MDMP';
 
-export interface MinidumpFile {
-  path: string;
-  load(): Promise<Uint8Array | undefined>;
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export type MinidumpLoader = () => Promise<MinidumpFile[]>;
+export type MinidumpLoader = (deleteAll: boolean) => AsyncGenerator<Attachment>;
 
-async function filterAsync<T>(
-  array: T[],
-  predicate: (item: T) => Promise<boolean> | boolean,
-  thisArg?: any,
-): Promise<T[]> {
-  const verdicts = await Promise.all(array.map(predicate, thisArg));
-  return array.filter((_, index) => verdicts[index]);
-}
+/** Creates a minidump loader */
+export function createMinidumpLoader(
+  getMinidumpPaths: () => Promise<string[]>,
+  preProcessFile: (file: Buffer) => Buffer = (file) => file,
+): MinidumpLoader {
+  // Keep track of which minidumps we are currently processing in case this function is called before we're finished
+  const processingPaths: Set<string> = new Set();
 
-/** Deletes a minidump */
-export async function deleteMinidump(dump: MinidumpFile): Promise<void> {
-  try {
-    await unlinkAsync(dump.path);
-  } catch (e) {
-    logger.warn('Could not delete', dump.path);
+  /** Deletes a file and removes it from the processing paths */
+  async function cleanup(path: string): Promise<void> {
+    try {
+      await unlinkAsync(path);
+    } catch (e) {
+      logger.warn('Could not delete', path);
+    } finally {
+      processingPaths.delete(path);
+    }
   }
-}
 
-function createMinidumpLoader(fetchMinidumpsImpl: MinidumpLoader): MinidumpLoader {
-  const knownPaths: string[] = [];
+  /** The generator function */
+  async function* getMinidumps(deleteAll: boolean): AsyncGenerator<Attachment> {
+    for (const path of await getMinidumpPaths()) {
+      try {
+        // Ignore non-minidump files
+        if (!path.endsWith('.dmp')) {
+          continue;
+        }
 
-  return async () => {
-    const minidumps = await fetchMinidumpsImpl();
-    logger.log(`Found ${minidumps.length} minidumps`);
+        // Ignore minidumps we are already processing
+        if (processingPaths.has(path)) {
+          continue;
+        }
 
-    const oldestMs = new Date().getTime() - MAX_AGE * 24 * 3_600 * 1_000;
-    return filterAsync(minidumps, async (dump) => {
-      // Skip files that we have seen before
-      if (knownPaths.indexOf(dump.path) >= 0) {
-        return false;
+        processingPaths.add(path);
+
+        if (deleteAll) {
+          await cleanup(path);
+          continue;
+        }
+
+        logger.log('Found minidump', path);
+
+        let stats = await statAsync(path);
+
+        const thirtyDaysAgo = new Date().getTime() - MAX_AGE * 24 * 3_600 * 1_000;
+
+        if (stats.birthtimeMs < thirtyDaysAgo) {
+          logger.log(`Ignoring minidump as it is over ${MAX_AGE} days old`);
+          await cleanup(path);
+          continue;
+        }
+
+        let retries = 0;
+
+        while (retries <= 10) {
+          const twoSecondsAgo = new Date().getTime() - MIN_NOT_MODIFIED * 1_000;
+
+          if (stats.mtimeMs < twoSecondsAgo) {
+            const file = await readFileAsync(path);
+            const data = preProcessFile(file);
+            await cleanup(path);
+
+            if (data.length < 10_000 || data.subarray(0, 4).toString() !== MINIDUMP_HEADER) {
+              logger.warn('Dropping minidump as it appears invalid.');
+              break;
+            }
+
+            logger.log('Sending minidump');
+
+            yield {
+              attachmentType: 'event.minidump',
+              filename: basename(path),
+              data,
+            };
+
+            break;
+          }
+
+          logger.log(`Minidump has been modified in the last ${MIN_NOT_MODIFIED} seconds. Checking again in a second.`);
+          retries += 1;
+          await delay(1_000);
+          stats = await statAsync(path);
+        }
+
+        if (retries >= 10) {
+          logger.warn('Timed out waiting for minidump to stop being modified');
+          await cleanup(path);
+        }
+      } catch (e) {
+        logger.error('Failed to load minidump', e);
+        await cleanup(path);
       }
+    }
+  }
 
-      // Lock this minidump until we have uploaded it or an error occurs and we
-      // remove it from the file system.
-      knownPaths.push(dump.path);
-
-      const stats = await statAsync(dump.path);
-
-      // We do not want to upload minidumps that have been generated before a
-      // certain threshold. Those old files can be deleted immediately.
-      const tooOld = stats.birthtimeMs < oldestMs;
-      const tooSmall = stats.size < 1024;
-
-      if (tooSmall) {
-        logger.log('Minidump too small to be valid', dump.path);
-      }
-
-      if (tooOld || tooSmall) {
-        await deleteMinidump(dump);
-        knownPaths.splice(knownPaths.indexOf(dump.path), 1);
-        return false;
-      }
-
-      return true;
-    });
-  };
+  return getMinidumps;
 }
 
 /** Attempts to remove the metadata file so Crashpad doesn't output `failed to stat report` errors to the console */
@@ -119,24 +162,15 @@ function crashpadMinidumpLoader(): MinidumpLoader {
 
   return createMinidumpLoader(async () => {
     await deleteCrashpadMetadataFile(crashesDirectory).catch((error) => logger.error(error));
-
-    const files = await readDirsAsync(dumpDirectories);
-    return files
-      .filter((file) => file.endsWith('.dmp'))
-      .map((path) => {
-        return {
-          path,
-          load: () => readFileAsync(path),
-        };
-      });
+    return readDirsAsync(dumpDirectories);
   });
 }
 
 /** Crudely parses the minidump from the Breakpad multipart file */
-function minidumpFromBreakpadMultipart(file: Buffer): Buffer | undefined {
+function minidumpFromBreakpadMultipart(file: Buffer): Buffer {
   const binaryStart = file.lastIndexOf('Content-Type: application/octet-stream');
   if (binaryStart > 0) {
-    const dumpStart = file.indexOf('MDMP', binaryStart);
+    const dumpStart = file.indexOf(MINIDUMP_HEADER, binaryStart);
     const dumpEnd = file.lastIndexOf('----------------------------');
 
     if (dumpStart > 0 && dumpEnd > 0 && dumpEnd > dumpStart) {
@@ -144,7 +178,7 @@ function minidumpFromBreakpadMultipart(file: Buffer): Buffer | undefined {
     }
   }
 
-  return undefined;
+  return file;
 }
 
 function removeBreakpadMetadata(crashesDirectory: string, paths: string[]): void {
@@ -170,24 +204,9 @@ function breakpadMinidumpLoader(): MinidumpLoader {
     // Breakpad stores all minidump files along with a metadata file directly in
     // the crashes directory.
     const files = await readDirAsync(crashesDirectory);
-
     removeBreakpadMetadata(crashesDirectory, files);
-
-    return files
-      .filter((file) => file.endsWith('.dmp'))
-      .map((file) => {
-        const path = join(crashesDirectory, file);
-
-        return {
-          path,
-          load: async () => {
-            const file = await readFileAsync(path);
-            return minidumpFromBreakpadMultipart(file) || file;
-          },
-        };
-      })
-      .filter((m) => !!m);
-  });
+    return files;
+  }, minidumpFromBreakpadMultipart);
 }
 
 /**
