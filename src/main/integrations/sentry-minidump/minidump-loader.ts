@@ -202,7 +202,7 @@ function breakpadMinidumpLoader(): MinidumpLoader {
     // the crashes directory.
     const files = await readDirAsync(crashesDirectory);
     removeBreakpadMetadata(crashesDirectory, files);
-    return files;
+    return files.map((file) => join(crashesDirectory, file));
   }, minidumpFromBreakpadMultipart);
 }
 
