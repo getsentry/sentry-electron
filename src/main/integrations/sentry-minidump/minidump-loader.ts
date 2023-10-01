@@ -2,6 +2,7 @@ import { Attachment } from '@sentry/types';
 import { basename, logger } from '@sentry/utils';
 import { join } from 'path';
 
+import { Mutex } from '../../../common/mutex';
 import { getCrashesDirectory, usesCrashpad } from '../../electron-normalize';
 import { readDirAsync, readFileAsync, statAsync, unlinkAsync } from '../../fs';
 
@@ -17,98 +18,84 @@ function delay(ms: number): Promise<void> {
 
 export type MinidumpLoader = (deleteAll: boolean, callback: (attachment: Attachment) => void) => Promise<void>;
 
-/** Creates a minidump loader */
+/**
+ * Creates a minidump loader
+ * @param getMinidumpPaths A function that returns paths to minidumps
+ * @param preProcessFile A function that pre-processes the minidump file
+ * @returns A function to fetch minidumps
+ */
 export function createMinidumpLoader(
   getMinidumpPaths: () => Promise<string[]>,
   preProcessFile: (file: Buffer) => Buffer = (file) => file,
 ): MinidumpLoader {
-  // Keep track of which minidumps we are currently processing in case this function is called before we're finished
-  const processingPaths: Set<string> = new Set();
-
-  /** Deletes a file and removes it from the processing paths */
-  async function cleanup(path: string): Promise<void> {
-    try {
-      await unlinkAsync(path);
-    } catch (e) {
-      logger.warn('Could not delete', path);
-    } finally {
-      processingPaths.delete(path);
-    }
-  }
+  // The mutex protects against a whole host of reentrancy issues and race conditions.
+  const mutex = new Mutex();
 
   return async (deleteAll, callback) => {
-    for (const path of await getMinidumpPaths()) {
-      try {
-        // Ignore non-minidump files
-        if (!path.endsWith('.dmp')) {
-          continue;
-        }
+    // any calls to this function will be queued and run exclusively
+    await mutex.runExclusive(async () => {
+      for (const path of await getMinidumpPaths()) {
+        try {
+          if (deleteAll) {
+            continue;
+          }
 
-        // Ignore minidumps we are already processing
-        if (processingPaths.has(path)) {
-          continue;
-        }
+          logger.log('Found minidump', path);
 
-        processingPaths.add(path);
+          let stats = await statAsync(path);
 
-        if (deleteAll) {
-          await cleanup(path);
-          continue;
-        }
+          const thirtyDaysAgo = new Date().getTime() - MAX_AGE * 24 * 3_600 * 1_000;
 
-        logger.log('Found minidump', path);
+          if (stats.birthtimeMs < thirtyDaysAgo) {
+            logger.log(`Ignoring minidump as it is over ${MAX_AGE} days old`);
+            continue;
+          }
 
-        let stats = await statAsync(path);
+          let retries = 0;
 
-        const thirtyDaysAgo = new Date().getTime() - MAX_AGE * 24 * 3_600 * 1_000;
+          while (retries <= 10) {
+            const twoSecondsAgo = new Date().getTime() - MIN_NOT_MODIFIED * 1_000;
 
-        if (stats.birthtimeMs < thirtyDaysAgo) {
-          logger.log(`Ignoring minidump as it is over ${MAX_AGE} days old`);
-          await cleanup(path);
-          continue;
-        }
+            if (stats.mtimeMs < twoSecondsAgo) {
+              const file = await readFileAsync(path);
+              const data = preProcessFile(file);
 
-        let retries = 0;
+              if (data.length < 10_000 || data.subarray(0, 4).toString() !== MINIDUMP_HEADER) {
+                logger.warn('Dropping minidump as it appears invalid.');
+                break;
+              }
 
-        while (retries <= 10) {
-          const twoSecondsAgo = new Date().getTime() - MIN_NOT_MODIFIED * 1_000;
+              logger.log('Sending minidump');
 
-          if (stats.mtimeMs < twoSecondsAgo) {
-            const file = await readFileAsync(path);
-            const data = preProcessFile(file);
-            await cleanup(path);
+              callback({
+                attachmentType: 'event.minidump',
+                filename: basename(path),
+                data,
+              });
 
-            if (data.length < 10_000 || data.subarray(0, 4).toString() !== MINIDUMP_HEADER) {
-              logger.warn('Dropping minidump as it appears invalid.');
               break;
             }
 
-            logger.log('Sending minidump');
-
-            callback({
-              attachmentType: 'event.minidump',
-              filename: basename(path),
-              data,
-            });
-
-            break;
+            logger.log(`Waiting. Minidump has been modified in the last ${MIN_NOT_MODIFIED} seconds.`);
+            retries += 1;
+            await delay(1_000);
+            stats = await statAsync(path);
           }
 
-          logger.log(`Minidump has been modified in the last ${MIN_NOT_MODIFIED} seconds. Checking again in a second.`);
-          retries += 1;
-          await delay(1_000);
-          stats = await statAsync(path);
+          if (retries >= 10) {
+            logger.warn('Timed out waiting for minidump to stop being modified');
+          }
+        } catch (e) {
+          logger.error('Failed to load minidump', e);
+        } finally {
+          try {
+            await unlinkAsync(path);
+          } catch (e) {
+            logger.warn('Could not delete', path);
+          }
         }
-
-        if (retries >= 10) {
-          logger.warn('Timed out waiting for minidump to stop being modified');
-          await cleanup(path);
-        }
-      } catch (e) {
-        logger.error('Failed to load minidump', e);
-        await cleanup(path);
       }
-    }
+    });
   };
 }
 
@@ -159,7 +146,8 @@ function crashpadMinidumpLoader(): MinidumpLoader {
 
   return createMinidumpLoader(async () => {
     await deleteCrashpadMetadataFile(crashesDirectory).catch((error) => logger.error(error));
-    return readDirsAsync(dumpDirectories);
+    const files = await readDirsAsync(dumpDirectories);
+    return files.filter((file) => file.endsWith('.dmp'));
   });
 }
 
@@ -202,7 +190,7 @@ function breakpadMinidumpLoader(): MinidumpLoader {
     // the crashes directory.
     const files = await readDirAsync(crashesDirectory);
     removeBreakpadMetadata(crashesDirectory, files);
-    return files.map((file) => join(crashesDirectory, file));
+    return files.filter((file) => file.endsWith('.dmp')).map((file) => join(crashesDirectory, file));
   }, minidumpFromBreakpadMultipart);
 }
 
