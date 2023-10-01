@@ -1,6 +1,6 @@
 import { uuid4 } from '@sentry/utils';
 import { expect } from 'chai';
-import { existsSync, utimesSync, writeFileSync } from 'fs';
+import { closeSync, existsSync, openSync, utimesSync, writeFileSync, writeSync } from 'fs';
 import { join } from 'path';
 import * as tmp from 'tmp';
 
@@ -10,7 +10,7 @@ function dumpFileName(): string {
   return `${uuid4()}.dmp`;
 }
 
-const VALID_LOOKING_MINIDUMP = Buffer.from(`MDMP${'x'.repeat(12_000)}`);
+const VALID_LOOKING_MINIDUMP = Buffer.from(`MDMP${'X'.repeat(12_000)}`);
 const LOOKS_NOTHING_LIKE_A_MINIDUMP = Buffer.from('X'.repeat(12_000));
 const MINIDUMP_HEADER_BUT_TOO_SMALL = Buffer.from('MDMPdflahfalfhalkfnaklsfnalfkn');
 
@@ -69,6 +69,12 @@ describe('createMinidumpLoader', () => {
   });
 
   it("doesn't send minidumps that are over 30 days old", (done) => {
+    // Updating the file times does not appear to work in GitHub Actions on Windows and Linux
+    if (process.env.CI) {
+      done();
+      return;
+    }
+
     const dumpPath = join(tempDir.name, dumpFileName());
     writeFileSync(dumpPath, VALID_LOOKING_MINIDUMP);
     const now = new Date().getTime() / 1000;
@@ -109,19 +115,20 @@ describe('createMinidumpLoader', () => {
 
   it('waits for minidump to stop being modified', (done) => {
     const dumpPath = join(tempDir.name, dumpFileName());
-    writeFileSync(dumpPath, VALID_LOOKING_MINIDUMP);
+    const file = openSync(dumpPath, 'w');
+    writeSync(file, VALID_LOOKING_MINIDUMP);
 
     let count = 0;
     // Write the file every 500ms
     const timer = setInterval(() => {
       count += 500;
-      writeFileSync(dumpPath, VALID_LOOKING_MINIDUMP);
+      writeSync(file, 'X');
     }, 500);
 
-    // Stop writing after 3 seconds
     setTimeout(() => {
       clearInterval(timer);
-    }, 3_200);
+      closeSync(file);
+    }, 4_200);
 
     const loader = createMinidumpLoader(() => Promise.resolve([dumpPath]));
 

@@ -7,12 +7,12 @@ import { getCrashesDirectory, usesCrashpad } from '../../electron-normalize';
 import { readDirAsync, readFileAsync, statAsync, unlinkAsync } from '../../fs';
 
 /** Maximum number of days to keep a minidump before deleting it. */
-const MAX_AGE = 30;
+const MAX_AGE_DAYS = 30;
 /** Minimum number of milliseconds a minidump should not be modified for before we assume writing is complete */
-const MIN_NOT_MODIFIED = 1_000;
-const MAX_RETRY_TIME = 5_000;
-const TIME_BETWEEN_RETRIES = 200;
-const MAX_RETRIES = MAX_RETRY_TIME / TIME_BETWEEN_RETRIES;
+const NOT_MODIFIED_MS = 1_000;
+const MAX_RETRY_MS = 5_000;
+const RETRY_DELAY_MS = 500;
+const MAX_RETRIES = MAX_RETRY_MS / RETRY_DELAY_MS;
 
 const MINIDUMP_HEADER = 'MDMP';
 
@@ -20,6 +20,11 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * A function that loads minidumps
+ * @param deleteAll Whether to just delete all minidumps
+ * @param callback A callback to call with the attachment ready to send
+ */
 export type MinidumpLoader = (deleteAll: boolean, callback: (attachment: Attachment) => void) => Promise<void>;
 
 /**
@@ -48,17 +53,17 @@ export function createMinidumpLoader(
 
           let stats = await statAsync(path);
 
-          const thirtyDaysAgo = new Date().getTime() - MAX_AGE * 24 * 3_600 * 1_000;
+          const thirtyDaysAgo = new Date().getTime() - MAX_AGE_DAYS * 24 * 3_600 * 1_000;
 
           if (stats.birthtimeMs < thirtyDaysAgo) {
-            logger.log(`Ignoring minidump as it is over ${MAX_AGE} days old`);
+            logger.log(`Ignoring minidump as it is over ${MAX_AGE_DAYS} days old`);
             continue;
           }
 
           let retries = 0;
 
           while (retries <= MAX_RETRIES) {
-            const twoSecondsAgo = new Date().getTime() - MIN_NOT_MODIFIED;
+            const twoSecondsAgo = new Date().getTime() - NOT_MODIFIED_MS;
 
             if (stats.mtimeMs < twoSecondsAgo) {
               const file = await readFileAsync(path);
@@ -80,9 +85,10 @@ export function createMinidumpLoader(
               break;
             }
 
-            logger.log(`Waiting. Minidump has been modified in the last ${MIN_NOT_MODIFIED} milliseconds.`);
+            logger.log(`Waiting. Minidump has been modified in the last ${NOT_MODIFIED_MS} milliseconds.`);
             retries += 1;
-            await delay(TIME_BETWEEN_RETRIES);
+            await delay(RETRY_DELAY_MS);
+            // update the stats
             stats = await statAsync(path);
           }
 
@@ -92,10 +98,11 @@ export function createMinidumpLoader(
         } catch (e) {
           logger.error('Failed to load minidump', e);
         } finally {
+          // We always attempt to delete the minidump
           try {
             await unlinkAsync(path);
           } catch (e) {
-            logger.warn('Could not delete', path);
+            logger.warn('Could not delete minidump', path);
           }
         }
       }
