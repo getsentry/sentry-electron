@@ -37,4 +37,4 @@ setTimeout(() => {
   } else {
     app.quit();
   }
-}, 2000);
+}, 4000);

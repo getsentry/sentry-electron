@@ -95,44 +95,7 @@
     "event_id": "{{id}}",
     "platform": "node",
     "timestamp": 0,
-    "breadcrumbs": [
-      {
-        "timestamp": 0,
-        "category": "electron",
-        "message": "app.will-finish-launching",
-        "type": "ui"
-      },
-      {
-        "timestamp": 0,
-        "category": "electron",
-        "message": "app.ready",
-        "type": "ui"
-      },
-      {
-        "timestamp": 0,
-        "category": "electron",
-        "message": "app.session-created",
-        "type": "ui"
-      },
-      {
-        "timestamp": 0,
-        "category": "electron",
-        "message": "app.web-contents-created",
-        "type": "ui"
-      },
-      {
-        "timestamp": 0,
-        "category": "electron",
-        "message": "app.browser-window-created",
-        "type": "ui"
-      },
-      {
-        "timestamp": 0,
-        "category": "electron",
-        "message": "renderer.dom-ready",
-        "type": "ui"
-      }
-    ],
+    "breadcrumbs": [],
     "tags": {
       "event.environment": "javascript",
       "event.origin": "electron",
