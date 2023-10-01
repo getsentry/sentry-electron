@@ -8,8 +8,12 @@ import { readDirAsync, readFileAsync, statAsync, unlinkAsync } from '../../fs';
 
 /** Maximum number of days to keep a minidump before deleting it. */
 const MAX_AGE = 30;
-/** Minimum number of seconds a minidump should not be modified for before we assume writing is complete */
-const MIN_NOT_MODIFIED = 2;
+/** Minimum number of milliseconds a minidump should not be modified for before we assume writing is complete */
+const MIN_NOT_MODIFIED = 1_000;
+const MAX_RETRY_TIME = 5_000;
+const TIME_BETWEEN_RETRIES = 200;
+const MAX_RETRIES = MAX_RETRY_TIME / TIME_BETWEEN_RETRIES;
+
 const MINIDUMP_HEADER = 'MDMP';
 
 function delay(ms: number): Promise<void> {
@@ -53,8 +57,8 @@ export function createMinidumpLoader(
 
           let retries = 0;
 
-          while (retries <= 10) {
-            const twoSecondsAgo = new Date().getTime() - MIN_NOT_MODIFIED * 1_000;
+          while (retries <= MAX_RETRIES) {
+            const twoSecondsAgo = new Date().getTime() - MIN_NOT_MODIFIED;
 
             if (stats.mtimeMs < twoSecondsAgo) {
               const file = await readFileAsync(path);
@@ -76,13 +80,13 @@ export function createMinidumpLoader(
               break;
             }
 
-            logger.log(`Waiting. Minidump has been modified in the last ${MIN_NOT_MODIFIED} seconds.`);
+            logger.log(`Waiting. Minidump has been modified in the last ${MIN_NOT_MODIFIED} milliseconds.`);
             retries += 1;
-            await delay(1_000);
+            await delay(TIME_BETWEEN_RETRIES);
             stats = await statAsync(path);
           }
 
-          if (retries >= 10) {
+          if (retries >= MAX_RETRIES) {
             logger.warn('Timed out waiting for minidump to stop being modified');
           }
         } catch (e) {
