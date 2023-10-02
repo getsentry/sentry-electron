@@ -21,13 +21,13 @@ async function newProtocolRenderer(): Promise<void> {
       continue;
     }
 
-    const windowId: string | undefined = await wc.executeJavaScript('window.__SENTRY_RENDERER_ID__');
+    if (!wc.isDestroyed()) {
+      const windowId: string | undefined = await wc.executeJavaScript('window.__SENTRY_RENDERER_ID__');
 
-    if (windowId) {
-      KNOWN_RENDERERS.add(wcId);
-      WINDOW_ID_TO_WEB_CONTENTS.set(windowId, wcId);
+      if (windowId) {
+        KNOWN_RENDERERS.add(wcId);
+        WINDOW_ID_TO_WEB_CONTENTS.set(windowId, wcId);
 
-      if (!wc.isDestroyed()) {
         wc.once('destroyed', () => {
           KNOWN_RENDERERS?.delete(wcId);
           WINDOW_ID_TO_WEB_CONTENTS?.delete(windowId);
@@ -195,11 +195,13 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
 function configureClassic(options: ElectronMainOptionsInternal): void {
   ipcMain.on(IPCChannel.RENDERER_START, ({ sender }) => {
     const id = sender.id;
-    // Keep track of renderers that are using IPC
-    KNOWN_RENDERERS = KNOWN_RENDERERS || new Set();
-    KNOWN_RENDERERS.add(id);
 
+    // In older Electron, sender can be destroyed before this callback is called
     if (!sender.isDestroyed()) {
+      // Keep track of renderers that are using IPC
+      KNOWN_RENDERERS = KNOWN_RENDERERS || new Set();
+      KNOWN_RENDERERS.add(id);
+
       sender.once('destroyed', () => {
         KNOWN_RENDERERS?.delete(id);
       });
