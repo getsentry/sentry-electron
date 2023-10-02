@@ -18,7 +18,8 @@ function longWork() {
   }
 }
 
-enableAnrDetection({ debug: true, anrThreshold: 1000, captureStackTrace: true }).then(() => {
+enableAnrDetection({ mainProcess: { debug: true, anrThreshold: 1000, captureStackTrace: true } }).then(() => {
+  console.log('main app code');
   app.on('ready', () => {
     setTimeout(() => {
       longWork();
