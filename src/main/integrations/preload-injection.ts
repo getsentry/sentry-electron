@@ -4,11 +4,33 @@ import { Integration } from '@sentry/types';
 import { logger } from '@sentry/utils';
 import { app } from 'electron';
 import { existsSync } from 'fs';
-import { isAbsolute } from 'path';
+import { isAbsolute, resolve } from 'path';
+import { fileURLToPath } from 'url';
 
 import { IPCMode } from '../../common';
 import { rendererRequiresCrashReporterStart } from '../electron-normalize';
 import { ElectronMainOptionsInternal } from '../sdk';
+
+// After bundling with webpack, require.resolve can return number so we include that in the types
+// to ensure we check for that!
+function getPreloadPath(): string | number | undefined {
+  try {
+    return rendererRequiresCrashReporterStart()
+      ? require.resolve('../../preload/legacy.js')
+      : require.resolve('../../preload/index.js');
+  } catch (_) {
+    try {
+      // This could be ESM
+      const currentDir = fileURLToPath(import.meta.url);
+      // Use the CJS preload
+      return resolve(currentDir, '..', '..', '..', '..', 'preload', 'index.js');
+    } catch (_) {
+      //
+    }
+  }
+
+  return undefined;
+}
 
 /**
  * Injects the preload script into the provided sessions.
@@ -45,14 +67,7 @@ export class PreloadInjection implements Integration {
    * Attempts to add the preload script the the provided sessions
    */
   private _addPreloadToSessions(options: ElectronMainOptionsInternal): void {
-    let path = undefined;
-    try {
-      path = rendererRequiresCrashReporterStart()
-        ? require.resolve('../../preload/legacy.js')
-        : require.resolve('../../preload/index.js');
-    } catch (_) {
-      //
-    }
+    const path = getPreloadPath();
 
     if (path && typeof path === 'string' && isAbsolute(path) && existsSync(path)) {
       for (const sesh of options.getSessions()) {

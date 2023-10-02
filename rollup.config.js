@@ -17,6 +17,18 @@ const outputOptions = {
   },
 };
 
+// a simple plugin that adds a package.json file with type: module
+const modulePackageJson = {
+  name: 'package-json-module-type',
+  generateBundle(_, __) {
+    this.emitFile({
+      type: 'asset',
+      fileName: 'package.json',
+      source: '{"type": "module"}',
+    });
+  },
+};
+
 function transpileFiles(format, input, outDir) {
   return {
     input,
@@ -32,6 +44,7 @@ function transpileFiles(format, input, outDir) {
         outDir,
         tsconfig: './tsconfig.build.json',
       }),
+      format === 'esm' ? modulePackageJson : {},
     ],
     external,
   };
