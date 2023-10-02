@@ -22,16 +22,20 @@ async function newProtocolRenderer(): Promise<void> {
     }
 
     if (!wc.isDestroyed()) {
-      const windowId: string | undefined = await wc.executeJavaScript('window.__SENTRY_RENDERER_ID__');
+      try {
+        const windowId: string | undefined = await wc.executeJavaScript('window.__SENTRY_RENDERER_ID__');
 
-      if (windowId) {
-        KNOWN_RENDERERS.add(wcId);
-        WINDOW_ID_TO_WEB_CONTENTS.set(windowId, wcId);
+        if (windowId) {
+          KNOWN_RENDERERS.add(wcId);
+          WINDOW_ID_TO_WEB_CONTENTS.set(windowId, wcId);
 
-        wc.once('destroyed', () => {
-          KNOWN_RENDERERS?.delete(wcId);
-          WINDOW_ID_TO_WEB_CONTENTS?.delete(windowId);
-        });
+          wc.once('destroyed', () => {
+            KNOWN_RENDERERS?.delete(wcId);
+            WINDOW_ID_TO_WEB_CONTENTS?.delete(windowId);
+          });
+        }
+      } catch (_) {
+        // ignore
       }
     }
   }
