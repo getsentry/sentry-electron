@@ -1,12 +1,45 @@
 import { captureEvent, configureScope, getCurrentHub, Scope } from '@sentry/core';
 import { Attachment, AttachmentItem, Envelope, Event, EventItem } from '@sentry/types';
 import { forEachEnvelopeItem, logger, parseEnvelope, SentryError } from '@sentry/utils';
-import { app, ipcMain, protocol, WebContents } from 'electron';
+import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
 import { TextDecoder, TextEncoder } from 'util';
 
 import { IPCChannel, IPCMode, mergeEvents, normalizeUrlsInReplayEnvelope, PROTOCOL_SCHEME } from '../common';
 import { registerProtocol, supportsFullProtocol, whenAppReady } from './electron-normalize';
 import { ElectronMainOptionsInternal } from './sdk';
+
+let KNOWN_RENDERERS: Set<number> | undefined;
+let WINDOW_ID_TO_WEB_CONTENTS: Map<string, number> | undefined;
+
+async function newProtocolRenderer(): Promise<void> {
+  KNOWN_RENDERERS = KNOWN_RENDERERS || new Set();
+  WINDOW_ID_TO_WEB_CONTENTS = WINDOW_ID_TO_WEB_CONTENTS || new Map();
+
+  for (const wc of webContents.getAllWebContents()) {
+    const wcId = wc.id;
+    if (KNOWN_RENDERERS.has(wcId)) {
+      continue;
+    }
+
+    if (!wc.isDestroyed()) {
+      try {
+        const windowId: string | undefined = await wc.executeJavaScript('window.__SENTRY_RENDERER_ID__');
+
+        if (windowId) {
+          KNOWN_RENDERERS.add(wcId);
+          WINDOW_ID_TO_WEB_CONTENTS.set(windowId, wcId);
+
+          wc.once('destroyed', () => {
+            KNOWN_RENDERERS?.delete(wcId);
+            WINDOW_ID_TO_WEB_CONTENTS?.delete(windowId);
+          });
+        }
+      } catch (_) {
+        // ignore
+      }
+    }
+  }
+}
 
 function captureEventFromRenderer(
   options: ElectronMainOptionsInternal,
@@ -139,14 +172,20 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
     .then(() => {
       for (const sesh of options.getSessions()) {
         registerProtocol(sesh.protocol, PROTOCOL_SCHEME, (request) => {
-          const data = request.body;
+          const getWebContents = (): WebContents | undefined => {
+            const webContentsId = request.windowId ? WINDOW_ID_TO_WEB_CONTENTS?.get(request.windowId) : undefined;
+            return webContentsId ? webContents.fromId(webContentsId) : undefined;
+          };
 
-          if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.EVENT}`) && data) {
-            handleEvent(options, data.toString());
+          const data = request.body;
+          if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.RENDERER_START}`)) {
+            void newProtocolRenderer();
+          } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.EVENT}`) && data) {
+            handleEvent(options, data.toString(), getWebContents());
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.SCOPE}`) && data) {
             handleScope(options, data.toString());
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.ENVELOPE}`) && data) {
-            handleEnvelope(options, data);
+            handleEnvelope(options, data, getWebContents());
           }
         });
       }
@@ -158,6 +197,20 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
  * Hooks IPC for communication with the renderer processes
  */
 function configureClassic(options: ElectronMainOptionsInternal): void {
+  ipcMain.on(IPCChannel.RENDERER_START, ({ sender }) => {
+    const id = sender.id;
+
+    // In older Electron, sender can be destroyed before this callback is called
+    if (!sender.isDestroyed()) {
+      // Keep track of renderers that are using IPC
+      KNOWN_RENDERERS = KNOWN_RENDERERS || new Set();
+      KNOWN_RENDERERS.add(id);
+
+      sender.once('destroyed', () => {
+        KNOWN_RENDERERS?.delete(id);
+      });
+    }
+  });
   ipcMain.on(IPCChannel.EVENT, ({ sender }, jsonEvent: string) => handleEvent(options, jsonEvent, sender));
   ipcMain.on(IPCChannel.SCOPE, (_, jsonScope: string) => handleScope(options, jsonScope));
   ipcMain.on(IPCChannel.ENVELOPE, ({ sender }, env: Uint8Array | string) => handleEnvelope(options, env, sender));

@@ -12,6 +12,7 @@ if (window.__SENTRY_IPC__) {
   console.log('Sentry Electron preload has already been run');
 } else {
   const ipcObject = {
+    sendRendererStart: () => ipcRenderer.send(IPCChannel.RENDERER_START),
     sendScope: (scopeJson: string) => ipcRenderer.send(IPCChannel.SCOPE, scopeJson),
     sendEvent: (eventJson: string) => ipcRenderer.send(IPCChannel.EVENT, eventJson),
     sendEnvelope: (envelope: Uint8Array | string) => ipcRenderer.send(IPCChannel.ENVELOPE, envelope),

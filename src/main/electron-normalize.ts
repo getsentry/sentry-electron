@@ -2,6 +2,7 @@ import { parseSemver } from '@sentry/utils';
 import { app, BrowserWindow, crashReporter, NativeImage, WebContents } from 'electron';
 import { basename } from 'path';
 
+import { RENDERER_ID_HEADER } from '../common/ipc';
 import { Optional } from '../common/types';
 
 const parsed = parseSemver(process.versions.electron);
@@ -219,6 +220,7 @@ function supportsProtocolHandle(): boolean {
 }
 
 interface InternalRequest {
+  windowId?: string;
   url: string;
   body?: Buffer;
 }
@@ -236,6 +238,7 @@ export function registerProtocol(
   if (supportsProtocolHandle()) {
     protocol.handle(scheme, async (request) => {
       callback({
+        windowId: request.headers.get(RENDERER_ID_HEADER) || undefined,
         url: request.url,
         body: Buffer.from(await request.arrayBuffer()),
       });
@@ -246,6 +249,7 @@ export function registerProtocol(
     // eslint-disable-next-line deprecation/deprecation
     protocol.registerStringProtocol(scheme, (request, complete) => {
       callback({
+        windowId: request.headers[RENDERER_ID_HEADER],
         url: request.url,
         body: request.uploadData?.[0]?.bytes,
       });
