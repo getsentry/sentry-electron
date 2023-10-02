@@ -21,7 +21,10 @@
       "require": "./renderer/index.js",
       "import": "./esm/renderer/index.js"
     },
-    "./preload": "./preload/index.js"
+    "./preload": {
+      "require": "./preload/index.js",
+      "import": "./esm/preload/index.js"
+    }
   },
   "repository": "https://github.com/getsentry/sentry-electron.git",
   "author": "Sentry",
@@ -35,27 +38,21 @@
   },
   "scripts": {
     "prebuild": "yarn clean && node scripts/update-version.js",
-    "build": "run-p build:es6 build:esm build:preload",
-    "build:es6": "tsc -p tsconfig.build.json",
-    "build:esm": "tsc -p tsconfig.esm.json",
-    "build:preload": "node scripts/build-preload.js",
-    "build:watch": "run-p build:watch:es6 build:watch:esm",
-    "build:watch:es6": "tsc -p tsconfig.build.json -w --preserveWatchOutput",
-    "build:watch:esm": "tsc -p tsconfig.esm.json -w --preserveWatchOutput",
+    "build": "rollup --config rollup.config.js",
     "clean": "rimraf coverage esm main preload renderer index.* integrations.* ipc.* sentry-electron*.tgz",
     "prelint": "node scripts/update-version.js",
-    "update-electron-versions": "electron-latest-versions --start 2 > ./test/e2e/versions.json",
-    "update-sdk-versions": "node ./scripts/update-sdk-versions.mjs",
     "lint": "run-s lint:prettier lint:eslint",
     "lint:prettier": "prettier --check \"{src,test}/**/*.ts\"",
     "lint:eslint": "eslint . --cache --format stylish",
     "fix": "run-s fix:eslint fix:prettier",
     "fix:prettier": "prettier --write \"{src,test}/**/*.ts\"",
     "fix:eslint": "eslint . --format stylish --fix",
+    "update-electron-versions": "electron-latest-versions --start 2 > ./test/e2e/versions.json",
+    "update-sdk-versions": "node ./scripts/update-sdk-versions.mjs",
     "pretest": "yarn build",
-    "test": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe electron-mocha --require ts-node/register/transpile-only --timeout 12000 ./test/unit/**/*.ts",
+    "test": "cross-env TS_NODE_PROJECT=tsconfig.test.json xvfb-maybe electron-mocha --require ts-node/register/transpile-only --timeout 12000 ./test/unit/**/*.ts",
     "pree2e": "rimraf test/e2e/dist/**/node_modules/@sentry/** test/e2e/dist/**/yarn.lock test/e2e/dist/**/package-lock.json && node scripts/clean-cache.js && yarn build && npm pack",
-    "e2e": "cross-env TS_NODE_PROJECT=tsconfig.json xvfb-maybe mocha --require ts-node/register/transpile-only --retries 3 ./test/e2e/*.ts"
+    "e2e": "cross-env TS_NODE_PROJECT=tsconfig.test.json xvfb-maybe mocha --require ts-node/register/transpile-only --retries 3 ./test/e2e/*.ts"
   },
   "dependencies": {
     "@sentry/browser": "7.68.0",
@@ -68,6 +65,8 @@
     "tslib": "^2.5.0"
   },
   "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.2.1",
+    "@rollup/plugin-typescript": "^11.1.4",
     "@sentry-internal/eslint-config-sdk": "7.68.0",
     "@sentry-internal/typescript": "7.68.0",
     "@types/busboy": "^0.2.3",
@@ -97,6 +96,7 @@
     "npm-run-all": "^4.1.5",
     "prettier": "^2.8.4",
     "rimraf": "^3.0.2",
+    "rollup": "^3.29.4",
     "tmp": "^0.2.1",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.5",
