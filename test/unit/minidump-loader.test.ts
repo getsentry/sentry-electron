@@ -69,16 +69,9 @@ describe('createMinidumpLoader', () => {
   });
 
   it("doesn't send minidumps that are over 30 days old", (done) => {
-    // Updating the file times does not appear to work in GitHub Actions on Windows and Linux
-    if (process.env.CI) {
-      done();
-      return;
-    }
-
     const dumpPath = join(tempDir.name, dumpFileName());
     writeFileSync(dumpPath, VALID_LOOKING_MINIDUMP);
-    const now = new Date().getTime() / 1000;
-    const thirtyOneDaysAgo = now - 31 * 24 * 3_600;
+    const thirtyOneDaysAgo = new Date(new Date().getTime() - 31 * 24 * 3_600 * 1_000);
     utimesSync(dumpPath, thirtyOneDaysAgo, thirtyOneDaysAgo);
 
     const loader = createMinidumpLoader(() => Promise.resolve([dumpPath]));

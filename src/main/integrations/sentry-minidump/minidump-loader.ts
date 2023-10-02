@@ -8,6 +8,7 @@ import { readDirAsync, readFileAsync, statAsync, unlinkAsync } from '../../fs';
 
 /** Maximum number of days to keep a minidump before deleting it. */
 const MAX_AGE_DAYS = 30;
+const MS_PER_DAY = 24 * 3_600 * 1_000;
 /** Minimum number of milliseconds a minidump should not be modified for before we assume writing is complete */
 const NOT_MODIFIED_MS = 1_000;
 const MAX_RETRY_MS = 5_000;
@@ -53,9 +54,9 @@ export function createMinidumpLoader(
 
           let stats = await statAsync(path);
 
-          const thirtyDaysAgo = new Date().getTime() - MAX_AGE_DAYS * 24 * 3_600 * 1_000;
+          const thirtyDaysAgo = new Date().getTime() - MAX_AGE_DAYS * MS_PER_DAY;
 
-          if (stats.birthtimeMs < thirtyDaysAgo) {
+          if (stats.mtimeMs < thirtyDaysAgo) {
             logger.log(`Ignoring minidump as it is over ${MAX_AGE_DAYS} days old`);
             continue;
           }
