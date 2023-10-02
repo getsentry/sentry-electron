@@ -20,13 +20,17 @@ export const isPackaged = (() => {
 
 /** A promise that is resolved when the app is ready */
 export const whenAppReady: Promise<void> = (() => {
-  return app.isReady()
-    ? Promise.resolve()
-    : new Promise<void>((resolve) => {
-        app.once('ready', () => {
-          resolve();
+  if (app) {
+    return app.isReady()
+      ? Promise.resolve()
+      : new Promise<void>((resolve) => {
+          app.once('ready', () => {
+            resolve();
+          });
         });
-      });
+  } else {
+    return Promise.resolve();
+  }
 })();
 
 /**
