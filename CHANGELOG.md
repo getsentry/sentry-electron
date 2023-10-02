@@ -3,6 +3,7 @@
 ## Unreleased
 
 ## 4.12.0
+
 - feat: Identify `webContents` of renderers via custom protocol (#762)
 - fix: Re-work Sentry minidump loader (#761)
 - feat: Node compatible ESM build for main process (#756)
