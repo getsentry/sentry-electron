@@ -16,20 +16,23 @@ async function newProtocolRenderer(): Promise<void> {
   WINDOW_ID_TO_WEB_CONTENTS = WINDOW_ID_TO_WEB_CONTENTS || new Map();
 
   for (const wc of webContents.getAllWebContents()) {
-    if (KNOWN_RENDERERS.has(wc.id)) {
+    const wcId = wc.id;
+    if (KNOWN_RENDERERS.has(wcId)) {
       continue;
     }
 
     const windowId: string | undefined = await wc.executeJavaScript('window.__SENTRY_RENDERER_ID__');
 
     if (windowId) {
-      KNOWN_RENDERERS.add(wc.id);
-      WINDOW_ID_TO_WEB_CONTENTS.set(windowId, wc.id);
+      KNOWN_RENDERERS.add(wcId);
+      WINDOW_ID_TO_WEB_CONTENTS.set(windowId, wcId);
 
-      wc.once('destroyed', () => {
-        KNOWN_RENDERERS?.delete(wc.id);
-        WINDOW_ID_TO_WEB_CONTENTS?.delete(windowId);
-      });
+      if (!wc.isDestroyed()) {
+        wc.once('destroyed', () => {
+          KNOWN_RENDERERS?.delete(wcId);
+          WINDOW_ID_TO_WEB_CONTENTS?.delete(windowId);
+        });
+      }
     }
   }
 }
@@ -191,13 +194,16 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
  */
 function configureClassic(options: ElectronMainOptionsInternal): void {
   ipcMain.on(IPCChannel.RENDERER_START, ({ sender }) => {
+    const id = sender.id;
     // Keep track of renderers that are using IPC
     KNOWN_RENDERERS = KNOWN_RENDERERS || new Set();
-    KNOWN_RENDERERS.add(sender.id);
+    KNOWN_RENDERERS.add(id);
 
-    sender.once('destroyed', () => {
-      KNOWN_RENDERERS?.delete(sender.id);
-    });
+    if (!sender.isDestroyed()) {
+      sender.once('destroyed', () => {
+        KNOWN_RENDERERS?.delete(id);
+      });
+    }
   });
   ipcMain.on(IPCChannel.EVENT, ({ sender }, jsonEvent: string) => handleEvent(options, jsonEvent, sender));
   ipcMain.on(IPCChannel.SCOPE, (_, jsonScope: string) => handleScope(options, jsonScope));
