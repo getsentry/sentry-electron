@@ -50,7 +50,7 @@
     "update-electron-versions": "electron-latest-versions --start 2 > ./test/e2e/versions.json",
     "update-sdk-versions": "node ./scripts/update-sdk-versions.mjs",
     "pretest": "yarn build",
-    "test": "cross-env TS_NODE_PROJECT=tsconfig.test.json xvfb-maybe electron-mocha --require ts-node/register/transpile-only --timeout 120000 ./test/unit/**/*.ts",
+    "test": "cross-env TS_NODE_PROJECT=tsconfig.test.json xvfb-maybe electron-mocha --require ts-node/register/transpile-only --timeout 12000 ./test/unit/**/*.ts",
     "pree2e": "rimraf test/e2e/dist/**/node_modules/@sentry/** test/e2e/dist/**/yarn.lock test/e2e/dist/**/package-lock.json && node scripts/clean-cache.js && yarn build && npm pack",
     "e2e": "cross-env TS_NODE_PROJECT=tsconfig.test.json xvfb-maybe mocha --require ts-node/register/transpile-only --retries 3 ./test/e2e/*.ts"
   },
