@@ -15,7 +15,7 @@
     },
     "contexts": {
       "app": {
-        "app_name": "webpack-main-process",
+        "app_name": "custom-renderer-name-protocol",
         "app_version": "1.0.0",
         "app_start_time": "{{time}}"
       },
@@ -53,53 +53,53 @@
         "version": "{{version}}"
       }
     },
-    "release": "webpack-main-process@1.0.0",
+    "release": "custom-renderer-name-protocol@1.0.0",
     "environment": "development",
     "user": {
-      "ip_address": "{{auto}}",
-      "id": "abc-123"
-    },
-    "debug_meta": {
-      "images": [
-        {
-          "code_file": "app:///dist/main.js",
-          "type": "sourcemap"
-        }
-      ]
+      "ip_address": "{{auto}}"
     },
     "exception": {
       "values": [
         {
           "type": "Error",
-          "value": "Some main error",
+          "value": "Some renderer error",
           "stacktrace": {
             "frames": [
               {
                 "colno": 0,
-                "filename": "app:///dist/main.js",
+                "filename": "app:///src/index.html",
                 "function": "{{function}}",
                 "in_app": true,
-                "lineno": 0,
-                "module": "main"
+                "lineno": 0
               }
             ]
           },
           "mechanism": {
             "handled": false,
-            "type": "generic"
+            "type": "instrument"
           }
         }
       ]
     },
-    "level": "fatal",
+    "level": "error",
     "event_id": "{{id}}",
-    "platform": "node",
+    "platform": "javascript",
     "timestamp": 0,
-    "breadcrumbs": [],
+    "breadcrumbs": [
+      {
+        "timestamp": 0,
+        "category": "electron",
+        "message": "SomeWindow.dom-ready",
+        "type": "ui"
+      }
+    ],
+    "request": {
+      "url": "app:///src/index.html"
+    },
     "tags": {
       "event.environment": "javascript",
       "event.origin": "electron",
-      "event.process": "browser",
+      "event.process": "SomeWindow",
       "event_type": "javascript"
     }
   }

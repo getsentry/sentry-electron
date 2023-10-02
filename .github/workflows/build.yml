@@ -84,3 +84,15 @@ jobs:
       - run: yarn install
       - name: Run E2E Tests
         run: yarn e2e
+
+  required_jobs_passed:
+    name: All required jobs passed or were skipped
+    needs: [build, lint, test, e2e]
+    # Always run this, even if a dependent job failed
+    if: always()
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Check for failures
+        if: contains(needs.*.result, 'failure')
+        run: |
+          echo "One of the dependent jobs have failed. You may need to re-run it." && exit 1

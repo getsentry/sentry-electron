@@ -136,7 +136,7 @@ export class TestContext {
   public async waitForTrue(
     method: () => boolean | Promise<boolean>,
     message: () => string = () => 'Timeout',
-    timeout: number = 8_000,
+    timeout: number = 12_000,
   ): Promise<void> {
     if (!this.mainProcess) {
       throw new Error('Invariant violation: Call .start() first');

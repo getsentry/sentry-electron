@@ -32,5 +32,5 @@ app.on('ready', () => {
 
   setTimeout(() => {
     throw new Error('Some main error');
-  }, 500);
+  }, 2000);
 });
