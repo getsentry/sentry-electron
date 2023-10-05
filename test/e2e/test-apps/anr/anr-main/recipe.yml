@@ -1,0 +1,4 @@
+description: ANR Main Event
+category: ANR
+command: yarn
+condition: version.major >= 4

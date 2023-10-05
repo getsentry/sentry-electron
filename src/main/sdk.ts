@@ -96,6 +96,11 @@ export function init(userOptions: ElectronMainOptions): void {
   const options: ElectronMainOptionsInternal = Object.assign(defaultOptions, userOptions);
   const defaults = defaultIntegrations;
 
+  if (process.env.SENTRY_ANR_CHILD_PROCESS) {
+    options.autoSessionTracking = false;
+    options.tracesSampleRate = 0;
+  }
+
   // If we don't set a release, @sentry/node will automatically fetch from environment variables
   if (options.release === undefined) {
     options.release = getDefaultReleaseName();

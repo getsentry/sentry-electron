@@ -58,3 +58,4 @@ export const Integrations = { ...ElectronMainIntegrations, ...NodeIntegrations }
 export type { ElectronMainOptions } from './sdk';
 export { init, defaultIntegrations } from './sdk';
 export { IPCMode } from '../common';
+export { enableAnrDetection } from './anr';
