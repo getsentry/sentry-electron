@@ -92,11 +92,6 @@ export async function unreportedDuringLastSession(crashDate: Date | undefined): 
 /** Checks if the previous session needs sending as crashed or abnormal  */
 export async function checkPreviousSession(crashed: boolean): Promise<void> {
   const client = getCurrentHub().getClient<NodeClient>();
-  const options = client?.getOptions();
-
-  if (options?.autoSessionTracking === false) {
-    return;
-  }
 
   const previous = await previousSession;
 
