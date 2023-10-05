@@ -3,13 +3,28 @@ import { app } from 'electron';
 
 import { ELECTRON_MAJOR_VERSION } from './electron-normalize';
 
+type MainProcessOptions = Parameters<typeof enableNodeAnrDetection>[0];
+
 interface Options {
   /**
    * Main process ANR options.
    *
    * Set to false to disable ANR detection in the main process.
    */
-  mainProcess?: Parameters<typeof enableNodeAnrDetection>[0] | false;
+  mainProcess?: MainProcessOptions | false;
+}
+
+function enableAnrMainProcess(options: MainProcessOptions): Promise<void> {
+  if (ELECTRON_MAJOR_VERSION < 4) {
+    throw new Error('Main process ANR detection is only supported on Electron v4+');
+  }
+
+  const mainOptions = {
+    entryScript: app.getAppPath(),
+    ...options,
+  };
+
+  return enableNodeAnrDetection(mainOptions);
 }
 
 /**
@@ -37,19 +52,7 @@ interface Options {
  */
 export async function enableAnrDetection(options: Options = {}): Promise<void> {
   if (options.mainProcess !== false) {
-    if (ELECTRON_MAJOR_VERSION < 4) {
-      throw new Error('Main process ANR detection is only supported on Electron v4+');
-    }
-
-    options.mainProcess = options.mainProcess || {};
-
-    // We need to override the entryScript option to make it work with Electron which doesn't get passed a script in
-    // the process.argv when the app is packaged
-    if (options.mainProcess.entryScript === undefined) {
-      options.mainProcess.entryScript = app.getAppPath();
-    }
-
-    return enableNodeAnrDetection(options.mainProcess);
+    return enableAnrMainProcess(options.mainProcess || {});
   }
 
   return Promise.resolve();
