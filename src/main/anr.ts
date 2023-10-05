@@ -1,6 +1,8 @@
 import { enableAnrDetection as enableNodeAnrDetection } from '@sentry/node';
 import { app } from 'electron';
 
+import { ELECTRON_MAJOR_VERSION } from './electron-normalize';
+
 interface Options {
   /**
    * Main process ANR options.
@@ -35,6 +37,10 @@ interface Options {
  */
 export async function enableAnrDetection(options: Options = {}): Promise<void> {
   if (options.mainProcess !== false) {
+    if (ELECTRON_MAJOR_VERSION < 4) {
+      throw new Error('Main process ANR detection is only supported on Electron v4+');
+    }
+
     options.mainProcess = options.mainProcess || {};
 
     // We need to override the entryScript option to make it work with Electron which doesn't get passed a script in

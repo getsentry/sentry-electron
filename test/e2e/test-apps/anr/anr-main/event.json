@@ -68,7 +68,6 @@
             "frames": [
               {
                 "colno": 0,
-                "filename": "node:internal/crypto/pbkdf2",
                 "function": "{{function}}",
                 "in_app": false,
                 "lineno": 0,
