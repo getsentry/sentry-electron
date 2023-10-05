@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 4.13.0
+
+- feat: Add App Not Responding detection for main process (#753)
+- feat: Update from [v7.68.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.68.0) to
+  [v7.73.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.73.0) of JavaScript SDKs (#766)
+
 ## 4.12.0
 
 - feat: Identify `webContents` of renderers via custom protocol (#762)
