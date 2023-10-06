@@ -9,13 +9,18 @@ export enum IPCChannel {
   SCOPE = 'sentry-electron.scope',
   /** IPC to pass envelopes to the main process. */
   ENVELOPE = 'sentry-electron.envelope',
+  /** IPC to pass renderer status updates */
+  STATUS = 'sentry-electron.status',
 }
+
+export type RendererStatus = 'alive' | 'visible' | 'hidden';
 
 export interface IPCInterface {
   sendRendererStart: () => void;
   sendScope: (scope: string) => void;
   sendEvent: (event: string) => void;
   sendEnvelope: (evn: Uint8Array | string) => void;
+  sendStatus: (state: RendererStatus) => void;
 }
 
 export const RENDERER_ID_HEADER = 'sentry-electron-renderer-id';

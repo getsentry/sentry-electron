@@ -7,11 +7,16 @@ import {
 import { logger } from '@sentry/utils';
 
 import { ensureProcess } from '../common';
+import { enableAnrRendererMessages } from './anr';
 import { ScopeToMain } from './integrations';
 import { electronRendererStackParser } from './stack-parse';
 import { makeRendererTransport } from './transport';
 
 export const defaultIntegrations = [...defaultBrowserIntegrations, new ScopeToMain()];
+
+interface ElectronRendererOptions extends BrowserOptions {
+  anr?: boolean;
+}
 
 /**
  * Initialize Sentry in the Electron renderer process
@@ -19,8 +24,8 @@ export const defaultIntegrations = [...defaultBrowserIntegrations, new ScopeToMa
  * @param originalInit Optional init function for a specific framework SDK
  * @returns
  */
-export function init<O extends BrowserOptions>(
-  options: BrowserOptions & O = {} as BrowserOptions & O,
+export function init<O extends ElectronRendererOptions>(
+  options: ElectronRendererOptions & O = {} as ElectronRendererOptions & O,
   // This parameter name ensures that TypeScript error messages contain a hint for fixing SDK version mismatches
   originalInit: (if_you_get_a_typescript_error_ensure_sdks_use_version_v7_73_0: O) => void = browserInit,
 ): void {
@@ -60,6 +65,10 @@ If init has been called in the preload and contextIsolation is disabled, is not 
 
   if (options.transport === undefined) {
     options.transport = makeRendererTransport;
+  }
+
+  if (options.anr) {
+    enableAnrRendererMessages();
   }
 
   // We only handle initialScope in the main process otherwise it can cause race conditions over IPC

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <script>
+      const crypto = require('crypto');
+      const { init } = require('@sentry/electron');
+
+      function longWork() {
+        for (let i = 0; i < 100; i++) {
+          const salt = crypto.randomBytes(128).toString('base64');
+          // eslint-disable-next-line no-unused-vars
+          const hash = crypto.pbkdf2Sync('myPassword', salt, 10000, 512, 'sha512');
+        }
+      }
+
+      init({
+        debug: true,
+        anr: true,
+      });
+
+      setTimeout(() => {
+        longWork();
+      }, 2000);
+    </script>
+  </body>
+</html>

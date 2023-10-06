@@ -4,7 +4,14 @@ import { forEachEnvelopeItem, logger, parseEnvelope, SentryError } from '@sentry
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
 import { TextDecoder, TextEncoder } from 'util';
 
-import { IPCChannel, IPCMode, mergeEvents, normalizeUrlsInReplayEnvelope, PROTOCOL_SCHEME } from '../common';
+import {
+  IPCChannel,
+  IPCMode,
+  mergeEvents,
+  normalizeUrlsInReplayEnvelope,
+  PROTOCOL_SCHEME,
+  RendererStatus,
+} from '../common';
 import { registerProtocol, supportsFullProtocol, whenAppReady } from './electron-normalize';
 import { ElectronMainOptionsInternal } from './sdk';
 
@@ -111,6 +118,25 @@ function handleEnvelope(options: ElectronMainOptionsInternal, env: Uint8Array | 
   }
 }
 
+type StatusListener = (status: RendererStatus, contents: WebContents) => void;
+
+let statusListeners: StatusListener[] | undefined;
+
+/**
+ * Adds a listener that will be called when the renderer process sends a status update
+ */
+export function addStatusListener(listener: StatusListener): void {
+  statusListeners = statusListeners || [];
+  statusListeners.push(listener);
+}
+
+function handleStatus(status: RendererStatus, contents: WebContents): void {
+  statusListeners = statusListeners || [];
+  for (const listener of statusListeners) {
+    listener(status, contents);
+  }
+}
+
 /** Is object defined and has keys */
 function hasKeys(obj: any): boolean {
   return obj != undefined && Object.keys(obj).length > 0;
@@ -186,6 +212,12 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
             handleScope(options, data.toString());
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.ENVELOPE}`) && data) {
             handleEnvelope(options, data, getWebContents());
+          } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.STATUS}`) && data) {
+            const wc = getWebContents();
+            if (wc) {
+              const status = (JSON.parse(data.toString()) as { status: RendererStatus }).status;
+              handleStatus(status, wc);
+            }
           }
         });
       }
@@ -214,6 +246,7 @@ function configureClassic(options: ElectronMainOptionsInternal): void {
   ipcMain.on(IPCChannel.EVENT, ({ sender }, jsonEvent: string) => handleEvent(options, jsonEvent, sender));
   ipcMain.on(IPCChannel.SCOPE, (_, jsonScope: string) => handleScope(options, jsonScope));
   ipcMain.on(IPCChannel.ENVELOPE, ({ sender }, env: Uint8Array | string) => handleEnvelope(options, env, sender));
+  ipcMain.on(IPCChannel.STATUS, ({ sender }, status: RendererStatus) => handleStatus(status, sender));
 }
 
 /** Sets up communication channels with the renderer */

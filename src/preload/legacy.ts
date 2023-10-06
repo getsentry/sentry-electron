@@ -5,7 +5,7 @@
 import { contextBridge, crashReporter, ipcRenderer } from 'electron';
 import * as electron from 'electron';
 
-import { IPCChannel } from '../common/ipc';
+import { IPCChannel, RendererStatus } from '../common/ipc';
 
 // eslint-disable-next-line no-restricted-globals
 if (window.__SENTRY_IPC__) {
@@ -27,6 +27,7 @@ if (window.__SENTRY_IPC__) {
     sendScope: (scopeJson: string) => ipcRenderer.send(IPCChannel.SCOPE, scopeJson),
     sendEvent: (eventJson: string) => ipcRenderer.send(IPCChannel.EVENT, eventJson),
     sendEnvelope: (envelope: Uint8Array | string) => ipcRenderer.send(IPCChannel.ENVELOPE, envelope),
+    sendStatus: (status: RendererStatus) => ipcRenderer.send(IPCChannel.STATUS, status),
   };
 
   // eslint-disable-next-line no-restricted-globals
