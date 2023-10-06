@@ -9,14 +9,24 @@ import { Event } from '@sentry/types';
 import { logger } from '@sentry/utils';
 import { app, WebContents } from 'electron';
 
+import { RendererStatus } from '../common';
 import { createDebuggerMessageHandler, watchdogTimer } from './anr-utils';
 import { ELECTRON_MAJOR_VERSION } from './electron-normalize';
 import { addStatusListener } from './ipc';
 import { ElectronMainOptions } from './sdk';
 
+let cachedOptions: ElectronMainOptions | undefined;
+
+function getOptions(): ElectronMainOptions | undefined {
+  if (cachedOptions === undefined) {
+    cachedOptions = getCurrentHub().getClient()?.getOptions() as ElectronMainOptions | undefined;
+  }
+
+  return cachedOptions;
+}
+
 function sendRendererAnrEvent(contents: WebContents, blockedMs: number, frames?: StackFrame[]): void {
-  const options = getCurrentHub().getClient()?.getOptions() as ElectronMainOptions | undefined;
-  const rendererName = options?.getRendererName?.(contents) || 'renderer';
+  const rendererName = getOptions()?.getRendererName?.(contents) || 'renderer';
 
   const event: Event = {
     level: 'error',
@@ -43,15 +53,18 @@ function sendRendererAnrEvent(contents: WebContents, blockedMs: number, frames?:
 
 function rendererDebugger(contents: WebContents, pausedStack: (frames: StackFrame[]) => void): () => void {
   contents.debugger.attach('1.3');
-  const handler = createDebuggerMessageHandler(
+
+  const messageHandler = createDebuggerMessageHandler(
     (cmd) => contents.debugger.sendCommand(cmd),
     getModuleFromFilename,
     pausedStack,
   );
-  contents.debugger.on('message', async (_, cmd, params) => {
-    const method = cmd as 'Debugger.paused' | 'Debugger.scriptParsed';
-    handler({ method, params });
+
+  contents.debugger.on('message', (_, method, params) => {
+    messageHandler({ method, params } as Parameters<typeof messageHandler>[0]);
   });
+
+  // In node, we enable just before pausing but for Chrome, the debugger must be enabled before he ANR event occurs
   void contents.debugger.sendCommand('Debugger.enable');
 
   return () => {
@@ -83,7 +96,7 @@ function enableAnrRendererProcesses(options: RendererProcessAnrOptions): void {
     }
   }
 
-  addStatusListener(async (status, contents) => {
+  const rendererStatusUpdate = async (status: RendererStatus, contents: WebContents): Promise<void> => {
     rendererWatchdogTimers = rendererWatchdogTimers || new Map();
 
     let watchdog = rendererWatchdogTimers.get(contents);
@@ -94,7 +107,7 @@ function enableAnrRendererProcesses(options: RendererProcessAnrOptions): void {
       if (options.captureStackTrace) {
         log('Connecting to debugger');
         pauseAndCapture = rendererDebugger(contents, (frames) => {
-          log('Capturing event with stack frames');
+          log('Event captured with stack frames');
           sendRendererAnrEvent(contents, options.anrThreshold, frames);
         });
       }
@@ -123,7 +136,9 @@ function enableAnrRendererProcesses(options: RendererProcessAnrOptions): void {
       log('Renderer visibility changed', status);
       watchdog.enabled(status === 'visible');
     }
-  });
+  };
+
+  addStatusListener(rendererStatusUpdate);
 }
 
 type MainProcessAnrOptions = Parameters<typeof enableNodeAnrDetection>[0];
@@ -186,6 +201,7 @@ export async function enableAnrDetection(options: Options = {}): Promise<void> {
       captureStackTrace: !!options.rendererProcesses?.captureStackTrace,
       debug: !!options.rendererProcesses?.debug,
     };
+
     enableAnrRendererProcesses(rendererOptions);
   }
 

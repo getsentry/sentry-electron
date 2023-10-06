@@ -130,7 +130,7 @@ export function addStatusListener(listener: StatusListener): void {
   statusListeners.push(listener);
 }
 
-function handleStatus(status: RendererStatus, contents: WebContents): void {
+function handleRendererStatus(status: RendererStatus, contents: WebContents): void {
   statusListeners = statusListeners || [];
   for (const listener of statusListeners) {
     listener(status, contents);
@@ -213,10 +213,10 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.ENVELOPE}`) && data) {
             handleEnvelope(options, data, getWebContents());
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.STATUS}`) && data) {
-            const wc = getWebContents();
-            if (wc) {
+            const contents = getWebContents();
+            if (contents) {
               const status = (JSON.parse(data.toString()) as { status: RendererStatus }).status;
-              handleStatus(status, wc);
+              handleRendererStatus(status, contents);
             }
           }
         });
@@ -246,7 +246,7 @@ function configureClassic(options: ElectronMainOptionsInternal): void {
   ipcMain.on(IPCChannel.EVENT, ({ sender }, jsonEvent: string) => handleEvent(options, jsonEvent, sender));
   ipcMain.on(IPCChannel.SCOPE, (_, jsonScope: string) => handleScope(options, jsonScope));
   ipcMain.on(IPCChannel.ENVELOPE, ({ sender }, env: Uint8Array | string) => handleEnvelope(options, env, sender));
-  ipcMain.on(IPCChannel.STATUS, ({ sender }, status: RendererStatus) => handleStatus(status, sender));
+  ipcMain.on(IPCChannel.STATUS, ({ sender }, status: RendererStatus) => handleRendererStatus(status, sender));
 }
 
 /** Sets up communication channels with the renderer */
