@@ -12,7 +12,6 @@ import { app, WebContents } from 'electron';
 import { RendererStatus } from '../common';
 import { createDebuggerMessageHandler, watchdogTimer } from './anr-utils';
 import { ELECTRON_MAJOR_VERSION } from './electron-normalize';
-import { StatusListener } from './ipc';
 import { ElectronMainOptions } from './sdk';
 
 function getRendererName(contents: WebContents): string | undefined {
@@ -69,8 +68,8 @@ function rendererDebugger(contents: WebContents, pausedStack: (frames: StackFram
 
 let rendererWatchdogTimers: Map<WebContents, ReturnType<typeof watchdogTimer>> | undefined;
 
-/** */
-export function hookRendererAnr(): StatusListener {
+/** Creates a renderer ANR status hook */
+export function createRendererAnrStatusHook(): (status: RendererStatus, contents: WebContents) => void {
   function log(message: string, ...args: unknown[]): void {
     logger.log(`[Renderer ANR] ${message}`, ...args);
   }
