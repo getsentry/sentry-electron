@@ -12,21 +12,16 @@ import { app, WebContents } from 'electron';
 import { RendererStatus } from '../common';
 import { createDebuggerMessageHandler, watchdogTimer } from './anr-utils';
 import { ELECTRON_MAJOR_VERSION } from './electron-normalize';
-import { addStatusListener } from './ipc';
+import { StatusListener } from './ipc';
 import { ElectronMainOptions } from './sdk';
 
-let cachedOptions: ElectronMainOptions | undefined;
-
-function getOptions(): ElectronMainOptions | undefined {
-  if (cachedOptions === undefined) {
-    cachedOptions = getCurrentHub().getClient()?.getOptions() as ElectronMainOptions | undefined;
-  }
-
-  return cachedOptions;
+function getRendererName(contents: WebContents): string | undefined {
+  const options = getCurrentHub().getClient()?.getOptions() as ElectronMainOptions | undefined;
+  return options?.getRendererName?.(contents);
 }
 
 function sendRendererAnrEvent(contents: WebContents, blockedMs: number, frames?: StackFrame[]): void {
-  const rendererName = getOptions()?.getRendererName?.(contents) || 'renderer';
+  const rendererName = getRendererName(contents) || 'renderer';
 
   const event: Event = {
     level: 'error',
@@ -74,52 +69,37 @@ function rendererDebugger(contents: WebContents, pausedStack: (frames: StackFram
 
 let rendererWatchdogTimers: Map<WebContents, ReturnType<typeof watchdogTimer>> | undefined;
 
-interface RendererProcessAnrOptions {
-  /**
-   * The number of milliseconds to wait before considering the renderer process to be unresponsive.
-   */
-  anrThreshold: number;
-  /**
-   * Whether to capture a stack trace when the renderer process is unresponsive.
-   */
-  captureStackTrace: boolean;
-  /**
-   * Whether to log debug messages to the console.
-   */
-  debug: boolean;
-}
-
-function enableAnrRendererProcesses(options: RendererProcessAnrOptions): void {
+/** */
+export function hookRendererAnr(): StatusListener {
   function log(message: string, ...args: unknown[]): void {
-    if (options.debug) {
-      logger.log(`[Renderer ANR] ${message}`, ...args);
-    }
+    logger.log(`[Renderer ANR] ${message}`, ...args);
   }
 
-  const rendererStatusUpdate = async (status: RendererStatus, contents: WebContents): Promise<void> => {
+  return (message: RendererStatus, contents: WebContents): void => {
     rendererWatchdogTimers = rendererWatchdogTimers || new Map();
 
     let watchdog = rendererWatchdogTimers.get(contents);
 
     if (watchdog === undefined) {
+      log('Renderer sent first status message', message.config);
       let pauseAndCapture: (() => void) | undefined;
 
-      if (options.captureStackTrace) {
+      if (message.config.captureStackTrace) {
         log('Connecting to debugger');
         pauseAndCapture = rendererDebugger(contents, (frames) => {
           log('Event captured with stack frames');
-          sendRendererAnrEvent(contents, options.anrThreshold, frames);
+          sendRendererAnrEvent(contents, message.config.anrThreshold, frames);
         });
       }
 
-      watchdog = watchdogTimer(100, options.anrThreshold, async () => {
+      watchdog = watchdogTimer(100, message.config.anrThreshold, async () => {
         log('Watchdog timeout');
         if (pauseAndCapture) {
           log('Pausing debugger to capture stack trace');
           pauseAndCapture();
         } else {
           log('Capturing event');
-          sendRendererAnrEvent(contents, options.anrThreshold);
+          sendRendererAnrEvent(contents, message.config.anrThreshold);
         }
       });
 
@@ -132,13 +112,11 @@ function enableAnrRendererProcesses(options: RendererProcessAnrOptions): void {
 
     watchdog.poll();
 
-    if (status !== 'alive') {
-      log('Renderer visibility changed', status);
-      watchdog.enabled(status === 'visible');
+    if (message.status !== 'alive') {
+      log('Renderer visibility changed', message.status);
+      watchdog.enabled(message.status === 'visible');
     }
   };
-
-  addStatusListener(rendererStatusUpdate);
 }
 
 type MainProcessAnrOptions = Parameters<typeof enableNodeAnrDetection>[0];
@@ -163,12 +141,6 @@ interface Options {
    * Set to false to disable ANR detection in the main process.
    */
   mainProcess?: MainProcessAnrOptions | false;
-  /**
-   * Renderer process ANR options.
-   *
-   * Set to false to disable ANR detection in renderer processes.
-   */
-  rendererProcesses?: Partial<RendererProcessAnrOptions> | false;
 }
 
 /**
@@ -195,16 +167,6 @@ interface Options {
  * ```
  */
 export async function enableAnrDetection(options: Options = {}): Promise<void> {
-  if (options.rendererProcesses !== false) {
-    const rendererOptions: RendererProcessAnrOptions = {
-      anrThreshold: options.rendererProcesses?.anrThreshold || 5000,
-      captureStackTrace: !!options.rendererProcesses?.captureStackTrace,
-      debug: !!options.rendererProcesses?.debug,
-    };
-
-    enableAnrRendererProcesses(rendererOptions);
-  }
-
   if (options.mainProcess !== false) {
     return enableAnrMainProcess(options.mainProcess || {});
   }

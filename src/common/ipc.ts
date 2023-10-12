@@ -13,7 +13,31 @@ export enum IPCChannel {
   STATUS = 'sentry-electron.status',
 }
 
-export type RendererStatus = 'alive' | 'visible' | 'hidden';
+export interface RendererProcessAnrOptions {
+  /**
+   * Interval to send heartbeat messages to the child process.
+   *
+   * Defaults to 1000ms.
+   */
+  pollInterval: number;
+  /**
+   * The number of milliseconds to wait before considering the renderer process to be unresponsive.
+   *
+   * Defaults to 5000ms.
+   */
+  anrThreshold: number;
+  /**
+   * Whether to capture a stack trace when the renderer process is unresponsive.
+   *
+   * Defaults to `false`.
+   */
+  captureStackTrace: boolean;
+}
+
+export interface RendererStatus {
+  status: 'alive' | 'visible' | 'hidden';
+  config: RendererProcessAnrOptions;
+}
 
 export interface IPCInterface {
   sendRendererStart: () => void;

@@ -5,6 +5,7 @@ import { defaultIntegrations as defaultNodeIntegrations, init as nodeInit, NodeO
 import { Integration, Options } from '@sentry/types';
 import { Session, session, WebContents } from 'electron';
 
+import { hookRendererAnr } from './anr';
 import { getDefaultEnvironment, getDefaultReleaseName } from './context';
 import {
   AdditionalContext,
@@ -129,7 +130,7 @@ export function init(userOptions: ElectronMainOptions): void {
     options.transport = makeElectronOfflineTransport;
   }
 
-  configureIPC(options);
+  configureIPC(options, hookRendererAnr());
   nodeInit(options);
 }
 

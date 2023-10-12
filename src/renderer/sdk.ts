@@ -6,7 +6,7 @@ import {
 } from '@sentry/browser';
 import { logger } from '@sentry/utils';
 
-import { ensureProcess } from '../common';
+import { ensureProcess, RendererProcessAnrOptions } from '../common';
 import { enableAnrRendererMessages } from './anr';
 import { ScopeToMain } from './integrations';
 import { electronRendererStackParser } from './stack-parse';
@@ -15,7 +15,7 @@ import { makeRendererTransport } from './transport';
 export const defaultIntegrations = [...defaultBrowserIntegrations, new ScopeToMain()];
 
 interface ElectronRendererOptions extends BrowserOptions {
-  anr?: boolean;
+  anrDetection?: Partial<RendererProcessAnrOptions> | true;
 }
 
 /**
@@ -67,8 +67,8 @@ If init has been called in the preload and contextIsolation is disabled, is not 
     options.transport = makeRendererTransport;
   }
 
-  if (options.anr) {
-    enableAnrRendererMessages();
+  if (options.anrDetection) {
+    enableAnrRendererMessages(options.anrDetection === true ? {} : options.anrDetection);
   }
 
   // We only handle initialScope in the main process otherwise it can cause race conditions over IPC

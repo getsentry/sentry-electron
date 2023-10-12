@@ -118,25 +118,6 @@ function handleEnvelope(options: ElectronMainOptionsInternal, env: Uint8Array | 
   }
 }
 
-type StatusListener = (status: RendererStatus, contents: WebContents) => void;
-
-let statusListeners: StatusListener[] | undefined;
-
-/**
- * Adds a listener that will be called when the renderer process sends a status update
- */
-export function addStatusListener(listener: StatusListener): void {
-  statusListeners = statusListeners || [];
-  statusListeners.push(listener);
-}
-
-function handleRendererStatus(status: RendererStatus, contents: WebContents): void {
-  statusListeners = statusListeners || [];
-  for (const listener of statusListeners) {
-    listener(status, contents);
-  }
-}
-
 /** Is object defined and has keys */
 function hasKeys(obj: any): boolean {
   return obj != undefined && Object.keys(obj).length > 0;
@@ -182,7 +163,7 @@ function handleScope(options: ElectronMainOptionsInternal, jsonScope: string): v
 }
 
 /** Enables Electron protocol handling */
-function configureProtocol(options: ElectronMainOptionsInternal): void {
+function configureProtocol(options: ElectronMainOptionsInternal, rendererStatusUpdates: StatusListener): void {
   if (app.isReady()) {
     throw new SentryError("Sentry SDK should be initialized before the Electron app 'ready' event is fired");
   }
@@ -216,7 +197,7 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
             const contents = getWebContents();
             if (contents) {
               const status = (JSON.parse(data.toString()) as { status: RendererStatus }).status;
-              handleRendererStatus(status, contents);
+              rendererStatusUpdates(status, contents);
             }
           }
         });
@@ -228,7 +209,7 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
 /**
  * Hooks IPC for communication with the renderer processes
  */
-function configureClassic(options: ElectronMainOptionsInternal): void {
+function configureClassic(options: ElectronMainOptionsInternal, rendererStatusUpdates: StatusListener): void {
   ipcMain.on(IPCChannel.RENDERER_START, ({ sender }) => {
     const id = sender.id;
 
@@ -246,22 +227,24 @@ function configureClassic(options: ElectronMainOptionsInternal): void {
   ipcMain.on(IPCChannel.EVENT, ({ sender }, jsonEvent: string) => handleEvent(options, jsonEvent, sender));
   ipcMain.on(IPCChannel.SCOPE, (_, jsonScope: string) => handleScope(options, jsonScope));
   ipcMain.on(IPCChannel.ENVELOPE, ({ sender }, env: Uint8Array | string) => handleEnvelope(options, env, sender));
-  ipcMain.on(IPCChannel.STATUS, ({ sender }, status: RendererStatus) => handleRendererStatus(status, sender));
+  ipcMain.on(IPCChannel.STATUS, ({ sender }, status: RendererStatus) => rendererStatusUpdates(status, sender));
 }
 
+export type StatusListener = (status: RendererStatus, contents: WebContents) => void;
+
 /** Sets up communication channels with the renderer */
-export function configureIPC(options: ElectronMainOptionsInternal): void {
+export function configureIPC(options: ElectronMainOptionsInternal, rendererStatusUpdates: StatusListener): void {
   if (!supportsFullProtocol() && options.ipcMode === IPCMode.Protocol) {
     throw new SentryError('IPCMode.Protocol is only supported in Electron >= v5');
   }
 
   // eslint-disable-next-line no-bitwise
   if (supportsFullProtocol() && (options.ipcMode & IPCMode.Protocol) > 0) {
-    configureProtocol(options);
+    configureProtocol(options, rendererStatusUpdates);
   }
 
   // eslint-disable-next-line no-bitwise
   if ((options.ipcMode & IPCMode.Classic) > 0) {
-    configureClassic(options);
+    configureClassic(options, rendererStatusUpdates);
   }
 }
