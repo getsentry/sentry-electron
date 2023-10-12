@@ -15,7 +15,20 @@ import { makeRendererTransport } from './transport';
 export const defaultIntegrations = [...defaultBrowserIntegrations, new ScopeToMain()];
 
 interface ElectronRendererOptions extends BrowserOptions {
-  anrDetection?: Partial<RendererProcessAnrOptions> | true;
+  /**
+   * Enables ANR detection in this renderer process.
+   *
+   * Optionally accepts an object of options to configure ANR detection.
+   *
+   * {
+   *   pollInterval: number; // Defaults to 1000ms
+   *   anrThreshold: number; // Defaults to 5000ms
+   *   captureStackTrace: boolean; // Defaults to false
+   * }
+   *
+   * Defaults to 'true'.
+   */
+  anrDetection?: Partial<RendererProcessAnrOptions> | boolean;
 }
 
 /**
@@ -67,8 +80,8 @@ If init has been called in the preload and contextIsolation is disabled, is not 
     options.transport = makeRendererTransport;
   }
 
-  if (options.anrDetection) {
-    enableAnrRendererMessages(options.anrDetection === true ? {} : options.anrDetection);
+  if (options.anrDetection !== false) {
+    enableAnrRendererMessages(typeof options.anrDetection === 'object' ? options.anrDetection : {});
   }
 
   // We only handle initialScope in the main process otherwise it can cause race conditions over IPC
