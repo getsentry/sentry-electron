@@ -6,7 +6,7 @@ import {
   StackFrame,
 } from '@sentry/node';
 import { Event } from '@sentry/types';
-import { logger, createDebugPauseMessageHandler, watchdogTimer } from '@sentry/utils';
+import { createDebugPauseMessageHandler, logger, watchdogTimer } from '@sentry/utils';
 import { app, WebContents } from 'electron';
 
 import { RendererStatus } from '../common';
