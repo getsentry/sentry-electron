@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 
 const { app } = require('electron');
-const { init, enableAnrDetection } = require('@sentry/electron/main');
+const { init, enableMainProcessAnrDetection } = require('@sentry/electron/main');
 
 init({
   dsn: '__DSN__',
@@ -18,7 +18,7 @@ function longWork() {
   }
 }
 
-enableAnrDetection({ mainProcess: { debug: true, anrThreshold: 1000, captureStackTrace: true } }).then(() => {
+enableMainProcessAnrDetection({ anrThreshold: 1000, captureStackTrace: true }).then(() => {
   app.on('ready', () => {
     setTimeout(() => {
       longWork();
