@@ -6,11 +6,10 @@ import {
   StackFrame,
 } from '@sentry/node';
 import { Event } from '@sentry/types';
-import { logger } from '@sentry/utils';
+import { logger, createDebugPauseMessageHandler, watchdogTimer } from '@sentry/utils';
 import { app, WebContents } from 'electron';
 
 import { RendererStatus } from '../common';
-import { createDebuggerMessageHandler, watchdogTimer } from './anr-utils';
 import { ELECTRON_MAJOR_VERSION } from './electron-normalize';
 import { ElectronMainOptions } from './sdk';
 
@@ -48,7 +47,7 @@ function sendRendererAnrEvent(contents: WebContents, blockedMs: number, frames?:
 function rendererDebugger(contents: WebContents, pausedStack: (frames: StackFrame[]) => void): () => void {
   contents.debugger.attach('1.3');
 
-  const messageHandler = createDebuggerMessageHandler(
+  const messageHandler = createDebugPauseMessageHandler(
     (cmd) => contents.debugger.sendCommand(cmd),
     getModuleFromFilename,
     pausedStack,
