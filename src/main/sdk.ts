@@ -3,7 +3,7 @@ ensureProcess('main');
 
 import { defaultIntegrations as defaultNodeIntegrations, init as nodeInit, NodeOptions } from '@sentry/node';
 import { Integration, Options } from '@sentry/types';
-import { Session, session, WebContents } from 'electron';
+import { app, Session, session, WebContents } from 'electron';
 
 import { getDefaultEnvironment, getDefaultReleaseName } from './context';
 import {
@@ -97,6 +97,7 @@ export function init(userOptions: ElectronMainOptions): void {
   const defaults = defaultIntegrations;
 
   if (process.env.SENTRY_ANR_CHILD_PROCESS) {
+    app.dock?.hide();
     options.autoSessionTracking = false;
     options.tracesSampleRate = 0;
   }
