@@ -168,7 +168,7 @@ export class RecipeRunner {
             /"@sentry\/electron": ".*"/,
             `"@sentry/electron": "file:./../../../../sentry-electron-${SDK_VERSION}.tgz"`,
           )
-          // We replace the Sentry JavaScript dependency versions to match that of @sentry/electron
+          // We replace the Sentry JavaScript dependency versions to match that of @sentry/core
           .replace(/"@sentry\/replay": ".*"/, `"@sentry/replay": "${JS_VERSION}"`)
           .replace(/"@sentry\/react": ".*"/, `"@sentry/react": "${JS_VERSION}"`)
           .replace(/"@sentry\/vue": ".*"/, `"@sentry/vue": "${JS_VERSION}"`);
@@ -176,7 +176,7 @@ export class RecipeRunner {
 
       let filename = file;
 
-      if (parseSemver(this._electronVersion).major || 0 >= 28) {
+      if (!this._recipe.metadata.skipEsmAutoTransform && (parseSemver(this._electronVersion).major || 0) >= 28) {
         [filename, content] = convertToEsm(file, content);
       }
 

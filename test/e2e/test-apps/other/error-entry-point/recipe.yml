@@ -3,3 +3,4 @@ command: yarn && yarn build
 condition: version.major >= 15
 timeout: 120
 expectedError: This code is intended to run in the Electron renderer
+skipEsmAutoTransform: true

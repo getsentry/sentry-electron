@@ -1,2 +1,3 @@
 description: Electron net Breadcrumbs
 command: yarn
+skipEsmAutoTransform: true
