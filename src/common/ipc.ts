@@ -9,6 +9,34 @@ export enum IPCChannel {
   SCOPE = 'sentry-electron.scope',
   /** IPC to pass envelopes to the main process. */
   ENVELOPE = 'sentry-electron.envelope',
+  /** IPC to pass renderer status updates */
+  STATUS = 'sentry-electron.status',
+}
+
+export interface RendererProcessAnrOptions {
+  /**
+   * Interval to send heartbeat messages to the child process.
+   *
+   * Defaults to 1000ms.
+   */
+  pollInterval: number;
+  /**
+   * The number of milliseconds to wait before considering the renderer process to be unresponsive.
+   *
+   * Defaults to 5000ms.
+   */
+  anrThreshold: number;
+  /**
+   * Whether to capture a stack trace when the renderer process is unresponsive.
+   *
+   * Defaults to `false`.
+   */
+  captureStackTrace: boolean;
+}
+
+export interface RendererStatus {
+  status: 'alive' | 'visible' | 'hidden';
+  config: RendererProcessAnrOptions;
 }
 
 export interface IPCInterface {
@@ -16,6 +44,7 @@ export interface IPCInterface {
   sendScope: (scope: string) => void;
   sendEvent: (event: string) => void;
   sendEnvelope: (evn: Uint8Array | string) => void;
+  sendStatus: (state: RendererStatus) => void;
 }
 
 export const RENDERER_ID_HEADER = 'sentry-electron-renderer-id';

@@ -64,7 +64,7 @@ interface ProcessEntryPoint {
   init: (options: Partial<ElectronOptions>) => void;
   close?: (timeout?: number) => Promise<boolean>;
   flush?: (timeout?: number) => Promise<boolean>;
-  enableAnrDetection?(options: Parameters<typeof enableNodeAnrDetection>[0]): Promise<void>;
+  enableMainProcessAnrDetection?(options: Parameters<typeof enableNodeAnrDetection>[0]): Promise<void>;
 }
 
 /** Fetches the SDK entry point for the current process */
@@ -178,25 +178,25 @@ export async function flush(timeout?: number): Promise<boolean> {
  * child process.
  *
  * ```js
- * import { init, enableAnrDetection } from '@sentry/electron';
+ * import { init, enableMainProcessAnrDetection } from '@sentry/electron';
  *
  * init({ dsn: "__DSN__" });
  *
  * // with ESM + Electron v28+
- * await enableAnrDetection({ captureStackTrace: true });
+ * await enableMainProcessAnrDetection({ captureStackTrace: true });
  * runApp();
  *
  * // with CJS
- * enableAnrDetection({ captureStackTrace: true }).then(() => {
+ * enableMainProcessAnrDetection({ captureStackTrace: true }).then(() => {
  *   runApp();
  * });
  * ```
  */
-export async function enableAnrDetection(options: Parameters<typeof enableNodeAnrDetection>[0]): Promise<void> {
+export function enableMainProcessAnrDetection(options: Parameters<typeof enableNodeAnrDetection>[0]): Promise<void> {
   const entryPoint = getEntryPoint();
 
-  if (entryPoint.enableAnrDetection) {
-    return entryPoint.enableAnrDetection(options);
+  if (entryPoint.enableMainProcessAnrDetection) {
+    return entryPoint.enableMainProcessAnrDetection(options);
   }
 
   throw new Error('ANR detection should be started in the main process');

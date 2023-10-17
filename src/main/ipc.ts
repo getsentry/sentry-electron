@@ -4,7 +4,15 @@ import { forEachEnvelopeItem, logger, parseEnvelope, SentryError } from '@sentry
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
 import { TextDecoder, TextEncoder } from 'util';
 
-import { IPCChannel, IPCMode, mergeEvents, normalizeUrlsInReplayEnvelope, PROTOCOL_SCHEME } from '../common';
+import {
+  IPCChannel,
+  IPCMode,
+  mergeEvents,
+  normalizeUrlsInReplayEnvelope,
+  PROTOCOL_SCHEME,
+  RendererStatus,
+} from '../common';
+import { createRendererAnrStatusHook } from './anr';
 import { registerProtocol, supportsFullProtocol, whenAppReady } from './electron-normalize';
 import { ElectronMainOptionsInternal } from './sdk';
 
@@ -168,6 +176,8 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
     },
   ]);
 
+  const rendererStatusChanged = createRendererAnrStatusHook();
+
   whenAppReady
     .then(() => {
       for (const sesh of options.getSessions()) {
@@ -186,6 +196,12 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
             handleScope(options, data.toString());
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.ENVELOPE}`) && data) {
             handleEnvelope(options, data, getWebContents());
+          } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.STATUS}`) && data) {
+            const contents = getWebContents();
+            if (contents) {
+              const status = (JSON.parse(data.toString()) as { status: RendererStatus }).status;
+              rendererStatusChanged(status, contents);
+            }
           }
         });
       }
@@ -214,6 +230,9 @@ function configureClassic(options: ElectronMainOptionsInternal): void {
   ipcMain.on(IPCChannel.EVENT, ({ sender }, jsonEvent: string) => handleEvent(options, jsonEvent, sender));
   ipcMain.on(IPCChannel.SCOPE, (_, jsonScope: string) => handleScope(options, jsonScope));
   ipcMain.on(IPCChannel.ENVELOPE, ({ sender }, env: Uint8Array | string) => handleEnvelope(options, env, sender));
+
+  const rendererStatusChanged = createRendererAnrStatusHook();
+  ipcMain.on(IPCChannel.STATUS, ({ sender }, status: RendererStatus) => rendererStatusChanged(status, sender));
 }
 
 /** Sets up communication channels with the renderer */
