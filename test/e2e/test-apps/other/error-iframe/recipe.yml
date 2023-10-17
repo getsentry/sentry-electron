@@ -2,3 +2,4 @@ description: JavaScript Error from <iframe>
 command: yarn && yarn build
 condition: supportsContextIsolation && supportsSandbox
 timeout: 120
+skipEsmAutoTransform: true

@@ -3,3 +3,4 @@ command: npm install && npm run build
 condition: version.major >= 16
 timeout: 120
 distPath: release/app
+skipEsmAutoTransform: true

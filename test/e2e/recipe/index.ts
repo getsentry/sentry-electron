@@ -1,4 +1,5 @@
 import { Event } from '@sentry/types';
+import { parseSemver } from '@sentry/utils';
 import { expect } from 'chai';
 import { spawnSync } from 'child_process';
 import { mkdirSync, writeFileSync } from 'fs';
@@ -53,6 +54,51 @@ export function getCategorisedTestRecipes(electronVersion: string): Record<strin
   }, {} as Record<string, RecipeRunner[]>);
 }
 
+function insertAfterLastImport(content: string, insert: string): string {
+  const lines = content.split('\n');
+  const importCount = lines.filter((l) => l.startsWith('import ')).length;
+
+  let output = '';
+  let count = 0;
+  for (const line of lines) {
+    output += `${line}\n`;
+
+    if (line.startsWith('import ')) {
+      count += 1;
+    }
+
+    if (count === importCount) {
+      output += `${insert}\n`;
+      count += 1;
+    }
+  }
+
+  return output;
+}
+
+function convertToEsm(filename: string, content: string): [string, string] {
+  if (filename.endsWith('package.json')) {
+    const obj = JSON.parse(content);
+    obj.main = obj.main.replace(/\.js$/, '.mjs');
+    return [filename, JSON.stringify(obj)];
+  }
+
+  if (filename.endsWith('main.js')) {
+    return [
+      filename.replace(/\.js$/, '.mjs'),
+      insertAfterLastImport(
+        content
+          .replace(/(?:const|var) (\{[\s\S]*?\}) = require\((\S*?)\)/g, 'import $1 from $2')
+          .replace(/(?:const|var) (\S*) = require\((\S*)\)/g, 'import * as $1 from $2'),
+        `import * as url from 'url';
+const __dirname = url.fileURLToPath(new url.URL('.', import.meta.url));`,
+      ),
+    ];
+  }
+
+  return [filename, content];
+}
+
 export class RecipeRunner {
   private constructor(private readonly _electronVersion: string, private readonly _recipe: TestRecipe) {}
 
@@ -105,9 +151,6 @@ export class RecipeRunner {
     for (const file of Object.keys(this._recipe.files)) {
       log(`Writing file '${file}'`);
 
-      const path = join(appPath, file);
-
-      mkdirSync(dirname(path), { recursive: true });
       let content = this._recipe.files[file];
 
       // Replace with the test server localhost DSN
@@ -125,12 +168,20 @@ export class RecipeRunner {
             /"@sentry\/electron": ".*"/,
             `"@sentry/electron": "file:./../../../../sentry-electron-${SDK_VERSION}.tgz"`,
           )
-          // We replace the Sentry JavaScript dependency versions to match that of @sentry/electron
+          // We replace the Sentry JavaScript dependency versions to match that of @sentry/core
           .replace(/"@sentry\/replay": ".*"/, `"@sentry/replay": "${JS_VERSION}"`)
           .replace(/"@sentry\/react": ".*"/, `"@sentry/react": "${JS_VERSION}"`)
           .replace(/"@sentry\/vue": ".*"/, `"@sentry/vue": "${JS_VERSION}"`);
       }
 
+      let filename = file;
+
+      if (!this._recipe.metadata.skipEsmAutoTransform && (parseSemver(this._electronVersion).major || 0) >= 28) {
+        [filename, content] = convertToEsm(file, content);
+      }
+
+      const path = join(appPath, filename);
+      mkdirSync(dirname(path), { recursive: true });
       writeFileSync(path, content);
     }
 

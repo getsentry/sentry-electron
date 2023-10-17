@@ -151,6 +151,7 @@ function normalizeEvent(event: Event & ReplayEvent): Event {
       frame.colno = 0;
       frame.lineno = 0;
       frame.function = '{{function}}';
+      frame.filename = frame.filename?.replace(/\.mjs$/, '.js');
     }
   }
 
