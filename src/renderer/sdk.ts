@@ -26,7 +26,7 @@ interface ElectronRendererOptions extends BrowserOptions {
    *   captureStackTrace: boolean; // Defaults to false
    * }
    *
-   * Defaults to 'true'.
+   * Defaults to 'false'.
    */
   anrDetection?: Partial<RendererProcessAnrOptions> | boolean;
 }
@@ -54,7 +54,7 @@ If init has been called in the preload and contextIsolation is disabled, is not 
   window.__SENTRY__RENDERER_INIT__ = true;
 
   // We don't want browser session tracking enabled by default because we already have Electron
-  // specific session tracking
+  // specific session tracking from the main process.
   if (options.autoSessionTracking === undefined) {
     options.autoSessionTracking = false;
   }
@@ -80,8 +80,8 @@ If init has been called in the preload and contextIsolation is disabled, is not 
     options.transport = makeRendererTransport;
   }
 
-  if (options.anrDetection !== false) {
-    enableAnrRendererMessages(typeof options.anrDetection === 'object' ? options.anrDetection : {});
+  if (options.anrDetection) {
+    enableAnrRendererMessages(options.anrDetection === true ? {} : options.anrDetection);
   }
 
   // We only handle initialScope in the main process otherwise it can cause race conditions over IPC
