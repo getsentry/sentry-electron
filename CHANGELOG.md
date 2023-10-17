@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 4.14.0
+
+- feat: Renderer process ANR detection with stack traces (#770)
+  - Update from [v7.73.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.73.0) to
+  [v7.74.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.74.0) of JavaScript SDKs
+- fix: Hide ANR child process from dock (#777)
+- test: Electron v28 main process ESM (#773)
+
 ## 4.13.0
 
 - feat: Add App Not Responding detection for main process (#753)
