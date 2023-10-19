@@ -67,6 +67,20 @@ function rendererDebugger(contents: WebContents, pausedStack: (frames: StackFram
 
 let rendererWatchdogTimers: Map<WebContents, ReturnType<typeof watchdogTimer>> | undefined;
 
+function createHrTimer(): { getTimeMs: () => number; reset: () => void } {
+  let lastPoll = process.hrtime();
+
+  return {
+    getTimeMs: (): number => {
+      const [seconds, nanoSeconds] = process.hrtime(lastPoll);
+      return Math.floor(seconds * 1e3 + nanoSeconds / 1e6);
+    },
+    reset: (): void => {
+      lastPoll = process.hrtime();
+    },
+  };
+}
+
 /** Creates a renderer ANR status hook */
 export function createRendererAnrStatusHook(): (status: RendererStatus, contents: WebContents) => void {
   function log(message: string, ...args: unknown[]): void {
@@ -90,7 +104,7 @@ export function createRendererAnrStatusHook(): (status: RendererStatus, contents
         });
       }
 
-      watchdog = watchdogTimer(100, message.config.anrThreshold, async () => {
+      watchdog = watchdogTimer(createHrTimer, 100, message.config.anrThreshold, async () => {
         log('Watchdog timeout');
         if (pauseAndCapture) {
           log('Pausing debugger to capture stack trace');
