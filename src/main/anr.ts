@@ -12,6 +12,7 @@ import { app, WebContents } from 'electron';
 import { RendererStatus } from '../common';
 import { ELECTRON_MAJOR_VERSION } from './electron-normalize';
 import { ElectronMainOptions } from './sdk';
+import { sessionAnr } from './sessions';
 
 function getRendererName(contents: WebContents): string | undefined {
   const options = getCurrentHub().getClient()?.getOptions() as ElectronMainOptions | undefined;
@@ -19,6 +20,8 @@ function getRendererName(contents: WebContents): string | undefined {
 }
 
 function sendRendererAnrEvent(contents: WebContents, blockedMs: number, frames?: StackFrame[]): void {
+  sessionAnr();
+
   const rendererName = getRendererName(contents) || 'renderer';
 
   const event: Event = {
@@ -79,6 +82,11 @@ function createHrTimer(): { getTimeMs: () => number; reset: () => void } {
       lastPoll = process.hrtime();
     },
   };
+}
+
+/** Are we currently running in the ANR child process */
+export function isAnrChildProcess(): boolean {
+  return !!process.env.SENTRY_ANR_CHILD_PROCESS;
 }
 
 /** Creates a renderer ANR status hook */

@@ -5,6 +5,7 @@ import { defaultIntegrations as defaultNodeIntegrations, init as nodeInit, NodeO
 import { Integration, Options } from '@sentry/types';
 import { app, Session, session, WebContents } from 'electron';
 
+import { isAnrChildProcess } from './anr';
 import { getDefaultEnvironment, getDefaultReleaseName } from './context';
 import {
   AdditionalContext,
@@ -96,7 +97,7 @@ export function init(userOptions: ElectronMainOptions): void {
   const options: ElectronMainOptionsInternal = Object.assign(defaultOptions, userOptions);
   const defaults = defaultIntegrations;
 
-  if (process.env.SENTRY_ANR_CHILD_PROCESS) {
+  if (isAnrChildProcess()) {
     app.dock?.hide();
     options.autoSessionTracking = false;
     options.tracesSampleRate = 0;

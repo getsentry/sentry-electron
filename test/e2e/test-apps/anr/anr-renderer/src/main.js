@@ -6,7 +6,6 @@ const { init } = require('@sentry/electron/main');
 init({
   dsn: '__DSN__',
   debug: true,
-  autoSessionTracking: false,
   onFatalError: () => {},
 });
 

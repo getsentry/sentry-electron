@@ -4,6 +4,7 @@ import { SerializedSession, Session, SessionContext, SessionStatus } from '@sent
 import { logger } from '@sentry/utils';
 import { app } from 'electron';
 
+import { isAnrChildProcess } from './anr';
 import { sentryCachePath } from './fs';
 import { Store } from './store';
 
@@ -93,6 +94,11 @@ export async function unreportedDuringLastSession(crashDate: Date | undefined): 
 export async function checkPreviousSession(crashed: boolean): Promise<void> {
   const client = getCurrentHub().getClient<NodeClient>();
 
+  // We should not check the session storage if we are in an ANR child process
+  if (isAnrChildProcess()) {
+    return;
+  }
+
   const previous = await previousSession;
 
   if (previous && client) {
@@ -145,6 +151,27 @@ export function sessionCrashed(): void {
   }
 
   hub.captureSession();
+}
+
+/** Sets the current session as ANR */
+export function sessionAnr(): void {
+  // stop persisting session
+  if (persistTimer) {
+    clearInterval(persistTimer);
+  }
+
+  const hub = getCurrentHub();
+  const session = hub.getScope()?.getSession();
+
+  if (!session) {
+    return;
+  }
+
+  if (session.status === 'ok') {
+    logger.log('Setting session as abnormal ANR');
+    updateSession(session, { status: 'abnormal', abnormal_mechanism: 'anr_foreground' });
+    hub.captureSession();
+  }
 }
 
 /**
