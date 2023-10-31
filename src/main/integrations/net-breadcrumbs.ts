@@ -7,10 +7,10 @@ import {
   fill,
   generateSentryTraceHeader,
   logger,
+  LRUMap,
   stringMatchesSomePattern,
 } from '@sentry/utils';
 import { ClientRequest, ClientRequestConstructorOptions, IncomingMessage, net } from 'electron';
-import { LRUMap } from 'lru_map';
 import * as urlModule from 'url';
 
 type ShouldTraceFn = (method: string, url: string) => boolean;

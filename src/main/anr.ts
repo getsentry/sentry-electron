@@ -12,6 +12,7 @@ import { app, WebContents } from 'electron';
 import { RendererStatus } from '../common';
 import { ELECTRON_MAJOR_VERSION } from './electron-normalize';
 import { ElectronMainOptions } from './sdk';
+import { sessionAnr } from './sessions';
 
 function getRendererName(contents: WebContents): string | undefined {
   const options = getCurrentHub().getClient()?.getOptions() as ElectronMainOptions | undefined;
@@ -19,6 +20,8 @@ function getRendererName(contents: WebContents): string | undefined {
 }
 
 function sendRendererAnrEvent(contents: WebContents, blockedMs: number, frames?: StackFrame[]): void {
+  sessionAnr();
+
   const rendererName = getRendererName(contents) || 'renderer';
 
   const event: Event = {
@@ -67,6 +70,25 @@ function rendererDebugger(contents: WebContents, pausedStack: (frames: StackFram
 
 let rendererWatchdogTimers: Map<WebContents, ReturnType<typeof watchdogTimer>> | undefined;
 
+function createHrTimer(): { getTimeMs: () => number; reset: () => void } {
+  let lastPoll = process.hrtime();
+
+  return {
+    getTimeMs: (): number => {
+      const [seconds, nanoSeconds] = process.hrtime(lastPoll);
+      return Math.floor(seconds * 1e3 + nanoSeconds / 1e6);
+    },
+    reset: (): void => {
+      lastPoll = process.hrtime();
+    },
+  };
+}
+
+/** Are we currently running in the ANR child process */
+export function isAnrChildProcess(): boolean {
+  return !!process.env.SENTRY_ANR_CHILD_PROCESS;
+}
+
 /** Creates a renderer ANR status hook */
 export function createRendererAnrStatusHook(): (status: RendererStatus, contents: WebContents) => void {
   function log(message: string, ...args: unknown[]): void {
@@ -90,7 +112,7 @@ export function createRendererAnrStatusHook(): (status: RendererStatus, contents
         });
       }
 
-      watchdog = watchdogTimer(100, message.config.anrThreshold, async () => {
+      watchdog = watchdogTimer(createHrTimer, 100, message.config.anrThreshold, async () => {
         log('Watchdog timeout');
         if (pauseAndCapture) {
           log('Pausing debugger to capture stack trace');
