@@ -1,6 +1,6 @@
 const path = require('path');
 
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, protocol } = require('electron');
 const { init, IPCMode } = require('@sentry/electron');
 
 init({
@@ -10,6 +10,18 @@ init({
   autoSessionTracking: false,
   onFatalError: () => {},
 });
+
+// Since we patch registerSchemesAsPrivileged, this should not overwrite the sentry scheme
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'custom1',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+    },
+  },
+]);
 
 app.on('ready', () => {
   const mainWindow = new BrowserWindow({

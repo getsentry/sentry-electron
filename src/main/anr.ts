@@ -90,7 +90,7 @@ export function isAnrChildProcess(): boolean {
 }
 
 /** Creates a renderer ANR status hook */
-export function createRendererAnrStatusHook(): (status: RendererStatus, contents: WebContents) => void {
+export function createRendererAnrStatusHandler(): (status: RendererStatus, contents: WebContents) => void {
   function log(message: string, ...args: unknown[]): void {
     logger.log(`[Renderer ANR] ${message}`, ...args);
   }

@@ -12,12 +12,17 @@ import {
   PROTOCOL_SCHEME,
   RendererStatus,
 } from '../common';
-import { createRendererAnrStatusHook } from './anr';
+import { createRendererAnrStatusHandler } from './anr';
 import { registerProtocol, supportsFullProtocol, whenAppReady } from './electron-normalize';
 import { ElectronMainOptionsInternal } from './sdk';
 
 let KNOWN_RENDERERS: Set<number> | undefined;
 let WINDOW_ID_TO_WEB_CONTENTS: Map<string, number> | undefined;
+
+const SENTRY_CUSTOM_SCHEME = {
+  scheme: PROTOCOL_SCHEME,
+  privileges: { bypassCSP: true, corsEnabled: true, supportFetchAPI: true, secure: true },
+};
 
 async function newProtocolRenderer(): Promise<void> {
   KNOWN_RENDERERS = KNOWN_RENDERERS || new Set();
@@ -169,14 +174,17 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
     throw new SentryError("Sentry SDK should be initialized before the Electron app 'ready' event is fired");
   }
 
-  protocol.registerSchemesAsPrivileged([
-    {
-      scheme: PROTOCOL_SCHEME,
-      privileges: { bypassCSP: true, corsEnabled: true, supportFetchAPI: true, secure: true },
-    },
-  ]);
+  protocol.registerSchemesAsPrivileged([SENTRY_CUSTOM_SCHEME]);
 
-  const rendererStatusChanged = createRendererAnrStatusHook();
+  // We Proxy this function so that later user calls to registerSchemesAsPrivileged don't overwrite our custom scheme
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  protocol.registerSchemesAsPrivileged = new Proxy(protocol.registerSchemesAsPrivileged, {
+    apply: (target, __, args: Parameters<typeof protocol.registerSchemesAsPrivileged>) => {
+      target([...args[0], SENTRY_CUSTOM_SCHEME]);
+    },
+  });
+
+  const rendererStatusChanged = createRendererAnrStatusHandler();
 
   whenAppReady
     .then(() => {
@@ -231,7 +239,7 @@ function configureClassic(options: ElectronMainOptionsInternal): void {
   ipcMain.on(IPCChannel.SCOPE, (_, jsonScope: string) => handleScope(options, jsonScope));
   ipcMain.on(IPCChannel.ENVELOPE, ({ sender }, env: Uint8Array | string) => handleEnvelope(options, env, sender));
 
-  const rendererStatusChanged = createRendererAnrStatusHook();
+  const rendererStatusChanged = createRendererAnrStatusHandler();
   ipcMain.on(IPCChannel.STATUS, ({ sender }, status: RendererStatus) => rendererStatusChanged(status, sender));
 }
 
