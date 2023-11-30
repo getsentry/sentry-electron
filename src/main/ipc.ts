@@ -176,12 +176,13 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
 
   protocol.registerSchemesAsPrivileged([SENTRY_CUSTOM_SCHEME]);
 
-  // We override this function so that later user calls to registerSchemesAsPrivileged don't overwrite our custom scheme
+  // We Proxy this function so that later user calls to registerSchemesAsPrivileged don't overwrite our custom scheme
   // eslint-disable-next-line @typescript-eslint/unbound-method
-  const originalFn = protocol.registerSchemesAsPrivileged;
-  protocol.registerSchemesAsPrivileged = function (schemes) {
-    originalFn.call(this, [...schemes, SENTRY_CUSTOM_SCHEME]);
-  };
+  protocol.registerSchemesAsPrivileged = new Proxy(protocol.registerSchemesAsPrivileged, {
+    apply: (target, __, args: Parameters<typeof protocol.registerSchemesAsPrivileged>) => {
+      target([...args[0], SENTRY_CUSTOM_SCHEME]);
+    },
+  });
 
   const rendererStatusChanged = createRendererAnrStatusHandler();
 
