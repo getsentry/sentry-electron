@@ -1,4 +1,4 @@
-import { DeviceContext, Event, EventProcessor, Integration } from '@sentry/types';
+import { DeviceContext, Event, Integration } from '@sentry/types';
 import { app, screen as electronScreen } from 'electron';
 import { CpuInfo, cpus } from 'os';
 
@@ -40,9 +40,12 @@ export class AdditionalContext implements Integration {
   }
 
   /** @inheritDoc */
-  public setupOnce(addGlobalEventProcessor: (callback: EventProcessor) => void): void {
-    addGlobalEventProcessor(async (event: Event) => this._addAdditionalContext(event));
+  public setupOnce(): void {
+    //
+  }
 
+  /** @inheritDoc */
+  public setup(): void {
     // Some metrics are only available after app ready so we lazily load them
     void whenAppReady.then(() => {
       const { language, screen } = this._options;
@@ -61,8 +64,8 @@ export class AdditionalContext implements Integration {
     });
   }
 
-  /** Adds additional context to event */
-  private _addAdditionalContext(event: Event): Event {
+  /** @inheritDoc */
+  public processEvent(event: Event): Event {
     const device: DeviceContext = this._lazyDeviceContext;
 
     const { memory, cpu } = this._options;

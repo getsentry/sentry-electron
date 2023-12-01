@@ -1,7 +1,7 @@
 /* eslint-disable deprecation/deprecation */
 import { getDynamicSamplingContextFromClient } from '@sentry/core';
-import { getCurrentHub } from '@sentry/node';
-import { DynamicSamplingContext, EventProcessor, Hub, Integration, Span, TracePropagationTargets } from '@sentry/types';
+import { getCurrentHub, NodeClient } from '@sentry/node';
+import { DynamicSamplingContext, Integration, Span, TracePropagationTargets } from '@sentry/types';
 import {
   dynamicSamplingContextToSentryBaggageHeader,
   fill,
@@ -54,8 +54,13 @@ export class Net implements Integration {
   }
 
   /** @inheritDoc */
-  public setupOnce(_addGlobalEventProcessor: (callback: EventProcessor) => void, getCurrentHub: () => Hub): void {
-    const clientOptions = getCurrentHub().getClient()?.getOptions();
+  public setupOnce(): void {
+    //
+  }
+
+  /** @inheritDoc */
+  public setup(client: NodeClient): void {
+    const clientOptions = client.getOptions();
 
     // No need to instrument if we don't want to track anything
     if (this._options.breadcrumbs === false && this._options.tracing === false) {

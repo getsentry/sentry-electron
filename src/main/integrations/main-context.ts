@@ -1,6 +1,5 @@
-import { getCurrentHub } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
-import { Event, EventProcessor, Integration } from '@sentry/types';
+import { Event, EventHint, Integration } from '@sentry/types';
 import { app } from 'electron';
 
 import { mergeEvents, normalizeEvent } from '../../common';
@@ -19,13 +18,15 @@ export class MainContext implements Integration {
   }
 
   /** @inheritDoc */
-  public setupOnce(addGlobalEventProcessor: (callback: EventProcessor) => void): void {
-    const options = getCurrentHub().getClient<NodeClient>()?.getOptions();
+  public setupOnce(): void {
+    //
+  }
 
-    addGlobalEventProcessor(async (event: Event) => {
-      const normalized = normalizeEvent(event, app.getAppPath());
-      const defaults = await getEventDefaults(options?.release, options?.environment);
-      return mergeEvents(defaults, normalized);
-    });
+  /** @inheritDoc */
+  public async processEvent(event: Event, _: EventHint, client: NodeClient): Promise<Event> {
+    const options = client.getOptions();
+    const normalized = normalizeEvent(event, app.getAppPath());
+    const defaults = await getEventDefaults(options?.release, options?.environment);
+    return mergeEvents(defaults, normalized);
   }
 }

@@ -1,4 +1,4 @@
-import { addBreadcrumb, getCurrentHub } from '@sentry/core';
+import { addBreadcrumb } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { Breadcrumb, Integration } from '@sentry/types';
 import { app, autoUpdater, BrowserWindow, powerMonitor, screen, WebContents } from 'electron';
@@ -123,7 +123,12 @@ export class ElectronBreadcrumbs implements Integration {
 
   /** @inheritDoc */
   public setupOnce(): void {
-    const initOptions = getCurrentHub().getClient<NodeClient>()?.getOptions() as ElectronMainOptions | undefined;
+    //
+  }
+
+  /** @inheritDoc */
+  public setup(client: NodeClient): void {
+    const initOptions = client.getOptions() as ElectronMainOptions | undefined;
 
     trackRendererProperties();
 

@@ -1,4 +1,3 @@
-import { getCurrentHub } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { Integration } from '@sentry/types';
 import { logger } from '@sentry/utils';
@@ -50,7 +49,12 @@ export class PreloadInjection implements Integration {
 
   /** @inheritDoc */
   public setupOnce(): void {
-    const options = getCurrentHub().getClient<NodeClient>()?.getOptions() as ElectronMainOptionsInternal;
+    //
+  }
+
+  /** @inheritDoc */
+  public setup(client: NodeClient): void {
+    const options = client.getOptions() as ElectronMainOptionsInternal;
 
     // If classic IPC mode is disabled, we shouldn't attempt to inject preload scripts
     // eslint-disable-next-line no-bitwise

@@ -73,6 +73,11 @@ export class ElectronMinidump implements Integration {
 
   /** @inheritDoc */
   public setupOnce(): void {
+    //
+  }
+
+  /** @inheritDoc */
+  public setup(client: NodeClient): void {
     // Mac AppStore builds cannot run the crash reporter due to the sandboxing
     // requirements. In this case, we prevent enabling native crashes entirely.
     // https://electronjs.org/docs/tutorial/mac-app-store-submission-guide#limitations-of-mas-build
@@ -84,7 +89,7 @@ export class ElectronMinidump implements Integration {
       throw new SentryError(`The '${this.name}' integration is only supported with Electron >= v9`);
     }
 
-    const options = getCurrentHub().getClient<NodeClient>()?.getOptions();
+    const options = client.getOptions();
 
     if (!options?.dsn) {
       throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
