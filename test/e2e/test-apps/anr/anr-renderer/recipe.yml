@@ -1,4 +1,4 @@
 description: ANR Renderer Event
 category: ANR
 command: yarn
-condition: version.major >= 4
+condition: version.major >= 13
