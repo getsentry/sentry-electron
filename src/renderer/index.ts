@@ -23,6 +23,7 @@ export type {
 export {
   addGlobalEventProcessor,
   addBreadcrumb,
+  addIntegration,
   captureException,
   captureEvent,
   captureMessage,
@@ -34,6 +35,11 @@ export {
   makeMain,
   Scope,
   startTransaction,
+  getActiveSpan,
+  startSpan,
+  startInactiveSpan,
+  startSpanManual,
+  continueTrace,
   setContext,
   setExtra,
   setExtras,
@@ -44,8 +50,17 @@ export {
   FunctionToString,
   InboundFilters,
 } from '@sentry/core';
+export type { SpanStatusType } from '@sentry/core';
 
-export { BrowserClient, BrowserTracing, lastEventId, showReportDialog, Replay } from '@sentry/browser';
+export {
+  addTracingExtensions,
+  BrowserClient,
+  BrowserTracing,
+  BrowserProfilingIntegration,
+  lastEventId,
+  showReportDialog,
+  Replay,
+} from '@sentry/browser';
 export type { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
 
 export const Integrations = { ...ElectronRendererIntegrations, ...BrowserIntegrations };

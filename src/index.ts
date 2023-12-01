@@ -19,24 +19,32 @@ export type {
   StackFrame,
   Stacktrace,
   Thread,
+  Transaction,
   User,
 } from '@sentry/types';
 
 export {
   addGlobalEventProcessor,
   addBreadcrumb,
+  addIntegration,
   captureException,
   captureEvent,
   captureMessage,
   configureScope,
   createTransport,
-  getActiveTransaction,
   getHubFromCarrier,
   getCurrentHub,
   Hub,
+  lastEventId,
   makeMain,
   Scope,
   startTransaction,
+  getActiveSpan,
+  startSpan,
+  startInactiveSpan,
+  startSpanManual,
+  continueTrace,
+  SDK_VERSION,
   setContext,
   setExtra,
   setExtras,
@@ -46,8 +54,8 @@ export {
   withScope,
   FunctionToString,
   InboundFilters,
-  trace,
 } from '@sentry/core';
+export type { SpanStatusType } from '@sentry/core';
 
 import type { enableAnrDetection as enableNodeAnrDetection } from '@sentry/node';
 
