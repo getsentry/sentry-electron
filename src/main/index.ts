@@ -26,6 +26,7 @@ export type {
 export {
   addGlobalEventProcessor,
   addBreadcrumb,
+  addIntegration,
   captureException,
   captureEvent,
   captureMessage,
@@ -37,6 +38,11 @@ export {
   makeMain,
   Scope,
   startTransaction,
+  getActiveSpan,
+  startSpan,
+  startInactiveSpan,
+  startSpanManual,
+  continueTrace,
   setContext,
   setExtra,
   setExtras,
@@ -47,6 +53,7 @@ export {
   FunctionToString,
   InboundFilters,
 } from '@sentry/core';
+export type { SpanStatusType } from '@sentry/core';
 
 export type { NodeOptions } from '@sentry/node';
 export { flush, close, NodeClient, lastEventId } from '@sentry/node';
