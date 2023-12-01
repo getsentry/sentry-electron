@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 4.15.0
+
+- feat: Update from [v7.74.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.74.0) to
+  [v7.84.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.84.0) of JavaScript SDKs (#779, #786, #788)
+- fix: Patch registerSchemesAsPrivileged so sentry scheme isn't overwritten (#787)
+- fix: Add missing exports (#790)
+
 ## 4.14.0
 
 - feat: Renderer process ANR detection with stack traces (#770)
