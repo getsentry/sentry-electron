@@ -5,7 +5,7 @@ import { promisify } from 'util';
 
 /** Gets the Sentry Cache path */
 export function getSentryCachePath(): string {
-  return join(app ? app.getPath('userData') : '', 'sentry');
+  return join(app.getPath('userData'), 'sentry');
 }
 
 export const writeFileAsync = promisify(writeFile);
