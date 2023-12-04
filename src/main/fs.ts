@@ -3,7 +3,10 @@ import { mkdir, readdir, readFile, stat, statSync, unlink, writeFile } from 'fs'
 import { dirname, join, resolve } from 'path';
 import { promisify } from 'util';
 
-export const sentryCachePath = join(app ? app.getPath('userData') : '', 'sentry');
+/** Gets the Sentry Cache path */
+export function getSentryCachePath(): string {
+  return join(app ? app.getPath('userData') : '', 'sentry');
+}
 
 export const writeFileAsync = promisify(writeFile);
 export const readFileAsync = promisify(readFile);
