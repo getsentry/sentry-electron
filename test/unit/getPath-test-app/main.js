@@ -1,13 +1,13 @@
-process.on('uncaughtException', () => {
-  process.exit(1);
-});
-
 const { app } = require('electron');
 
+process.on('uncaughtException', () => {
+  app.exit(1);
+});
+
 app.getPath = () => {
-  process.exit(1);
+  app.exit(1);
 };
 
 require('../../../main');
 
-process.exit(0);
+app.exit(0);
