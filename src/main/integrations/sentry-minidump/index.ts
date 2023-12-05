@@ -7,7 +7,7 @@ import { app, crashReporter } from 'electron';
 import { mergeEvents } from '../../../common';
 import { getDefaultEnvironment, getDefaultReleaseName, getEventDefaults } from '../../context';
 import { EXIT_REASONS, onChildProcessGone, onRendererProcessGone } from '../../electron-normalize';
-import { sentryCachePath } from '../../fs';
+import { getSentryCachePath } from '../../fs';
 import { getRendererProperties, trackRendererProperties } from '../../renderers';
 import { ElectronMainOptions } from '../../sdk';
 import { checkPreviousSession, sessionCrashed } from '../../sessions';
@@ -50,7 +50,7 @@ export class SentryMinidump implements Integration {
 
     this._startCrashReporter();
 
-    this._scopeStore = new BufferedWriteStore<PreviousRun>(sentryCachePath, 'scope_v3', {
+    this._scopeStore = new BufferedWriteStore<PreviousRun>(getSentryCachePath(), 'scope_v3', {
       scope: new Scope(),
     });
 

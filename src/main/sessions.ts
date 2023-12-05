@@ -5,16 +5,24 @@ import { logger } from '@sentry/utils';
 import { app } from 'electron';
 
 import { isAnrChildProcess } from './anr';
-import { sentryCachePath } from './fs';
+import { getSentryCachePath } from './fs';
 import { Store } from './store';
 
 const PERSIST_INTERVAL_MS = 60_000;
 
 /** Stores the app session in case of termination due to main process crash or app killed */
-const sessionStore = new Store<SessionContext | undefined>(sentryCachePath, 'session', undefined);
-
+let sessionStore: Store<SessionContext | undefined> | undefined;
 /** Previous session if it did not exit cleanly */
-let previousSession: Promise<Partial<Session> | undefined> | undefined = sessionStore.get();
+let previousSession: Promise<Partial<Session> | undefined> | undefined;
+
+function getSessionStore(): Store<SessionContext | undefined> {
+  if (!sessionStore) {
+    sessionStore = new Store<SessionContext | undefined>(getSentryCachePath(), 'session', undefined);
+    previousSession = sessionStore.get();
+  }
+
+  return sessionStore;
+}
 
 let persistTimer: NodeJS.Timer | undefined;
 
@@ -27,14 +35,14 @@ export async function startSession(sendOnCreate: boolean): Promise<void> {
     hub.captureSession();
   }
 
-  await sessionStore.set(session);
+  await getSessionStore().set(session);
 
   // Every PERSIST_INTERVAL, write the session to disk
   persistTimer = setInterval(async () => {
     const currentSession = hub.getScope()?.getSession();
     // Only bother saving if it hasn't already ended
     if (currentSession && currentSession.status === 'ok') {
-      await sessionStore.set(currentSession);
+      await getSessionStore().set(currentSession);
     }
   }, PERSIST_INTERVAL_MS);
 }
@@ -60,7 +68,7 @@ export async function endSession(): Promise<void> {
     logger.log('No session');
   }
 
-  await sessionStore.clear();
+  await getSessionStore().clear();
 
   await flush(2_000);
 }
@@ -71,7 +79,7 @@ export async function unreportedDuringLastSession(crashDate: Date | undefined): 
     return false;
   }
 
-  const previousSessionModified = await sessionStore.getModifiedDate();
+  const previousSessionModified = await getSessionStore().getModifiedDate();
   // There is no previous session
   if (previousSessionModified == undefined) {
     return false;
