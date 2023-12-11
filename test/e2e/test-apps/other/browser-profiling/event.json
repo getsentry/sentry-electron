@@ -1,0 +1,141 @@
+{
+  "method": "envelope",
+  "sentryKey": "37f8a2ee37c0409d8970bc7559c7c7e4",
+  "appId": "277345",
+  "data": {
+    "sdk": {
+      "name": "sentry.javascript.electron",
+      "packages": [
+        {
+          "name": "npm:@sentry/electron",
+          "version": "{{version}}"
+        }
+      ],
+      "version": "{{version}}"
+    },
+    "contexts": {
+      "app": {
+        "app_name": "browser-profiling",
+        "app_version": "1.0.0",
+        "app_start_time": "{{time}}"
+      },
+      "browser": {
+        "name": "Chrome"
+      },
+      "chrome": {
+        "name": "Chrome",
+        "type": "runtime",
+        "version": "{{version}}"
+      },
+      "device": {
+        "arch": "{{arch}}",
+        "family": "Desktop",
+        "memory_size": 0,
+        "free_memory": 0,
+        "processor_count": 0,
+        "processor_frequency": 0,
+        "cpu_description": "{{cpu}}",
+        "screen_resolution": "{{screen}}",
+        "screen_density": 1,
+        "language": "{{language}}"
+      },
+      "node": {
+        "name": "Node",
+        "type": "runtime",
+        "version": "{{version}}"
+      },
+      "os": {
+        "name": "{{platform}}",
+        "version": "{{version}}"
+      },
+      "runtime": {
+        "name": "Electron",
+        "version": "{{version}}"
+      }
+    },
+    "spans": [
+      {
+        "description": "PBKDF2",
+        "origin": "manual",
+        "parent_span_id": "{{id}}",
+        "span_id": "{{id}}",
+        "start_timestamp": 0,
+        "timestamp": 0,
+        "trace_id": "{{id}}"
+      },
+      {
+        "description": "PBKDF2",
+        "origin": "manual",
+        "parent_span_id": "{{id}}",
+        "span_id": "{{id}}",
+        "start_timestamp": 0,
+        "timestamp": 0,
+        "trace_id": "{{id}}"
+      },
+      {
+        "description": "PBKDF2",
+        "origin": "manual",
+        "parent_span_id": "{{id}}",
+        "span_id": "{{id}}",
+        "start_timestamp": 0,
+        "timestamp": 0,
+        "trace_id": "{{id}}"
+      },
+      {
+        "description": "PBKDF2",
+        "origin": "manual",
+        "parent_span_id": "{{id}}",
+        "span_id": "{{id}}",
+        "start_timestamp": 0,
+        "timestamp": 0,
+        "trace_id": "{{id}}"
+      }
+    ],
+    "release": "some-release",
+    "environment": "development",
+    "user": {
+      "ip_address": "{{auto}}"
+    },
+    "event_id": "{{id}}",
+    "platform": "javascript",
+    "start_timestamp": 0,
+    "timestamp": 0,
+    "breadcrumbs": [],
+    "request": {
+      "url": "app:///src/index.html"
+    },
+    "tags": {
+      "event.environment": "javascript",
+      "event.origin": "electron",
+      "event_type": "javascript"
+    }
+  },
+  "profile": {
+    "event_id": "{{id}}",
+    "timestamp": "{{time}}",
+    "release": "some-release",
+    "environment": "development",
+    "profile": {
+      "samples": [
+        {
+          "stack_id": 0,
+          "thread_id": "0"
+        },
+        {
+          "stack_id": 0,
+          "thread_id": "0"
+        },
+        {
+          "stack_id": 0,
+          "thread_id": "0"
+        }
+      ],
+      "thread_metadata": { "0": { "name": "main" } }
+    },
+    "transactions": [
+      {
+        "name": "Long work"
+      }
+    ]
+  }
+}

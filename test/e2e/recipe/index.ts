@@ -257,7 +257,7 @@ export class RecipeRunner {
     }
 
     for (const event of testServer.events) {
-      event.data = normalize(event.data);
+      normalize(event);
     }
 
     for (const [i, expectedEvent] of expectedEvents.entries()) {

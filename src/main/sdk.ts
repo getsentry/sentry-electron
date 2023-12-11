@@ -16,6 +16,7 @@ import {
   Net,
   OnUncaughtException,
   PreloadInjection,
+  RendererProfiling,
   Screenshots,
   SentryMinidump,
 } from './integrations';
@@ -34,6 +35,7 @@ export const defaultIntegrations: Integration[] = [
   new PreloadInjection(),
   new AdditionalContext(),
   new Screenshots(),
+  new RendererProfiling(),
   ...defaultNodeIntegrations.filter(
     (integration) => integration.name !== 'OnUncaughtException' && integration.name !== 'Context',
   ),
@@ -77,6 +79,13 @@ export interface ElectronMainOptionsInternal extends Options<ElectronOfflineTran
    * renderers.
    */
   attachScreenshot?: boolean;
+
+  /**
+   * Enables injection of 'js-profiling' document policy headers and ensure profiles are forwarded with transactions
+   *
+   * Requires Electron 15+
+   */
+  enableRendererProfiling?: boolean;
 }
 
 // getSessions and ipcMode properties are optional because they have defaults
