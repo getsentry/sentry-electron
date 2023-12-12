@@ -21,7 +21,9 @@ export type {
 } from '@sentry/types';
 
 export {
+  // eslint-disable-next-line deprecation/deprecation
   addGlobalEventProcessor,
+  addEventProcessor,
   addBreadcrumb,
   addIntegration,
   captureException,
