@@ -141,7 +141,7 @@ function handleScope(options: ElectronMainOptionsInternal, jsonScope: string): v
     return;
   }
 
-  const sentScope = Scope.clone(rendererScope) as any;
+  const sentScope = rendererScope.clone() as any;
   /* eslint-disable @typescript-eslint/no-unsafe-member-access */
   configureScope((scope) => {
     if (hasKeys(sentScope._user)) {
