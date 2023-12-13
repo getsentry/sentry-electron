@@ -145,7 +145,8 @@ export class ElectronMinidump implements Integration {
     const hubScope = getCurrentHub().getScope();
     if (hubScope) {
       hubScope.addScopeListener((updatedScope) => {
-        const scope = updatedScope.clone() as any;
+        // eslint-disable-next-line deprecation/deprecation
+        const scope = Scope.clone(updatedScope);
         /* eslint-disable @typescript-eslint/no-unsafe-member-access */
         (scope as any)._eventProcessors = [];
         (scope as any)._scopeListeners = [];

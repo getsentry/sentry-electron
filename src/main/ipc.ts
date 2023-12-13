@@ -141,7 +141,8 @@ function handleScope(options: ElectronMainOptionsInternal, jsonScope: string): v
     return;
   }
 
-  const sentScope = rendererScope.clone() as any;
+  // eslint-disable-next-line deprecation/deprecation
+  const sentScope = Scope.clone(rendererScope) as any;
   /* eslint-disable @typescript-eslint/no-unsafe-member-access */
   configureScope((scope) => {
     if (hasKeys(sentScope._user)) {

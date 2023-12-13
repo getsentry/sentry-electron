@@ -187,7 +187,8 @@ export class SentryMinidump implements Integration {
    */
   private _setupScopeListener(currentRelease: string, currentEnvironment: string): void {
     const scopeChanged = (updatedScope: Scope): void => {
-      const scope = updatedScope.clone();
+      // eslint-disable-next-line deprecation/deprecation
+      const scope = Scope.clone(updatedScope);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       (scope as any)._eventProcessors = [];
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -248,10 +249,9 @@ export class SentryMinidump implements Integration {
     if (event.tags?.['event.process'] === 'browser') {
       const previousRun = await this._scopeLastRun;
 
-      const storedScope = previousRun?.scope?.clone();
-      if (storedScope) {
-        event = await storedScope.applyToEvent(event);
-      }
+      // eslint-disable-next-line deprecation/deprecation
+      const storedScope = Scope.clone(previousRun?.scope);
+      event = await storedScope.applyToEvent(event);
 
       if (event && previousRun) {
         event.release = previousRun.event?.release || event.release;
