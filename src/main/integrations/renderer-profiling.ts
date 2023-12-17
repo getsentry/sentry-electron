@@ -8,6 +8,9 @@ import { getDefaultEnvironment, getDefaultReleaseName } from '../context';
 import { ELECTRON_MAJOR_VERSION } from '../electron-normalize';
 import { ElectronMainOptionsInternal } from '../sdk';
 
+const DOCUMENT_POLICY_HEADER = 'Document-Policy';
+const JS_PROFILING_HEADER = 'js-profiling';
+
 // A cache of renderer profiles which need attaching to events
 let RENDERER_PROFILES: LRUMap<string, Profile> | undefined;
 
@@ -31,6 +34,24 @@ export function rendererProfileFromIpc(event: Event, profile: Profile): void {
       },
     };
   }
+}
+
+function addJsProfilingHeader(
+  responseHeaders: Record<string, string | string[]> = {},
+): Electron.HeadersReceivedResponse {
+  if (responseHeaders[DOCUMENT_POLICY_HEADER]) {
+    const docPolicy = responseHeaders[DOCUMENT_POLICY_HEADER];
+
+    if (Array.isArray(docPolicy)) {
+      docPolicy.push(JS_PROFILING_HEADER);
+    } else {
+      responseHeaders[DOCUMENT_POLICY_HEADER] = [docPolicy, JS_PROFILING_HEADER];
+    }
+  } else {
+    responseHeaders[DOCUMENT_POLICY_HEADER] = JS_PROFILING_HEADER;
+  }
+
+  return { responseHeaders };
 }
 
 /**
@@ -69,12 +90,7 @@ export class RendererProfiling implements Integration {
       // Ensure the correct headers are set to enable the browser profiler
       for (const sesh of options.getSessions()) {
         sesh.webRequest.onHeadersReceived((details, callback) => {
-          callback({
-            responseHeaders: {
-              ...details.responseHeaders,
-              'Document-Policy': 'js-profiling',
-            },
-          });
+          callback(addJsProfilingHeader(details.responseHeaders));
         });
       }
     });

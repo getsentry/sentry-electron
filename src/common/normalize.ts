@@ -116,9 +116,9 @@ export function normalizeUrlsInReplayEnvelope(envelope: Envelope, basePath: stri
  * Normalizes all URLs in a profile
  */
 export function normaliseProfile(profile: Profile, basePath: string): void {
-  profile.profile.frames.forEach((frame) => {
+  for (const frame of profile.profile.frames) {
     if (frame.abs_path) {
       frame.abs_path = normalizeUrl(frame.abs_path, basePath);
     }
-  });
+  }
 }
