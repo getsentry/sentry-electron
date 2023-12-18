@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <script>
+      const crypto = require('crypto');
+      const {
+        addTracingExtensions,
+        init,
+        BrowserProfilingIntegration,
+        startSpan,
+      } = require('@sentry/electron/renderer');
+
+      addTracingExtensions();
+
+      init({
+        debug: true,
+        integrations: [new BrowserProfilingIntegration()],
+        tracesSampleRate: 1,
+        profilesSampleRate: 1,
+      });
+
+      function pbkdf2() {
+        return new Promise((resolve) => {
+          const salt = crypto.randomBytes(128).toString('base64');
+          crypto.pbkdf2('myPassword', salt, 10000, 512, 'sha512', resolve);
+        });
+      }
+
+      async function longWork() {
+        for (let i = 0; i < 10; i++) {
+          await startSpan({ name: 'PBKDF2' }, async () => {
+            await pbkdf2();
+          });
+        }
+      }
+
+      setTimeout(() => {
+        startSpan({ name: 'Long work' }, async () => {
+          await longWork();
+        });
+      }, 500);
+    </script>
+  </body>
+</html>

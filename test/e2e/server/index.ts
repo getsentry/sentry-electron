@@ -1,4 +1,4 @@
-import { Event, ReplayEvent, Session, Transaction } from '@sentry/types';
+import { Event, Profile, ReplayEvent, Session, Transaction } from '@sentry/types';
 import { forEachEnvelopeItem, parseEnvelope } from '@sentry/utils';
 import { Server } from 'http';
 import Koa from 'koa';
@@ -38,6 +38,8 @@ export interface TestServerEvent<T = unknown> {
   namespacedData?: Record<string, any>;
   /** Attachments */
   attachments?: Attachment[];
+  /** Profiling data */
+  profile?: Profile;
   /** API method used for submission */
   method: 'envelope' | 'minidump' | 'store';
 }
@@ -121,6 +123,7 @@ export class TestServer {
 
       let data: Event | Transaction | Session | ReplayEvent | undefined;
       const attachments: Attachment[] = [];
+      let profile: Profile | undefined;
 
       forEachEnvelopeItem(envelope, ([headers, item]) => {
         if (headers.type === 'event' || headers.type === 'transaction' || headers.type === 'session') {
@@ -138,12 +141,17 @@ export class TestServer {
         if (headers.type === 'attachment') {
           attachments.push(headers);
         }
+
+        if (headers.type === 'profile') {
+          profile = item as unknown as Profile;
+        }
       });
 
       if (data) {
         this._addEvent({
           data,
           attachments,
+          profile,
           appId: ctx.params.id,
           sentryKey: keyMatch[1],
           method: 'envelope',

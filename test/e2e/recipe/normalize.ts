@@ -1,14 +1,18 @@
 /* eslint-disable complexity */
-import { Event, ReplayEvent, Session, Transaction } from '@sentry/types';
+import { Event, Profile, ReplayEvent, Session, Transaction } from '@sentry/types';
+
+import { TestServerEvent } from '../server';
 
 type EventOrSession = Event | Transaction | Session;
 
-export function normalize(event: EventOrSession): EventOrSession {
-  if (eventIsSession(event)) {
-    return normalizeSession(event as Session);
+export function normalize(event: TestServerEvent<Event | Transaction | Session>): void {
+  if (eventIsSession(event.data)) {
+    normalizeSession(event.data as Session);
   } else {
-    return normalizeEvent(event as Event & ReplayEvent);
+    normalizeEvent(event.data as Event & ReplayEvent);
   }
+
+  normalizeProfile(event.profile);
 }
 
 export function eventIsSession(data: EventOrSession): boolean {
@@ -21,7 +25,7 @@ export function eventIsSession(data: EventOrSession): boolean {
  * All properties that are timestamps, versions, ids or variables that may vary
  * by platform are replaced with placeholder strings
  */
-function normalizeSession(session: Session): Session {
+function normalizeSession(session: Session): void {
   if (session.sid) {
     session.sid = '{{id}}';
   }
@@ -37,8 +41,6 @@ function normalizeSession(session: Session): Session {
   if (session.duration) {
     session.duration = 0;
   }
-
-  return session;
 }
 
 /**
@@ -47,7 +49,7 @@ function normalizeSession(session: Session): Session {
  * All properties that are timestamps, versions, ids or variables that may vary
  * by platform are replaced with placeholder strings
  */
-function normalizeEvent(event: Event & ReplayEvent): Event {
+function normalizeEvent(event: Event & ReplayEvent): void {
   if (event.sdk?.version) {
     event.sdk.version = '{{version}}';
   }
@@ -193,6 +195,13 @@ function normalizeEvent(event: Event & ReplayEvent): Event {
       breadcrumb.timestamp = 0;
     }
   }
+}
 
-  return event;
+export function normalizeProfile(profile: Profile | undefined): void {
+  if (!profile) {
+    return;
+  }
+
+  profile.event_id = '{{id}}';
+  profile.timestamp = '{{time}}';
 }

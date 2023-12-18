@@ -1,4 +1,4 @@
-import { Envelope, Event, ReplayEvent } from '@sentry/types';
+import { Envelope, Event, Profile, ReplayEvent } from '@sentry/types';
 import { addItemToEnvelope, createEnvelope, forEachEnvelopeItem } from '@sentry/utils';
 
 /**
@@ -110,4 +110,15 @@ export function normalizeUrlsInReplayEnvelope(envelope: Envelope, basePath: stri
   });
 
   return isReplay ? modifiedEnvelope : envelope;
+}
+
+/**
+ * Normalizes all URLs in a profile
+ */
+export function normaliseProfile(profile: Profile, basePath: string): void {
+  for (const frame of profile.profile.frames) {
+    if (frame.abs_path) {
+      frame.abs_path = normalizeUrl(frame.abs_path, basePath);
+    }
+  }
 }
