@@ -5,6 +5,7 @@ import { logger, makeDsn, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
 import { mergeEvents, normalizeEvent } from '../../common';
+import { scopeFromJson, ScopeInternal } from '../../common/scope';
 import { getEventDefaults } from '../context';
 import {
   CRASH_REASONS,
@@ -145,14 +146,10 @@ export class ElectronMinidump implements Integration {
     const hubScope = getCurrentHub().getScope();
     if (hubScope) {
       hubScope.addScopeListener((updatedScope) => {
-        // eslint-disable-next-line deprecation/deprecation
-        const scope = Scope.clone(updatedScope);
-        /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-        (scope as any)._eventProcessors = [];
-        (scope as any)._scopeListeners = [];
-        /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-
-        this._updateExtraParams(scope);
+        const scope = updatedScope as unknown as ScopeInternal;
+        scope._eventProcessors = [];
+        scope._scopeListeners = [];
+        this._updateExtraParams(scopeFromJson(scope));
       });
     }
   }
