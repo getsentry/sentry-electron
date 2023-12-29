@@ -1,5 +1,5 @@
 import { captureEvent, getCurrentHub, getCurrentScope } from '@sentry/core';
-import { Attachment, AttachmentItem, Envelope, Event, EventItem, ScopeData } from '@sentry/types';
+import { Attachment, AttachmentItem, Envelope, Event, EventItem, Profile, ScopeData } from '@sentry/types';
 import { forEachEnvelopeItem, logger, parseEnvelope, SentryError } from '@sentry/utils';
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
 import { TextDecoder, TextEncoder } from 'util';
@@ -14,6 +14,7 @@ import {
 } from '../common';
 import { createRendererAnrStatusHandler } from './anr';
 import { registerProtocol, supportsFullProtocol, whenAppReady } from './electron-normalize';
+import { rendererProfileFromIpc } from './integrations/renderer-profiling';
 import { ElectronMainOptionsInternal } from './sdk';
 
 let KNOWN_RENDERERS: Set<number> | undefined;
@@ -84,9 +85,10 @@ function handleEvent(options: ElectronMainOptionsInternal, jsonEvent: string, co
   captureEventFromRenderer(options, event, [], contents);
 }
 
-function eventFromEnvelope(envelope: Envelope): [Event, Attachment[]] | undefined {
+function eventFromEnvelope(envelope: Envelope): [Event, Attachment[], Profile | undefined] | undefined {
   let event: Event | undefined;
   const attachments: Attachment[] = [];
+  let profile: Profile | undefined;
 
   forEachEnvelopeItem(envelope, (item, type) => {
     if (type === 'event' || type === 'transaction') {
@@ -100,10 +102,12 @@ function eventFromEnvelope(envelope: Envelope): [Event, Attachment[]] | undefine
         contentType: headers.content_type,
         data,
       });
+    } else if (type === 'profile') {
+      profile = item[1] as unknown as Profile;
     }
   });
 
-  return event ? [event, attachments] : undefined;
+  return event ? [event, attachments, profile] : undefined;
 }
 
 function handleEnvelope(options: ElectronMainOptionsInternal, env: Uint8Array | string, contents?: WebContents): void {
@@ -111,7 +115,14 @@ function handleEnvelope(options: ElectronMainOptionsInternal, env: Uint8Array | 
 
   const eventAndAttachments = eventFromEnvelope(envelope);
   if (eventAndAttachments) {
-    const [event, attachments] = eventAndAttachments;
+    const [event, attachments, profile] = eventAndAttachments;
+
+    if (profile) {
+      // We have a 'profile' item and there is no way for us to pass this through event capture
+      // so store them in a cache and reattach them via the `beforeEnvelope` hook before sending
+      rendererProfileFromIpc(event, profile);
+    }
+
     captureEventFromRenderer(options, event, attachments, contents);
   } else {
     const normalizedEnvelope = normalizeUrlsInReplayEnvelope(envelope, app.getAppPath());
