@@ -25,9 +25,7 @@ export class MainProcessSession implements Integration {
 
   /** @inheritDoc */
   public setupOnce(): void {
-    startSession(!!this._options.sendOnCreate).then(null, () => {
-      // ignore
-    });
+    startSession(!!this._options.sendOnCreate);
 
     endSessionOnExit();
   }
