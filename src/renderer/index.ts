@@ -29,6 +29,7 @@ export {
   captureException,
   captureEvent,
   captureMessage,
+  // eslint-disable-next-line deprecation/deprecation
   configureScope,
   createTransport,
   getHubFromCarrier,

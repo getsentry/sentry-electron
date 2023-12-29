@@ -1,6 +1,6 @@
-import { captureEvent, getCurrentHub, Scope } from '@sentry/core';
+import { applyScopeDataToEvent, captureEvent, getCurrentHub, getCurrentScope, Scope } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
-import { Event, Integration } from '@sentry/types';
+import { Event, Integration, ScopeData } from '@sentry/types';
 import { logger, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
@@ -15,7 +15,7 @@ import { BufferedWriteStore } from '../../store';
 import { getMinidumpLoader, MinidumpLoader } from './minidump-loader';
 
 interface PreviousRun {
-  scope: Scope;
+  scope: ScopeData;
   event?: Event;
 }
 
@@ -51,7 +51,7 @@ export class SentryMinidump implements Integration {
     this._startCrashReporter();
 
     this._scopeStore = new BufferedWriteStore<PreviousRun>(getSentryCachePath(), 'scope_v3', {
-      scope: new Scope(),
+      scope: new Scope().getScopeData(),
     });
 
     // We need to store the scope in a variable here so it can be attached to minidumps
@@ -187,25 +187,17 @@ export class SentryMinidump implements Integration {
    */
   private _setupScopeListener(currentRelease: string, currentEnvironment: string): void {
     const scopeChanged = (updatedScope: Scope): void => {
-      // eslint-disable-next-line deprecation/deprecation
-      const scope = Scope.clone(updatedScope);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      (scope as any)._eventProcessors = [];
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      (scope as any)._scopeListeners = [];
-
       // Since the initial scope read is async, we need to ensure that any writes do not beat that
       // https://github.com/getsentry/sentry-electron/issues/585
       setImmediate(async () => {
-        const event = await getEventDefaults(currentRelease, currentEnvironment);
         void this._scopeStore?.set({
-          scope,
-          event,
+          scope: updatedScope.getScopeData(),
+          event: await getEventDefaults(currentRelease, currentEnvironment),
         });
       });
     };
 
-    const scope = getCurrentHub().getScope();
+    const scope = getCurrentScope();
 
     if (scope) {
       scope.addScopeListener(scopeChanged);
@@ -243,25 +235,21 @@ export class SentryMinidump implements Integration {
       return true;
     }
 
-    let event: Event | null = eventIn;
+    const event = eventIn;
 
     // If this is a native main process crash, we need to apply the scope and context from the previous run
     if (event.tags?.['event.process'] === 'browser') {
       const previousRun = await this._scopeLastRun;
+      if (previousRun) {
+        if (previousRun.scope) {
+          applyScopeDataToEvent(event, previousRun.scope);
+        }
 
-      // eslint-disable-next-line deprecation/deprecation
-      const storedScope = Scope.clone(previousRun?.scope);
-      event = await storedScope.applyToEvent(event);
-
-      if (event && previousRun) {
         event.release = previousRun.event?.release || event.release;
         event.environment = previousRun.event?.environment || event.environment;
         event.contexts = previousRun.event?.contexts || event.contexts;
       }
     }
-
-    const hubScope = hub.getScope();
-    event = hubScope && event ? await hubScope.applyToEvent(event) : event;
 
     if (!event) {
       return false;

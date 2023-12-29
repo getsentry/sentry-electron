@@ -44,21 +44,26 @@ export class AdditionalContext implements Integration {
     addGlobalEventProcessor(async (event: Event) => this._addAdditionalContext(event));
 
     // Some metrics are only available after app ready so we lazily load them
-    void whenAppReady.then(() => {
-      const { language, screen } = this._options;
+    whenAppReady.then(
+      () => {
+        const { language, screen } = this._options;
 
-      if (language) {
-        this._lazyDeviceContext.language = app.getLocale();
-      }
+        if (language) {
+          this._lazyDeviceContext.language = app.getLocale();
+        }
 
-      if (screen) {
-        this._setPrimaryDisplayInfo();
-
-        electronScreen.on('display-metrics-changed', () => {
+        if (screen) {
           this._setPrimaryDisplayInfo();
-        });
-      }
-    });
+
+          electronScreen.on('display-metrics-changed', () => {
+            this._setPrimaryDisplayInfo();
+          });
+        }
+      },
+      () => {
+        // ignore
+      },
+    );
   }
 
   /** Adds additional context to event */

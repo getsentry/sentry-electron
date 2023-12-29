@@ -80,7 +80,9 @@ export class BrowserWindowSession implements Integration {
       // We are now active
       if (this._state.name === 'inactive') {
         // If we were inactive, start a new session
-        void startSession(true);
+        startSession(true).then(null, () => {
+          // ignore
+        });
       } else if (this._state.name === 'timeout') {
         // Clear the timeout since the app has become active again
         clearTimeout(this._state.timer);
@@ -96,7 +98,9 @@ export class BrowserWindowSession implements Integration {
           // if the state says we're still waiting for the timeout, end the session
           if (this._state.name === 'timeout') {
             this._state = { name: 'inactive' };
-            void endSession();
+            endSession().then(null, () => {
+              // ignore
+            });
           }
         }, timeout)
           // unref so this timer doesn't block app exit

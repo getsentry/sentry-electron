@@ -151,7 +151,9 @@ export class BufferedWriteStore<T> extends Store<T> {
       const data = this._pendingWrite.data;
       // Clear the pending write immediately so that subsequent writes can be queued
       this._pendingWrite = undefined;
-      void super.set(data);
+      super.set(data).then(null, () => {
+        // ignore
+      });
     }
   }
 }
