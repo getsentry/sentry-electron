@@ -1,4 +1,4 @@
-import { captureEvent, configureScope, getCurrentHub } from '@sentry/core';
+import { captureEvent, configureScope, getCurrentHub, Scope } from '@sentry/core';
 import { Attachment, AttachmentItem, Envelope, Event, EventItem } from '@sentry/types';
 import { forEachEnvelopeItem, logger, parseEnvelope, SentryError } from '@sentry/utils';
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
@@ -12,7 +12,6 @@ import {
   PROTOCOL_SCHEME,
   RendererStatus,
 } from '../common';
-import { ScopeInternal } from '../common/scope';
 import { createRendererAnrStatusHandler } from './anr';
 import { registerProtocol, supportsFullProtocol, whenAppReady } from './electron-normalize';
 import { ElectronMainOptionsInternal } from './sdk';
@@ -134,14 +133,17 @@ function hasKeys(obj: any): boolean {
  * Handle scope updates from renderer processes
  */
 function handleScope(options: ElectronMainOptionsInternal, jsonScope: string): void {
-  let sentScope: ScopeInternal;
+  let rendererScope: Scope;
   try {
-    sentScope = JSON.parse(jsonScope) as ScopeInternal;
+    rendererScope = JSON.parse(jsonScope) as Scope;
   } catch {
     logger.warn('sentry-electron received an invalid scope message');
     return;
   }
 
+  // eslint-disable-next-line deprecation/deprecation
+  const sentScope = Scope.clone(rendererScope) as any;
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
   configureScope((scope) => {
     if (hasKeys(sentScope._user)) {
       scope.setUser(sentScope._user);
@@ -164,6 +166,7 @@ function handleScope(options: ElectronMainOptionsInternal, jsonScope: string): v
       scope.addBreadcrumb(breadcrumb, options?.maxBreadcrumbs || 100);
     }
   });
+  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 }
 
 /** Enables Electron protocol handling */

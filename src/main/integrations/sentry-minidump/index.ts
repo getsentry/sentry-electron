@@ -5,7 +5,6 @@ import { logger, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
 import { mergeEvents } from '../../../common';
-import { scopeFromJson, ScopeInternal } from '../../../common/scope';
 import { getDefaultEnvironment, getDefaultReleaseName, getEventDefaults } from '../../context';
 import { EXIT_REASONS, onChildProcessGone, onRendererProcessGone } from '../../electron-normalize';
 import { getSentryCachePath } from '../../fs';
@@ -188,16 +187,19 @@ export class SentryMinidump implements Integration {
    */
   private _setupScopeListener(currentRelease: string, currentEnvironment: string): void {
     const scopeChanged = (updatedScope: Scope): void => {
-      const scope = updatedScope as unknown as ScopeInternal;
-      scope._eventProcessors = [];
-      scope._scopeListeners = [];
+      // eslint-disable-next-line deprecation/deprecation
+      const scope = Scope.clone(updatedScope);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      (scope as any)._eventProcessors = [];
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      (scope as any)._scopeListeners = [];
 
       // Since the initial scope read is async, we need to ensure that any writes do not beat that
       // https://github.com/getsentry/sentry-electron/issues/585
       setImmediate(async () => {
         const event = await getEventDefaults(currentRelease, currentEnvironment);
         void this._scopeStore?.set({
-          scope: scopeFromJson(scope),
+          scope,
           event,
         });
       });
@@ -248,7 +250,7 @@ export class SentryMinidump implements Integration {
       const previousRun = await this._scopeLastRun;
 
       // eslint-disable-next-line deprecation/deprecation
-      const storedScope = scopeFromJson(previousRun?.scope as unknown as ScopeInternal);
+      const storedScope = Scope.clone(previousRun?.scope);
       event = await storedScope.applyToEvent(event);
 
       if (event && previousRun) {
