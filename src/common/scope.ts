@@ -16,6 +16,10 @@ import {
   User,
 } from '@sentry/types';
 
+/**
+ * This exists entirely to make the scope internals accessible and should be removed when the JavaScript scope internals
+ * are changed the the major v8 release.
+ */
 export interface ScopeInternal {
   _notifyingListeners: boolean;
   _scopeListeners: Array<(scope: ScopeInterface) => void>;
