@@ -110,7 +110,7 @@ export class PersistedRequestQueue {
 
   /** Removes the body of the request */
   private _removeBody(bodyPath: string): void {
-    unlinkAsync(join(this._queuePath, bodyPath)).then(null, () => {
+    unlinkAsync(join(this._queuePath, bodyPath)).catch(() => {
       // ignore
     });
   }

@@ -61,7 +61,7 @@ function rendererDebugger(contents: WebContents, pausedStack: (frames: StackFram
   });
 
   // In node, we enable just before pausing but for Chrome, the debugger must be enabled before he ANR event occurs
-  contents.debugger.sendCommand('Debugger.enable').then(null, () => {
+  contents.debugger.sendCommand('Debugger.enable').catch(() => {
     // ignore
   });
 

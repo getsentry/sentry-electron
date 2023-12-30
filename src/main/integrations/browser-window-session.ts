@@ -96,7 +96,7 @@ export class BrowserWindowSession implements Integration {
           // if the state says we're still waiting for the timeout, end the session
           if (this._state.name === 'timeout') {
             this._state = { name: 'inactive' };
-            endSession().then(null, () => {
+            endSession().catch(() => {
               // ignore
             });
           }

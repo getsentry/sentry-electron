@@ -37,7 +37,7 @@ export function startSession(sendOnCreate: boolean): void {
 
   getSessionStore()
     .set(session)
-    .then(null, () => {
+    .catch(() => {
       // Does not throw
     });
 

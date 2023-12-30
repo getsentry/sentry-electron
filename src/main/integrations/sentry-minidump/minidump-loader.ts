@@ -191,7 +191,7 @@ function removeBreakpadMetadata(crashesDirectory: string, paths: string[]): void
           logger.warn('Could not delete', path);
         }
       }),
-  ).then(null, () => {
+  ).catch(() => {
     // ignore since we catch each unlink individually
   });
 }
