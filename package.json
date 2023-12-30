@@ -47,7 +47,7 @@
     "fix": "run-s fix:eslint fix:prettier",
     "fix:prettier": "prettier --write \"{src,test}/**/*.ts\"",
     "fix:eslint": "eslint . --format stylish --fix",
-    "update-electron-versions": "electron-latest-versions --start 2 --alpha --beta > ./test/e2e/versions.json",
+    "update-electron-versions": "electron-latest-versions --start 2 --beta > ./test/e2e/versions.json",
     "update-sdk-versions": "node ./scripts/update-sdk-versions.mjs",
     "pretest": "yarn build",
     "test": "cross-env TS_NODE_PROJECT=tsconfig.test.json xvfb-maybe electron-mocha --require ts-node/register/transpile-only --timeout 12000 ./test/unit/**/*.ts",
