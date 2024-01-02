@@ -1,5 +1,5 @@
-import { captureEvent, configureScope, getCurrentHub, Scope } from '@sentry/core';
-import { Attachment, AttachmentItem, Envelope, Event, EventItem, Profile } from '@sentry/types';
+import { captureEvent, getCurrentHub, getCurrentScope } from '@sentry/core';
+import { Attachment, AttachmentItem, Envelope, Event, EventItem, Profile, ScopeData } from '@sentry/types';
 import { forEachEnvelopeItem, logger, parseEnvelope, SentryError } from '@sentry/utils';
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
 import { TextDecoder, TextEncoder } from 'util';
@@ -25,7 +25,7 @@ const SENTRY_CUSTOM_SCHEME = {
   privileges: { bypassCSP: true, corsEnabled: true, supportFetchAPI: true, secure: true },
 };
 
-async function newProtocolRenderer(): Promise<void> {
+function newProtocolRenderer(): void {
   KNOWN_RENDERERS = KNOWN_RENDERERS || new Set();
   WINDOW_ID_TO_WEB_CONTENTS = WINDOW_ID_TO_WEB_CONTENTS || new Map();
 
@@ -36,10 +36,8 @@ async function newProtocolRenderer(): Promise<void> {
     }
 
     if (!wc.isDestroyed()) {
-      try {
-        const windowId: string | undefined = await wc.executeJavaScript('window.__SENTRY_RENDERER_ID__');
-
-        if (windowId) {
+      wc.executeJavaScript('window.__SENTRY_RENDERER_ID__').then((windowId: string | undefined) => {
+        if (windowId && KNOWN_RENDERERS && WINDOW_ID_TO_WEB_CONTENTS) {
           KNOWN_RENDERERS.add(wcId);
           WINDOW_ID_TO_WEB_CONTENTS.set(windowId, wcId);
 
@@ -48,9 +46,7 @@ async function newProtocolRenderer(): Promise<void> {
             WINDOW_ID_TO_WEB_CONTENTS?.delete(windowId);
           });
         }
-      } catch (_) {
-        // ignore
-      }
+      }, logger.error);
     }
   }
 }
@@ -144,39 +140,36 @@ function hasKeys(obj: any): boolean {
  * Handle scope updates from renderer processes
  */
 function handleScope(options: ElectronMainOptionsInternal, jsonScope: string): void {
-  let rendererScope: Scope;
+  let sentScope: ScopeData;
   try {
-    rendererScope = JSON.parse(jsonScope) as Scope;
+    sentScope = JSON.parse(jsonScope) as ScopeData;
   } catch {
     logger.warn('sentry-electron received an invalid scope message');
     return;
   }
 
-  const sentScope = Scope.clone(rendererScope) as any;
-  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-  configureScope((scope) => {
-    if (hasKeys(sentScope._user)) {
-      scope.setUser(sentScope._user);
-    }
+  const scope = getCurrentScope();
 
-    if (hasKeys(sentScope._tags)) {
-      scope.setTags(sentScope._tags);
-    }
+  if (hasKeys(sentScope.user)) {
+    scope.setUser(sentScope.user);
+  }
 
-    if (hasKeys(sentScope._extra)) {
-      scope.setExtras(sentScope._extra);
-    }
+  if (hasKeys(sentScope.tags)) {
+    scope.setTags(sentScope.tags);
+  }
 
-    for (const attachment of sentScope._attachments || []) {
-      scope.addAttachment(attachment);
-    }
+  if (hasKeys(sentScope.extra)) {
+    scope.setExtras(sentScope.extra);
+  }
 
-    const breadcrumb = sentScope._breadcrumbs.pop();
-    if (breadcrumb) {
-      scope.addBreadcrumb(breadcrumb, options?.maxBreadcrumbs || 100);
-    }
-  });
-  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+  for (const attachment of sentScope.attachments || []) {
+    scope.addAttachment(attachment);
+  }
+
+  const breadcrumb = sentScope.breadcrumbs.pop();
+  if (breadcrumb) {
+    scope.addBreadcrumb(breadcrumb, options?.maxBreadcrumbs || 100);
+  }
 }
 
 /** Enables Electron protocol handling */
@@ -208,7 +201,7 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
 
           const data = request.body;
           if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.RENDERER_START}`)) {
-            void newProtocolRenderer();
+            newProtocolRenderer();
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.EVENT}`) && data) {
             handleEvent(options, data.toString(), getWebContents());
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.SCOPE}`) && data) {

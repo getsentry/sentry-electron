@@ -32,7 +32,7 @@ export class ScopeToMain implements Integration {
       const ipc = getIPC();
 
       scope.addScopeListener((updatedScope) => {
-        ipc.sendScope(JSON.stringify(normalize(updatedScope, 20, 2_000)));
+        ipc.sendScope(JSON.stringify(normalize(updatedScope.getScopeData(), 20, 2_000)));
         scope.clearBreadcrumbs();
         scope.clearAttachments();
       });

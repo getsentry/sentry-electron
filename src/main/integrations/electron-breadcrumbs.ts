@@ -127,16 +127,21 @@ export class ElectronBreadcrumbs implements Integration {
 
     trackRendererProperties();
 
-    void whenAppReady.then(() => {
-      // We can't access these until app 'ready'
-      if (this._options.screen) {
-        this._patchEventEmitter(screen, 'screen', this._options.screen);
-      }
+    whenAppReady.then(
+      () => {
+        // We can't access these until app 'ready'
+        if (this._options.screen) {
+          this._patchEventEmitter(screen, 'screen', this._options.screen);
+        }
 
-      if (this._options.powerMonitor) {
-        this._patchEventEmitter(powerMonitor, 'powerMonitor', this._options.powerMonitor);
-      }
-    });
+        if (this._options.powerMonitor) {
+          this._patchEventEmitter(powerMonitor, 'powerMonitor', this._options.powerMonitor);
+        }
+      },
+      () => {
+        // ignore
+      },
+    );
 
     if (this._options.app) {
       this._patchEventEmitter(app, 'app', this._options.app);

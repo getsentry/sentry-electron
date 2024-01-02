@@ -5,6 +5,7 @@ import * as ElectronRendererIntegrations from './integrations';
 export type {
   Breadcrumb,
   BreadcrumbHint,
+  PolymorphicRequest,
   Request,
   SdkInfo,
   Event,
@@ -14,41 +15,58 @@ export type {
   // eslint-disable-next-line deprecation/deprecation
   Severity,
   SeverityLevel,
+  Span,
   StackFrame,
   Stacktrace,
   Thread,
+  Transaction,
   User,
 } from '@sentry/types';
 
 export {
+  // eslint-disable-next-line deprecation/deprecation
   addGlobalEventProcessor,
+  addEventProcessor,
   addBreadcrumb,
   addIntegration,
   captureException,
   captureEvent,
   captureMessage,
+  // eslint-disable-next-line deprecation/deprecation
   configureScope,
   createTransport,
+  // eslint-disable-next-line deprecation/deprecation
+  extractTraceparentData,
+  getActiveTransaction,
   getHubFromCarrier,
   getCurrentHub,
+  getClient,
+  getCurrentScope,
   Hub,
   makeMain,
+  runWithAsyncContext,
   Scope,
   startTransaction,
-  getActiveSpan,
-  startSpan,
-  startInactiveSpan,
-  startSpanManual,
-  continueTrace,
   setContext,
   setExtra,
   setExtras,
   setTag,
   setTags,
   setUser,
+  spanStatusfromHttpCode,
+  trace,
   withScope,
-  FunctionToString,
-  InboundFilters,
+  captureCheckIn,
+  withMonitor,
+  setMeasurement,
+  getActiveSpan,
+  startSpan,
+  // eslint-disable-next-line deprecation/deprecation
+  startActiveSpan,
+  startInactiveSpan,
+  startSpanManual,
+  continueTrace,
+  metrics,
 } from '@sentry/core';
 export type { SpanStatusType } from '@sentry/core';
 

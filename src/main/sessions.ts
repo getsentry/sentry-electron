@@ -27,7 +27,7 @@ function getSessionStore(): Store<SessionContext | undefined> {
 let persistTimer: NodeJS.Timer | undefined;
 
 /** Starts a session */
-export async function startSession(sendOnCreate: boolean): Promise<void> {
+export function startSession(sendOnCreate: boolean): void {
   const hub = getCurrentHub();
   const session = hub.startSession();
 
@@ -35,7 +35,11 @@ export async function startSession(sendOnCreate: boolean): Promise<void> {
     hub.captureSession();
   }
 
-  await getSessionStore().set(session);
+  getSessionStore()
+    .set(session)
+    .catch(() => {
+      // Does not throw
+    });
 
   // Every PERSIST_INTERVAL, write the session to disk
   persistTimer = setInterval(async () => {

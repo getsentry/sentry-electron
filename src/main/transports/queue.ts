@@ -50,7 +50,7 @@ export class PersistedRequestQueue {
       while (queue.length > this._maxCount) {
         const removed = queue.shift();
         if (removed) {
-          void this._removeBody(removed.bodyPath);
+          this._removeBody(removed.bodyPath);
         }
       }
 
@@ -78,7 +78,7 @@ export class PersistedRequestQueue {
         // We drop events created in v3 of the SDK or before the cut-off
         if ('type' in found || found.date.getTime() < cutOff) {
           // we're dropping this event so delete the body
-          void this._removeBody(found.bodyPath);
+          this._removeBody(found.bodyPath);
           found = undefined;
         } else {
           pendingCount = queue.length;
@@ -91,7 +91,7 @@ export class PersistedRequestQueue {
     if (found) {
       try {
         const body = await readFileAsync(join(this._queuePath, found.bodyPath));
-        void this._removeBody(found.bodyPath);
+        this._removeBody(found.bodyPath);
 
         return {
           request: {
@@ -109,11 +109,9 @@ export class PersistedRequestQueue {
   }
 
   /** Removes the body of the request */
-  private async _removeBody(bodyPath: string): Promise<void> {
-    try {
-      await unlinkAsync(join(this._queuePath, bodyPath));
-    } catch (_) {
-      //
-    }
+  private _removeBody(bodyPath: string): void {
+    unlinkAsync(join(this._queuePath, bodyPath)).catch(() => {
+      // ignore
+    });
   }
 }

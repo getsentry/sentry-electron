@@ -180,7 +180,7 @@ function minidumpFromBreakpadMultipart(file: Buffer): Buffer {
 
 function removeBreakpadMetadata(crashesDirectory: string, paths: string[]): void {
   // Remove all metadata files and forget about them.
-  void Promise.all(
+  Promise.all(
     paths
       .filter((file) => file.endsWith('.txt') && !file.endsWith('log.txt'))
       .map(async (file) => {
@@ -191,7 +191,9 @@ function removeBreakpadMetadata(crashesDirectory: string, paths: string[]): void
           logger.warn('Could not delete', path);
         }
       }),
-  );
+  ).catch(() => {
+    // ignore since we catch each unlink individually
+  });
 }
 
 function breakpadMinidumpLoader(): MinidumpLoader {

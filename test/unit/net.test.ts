@@ -68,12 +68,10 @@ function createHubOnScope(customOptions: Partial<ClientOptions> = {}): Hub {
 
   hub.bindClient(new NodeClient(options));
 
-  hub.configureScope((scope) =>
-    scope.setUser({
-      id: 'uid123',
-      segment: 'segmentA',
-    }),
-  );
+  hub.getScope().setUser({
+    id: 'uid123',
+    segment: 'segmentA',
+  });
 
   return hub;
 }

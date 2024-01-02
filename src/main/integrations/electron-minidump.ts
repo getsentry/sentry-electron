@@ -1,6 +1,6 @@
-import { getCurrentHub, Scope } from '@sentry/core';
+import { applyScopeDataToEvent, getCurrentHub } from '@sentry/core';
 import { NodeClient, NodeOptions } from '@sentry/node';
-import { Event, Integration } from '@sentry/types';
+import { Event, Integration, ScopeData } from '@sentry/types';
 import { logger, makeDsn, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
@@ -105,10 +105,10 @@ export class ElectronMinidump implements Integration {
     }
 
     // Check if last crash report was likely to have been unreported in the last session
-    void unreportedDuringLastSession(crashReporter.getLastCrashReport()?.date).then((crashed) => {
+    unreportedDuringLastSession(crashReporter.getLastCrashReport()?.date).then((crashed) => {
       // Check if a previous session was not closed
-      checkPreviousSession(crashed).catch((error) => logger.error(error));
-    });
+      return checkPreviousSession(crashed);
+    }, logger.error);
   }
 
   /**
@@ -145,19 +145,15 @@ export class ElectronMinidump implements Integration {
     const hubScope = getCurrentHub().getScope();
     if (hubScope) {
       hubScope.addScopeListener((updatedScope) => {
-        const scope = Scope.clone(updatedScope);
-        /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-        (scope as any)._eventProcessors = [];
-        (scope as any)._scopeListeners = [];
-        /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-
+        const scope = updatedScope.getScopeData();
+        scope.eventProcessors = [];
         this._updateExtraParams(scope);
       });
     }
   }
 
   /** Updates Electron uploader extra params */
-  private _updateExtraParams(scope: Scope): void {
+  private _updateExtraParams(scope: ScopeData): void {
     this._updateEpoch += 1;
     const currentEpoch = this._updateEpoch;
 
@@ -175,15 +171,14 @@ export class ElectronMinidump implements Integration {
   }
 
   /** Builds up an event to send with the native Electron uploader */
-  private async _getNativeUploaderEvent(scope: Scope): Promise<Event> {
+  private async _getNativeUploaderEvent(scope: ScopeData): Promise<Event> {
     const event = mergeEvents(await getEventDefaults(this._customRelease), {
       level: 'fatal',
       platform: 'native',
       tags: { 'event.environment': 'native', event_type: 'native' },
     });
 
-    // Apply the scope to the event
-    await scope.applyToEvent(event);
+    applyScopeDataToEvent(event, scope);
 
     delete event.sdkProcessingMetadata;
 
