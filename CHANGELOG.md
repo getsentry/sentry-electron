@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 4.16.0
+
+- feat: Update from [v7.84.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.84.0) to
+  [v7.90.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.90.0) of JavaScript SDKs (#800)
+- feat: Browser profiling (#799)
+
 ## 4.15.1
 
 - fix: Don't call `app.getPath('userData')` before SDK `init` (#797)
