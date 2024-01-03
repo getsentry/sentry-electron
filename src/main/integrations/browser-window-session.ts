@@ -1,4 +1,5 @@
-import { Integration } from '@sentry/types';
+import { convertIntegrationFnToClass } from '@sentry/core';
+import { IntegrationFn } from '@sentry/types';
 import { app, BrowserWindow } from 'electron';
 
 import { ELECTRON_MAJOR_VERSION } from '../electron-normalize';
@@ -29,73 +30,38 @@ interface Options {
 // The state can be, active, inactive, or waiting for a timeout
 type SessionState = { name: 'active' } | { name: 'inactive' } | { name: 'timeout'; timer: NodeJS.Timeout };
 
-/**
- * Tracks sessions as BrowserWindows focused.
- *
- * Supports Electron >= v12
- */
-export class BrowserWindowSession implements Integration {
-  /** @inheritDoc */
-  public static id: string = 'BrowserWindowSession';
+const INTEGRATION_NAME = 'BrowserWindowSession';
 
-  /** @inheritDoc */
-  public readonly name: string;
-
-  private _state: SessionState;
-
-  public constructor(private readonly _options: Options = {}) {
-    if (ELECTRON_MAJOR_VERSION < 12) {
-      throw new Error('BrowserWindowSession requires Electron >= v12');
-    }
-
-    this.name = BrowserWindowSession.id;
-    this._state = { name: 'inactive' };
+const browserWindowSession: IntegrationFn = (options: Options = {}) => {
+  if (ELECTRON_MAJOR_VERSION < 12) {
+    throw new Error('BrowserWindowSession requires Electron >= v12');
   }
 
-  /** @inheritDoc */
-  public setupOnce(): void {
-    app.on('browser-window-created', (_event, window) => {
-      window.on('focus', this._windowStateChanged);
-      window.on('blur', this._windowStateChanged);
-      window.on('show', this._windowStateChanged);
-      window.on('hide', this._windowStateChanged);
+  let _state: SessionState = { name: 'inactive' };
 
-      // when the window is closed we need to remove the listeners
-      window.once('closed', () => {
-        window.removeListener('focus', this._windowStateChanged);
-        window.removeListener('blur', this._windowStateChanged);
-        window.removeListener('show', this._windowStateChanged);
-        window.removeListener('hide', this._windowStateChanged);
-      });
-    });
-
-    // if the app exits while the session is active, end the session
-    endSessionOnExit();
-  }
-
-  private _windowStateChanged = (): void => {
+  function windowStateChanged(): void {
     const hasFocusedWindow = focusedWindow();
 
     if (hasFocusedWindow) {
       // We are now active
-      if (this._state.name === 'inactive') {
+      if (_state.name === 'inactive') {
         // If we were inactive, start a new session
         startSession(true);
-      } else if (this._state.name === 'timeout') {
+      } else if (_state.name === 'timeout') {
         // Clear the timeout since the app has become active again
-        clearTimeout(this._state.timer);
+        clearTimeout(_state.timer);
       }
 
-      this._state = { name: 'active' };
+      _state = { name: 'active' };
     } else {
-      if (this._state.name === 'active') {
+      if (_state.name === 'active') {
         // We have become inactive, start the timeout
-        const timeout = (this._options.backgroundTimeoutSeconds ?? 30) * 1_000;
+        const timeout = (options.backgroundTimeoutSeconds ?? 30) * 1_000;
 
         const timer = setTimeout(() => {
           // if the state says we're still waiting for the timeout, end the session
-          if (this._state.name === 'timeout') {
-            this._state = { name: 'inactive' };
+          if (_state.name === 'timeout') {
+            _state = { name: 'inactive' };
             endSession().catch(() => {
               // ignore
             });
@@ -104,8 +70,39 @@ export class BrowserWindowSession implements Integration {
           // unref so this timer doesn't block app exit
           .unref();
 
-        this._state = { name: 'timeout', timer };
+        _state = { name: 'timeout', timer };
       }
     }
+  }
+
+  return {
+    name: INTEGRATION_NAME,
+    setup() {
+      app.on('browser-window-created', (_event, window) => {
+        window.on('focus', windowStateChanged);
+        window.on('blur', windowStateChanged);
+        window.on('show', windowStateChanged);
+        window.on('hide', windowStateChanged);
+
+        // when the window is closed we need to remove the listeners
+        window.once('closed', () => {
+          window.removeListener('focus', windowStateChanged);
+          window.removeListener('blur', windowStateChanged);
+          window.removeListener('show', windowStateChanged);
+          window.removeListener('hide', windowStateChanged);
+        });
+      });
+
+      // if the app exits while the session is active, end the session
+      endSessionOnExit();
+    },
   };
-}
+};
+
+/**
+ * Tracks sessions as BrowserWindows focused.
+ *
+ * Supports Electron >= v12
+ */
+// eslint-disable-next-line deprecation/deprecation
+export const BrowserWindowSession = convertIntegrationFnToClass(INTEGRATION_NAME, browserWindowSession);

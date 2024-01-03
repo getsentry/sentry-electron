@@ -1,29 +1,17 @@
-import { getCurrentHub, getCurrentScope } from '@sentry/core';
+import { convertIntegrationFnToClass, getCurrentScope } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
-import { Event, Integration } from '@sentry/types';
+import { Event, IntegrationFn } from '@sentry/types';
 import { dialog } from 'electron';
 
-/** Capture unhandled errors. */
-export class OnUncaughtException implements Integration {
-  /** @inheritDoc */
-  public static id: string = 'OnUncaughtException';
+const INTEGRATION_NAME = 'OnUncaughtException';
 
-  /** @inheritDoc */
-  public readonly name: string;
+const onUncaughtException: IntegrationFn = () => {
+  return {
+    name: INTEGRATION_NAME,
+    setup(client: NodeClient) {
+      const options = client.getOptions();
 
-  public constructor() {
-    this.name = OnUncaughtException.id;
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public setupOnce(): void {
-    const options = getCurrentHub().getClient<NodeClient>()?.getOptions();
-
-    global.process.on('uncaughtException', (error: Error) => {
-      const self = getCurrentHub().getIntegration(OnUncaughtException);
-      if (self) {
+      global.process.on('uncaughtException', (error: Error) => {
         const scope = getCurrentScope();
 
         scope.addEventProcessor(async (event: Event) => ({
@@ -31,8 +19,7 @@ export class OnUncaughtException implements Integration {
           level: 'fatal',
         }));
 
-        const nodeClient = getCurrentHub().getClient() as NodeClient;
-        nodeClient.captureException(
+        client.captureException(
           error,
           {
             originalException: error,
@@ -43,10 +30,10 @@ export class OnUncaughtException implements Integration {
               },
             },
           },
-          getCurrentHub().getScope(),
+          scope,
         );
 
-        nodeClient.flush(nodeClient.getOptions().shutdownTimeout || 2000).then(
+        client.flush(options.shutdownTimeout || 2000).then(
           () => {
             if (options?.onFatalError) {
               options.onFatalError(error);
@@ -67,7 +54,11 @@ export class OnUncaughtException implements Integration {
             // ignore
           },
         );
-      }
-    });
-  }
-}
+      });
+    },
+  };
+};
+
+/** Capture unhandled errors. */
+// eslint-disable-next-line deprecation/deprecation
+export const OnUncaughtException = convertIntegrationFnToClass(INTEGRATION_NAME, onUncaughtException);
