@@ -12,7 +12,7 @@ import { getRendererProperties, trackRendererProperties } from '../../renderers'
 import { ElectronMainOptions } from '../../sdk';
 import { checkPreviousSession, sessionCrashed } from '../../sessions';
 import { BufferedWriteStore } from '../../store';
-import { getMinidumpLoader } from './minidump-loader';
+import { getMinidumpLoader, MinidumpLoader } from './minidump-loader';
 
 interface PreviousRun {
   scope: ScopeData;
@@ -23,14 +23,10 @@ const INTEGRATION_NAME = 'SentryMinidump';
 
 const sentryMinidump: IntegrationFn = () => {
   /** Store to persist context information beyond application crashes. */
-  const scopeStore = new BufferedWriteStore<PreviousRun>(getSentryCachePath(), 'scope_v3', {
-    scope: new Scope().getScopeData(),
-  });
-
+  let scopeStore: BufferedWriteStore<PreviousRun> | undefined;
   // We need to store the scope in a variable here so it can be attached to minidumps
-  const scopeLastRun = scopeStore.get();
-
-  const minidumpLoader = getMinidumpLoader();
+  let scopeLastRun: Promise<PreviousRun> | undefined;
+  let minidumpLoader: MinidumpLoader | undefined;
 
   function startCrashReporter(): void {
     logger.log('Starting Electron crashReporter');
@@ -51,7 +47,7 @@ const sentryMinidump: IntegrationFn = () => {
       // Since the initial scope read is async, we need to ensure that any writes do not beat that
       // https://github.com/getsentry/sentry-electron/issues/585
       setImmediate(async () =>
-        scopeStore.set({
+        scopeStore?.set({
           scope: updatedScope.getScopeData(),
           event: await getEventDefaults(currentRelease, currentEnvironment),
         }),
@@ -104,7 +100,7 @@ const sentryMinidump: IntegrationFn = () => {
     const deleteAll = client.getOptions().enabled === false;
 
     let minidumpSent = false;
-    await minidumpLoader(deleteAll, (attachment) => {
+    await minidumpLoader?.(deleteAll, (attachment) => {
       captureEvent(event as Event, { attachments: [attachment] });
       minidumpSent = true;
     });
@@ -191,6 +187,12 @@ const sentryMinidump: IntegrationFn = () => {
       }
 
       startCrashReporter();
+
+      scopeStore = new BufferedWriteStore<PreviousRun>(getSentryCachePath(), 'scope_v3', {
+        scope: new Scope().getScopeData(),
+      });
+      scopeLastRun = scopeStore.get();
+      minidumpLoader = getMinidumpLoader();
 
       const options = client.getOptions();
 
