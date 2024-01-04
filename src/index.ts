@@ -44,6 +44,8 @@ export {
   getCurrentHub,
   getClient,
   getCurrentScope,
+  getGlobalScope,
+  getIsolationScope,
   Hub,
   // eslint-disable-next-line deprecation/deprecation
   lastEventId,
