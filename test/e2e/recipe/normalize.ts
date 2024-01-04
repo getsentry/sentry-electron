@@ -152,7 +152,9 @@ function normalizeEvent(event: Event & ReplayEvent): void {
     for (const frame of event.exception?.values?.[0].stacktrace?.frames || []) {
       frame.colno = 0;
       frame.lineno = 0;
-      frame.function = '{{function}}';
+      if (frame.function !== 'longWork') {
+        frame.function = '{{function}}';
+      }
       frame.filename = frame.filename?.replace(/\.mjs$/, '.js');
     }
   }

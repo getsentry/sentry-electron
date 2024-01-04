@@ -45,6 +45,7 @@ export {
   getClient,
   getCurrentScope,
   Hub,
+  // eslint-disable-next-line deprecation/deprecation
   lastEventId,
   makeMain,
   runWithAsyncContext,
@@ -57,6 +58,7 @@ export {
   setTags,
   setUser,
   spanStatusfromHttpCode,
+  // eslint-disable-next-line deprecation/deprecation
   trace,
   withScope,
   captureCheckIn,
@@ -88,6 +90,7 @@ interface ProcessEntryPoint {
   init: (options: Partial<ElectronOptions>) => void;
   close?: (timeout?: number) => Promise<boolean>;
   flush?: (timeout?: number) => Promise<boolean>;
+  // eslint-disable-next-line deprecation/deprecation
   enableMainProcessAnrDetection?(options: Parameters<typeof enableNodeAnrDetection>[0]): Promise<void>;
 }
 
@@ -194,28 +197,18 @@ export async function flush(timeout?: number): Promise<boolean> {
 }
 
 /**
- * **Note** This feature is still in beta so there may be breaking changes in future releases.
- *
- * Starts a child process that detects Application Not Responding (ANR) errors.
- *
- * It's important to await on the returned promise before your app code to ensure this code does not run in the ANR
- * child process.
+ * @deprecated Use `Anr` integration instead.
  *
  * ```js
- * import { init, enableMainProcessAnrDetection } from '@sentry/electron';
+ * import { init, Integrations } from '@sentry/electron';
  *
- * init({ dsn: "__DSN__" });
- *
- * // with ESM + Electron v28+
- * await enableMainProcessAnrDetection({ captureStackTrace: true });
- * runApp();
- *
- * // with CJS
- * enableMainProcessAnrDetection({ captureStackTrace: true }).then(() => {
- *   runApp();
+ * init({
+ *   dsn: "__DSN__",
+ *   integrations: [new Integrations.Anr({ captureStackTrace: true })],
  * });
  * ```
  */
+// eslint-disable-next-line deprecation/deprecation
 export function enableMainProcessAnrDetection(options: Parameters<typeof enableNodeAnrDetection>[0]): Promise<void> {
   const entryPoint = getEntryPoint();
 

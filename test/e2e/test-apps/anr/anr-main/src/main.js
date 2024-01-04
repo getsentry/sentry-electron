@@ -1,12 +1,13 @@
 const crypto = require('crypto');
 
 const { app } = require('electron');
-const { init, enableMainProcessAnrDetection } = require('@sentry/electron/main');
+const { init, Integrations } = require('@sentry/electron/main');
 
 init({
   dsn: '__DSN__',
   debug: true,
   onFatalError: () => {},
+  integrations: [new Integrations.Anr({ captureStackTrace: true, anrThreshold: 1000 })],
 });
 
 function longWork() {
@@ -17,10 +18,8 @@ function longWork() {
   }
 }
 
-enableMainProcessAnrDetection({ anrThreshold: 1000, captureStackTrace: true }).then(() => {
-  app.on('ready', () => {
-    setTimeout(() => {
-      longWork();
-    }, 1000);
-  });
+app.on('ready', () => {
+  setTimeout(() => {
+    longWork();
+  }, 2000);
 });

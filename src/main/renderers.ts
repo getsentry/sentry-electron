@@ -1,6 +1,6 @@
+import { normalizeUrlToBase } from '@sentry/utils';
 import { app } from 'electron';
 
-import { normalizeUrl } from '../common';
 import { onWebContentsCreated } from './electron-normalize';
 
 interface Renderer {
@@ -25,7 +25,7 @@ export function trackRendererProperties(): void {
 
   function updateUrl(id: number, url: string): void {
     const state = renderers.get(id) || { id };
-    state.url = normalizeUrl(url, app.getAppPath());
+    state.url = normalizeUrlToBase(url, app.getAppPath());
     renderers.set(id, state);
   }
 

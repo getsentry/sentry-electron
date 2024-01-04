@@ -31,7 +31,6 @@
         "arch": "{{arch}}",
         "family": "Desktop",
         "memory_size": 0,
-        "free_memory": 0,
         "processor_count": 0,
         "processor_frequency": 0,
         "cpu_description": "{{cpu}}",
@@ -51,13 +50,14 @@
       "runtime": {
         "name": "Electron",
         "version": "{{version}}"
+      },
+      "trace": {
+        "span_id": "{{id}}",
+        "trace_id": "{{id}}"
       }
     },
     "release": "anr-main@1.0.0",
     "environment": "development",
-    "user": {
-      "ip_address": "{{auto}}"
-    },
     "exception": {
       "values": [
         {
@@ -68,10 +68,9 @@
             "frames": [
               {
                 "colno": 0,
-                "function": "{{function}}",
-                "in_app": false,
-                "lineno": 0,
-                "module": "pbkdf2"
+                "function": "longWork",
+                "in_app": true,
+                "lineno": 0
               }
             ]
           }
@@ -79,16 +78,12 @@
       ]
     },
     "level": "error",
-    "event_id": "{{id}}",
     "platform": "node",
-    "timestamp": 0,
     "breadcrumbs": [],
     "tags": {
       "event.environment": "javascript",
       "event.origin": "electron",
-      "event.process": "browser",
-      "event_type": "javascript",
-      "process.name": "ANR"
+      "event.process": "browser"
     }
   }
 }

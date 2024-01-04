@@ -297,7 +297,6 @@ export function getDefaultEnvironment(): string {
  */
 async function _getEventDefaults(release?: string, environment?: string): Promise<Event> {
   return {
-    sdk: getSdkInfo(),
     contexts: await getContexts(),
     environment: environment || getDefaultEnvironment(),
     release: release || getDefaultReleaseName(),

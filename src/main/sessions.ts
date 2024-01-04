@@ -4,7 +4,6 @@ import { SerializedSession, Session, SessionContext, SessionStatus } from '@sent
 import { logger } from '@sentry/utils';
 import { app } from 'electron';
 
-import { isAnrChildProcess } from './anr';
 import { getSentryCachePath } from './fs';
 import { Store } from './store';
 
@@ -105,11 +104,6 @@ export async function unreportedDuringLastSession(crashDate: Date | undefined): 
 /** Checks if the previous session needs sending as crashed or abnormal  */
 export async function checkPreviousSession(crashed: boolean): Promise<void> {
   const client = getCurrentHub().getClient<NodeClient>();
-
-  // We should not check the session storage if we are in an ANR child process
-  if (isAnrChildProcess()) {
-    return;
-  }
 
   const previous = await previousSession;
 

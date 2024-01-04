@@ -1,16 +1,11 @@
-import {
-  captureEvent,
-  enableAnrDetection as enableNodeAnrDetection,
-  getCurrentHub,
-  getModuleFromFilename,
-  StackFrame,
-} from '@sentry/node';
+import { captureEvent, getClient, getCurrentHub, getModuleFromFilename, NodeClient, StackFrame } from '@sentry/node';
 import { Event } from '@sentry/types';
-import { createDebugPauseMessageHandler, logger, watchdogTimer } from '@sentry/utils';
-import { app, WebContents } from 'electron';
+import { callFrameToStackFrame, logger, stripSentryFramesAndReverse, watchdogTimer } from '@sentry/utils';
+import { WebContents } from 'electron';
 
 import { RendererStatus } from '../common';
 import { ELECTRON_MAJOR_VERSION } from './electron-normalize';
+import { Anr } from './integrations/anr';
 import { ElectronMainOptions } from './sdk';
 import { sessionAnr } from './sessions';
 
@@ -47,17 +42,60 @@ function sendRendererAnrEvent(contents: WebContents, blockedMs: number, frames?:
   captureEvent(event);
 }
 
+interface ScriptParsedEventDataType {
+  scriptId: string;
+  url: string;
+}
+
+interface Location {
+  scriptId: string;
+  lineNumber: number;
+  columnNumber?: number;
+}
+
+interface CallFrame {
+  functionName: string;
+  location: Location;
+  url: string;
+}
+
+interface PausedEventDataType {
+  callFrames: CallFrame[];
+  reason: string;
+}
+
 function rendererDebugger(contents: WebContents, pausedStack: (frames: StackFrame[]) => void): () => void {
   contents.debugger.attach('1.3');
 
-  const messageHandler = createDebugPauseMessageHandler(
-    (cmd) => contents.debugger.sendCommand(cmd),
-    getModuleFromFilename,
-    pausedStack,
-  );
+  // Collect scriptId -> url map so we can look up the filenames later
+  const scripts = new Map<string, string>();
 
   contents.debugger.on('message', (_, method, params) => {
-    messageHandler({ method, params } as Parameters<typeof messageHandler>[0]);
+    if (method === 'Debugger.scriptParsed') {
+      const param = params as ScriptParsedEventDataType;
+      scripts.set(param.scriptId, param.url);
+    } else if (method === 'Debugger.paused') {
+      const param = params as PausedEventDataType;
+
+      if (param.reason !== 'other') {
+        return;
+      }
+
+      // copy the frames
+      const callFrames = [...param.callFrames];
+
+      contents.debugger.sendCommand('Debugger.resume').then(null, () => {
+        // ignore
+      });
+
+      const stackFrames = stripSentryFramesAndReverse(
+        callFrames.map((frame) =>
+          callFrameToStackFrame(frame, scripts.get(frame.location.scriptId), getModuleFromFilename),
+        ),
+      );
+
+      pausedStack(stackFrames);
+    }
   });
 
   // In node, we enable just before pausing but for Chrome, the debugger must be enabled before he ANR event occurs
@@ -84,11 +122,6 @@ function createHrTimer(): { getTimeMs: () => number; reset: () => void } {
       lastPoll = process.hrtime();
     },
   };
-}
-
-/** Are we currently running in the ANR child process */
-export function isAnrChildProcess(): boolean {
-  return !!process.env.SENTRY_ANR_CHILD_PROCESS;
 }
 
 /** Creates a renderer ANR status hook */
@@ -141,38 +174,33 @@ export function createRendererAnrStatusHandler(): (status: RendererStatus, conte
   };
 }
 
+interface LegacyOptions {
+  entryScript: string;
+  pollInterval: number;
+  anrThreshold: number;
+  captureStackTrace: boolean;
+  debug: boolean;
+}
+
 /**
- * **Note** This feature is still in beta so there may be breaking changes in future releases.
- *
- * Starts a child process that detects Application Not Responding (ANR) errors.
- *
- * It's important to await on the returned promise before your app code to ensure this code does not run in the ANR
- * child process.
+ * @deprecated Use `Anr` integration instead.
  *
  * ```js
- * import { init, enableMainProcessAnrDetection } from '@sentry/electron';
+ * import { init, Integrations } from '@sentry/electron';
  *
- * init({ dsn: "__DSN__" });
- *
- * // with ESM + Electron v28+
- * await enableMainProcessAnrDetection({ captureStackTrace: true });
- * runApp();
- *
- * // with CJS
- * enableMainProcessAnrDetection({ captureStackTrace: true }).then(() => {
- *   runApp();
+ * init({
+ *   dsn: "__DSN__",
+ *   integrations: [new Integrations.Anr({ captureStackTrace: true })],
  * });
  * ```
  */
-export function enableMainProcessAnrDetection(options: Parameters<typeof enableNodeAnrDetection>[0]): Promise<void> {
-  if (ELECTRON_MAJOR_VERSION < 4) {
-    throw new Error('Main process ANR detection is only supported on Electron v4+');
+export function enableMainProcessAnrDetection(options: Partial<LegacyOptions> = {}): Promise<void> {
+  if (ELECTRON_MAJOR_VERSION < 15) {
+    throw new Error('Main process ANR detection requires Electron >= v15');
   }
 
-  const mainOptions = {
-    entryScript: app.getAppPath(),
-    ...options,
-  };
-
-  return enableNodeAnrDetection(mainOptions);
+  const integration = new Anr(options);
+  const client = getClient() as NodeClient;
+  integration.setup?.(client);
+  return Promise.resolve();
 }
