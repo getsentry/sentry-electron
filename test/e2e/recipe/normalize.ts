@@ -159,12 +159,17 @@ function normalizeEvent(event: Event & ReplayEvent): void {
     }
   }
 
-  event.timestamp = 0;
+  if (event.timestamp) {
+    event.timestamp = 0;
+  }
+
   if ((event as any).start_timestamp) {
     (event as any).start_timestamp = 0;
   }
 
-  event.event_id = '{{id}}';
+  if (event.event_id) {
+    event.event_id = '{{id}}';
+  }
 
   if (event.spans) {
     for (const span of event.spans) {
