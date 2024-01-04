@@ -195,10 +195,6 @@ interface LegacyOptions {
  * ```
  */
 export function enableMainProcessAnrDetection(options: Partial<LegacyOptions> = {}): Promise<void> {
-  if (ELECTRON_MAJOR_VERSION < 15) {
-    throw new Error('Main process ANR detection requires Electron >= v15');
-  }
-
   const integration = new Anr(options);
   const client = getClient() as NodeClient;
   integration.setup?.(client);
