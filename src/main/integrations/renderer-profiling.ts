@@ -1,5 +1,5 @@
-import { NodeClient } from '@sentry/node';
-import { Event, Integration, Profile } from '@sentry/types';
+import { convertIntegrationFnToClass } from '@sentry/core';
+import { Event, IntegrationFn, Profile } from '@sentry/types';
 import { forEachEnvelopeItem, LRUMap } from '@sentry/utils';
 import { app } from 'electron';
 
@@ -54,83 +54,75 @@ function addJsProfilingHeader(
   return { responseHeaders };
 }
 
-/**
- * Injects 'js-profiling' document policy headers and ensures that profiles get forwarded with transactions
- */
-export class RendererProfiling implements Integration {
-  /** @inheritDoc */
-  public static id: string = 'RendererProfiling';
+const INTEGRATION_NAME = 'RendererProfiling';
 
-  /** @inheritDoc */
-  public readonly name: string;
-
-  public constructor() {
-    this.name = RendererProfiling.id;
-  }
-
-  /** @inheritDoc */
-  public setupOnce(): void {
-    //
-  }
-
-  /** @inheritDoc */
-  public setup(client: NodeClient): void {
-    const options = client.getOptions() as ElectronMainOptionsInternal;
-    if (!options.enableRendererProfiling) {
-      return;
-    }
-
-    if (ELECTRON_MAJOR_VERSION < 15) {
-      throw new Error('Renderer profiling requires Electron 15+ (Chromium 94+)');
-    }
-
-    RENDERER_PROFILES = new LRUMap(10);
-
-    app.on('ready', () => {
-      // Ensure the correct headers are set to enable the browser profiler
-      for (const sesh of options.getSessions()) {
-        sesh.webRequest.onHeadersReceived((details, callback) => {
-          callback(addJsProfilingHeader(details.responseHeaders));
-        });
+const rendererProfiling: IntegrationFn = () => {
+  return {
+    name: INTEGRATION_NAME,
+    setup(client) {
+      const options = client.getOptions() as ElectronMainOptionsInternal;
+      if (!options.enableRendererProfiling) {
+        return;
       }
-    });
 
-    // Copy the profiles back into the event envelopes
-    client.on('beforeEnvelope', (envelope) => {
-      let profile_id: string | undefined;
+      if (ELECTRON_MAJOR_VERSION < 15) {
+        throw new Error('Renderer profiling requires Electron 15+ (Chromium 94+)');
+      }
 
-      forEachEnvelopeItem(envelope, (item, type) => {
-        if (type !== 'transaction') {
-          return;
-        }
+      RENDERER_PROFILES = new LRUMap(10);
 
-        for (let j = 1; j < item.length; j++) {
-          const event = item[j] as Event;
-
-          if (event && event.contexts && event.contexts.profile && event.contexts.profile.profile_id) {
-            profile_id = event.contexts.profile.profile_id as string;
-            // This can be removed as it's no longer needed
-            delete event.contexts.profile;
-          }
+      app.on('ready', () => {
+        // Ensure the correct headers are set to enable the browser profiler
+        for (const sesh of options.getSessions()) {
+          sesh.webRequest.onHeadersReceived((details, callback) => {
+            callback(addJsProfilingHeader(details.responseHeaders));
+          });
         }
       });
 
-      if (!profile_id) {
-        return;
-      }
+      // Copy the profiles back into the event envelopes
+      client.on?.('beforeEnvelope', (envelope) => {
+        let profile_id: string | undefined;
 
-      const profile = RENDERER_PROFILES?.remove(profile_id);
+        forEachEnvelopeItem(envelope, (item, type) => {
+          if (type !== 'transaction') {
+            return;
+          }
 
-      if (!profile) {
-        return;
-      }
+          for (let j = 1; j < item.length; j++) {
+            const event = item[j] as Event;
 
-      normaliseProfile(profile, app.getAppPath());
-      profile.release = options.release || getDefaultReleaseName();
-      profile.environment = options.environment || getDefaultEnvironment();
+            if (event && event.contexts && event.contexts.profile && event.contexts.profile.profile_id) {
+              profile_id = event.contexts.profile.profile_id as string;
+              // This can be removed as it's no longer needed
+              delete event.contexts.profile;
+            }
+          }
+        });
 
-      // @ts-expect-error untyped envelope
-      envelope[1].push([{ type: 'profile' }, profile]);
-    });
-  }
-}
+        if (!profile_id) {
+          return;
+        }
+
+        const profile = RENDERER_PROFILES?.remove(profile_id);
+
+        if (!profile) {
+          return;
+        }
+
+        normaliseProfile(profile, app.getAppPath());
+        profile.release = options.release || getDefaultReleaseName();
+        profile.environment = options.environment || getDefaultEnvironment();
+
+        // @ts-expect-error untyped envelope
+        envelope[1].push([{ type: 'profile' }, profile]);
+      });
+    },
+  };
+};
+
+/**
+ * Injects 'js-profiling' document policy headers and ensures that profiles get forwarded with transactions
+ */
+// eslint-disable-next-line deprecation/deprecation
+export const RendererProfiling = convertIntegrationFnToClass(INTEGRATION_NAME, rendererProfiling);

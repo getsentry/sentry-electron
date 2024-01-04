@@ -1,6 +1,6 @@
-import { addBreadcrumb, getCurrentHub } from '@sentry/core';
+import { addBreadcrumb, convertIntegrationFnToClass } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
-import { Breadcrumb, Integration } from '@sentry/types';
+import { Breadcrumb, IntegrationFn } from '@sentry/types';
 import { app, autoUpdater, BrowserWindow, powerMonitor, screen, WebContents } from 'electron';
 
 import { onBrowserWindowCreated, onWebContentsCreated, whenAppReady } from '../electron-normalize';
@@ -103,75 +103,15 @@ export function normalizeOptions(
   }, {} as Partial<ElectronBreadcrumbsOptions<EventFunction | false>>);
 }
 
-/** Adds breadcrumbs for Electron events. */
-export class ElectronBreadcrumbs implements Integration {
-  /** @inheritDoc */
-  public static id: string = 'ElectronBreadcrumbs';
+const INTEGRATION_NAME = 'ElectronBreadcrumbs';
 
-  /** @inheritDoc */
-  public readonly name: string;
+const electronBreadcrumbs: IntegrationFn = (userOptions: Partial<ElectronBreadcrumbsOptions<EventTypes>> = {}) => {
+  const options: ElectronBreadcrumbsOptions<EventFunction | false> = {
+    ...DEFAULT_OPTIONS,
+    ...normalizeOptions(userOptions),
+  };
 
-  private readonly _options: ElectronBreadcrumbsOptions<EventFunction | false>;
-
-  /**
-   * @param _options Integration options
-   */
-  public constructor(options: Partial<ElectronBreadcrumbsOptions<EventTypes>> = {}) {
-    this.name = ElectronBreadcrumbs.id;
-    this._options = { ...DEFAULT_OPTIONS, ...normalizeOptions(options) };
-  }
-
-  /** @inheritDoc */
-  public setupOnce(): void {
-    const initOptions = getCurrentHub().getClient<NodeClient>()?.getOptions() as ElectronMainOptions | undefined;
-
-    trackRendererProperties();
-
-    whenAppReady.then(
-      () => {
-        // We can't access these until app 'ready'
-        if (this._options.screen) {
-          this._patchEventEmitter(screen, 'screen', this._options.screen);
-        }
-
-        if (this._options.powerMonitor) {
-          this._patchEventEmitter(powerMonitor, 'powerMonitor', this._options.powerMonitor);
-        }
-      },
-      () => {
-        // ignore
-      },
-    );
-
-    if (this._options.app) {
-      this._patchEventEmitter(app, 'app', this._options.app);
-    }
-
-    if (this._options.autoUpdater) {
-      this._patchEventEmitter(autoUpdater, 'autoUpdater', this._options.autoUpdater);
-    }
-
-    if (this._options.browserWindow) {
-      onBrowserWindowCreated((window) => {
-        const id = window.webContents.id;
-        const windowName = initOptions?.getRendererName?.(window.webContents) || 'window';
-        this._patchEventEmitter(window, windowName, this._options.browserWindow, id);
-      });
-    }
-
-    if (this._options.webContents) {
-      onWebContentsCreated((contents) => {
-        const id = contents.id;
-        const webContentsName = initOptions?.getRendererName?.(contents) || 'renderer';
-        this._patchEventEmitter(contents, webContentsName, this._options.webContents, id);
-      });
-    }
-  }
-
-  /**
-   * Monkey patches the EventEmitter to capture breadcrumbs for the specified events. 🙈
-   */
-  private _patchEventEmitter(
+  function patchEventEmitter(
     emitter: NodeJS.EventEmitter | WebContents | BrowserWindow,
     category: string,
     shouldCapture: EventFunction | undefined | false,
@@ -191,7 +131,7 @@ export class ElectronBreadcrumbs implements Integration {
         if (id) {
           breadcrumb.data = { ...getRendererProperties(id) };
 
-          if (!this._options.captureWindowTitles && breadcrumb.data?.title) {
+          if (!options.captureWindowTitles && breadcrumb.data?.title) {
             delete breadcrumb.data?.title;
           }
         }
@@ -202,4 +142,57 @@ export class ElectronBreadcrumbs implements Integration {
       return emit(event, ...args);
     };
   }
-}
+
+  return {
+    name: INTEGRATION_NAME,
+    setup(client: NodeClient) {
+      const clientOptions = client.getOptions() as ElectronMainOptions | undefined;
+
+      trackRendererProperties();
+
+      whenAppReady.then(
+        () => {
+          // We can't access these until app 'ready'
+          if (options.screen) {
+            patchEventEmitter(screen, 'screen', options.screen);
+          }
+
+          if (options.powerMonitor) {
+            patchEventEmitter(powerMonitor, 'powerMonitor', options.powerMonitor);
+          }
+        },
+        () => {
+          // ignore
+        },
+      );
+
+      if (options.app) {
+        patchEventEmitter(app, 'app', options.app);
+      }
+
+      if (options.autoUpdater) {
+        patchEventEmitter(autoUpdater, 'autoUpdater', options.autoUpdater);
+      }
+
+      if (options.browserWindow) {
+        onBrowserWindowCreated((window) => {
+          const id = window.webContents.id;
+          const windowName = clientOptions?.getRendererName?.(window.webContents) || 'window';
+          patchEventEmitter(window, windowName, options.browserWindow, id);
+        });
+      }
+
+      if (options.webContents) {
+        onWebContentsCreated((contents) => {
+          const id = contents.id;
+          const webContentsName = clientOptions?.getRendererName?.(contents) || 'renderer';
+          patchEventEmitter(contents, webContentsName, options.webContents, id);
+        });
+      }
+    },
+  };
+};
+
+/** Adds breadcrumbs for Electron events. */
+// eslint-disable-next-line deprecation/deprecation
+export const ElectronBreadcrumbs = convertIntegrationFnToClass(INTEGRATION_NAME, electronBreadcrumbs);

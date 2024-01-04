@@ -1,4 +1,5 @@
-import { Integration } from '@sentry/types';
+import { convertIntegrationFnToClass } from '@sentry/core';
+import { IntegrationFn } from '@sentry/types';
 
 import { endSessionOnExit, startSession } from '../sessions';
 
@@ -11,22 +12,18 @@ interface Options {
   sendOnCreate?: boolean;
 }
 
+const INTEGRATION_NAME = 'MainProcessSession';
+
+const mainProcessSession: IntegrationFn = (options: Options = {}) => {
+  return {
+    name: INTEGRATION_NAME,
+    setup() {
+      startSession(!!options.sendOnCreate);
+      endSessionOnExit();
+    },
+  };
+};
+
 /** Tracks sessions as the main process lifetime. */
-export class MainProcessSession implements Integration {
-  /** @inheritDoc */
-  public static id: string = 'MainProcessSession';
-
-  /** @inheritDoc */
-  public readonly name: string;
-
-  public constructor(private readonly _options: Options = {}) {
-    this.name = MainProcessSession.id;
-  }
-
-  /** @inheritDoc */
-  public setupOnce(): void {
-    startSession(!!this._options.sendOnCreate);
-
-    endSessionOnExit();
-  }
-}
+// eslint-disable-next-line deprecation/deprecation
+export const MainProcessSession = convertIntegrationFnToClass(INTEGRATION_NAME, mainProcessSession);

@@ -1,7 +1,7 @@
 /* eslint-disable deprecation/deprecation */
-import { getDynamicSamplingContextFromClient } from '@sentry/core';
+import { convertIntegrationFnToClass, getDynamicSamplingContextFromClient } from '@sentry/core';
 import { getCurrentHub } from '@sentry/node';
-import { DynamicSamplingContext, EventProcessor, Hub, Integration, Span, TracePropagationTargets } from '@sentry/types';
+import { DynamicSamplingContext, IntegrationFn, Span, TracePropagationTargets } from '@sentry/types';
 import {
   dynamicSamplingContextToSentryBaggageHeader,
   fill,
@@ -10,7 +10,7 @@ import {
   LRUMap,
   stringMatchesSomePattern,
 } from '@sentry/utils';
-import { ClientRequest, ClientRequestConstructorOptions, IncomingMessage, net } from 'electron';
+import { ClientRequest, ClientRequestConstructorOptions, IncomingMessage, net as electronNet } from 'electron';
 import * as urlModule from 'url';
 
 type ShouldTraceFn = (method: string, url: string) => boolean;
@@ -38,32 +38,6 @@ interface NetOptions {
    * })
    */
   tracingOrigins?: ShouldTraceFn | boolean;
-}
-
-/** http module integration */
-export class Net implements Integration {
-  /** @inheritDoc */
-  public static id: string = 'Net';
-
-  /** @inheritDoc */
-  public readonly name: string;
-
-  /** @inheritDoc */
-  public constructor(private readonly _options: NetOptions = {}) {
-    this.name = Net.id;
-  }
-
-  /** @inheritDoc */
-  public setupOnce(_addGlobalEventProcessor: (callback: EventProcessor) => void, getCurrentHub: () => Hub): void {
-    const clientOptions = getCurrentHub().getClient()?.getOptions();
-
-    // No need to instrument if we don't want to track anything
-    if (this._options.breadcrumbs === false && this._options.tracing === false) {
-      return;
-    }
-
-    fill(net, 'request', createWrappedRequestFactory(this._options, clientOptions?.tracePropagationTargets));
-  }
 }
 
 /**
@@ -199,7 +173,7 @@ function createWrappedRequestFactory(
   };
 
   return function wrappedRequestMethodFactory(originalRequestMethod: RequestMethod): RequestMethod {
-    return function requestMethod(this: typeof net, reqOptions: RequestOptions): ClientRequest {
+    return function requestMethod(this: typeof electronNet, reqOptions: RequestOptions): ClientRequest {
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       const netModule = this;
 
@@ -300,3 +274,25 @@ function addRequestBreadcrumb(
     },
   );
 }
+
+const INTEGRATION_NAME = 'Net';
+
+const net: IntegrationFn = (options: NetOptions = {}) => {
+  return {
+    name: INTEGRATION_NAME,
+    setup() {
+      const clientOptions = getCurrentHub().getClient()?.getOptions();
+
+      // No need to instrument if we don't want to track anything
+      if (options.breadcrumbs === false && options.tracing === false) {
+        return;
+      }
+
+      fill(electronNet, 'request', createWrappedRequestFactory(options, clientOptions?.tracePropagationTargets));
+    },
+  };
+};
+
+/** http module integration */
+// eslint-disable-next-line deprecation/deprecation
+export const Net = convertIntegrationFnToClass(INTEGRATION_NAME, net);

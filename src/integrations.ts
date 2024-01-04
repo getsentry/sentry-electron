@@ -19,18 +19,18 @@ import { EventToMain, ScopeToMain } from './renderer/integrations';
 /** Convenience interface used to expose Integrations */
 export interface Integrations {
   // For main process
-  SentryMinidump: SentryMinidump;
-  ElectronMinidump: ElectronMinidump;
-  ElectronBreadcrumbs: ElectronBreadcrumbs;
-  MainContext: MainContext;
-  OnUncaughtExcept: OnUncaughtException;
-  PreloadInjection: PreloadInjection;
-  MainProcessSession: MainProcessSession;
-  AdditionalContext: AdditionalContext;
-  ChildProcess: ChildProcess;
-  Screenshots: Screenshots;
+  SentryMinidump: typeof SentryMinidump;
+  ElectronMinidump: typeof ElectronMinidump;
+  ElectronBreadcrumbs: typeof ElectronBreadcrumbs;
+  MainContext: typeof MainContext;
+  OnUncaughtExcept: typeof OnUncaughtException;
+  PreloadInjection: typeof PreloadInjection;
+  MainProcessSession: typeof MainProcessSession;
+  AdditionalContext: typeof AdditionalContext;
+  ChildProcess: typeof ChildProcess;
+  Screenshots: typeof Screenshots;
   // For renderer process
-  ScopeToMain: ScopeToMain;
+  ScopeToMain: typeof ScopeToMain;
   // eslint-disable-next-line deprecation/deprecation
   EventToMain: EventToMain;
 }
