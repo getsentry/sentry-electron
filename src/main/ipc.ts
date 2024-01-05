@@ -1,5 +1,14 @@
-import { captureEvent, getCurrentHub, getCurrentScope } from '@sentry/core';
-import { Attachment, AttachmentItem, Envelope, Event, EventItem, Profile, ScopeData } from '@sentry/types';
+import { BaseClient, captureEvent, getClient, getCurrentScope } from '@sentry/core';
+import {
+  Attachment,
+  AttachmentItem,
+  ClientOptions,
+  Envelope,
+  Event,
+  EventItem,
+  Profile,
+  ScopeData,
+} from '@sentry/types';
 import { forEachEnvelopeItem, logger, parseEnvelope, SentryError } from '@sentry/utils';
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
 import { TextDecoder, TextEncoder } from 'util';
@@ -8,6 +17,7 @@ import {
   IPCChannel,
   IPCMode,
   mergeEvents,
+  MetricIPCMessage,
   normalizeUrlsInReplayEnvelope,
   PROTOCOL_SCHEME,
   RendererStatus,
@@ -127,7 +137,26 @@ function handleEnvelope(options: ElectronMainOptionsInternal, env: Uint8Array | 
   } else {
     const normalizedEnvelope = normalizeUrlsInReplayEnvelope(envelope, app.getAppPath());
     // Pass other types of envelope straight to the transport
-    void getCurrentHub().getClient()?.getTransport()?.send(normalizedEnvelope);
+    void getClient()?.getTransport()?.send(normalizedEnvelope);
+  }
+}
+
+function handleMetric(metric: MetricIPCMessage): void {
+  const client = getClient<BaseClient<ClientOptions>>();
+
+  if (client?.metricsAggregator) {
+    client.metricsAggregator.add(
+      metric.metricType,
+      metric.name,
+      metric.value,
+      metric.unit,
+      metric.tags,
+      metric.timestamp,
+    );
+  } else {
+    logger.warn(
+      `Metric was dropped because the aggregator is not configured in the main process. Enable via '_experiments.metricsAggregator: true' in your init call.`,
+    );
   }
 }
 
@@ -208,6 +237,8 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
             handleScope(options, data.toString());
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.ENVELOPE}`) && data) {
             handleEnvelope(options, data, getWebContents());
+          } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.ADD_METRIC}`) && data) {
+            handleMetric(JSON.parse(data.toString()) as MetricIPCMessage);
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.STATUS}`) && data) {
             const contents = getWebContents();
             if (contents) {
@@ -245,6 +276,8 @@ function configureClassic(options: ElectronMainOptionsInternal): void {
 
   const rendererStatusChanged = createRendererAnrStatusHandler();
   ipcMain.on(IPCChannel.STATUS, ({ sender }, status: RendererStatus) => rendererStatusChanged(status, sender));
+
+  ipcMain.on(IPCChannel.ADD_METRIC, (_, metric: MetricIPCMessage) => handleMetric(metric));
 }
 
 /** Sets up communication channels with the renderer */

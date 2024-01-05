@@ -13,6 +13,10 @@ export function normalize(event: TestServerEvent<Event | Transaction | Session>)
   }
 
   normalizeProfile(event.profile);
+
+  if (event.metrics) {
+    event.metrics = event.metrics.replace(/T\d{10}/g, 'T0000000000');
+  }
 }
 
 export function eventIsSession(data: EventOrSession): boolean {

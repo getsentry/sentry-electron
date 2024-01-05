@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <script>
+      const Sentry = require('@sentry/electron/renderer');
+
+      Sentry.init({
+        debug: true,
+        integrations: [new Sentry.metrics.MetricsAggregator()],
+      });
+
+      Sentry.metrics.increment('hits', 4);
+    </script>
+  </body>
+</html>
