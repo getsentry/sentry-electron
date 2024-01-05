@@ -1,32 +1,5 @@
 import { Envelope, Event, Profile, ReplayEvent } from '@sentry/types';
-import { addItemToEnvelope, createEnvelope, forEachEnvelopeItem } from '@sentry/utils';
-
-/**
- * Normalizes URLs in exceptions and stacktraces so Sentry can fingerprint
- * across platforms.
- *
- * @param url The URL to be normalized.
- * @param basePath The application base path.
- * @returns The normalized URL.
- */
-export function normalizeUrl(url: string, basePath: string): string {
-  const escapedBase = basePath
-    // Backslash to forward
-    .replace(/\\/g, '/')
-    // Escape RegExp special characters
-    .replace(/[|\\{}()[\]^$+*?.]/g, '\\$&');
-
-  let newUrl = url;
-  try {
-    newUrl = decodeURI(url);
-  } catch (_Oo) {
-    // Sometime this breaks
-  }
-  return newUrl
-    .replace(/\\/g, '/')
-    .replace(/webpack:\/?/g, '') // Remove intermediate base path
-    .replace(new RegExp(`(file://)?/*${escapedBase}/*`, 'ig'), 'app:///');
-}
+import { addItemToEnvelope, createEnvelope, forEachEnvelopeItem, normalizeUrlToBase } from '@sentry/utils';
 
 /**
  * Normalizes all URLs in an event. See {@link normalizeUrl} for more
@@ -40,7 +13,7 @@ export function normalizeEvent(event: Event, basePath: string): Event {
   for (const exception of event.exception?.values || []) {
     for (const frame of exception.stacktrace?.frames || []) {
       if (frame.filename) {
-        frame.filename = normalizeUrl(frame.filename, basePath);
+        frame.filename = normalizeUrlToBase(frame.filename, basePath);
       }
     }
   }
@@ -48,17 +21,17 @@ export function normalizeEvent(event: Event, basePath: string): Event {
   // We need to normalize debug ID images the same way as the stack frames for symbolicator to match them correctly
   for (const debugImage of event.debug_meta?.images || []) {
     if (debugImage.type === 'sourcemap') {
-      debugImage.code_file = normalizeUrl(debugImage.code_file, basePath);
+      debugImage.code_file = normalizeUrlToBase(debugImage.code_file, basePath);
     }
   }
 
   if (event.transaction) {
-    event.transaction = normalizeUrl(event.transaction, basePath);
+    event.transaction = normalizeUrlToBase(event.transaction, basePath);
   }
 
   const { request = {} } = event;
   if (request.url) {
-    request.url = normalizeUrl(request.url, basePath);
+    request.url = normalizeUrlToBase(request.url, basePath);
   }
 
   event.contexts = {
@@ -96,11 +69,11 @@ export function normalizeUrlsInReplayEnvelope(envelope: Envelope, basePath: stri
       const [headers, event] = item as [{ type: 'replay_event' }, ReplayEvent];
 
       if (Array.isArray(event.urls)) {
-        event.urls = event.urls.map((url) => normalizeUrl(url, basePath));
+        event.urls = event.urls.map((url) => normalizeUrlToBase(url, basePath));
       }
 
       if (event?.request?.url) {
-        event.request.url = normalizeUrl(event.request.url, basePath);
+        event.request.url = normalizeUrlToBase(event.request.url, basePath);
       }
 
       modifiedEnvelope = addItemToEnvelope(modifiedEnvelope, [headers, event]);
@@ -118,7 +91,7 @@ export function normalizeUrlsInReplayEnvelope(envelope: Envelope, basePath: stri
 export function normaliseProfile(profile: Profile, basePath: string): void {
   for (const frame of profile.profile.frames) {
     if (frame.abs_path) {
-      frame.abs_path = normalizeUrl(frame.abs_path, basePath);
+      frame.abs_path = normalizeUrlToBase(frame.abs_path, basePath);
     }
   }
 }

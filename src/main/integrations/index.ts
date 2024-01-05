@@ -11,3 +11,4 @@ export { Net } from './net-breadcrumbs';
 export { ChildProcess } from './child-process';
 export { Screenshots } from './screenshots';
 export { RendererProfiling } from './renderer-profiling';
+export { Anr } from './anr';

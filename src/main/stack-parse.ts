@@ -1,9 +1,7 @@
 import { getModuleFromFilename as getModuleFromFilenameNode } from '@sentry/node';
 import { StackParser } from '@sentry/types';
-import { createStackParser, nodeStackLineParser } from '@sentry/utils';
+import { createStackParser, nodeStackLineParser, normalizeUrlToBase } from '@sentry/utils';
 import { app } from 'electron';
-
-import { normalizeUrl } from '../common';
 
 /** Parses the module name form a filename */
 function getModuleFromFilename(filename: string | undefined): string | undefined {
@@ -11,7 +9,7 @@ function getModuleFromFilename(filename: string | undefined): string | undefined
     return;
   }
 
-  const normalizedFilename = normalizeUrl(filename, app.getAppPath());
+  const normalizedFilename = normalizeUrlToBase(filename, app.getAppPath());
 
   return getModuleFromFilenameNode(normalizedFilename);
 }

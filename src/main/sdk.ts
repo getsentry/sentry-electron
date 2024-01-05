@@ -3,10 +3,9 @@ ensureProcess('main');
 
 import { defaultIntegrations as defaultNodeIntegrations, init as nodeInit, NodeOptions } from '@sentry/node';
 import { Integration, Options } from '@sentry/types';
-import { app, Session, session, WebContents } from 'electron';
+import { Session, session, WebContents } from 'electron';
 
-import { isAnrChildProcess } from './anr';
-import { getDefaultEnvironment, getDefaultReleaseName } from './context';
+import { getDefaultEnvironment, getDefaultReleaseName, getSdkInfo } from './context';
 import {
   AdditionalContext,
   ChildProcess,
@@ -23,7 +22,6 @@ import {
 import { configureIPC } from './ipc';
 import { defaultStackParser } from './stack-parse';
 import { ElectronOfflineTransportOptions, makeElectronOfflineTransport } from './transports/electron-offline-net';
-import { SDK_VERSION } from './version';
 
 export const defaultIntegrations: Integration[] = [
   new SentryMinidump(),
@@ -94,7 +92,7 @@ export type ElectronMainOptions = Pick<Partial<ElectronMainOptionsInternal>, 'ge
   NodeOptions;
 
 const defaultOptions: ElectronMainOptionsInternal = {
-  _metadata: { sdk: { name: 'sentry.javascript.electron', version: SDK_VERSION } },
+  _metadata: { sdk: getSdkInfo() },
   ipcMode: IPCMode.Both,
   getSessions: () => [session.defaultSession],
 };
@@ -105,12 +103,6 @@ const defaultOptions: ElectronMainOptionsInternal = {
 export function init(userOptions: ElectronMainOptions): void {
   const options: ElectronMainOptionsInternal = Object.assign(defaultOptions, userOptions);
   const defaults = defaultIntegrations;
-
-  if (isAnrChildProcess()) {
-    app.dock?.hide();
-    options.autoSessionTracking = false;
-    options.tracesSampleRate = 0;
-  }
 
   // If we don't set a release, @sentry/node will automatically fetch from environment variables
   if (options.release === undefined) {

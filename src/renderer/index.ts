@@ -42,6 +42,8 @@ export {
   getCurrentHub,
   getClient,
   getCurrentScope,
+  getGlobalScope,
+  getIsolationScope,
   Hub,
   makeMain,
   runWithAsyncContext,
@@ -54,6 +56,7 @@ export {
   setTags,
   setUser,
   spanStatusfromHttpCode,
+  // eslint-disable-next-line deprecation/deprecation
   trace,
   withScope,
   captureCheckIn,
@@ -75,10 +78,12 @@ export {
   BrowserClient,
   BrowserTracing,
   BrowserProfilingIntegration,
+  // eslint-disable-next-line deprecation/deprecation
   lastEventId,
   showReportDialog,
   Replay,
 } from '@sentry/browser';
+// eslint-disable-next-line deprecation/deprecation
 export type { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
 
 export const Integrations = { ...ElectronRendererIntegrations, ...BrowserIntegrations };
