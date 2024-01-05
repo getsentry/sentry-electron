@@ -1,11 +1,11 @@
 import { applyScopeDataToEvent, convertIntegrationFnToClass, getCurrentScope } from '@sentry/core';
 import { NodeClient, NodeOptions } from '@sentry/node';
 import { Event, IntegrationFn, ScopeData } from '@sentry/types';
-import { logger, makeDsn, SentryError } from '@sentry/utils';
+import { logger, makeDsn, SentryError, uuid4 } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
 import { mergeEvents, normalizeEvent } from '../../common';
-import { getEventDefaults } from '../context';
+import { getEventDefaults, getSdkInfo } from '../context';
 import {
   CRASH_REASONS,
   onRendererProcessGone,
@@ -102,6 +102,8 @@ const electronMinidump: IntegrationFn = () => {
 
   async function getNativeUploaderEvent(scope: ScopeData): Promise<Event> {
     const event = mergeEvents(await getEventDefaults(customRelease), {
+      sdk: getSdkInfo(),
+      event_id: uuid4(),
       level: 'fatal',
       platform: 'native',
       tags: { 'event.environment': 'native', event_type: 'native' },

@@ -4,7 +4,6 @@ import { callFrameToStackFrame, logger, stripSentryFramesAndReverse, watchdogTim
 import { WebContents } from 'electron';
 
 import { RendererStatus } from '../common';
-import { ELECTRON_MAJOR_VERSION } from './electron-normalize';
 import { Anr } from './integrations/anr';
 import { ElectronMainOptions } from './sdk';
 import { sessionAnr } from './sessions';
