@@ -1,4 +1,4 @@
-import { Event, MetricBucketItem, Profile, ReplayEvent, Session, Transaction } from '@sentry/types';
+import { Event, Profile, ReplayEvent, Session, Transaction } from '@sentry/types';
 import { forEachEnvelopeItem, parseEnvelope } from '@sentry/utils';
 import { Server } from 'http';
 import Koa from 'koa';
