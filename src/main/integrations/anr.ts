@@ -41,7 +41,7 @@ interface Options {
   appRootPath: string | undefined;
 }
 
-// We can't easily use the functional style of integration easily until it's exported...
+// We can't use the functional style of integration until they are exported as functions...
 
 /**
  * Starts a worker thread to detect App Not Responding (ANR) events
