@@ -7,11 +7,7 @@
     <script>
       const Sentry = require('@sentry/electron/renderer');
 
-      Sentry.init({
-        debug: true,
-        integrations: [new Sentry.metrics.MetricsAggregator()],
-      });
-
+      Sentry.init();
       Sentry.metrics.increment('hits', 4);
     </script>
   </body>
