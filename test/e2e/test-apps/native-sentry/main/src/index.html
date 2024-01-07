@@ -10,6 +10,10 @@
       init({
         debug: true,
       });
+
+      if (process.env.APP_FIRST_RUN) {
+        console.log('renderer process breadcrumb from first crashing run');
+      }
     </script>
   </body>
 </html>
