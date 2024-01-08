@@ -3,9 +3,6 @@
   "method": "minidump",
   "sentryKey": "37f8a2ee37c0409d8970bc7559c7c7e4",
   "appId": "277345",
-  "data": {
-    "event_id": "{{id}}",
-    "timestamp": 0
-  },
+  "data": {},
   "attachments": [ { "attachment_type": "event.minidump" } ]
 }

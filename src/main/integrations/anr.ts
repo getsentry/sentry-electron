@@ -48,8 +48,8 @@ interface Options {
  */
 export class Anr extends Integrations.Anr {
   public constructor(options: Partial<Options> = {}) {
-    if (ELECTRON_MAJOR_VERSION < 15) {
-      throw new Error('Main process ANR detection requires Electron >= v15');
+    if (ELECTRON_MAJOR_VERSION < 22) {
+      throw new Error('Main process ANR detection requires Electron v22+');
     }
 
     super({
