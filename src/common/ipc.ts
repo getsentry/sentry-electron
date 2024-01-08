@@ -1,3 +1,5 @@
+import { MeasurementUnit, Primitive } from '@sentry/types';
+
 export const PROTOCOL_SCHEME = 'sentry-ipc';
 
 export enum IPCChannel {
@@ -11,6 +13,8 @@ export enum IPCChannel {
   ENVELOPE = 'sentry-electron.envelope',
   /** IPC to pass renderer status updates */
   STATUS = 'sentry-electron.status',
+  /** IPC to pass renderer metric additions to the main process */
+  ADD_METRIC = 'sentry-electron.add-metric',
 }
 
 export interface RendererProcessAnrOptions {
@@ -39,12 +43,22 @@ export interface RendererStatus {
   config: RendererProcessAnrOptions;
 }
 
+export interface MetricIPCMessage {
+  metricType: 'c' | 'g' | 's' | 'd';
+  name: string;
+  value: number | string;
+  unit?: MeasurementUnit;
+  tags?: Record<string, Primitive>;
+  timestamp?: number;
+}
+
 export interface IPCInterface {
   sendRendererStart: () => void;
   sendScope: (scope: string) => void;
   sendEvent: (event: string) => void;
   sendEnvelope: (evn: Uint8Array | string) => void;
   sendStatus: (state: RendererStatus) => void;
+  sendAddMetric: (metric: MetricIPCMessage) => void;
 }
 
 export const RENDERER_ID_HEADER = 'sentry-electron-renderer-id';

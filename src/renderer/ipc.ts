@@ -2,7 +2,14 @@
 /* eslint-disable no-console */
 import { logger, uuid4 } from '@sentry/utils';
 
-import { IPCChannel, IPCInterface, PROTOCOL_SCHEME, RENDERER_ID_HEADER, RendererStatus } from '../common/ipc';
+import {
+  IPCChannel,
+  IPCInterface,
+  MetricIPCMessage,
+  PROTOCOL_SCHEME,
+  RENDERER_ID_HEADER,
+  RendererStatus,
+} from '../common/ipc';
 
 function buildUrl(channel: IPCChannel): string {
   // We include sentry_key in the URL so these don't end up in fetch breadcrumbs
@@ -49,6 +56,11 @@ function getImplementation(): IPCInterface {
       },
       sendStatus: (status: RendererStatus) => {
         fetch(buildUrl(IPCChannel.STATUS), { method: 'POST', body: JSON.stringify({ status }), headers }).catch(() => {
+          // ignore
+        });
+      },
+      sendAddMetric: (metric: MetricIPCMessage) => {
+        fetch(buildUrl(IPCChannel.ADD_METRIC), { method: 'POST', body: JSON.stringify(metric), headers }).catch(() => {
           // ignore
         });
       },

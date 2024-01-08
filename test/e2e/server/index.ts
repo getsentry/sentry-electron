@@ -40,6 +40,8 @@ export interface TestServerEvent<T = unknown> {
   attachments?: Attachment[];
   /** Profiling data */
   profile?: Profile;
+  /** Metrics data */
+  metrics?: string;
   /** API method used for submission */
   method: 'envelope' | 'minidump' | 'store';
 }
@@ -124,6 +126,7 @@ export class TestServer {
       let data: Event | Transaction | Session | ReplayEvent | undefined;
       const attachments: Attachment[] = [];
       let profile: Profile | undefined;
+      let metrics: string | undefined;
 
       forEachEnvelopeItem(envelope, ([headers, item]) => {
         if (headers.type === 'event' || headers.type === 'transaction' || headers.type === 'session') {
@@ -142,16 +145,21 @@ export class TestServer {
           attachments.push(headers);
         }
 
+        if (headers.type === 'statsd') {
+          metrics = item.toString();
+        }
+
         if (headers.type === 'profile') {
           profile = item as unknown as Profile;
         }
       });
 
-      if (data) {
+      if (data || metrics) {
         this._addEvent({
-          data,
+          data: data || {},
           attachments,
           profile,
+          metrics,
           appId: ctx.params.id,
           sentryKey: keyMatch[1],
           method: 'envelope',

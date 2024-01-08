@@ -69,9 +69,18 @@ export {
   startInactiveSpan,
   startSpanManual,
   continueTrace,
-  metrics,
 } from '@sentry/core';
 export type { SpanStatusType } from '@sentry/core';
+
+import { metrics as coreMetrics } from '@sentry/core';
+
+import { MetricsAggregator } from './integrations/metrics-aggregator';
+
+export const metrics = {
+  ...coreMetrics,
+  // Override the default browser metrics aggregator with the Electron renderer one
+  MetricsAggregator,
+};
 
 export {
   addTracingExtensions,
@@ -86,5 +95,5 @@ export {
 // eslint-disable-next-line deprecation/deprecation
 export type { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
 
-export const Integrations = { ...ElectronRendererIntegrations, ...BrowserIntegrations };
+export const Integrations = { ...BrowserIntegrations, ...ElectronRendererIntegrations };
 export { init, defaultIntegrations } from './sdk';
