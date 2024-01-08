@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 4.17.0
+
+- feat: Update from [v7.90.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.90.0) to
+  [v7.92.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.92.0) of JavaScript SDKs (#810)
+- feat: Re-work ANR detection to use worker thread (#810)
+- feat: Add support for performance metrics (#811)
+- test: Ensure correct scope for main process native crashes (#812)
+
 ## 4.16.0
 
 - feat: Update from [v7.84.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.84.0) to
