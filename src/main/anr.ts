@@ -1,7 +1,7 @@
-import { captureEvent, getClient, getCurrentHub, getModuleFromFilename, NodeClient, StackFrame } from '@sentry/node';
+import { captureEvent, createGetModuleFromFilename, getClient, NodeClient, StackFrame } from '@sentry/node';
 import { Event } from '@sentry/types';
 import { callFrameToStackFrame, logger, stripSentryFramesAndReverse, watchdogTimer } from '@sentry/utils';
-import { WebContents } from 'electron';
+import { app, WebContents } from 'electron';
 
 import { RendererStatus } from '../common';
 import { Anr } from './integrations/anr';
@@ -9,7 +9,7 @@ import { ElectronMainOptions } from './sdk';
 import { sessionAnr } from './sessions';
 
 function getRendererName(contents: WebContents): string | undefined {
-  const options = getCurrentHub().getClient()?.getOptions() as ElectronMainOptions | undefined;
+  const options = getClient()?.getOptions() as ElectronMainOptions | undefined;
   return options?.getRendererName?.(contents);
 }
 
@@ -68,6 +68,7 @@ function rendererDebugger(contents: WebContents, pausedStack: (frames: StackFram
 
   // Collect scriptId -> url map so we can look up the filenames later
   const scripts = new Map<string, string>();
+  const getModuleFromFilename = createGetModuleFromFilename(app.getAppPath());
 
   contents.debugger.on('message', (_, method, params) => {
     if (method === 'Debugger.scriptParsed') {

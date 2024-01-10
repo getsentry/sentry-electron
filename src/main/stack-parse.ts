@@ -1,18 +1,9 @@
-import { getModuleFromFilename as getModuleFromFilenameNode } from '@sentry/node';
+import { createGetModuleFromFilename } from '@sentry/node';
 import { StackParser } from '@sentry/types';
-import { createStackParser, nodeStackLineParser, normalizeUrlToBase } from '@sentry/utils';
+import { createStackParser, nodeStackLineParser } from '@sentry/utils';
 import { app } from 'electron';
 
-/** Parses the module name form a filename */
-function getModuleFromFilename(filename: string | undefined): string | undefined {
-  if (!filename) {
-    return;
-  }
-
-  const normalizedFilename = normalizeUrlToBase(filename, app.getAppPath());
-
-  return getModuleFromFilenameNode(normalizedFilename);
-}
-
 // node.js stack parser but filename normalized before parsing the module
-export const defaultStackParser: StackParser = createStackParser(nodeStackLineParser(getModuleFromFilename));
+export const defaultStackParser: StackParser = createStackParser(
+  nodeStackLineParser(createGetModuleFromFilename(app.getAppPath())),
+);

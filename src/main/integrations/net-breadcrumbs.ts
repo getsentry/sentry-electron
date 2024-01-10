@@ -1,6 +1,11 @@
-/* eslint-disable deprecation/deprecation */
-import { convertIntegrationFnToClass, getDynamicSamplingContextFromClient } from '@sentry/core';
-import { getCurrentHub } from '@sentry/node';
+import {
+  addBreadcrumb,
+  /* eslint-disable deprecation/deprecation */
+  convertIntegrationFnToClass,
+  getClient,
+  getCurrentScope,
+  getDynamicSamplingContextFromClient,
+} from '@sentry/core';
 import { DynamicSamplingContext, IntegrationFn, Span, TracePropagationTargets } from '@sentry/types';
 import {
   dynamicSamplingContextToSentryBaggageHeader,
@@ -186,8 +191,7 @@ function createWrappedRequestFactory(
 
       let span: Span | undefined;
 
-      const hub = getCurrentHub();
-      const scope = hub.getScope();
+      const scope = getCurrentScope();
       if (scope && shouldCreateSpan(method, url)) {
         const parentSpan = scope.getSpan();
 
@@ -208,7 +212,7 @@ function createWrappedRequestFactory(
             const { traceId, sampled, dsc } = scope.getPropagationContext();
             const sentryTraceHeader = generateSentryTraceHeader(traceId, undefined, sampled);
 
-            const client = hub.getClient();
+            const client = getClient();
             const dynamicSamplingContext =
               dsc || (client ? getDynamicSamplingContextFromClient(traceId, client, scope) : undefined);
 
@@ -257,7 +261,7 @@ function addRequestBreadcrumb(
   req: ClientRequest,
   res?: IncomingMessage,
 ): void {
-  getCurrentHub().addBreadcrumb(
+  addBreadcrumb(
     {
       type: 'http',
       category: 'electron.net',
@@ -281,7 +285,7 @@ const net: IntegrationFn = (options: NetOptions = {}) => {
   return {
     name: INTEGRATION_NAME,
     setup() {
-      const clientOptions = getCurrentHub().getClient()?.getOptions();
+      const clientOptions = getClient()?.getOptions();
 
       // No need to instrument if we don't want to track anything
       if (options.breadcrumbs === false && options.tracing === false) {

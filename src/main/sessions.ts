@@ -1,4 +1,12 @@
-import { getCurrentHub, makeSession, updateSession } from '@sentry/core';
+import {
+  captureSession as captureSessionCore,
+  endSession as endSessionCore,
+  getClient,
+  getCurrentScope,
+  makeSession,
+  startSession as startSessionCore,
+  updateSession,
+} from '@sentry/core';
 import { flush, NodeClient } from '@sentry/node';
 import { SerializedSession, Session, SessionContext, SessionStatus } from '@sentry/types';
 import { logger } from '@sentry/utils';
@@ -27,11 +35,10 @@ let persistTimer: NodeJS.Timer | undefined;
 
 /** Starts a session */
 export function startSession(sendOnCreate: boolean): void {
-  const hub = getCurrentHub();
-  const session = hub.startSession();
+  const session = startSessionCore();
 
   if (sendOnCreate) {
-    hub.captureSession();
+    captureSessionCore();
   }
 
   getSessionStore()
@@ -42,7 +49,7 @@ export function startSession(sendOnCreate: boolean): void {
 
   // Every PERSIST_INTERVAL, write the session to disk
   persistTimer = setInterval(async () => {
-    const currentSession = hub.getScope()?.getSession();
+    const currentSession = getCurrentScope().getSession();
     // Only bother saving if it hasn't already ended
     if (currentSession && currentSession.status === 'ok') {
       await getSessionStore().set(currentSession);
@@ -57,13 +64,12 @@ export async function endSession(): Promise<void> {
     clearInterval(persistTimer);
   }
 
-  const hub = getCurrentHub();
-  const session = hub.getScope()?.getSession();
+  const session = getCurrentScope().getSession();
 
   if (session) {
     if (session.status === 'ok') {
       logger.log('Ending session');
-      hub.endSession();
+      endSessionCore();
     } else {
       logger.log('Session was already ended');
     }
@@ -103,7 +109,7 @@ export async function unreportedDuringLastSession(crashDate: Date | undefined): 
 
 /** Checks if the previous session needs sending as crashed or abnormal  */
 export async function checkPreviousSession(crashed: boolean): Promise<void> {
-  const client = getCurrentHub().getClient<NodeClient>();
+  const client = getClient<NodeClient>();
 
   const previous = await previousSession;
 
@@ -141,8 +147,7 @@ export function sessionCrashed(): void {
   }
 
   logger.log('Session Crashed');
-  const hub = getCurrentHub();
-  const session = hub.getScope()?.getSession();
+  const session = getCurrentScope().getSession();
 
   if (!session) {
     logger.log('No session to update');
@@ -156,7 +161,7 @@ export function sessionCrashed(): void {
     logger.log('Session already ended');
   }
 
-  hub.captureSession();
+  captureSessionCore();
 }
 
 /** Sets the current session as ANR */
@@ -166,8 +171,7 @@ export function sessionAnr(): void {
     clearInterval(persistTimer);
   }
 
-  const hub = getCurrentHub();
-  const session = hub.getScope()?.getSession();
+  const session = getCurrentScope().getSession();
 
   if (!session) {
     return;
@@ -176,7 +180,7 @@ export function sessionAnr(): void {
   if (session.status === 'ok') {
     logger.log('Setting session as abnormal ANR');
     updateSession(session, { status: 'abnormal', abnormal_mechanism: 'anr_foreground' });
-    hub.captureSession();
+    captureSessionCore();
   }
 }
 
