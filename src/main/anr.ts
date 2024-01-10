@@ -2,6 +2,7 @@ import { captureEvent, createGetModuleFromFilename, getClient, NodeClient, Stack
 import { Event } from '@sentry/types';
 import { callFrameToStackFrame, logger, stripSentryFramesAndReverse, watchdogTimer } from '@sentry/utils';
 import { app, WebContents } from 'electron';
+import { sep } from 'path';
 
 import { RendererStatus } from '../common';
 import { Anr } from './integrations/anr';
@@ -68,7 +69,7 @@ function rendererDebugger(contents: WebContents, pausedStack: (frames: StackFram
 
   // Collect scriptId -> url map so we can look up the filenames later
   const scripts = new Map<string, string>();
-  const getModuleFromFilename = createGetModuleFromFilename(app.getAppPath());
+  const getModuleFromFilename = createGetModuleFromFilename(app.getAppPath() + sep);
 
   contents.debugger.on('message', (_, method, params) => {
     if (method === 'Debugger.scriptParsed') {

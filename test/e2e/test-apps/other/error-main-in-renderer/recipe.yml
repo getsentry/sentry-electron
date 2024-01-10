@@ -1,3 +1,0 @@
-description: Error logged when main code loaded in renderer process
-command: yarn
-expectedError: This code is intended to run in the Electron main
