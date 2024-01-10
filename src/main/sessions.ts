@@ -1,12 +1,4 @@
-import {
-  captureSession as captureSessionCore,
-  endSession as endSessionCore,
-  getClient,
-  getCurrentScope,
-  makeSession,
-  startSession as startSessionCore,
-  updateSession,
-} from '@sentry/core';
+import { getCurrentHub, makeSession, updateSession } from '@sentry/core';
 import { flush, NodeClient } from '@sentry/node';
 import { SerializedSession, Session, SessionContext, SessionStatus } from '@sentry/types';
 import { logger } from '@sentry/utils';
@@ -35,10 +27,13 @@ let persistTimer: NodeJS.Timer | undefined;
 
 /** Starts a session */
 export function startSession(sendOnCreate: boolean): void {
-  const session = startSessionCore();
+  const hub = getCurrentHub();
+  // eslint-disable-next-line deprecation/deprecation
+  const session = hub.startSession();
 
   if (sendOnCreate) {
-    captureSessionCore();
+    // eslint-disable-next-line deprecation/deprecation
+    hub.captureSession();
   }
 
   getSessionStore()
@@ -49,7 +44,7 @@ export function startSession(sendOnCreate: boolean): void {
 
   // Every PERSIST_INTERVAL, write the session to disk
   persistTimer = setInterval(async () => {
-    const currentSession = getCurrentScope().getSession();
+    const currentSession = hub.getScope()?.getSession();
     // Only bother saving if it hasn't already ended
     if (currentSession && currentSession.status === 'ok') {
       await getSessionStore().set(currentSession);
@@ -64,12 +59,14 @@ export async function endSession(): Promise<void> {
     clearInterval(persistTimer);
   }
 
-  const session = getCurrentScope().getSession();
+  const hub = getCurrentHub();
+  const session = hub.getScope()?.getSession();
 
   if (session) {
     if (session.status === 'ok') {
       logger.log('Ending session');
-      endSessionCore();
+      // eslint-disable-next-line deprecation/deprecation
+      hub.endSession();
     } else {
       logger.log('Session was already ended');
     }
@@ -90,7 +87,7 @@ export async function unreportedDuringLastSession(crashDate: Date | undefined): 
 
   const previousSessionModified = await getSessionStore().getModifiedDate();
   // There is no previous session
-  if (previousSessionModified == undefined) {
+  if (previousSessionModified === undefined) {
     return false;
   }
 
@@ -109,7 +106,7 @@ export async function unreportedDuringLastSession(crashDate: Date | undefined): 
 
 /** Checks if the previous session needs sending as crashed or abnormal  */
 export async function checkPreviousSession(crashed: boolean): Promise<void> {
-  const client = getClient<NodeClient>();
+  const client = getCurrentHub().getClient<NodeClient>();
 
   const previous = await previousSession;
 
@@ -147,7 +144,8 @@ export function sessionCrashed(): void {
   }
 
   logger.log('Session Crashed');
-  const session = getCurrentScope().getSession();
+  const hub = getCurrentHub();
+  const session = hub.getScope()?.getSession();
 
   if (!session) {
     logger.log('No session to update');
@@ -156,12 +154,14 @@ export function sessionCrashed(): void {
 
   if (session.status === 'ok') {
     logger.log('Setting session as crashed');
-    updateSession(session, { status: 'crashed', errors: (session.errors += 1) });
+    const errors = session.errors + 1;
+    updateSession(session, { status: 'crashed', errors });
   } else {
     logger.log('Session already ended');
   }
 
-  captureSessionCore();
+  // eslint-disable-next-line deprecation/deprecation
+  hub.captureSession();
 }
 
 /** Sets the current session as ANR */
@@ -171,7 +171,8 @@ export function sessionAnr(): void {
     clearInterval(persistTimer);
   }
 
-  const session = getCurrentScope().getSession();
+  const hub = getCurrentHub();
+  const session = hub.getScope()?.getSession();
 
   if (!session) {
     return;
@@ -180,7 +181,8 @@ export function sessionAnr(): void {
   if (session.status === 'ok') {
     logger.log('Setting session as abnormal ANR');
     updateSession(session, { status: 'abnormal', abnormal_mechanism: 'anr_foreground' });
-    captureSessionCore();
+    // eslint-disable-next-line deprecation/deprecation
+    hub.captureSession();
   }
 }
 
