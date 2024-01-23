@@ -98,7 +98,6 @@ const rendererProfiling: IntegrationFn = () => {
             if (event?.contexts?.profile?.profile_id) {
               profile_id = event.contexts.profile.profile_id as string;
               // This can be removed as it's no longer needed
-              // biome-ignore lint/performance/noDelete: not including this is JSON output is more important than perf
               delete event.contexts.profile;
             }
           }

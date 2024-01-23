@@ -111,7 +111,6 @@ const electronMinidump: IntegrationFn = () => {
 
     applyScopeDataToEvent(event, scope);
 
-    // biome-ignore lint/performance/noDelete: not including this is JSON output is more important than perf
     delete event.sdkProcessingMetadata;
 
     // Normalise paths

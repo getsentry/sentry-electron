@@ -120,7 +120,6 @@ const electronBreadcrumbs: IntegrationFn = (userOptions: Partial<ElectronBreadcr
     const emit = emitter.emit.bind(emitter) as (event: string, ...args: unknown[]) => boolean;
 
     emitter.emit = (event: string, ...args: unknown[]) => {
-      // biome-ignore lint/complexity/useOptionalChain: This lint is wrong. shouldCapture can be 'false'
       if (shouldCapture && shouldCapture(event)) {
         const breadcrumb: Breadcrumb = {
           category: 'electron',
@@ -133,7 +132,6 @@ const electronBreadcrumbs: IntegrationFn = (userOptions: Partial<ElectronBreadcr
           breadcrumb.data = { ...getRendererProperties(id) };
 
           if (!options.captureWindowTitles && breadcrumb.data?.title) {
-            // biome-ignore lint/performance/noDelete: not including this is JSON output is more important than perf
             delete breadcrumb.data?.title;
           }
         }
