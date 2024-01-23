@@ -42,6 +42,7 @@ export {
   // eslint-disable-next-line deprecation/deprecation
   getActiveTransaction,
   getHubFromCarrier,
+  // eslint-disable-next-line deprecation/deprecation
   getCurrentHub,
   getClient,
   getCurrentScope,
@@ -50,6 +51,7 @@ export {
   Hub,
   // eslint-disable-next-line deprecation/deprecation
   lastEventId,
+  // eslint-disable-next-line deprecation/deprecation
   makeMain,
   runWithAsyncContext,
   Scope,
