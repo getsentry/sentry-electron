@@ -9,6 +9,9 @@ const INTEGRATION_NAME = 'MetricsAggregator';
 const metricsAggregatorIntegration: IntegrationFn = () => {
   return {
     name: INTEGRATION_NAME,
+    setupOnce() {
+      // noop
+    },
     setup(client: BrowserClient) {
       client.metricsAggregator = new ElectronRendererMetricsAggregator();
     },

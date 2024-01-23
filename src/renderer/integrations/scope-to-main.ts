@@ -9,6 +9,9 @@ const INTEGRATION_NAME = 'ScopeToMain';
 const scopeToMain: IntegrationFn = () => {
   return {
     name: INTEGRATION_NAME,
+    setupOnce() {
+      // noop
+    },
     setup() {
       const scope = getCurrentScope();
       if (scope) {

@@ -42,12 +42,15 @@ const childProcess: IntegrationFn = (userOptions: Partial<OrBool<ChildProcessOpt
   const { breadcrumbs, events } = userOptions;
 
   const options: ChildProcessOptions = {
-    breadcrumbs: Array.isArray(breadcrumbs) ? breadcrumbs : breadcrumbs == false ? [] : DEFAULT_OPTIONS.breadcrumbs,
-    events: Array.isArray(events) ? events : events == false ? [] : DEFAULT_OPTIONS.events,
+    breadcrumbs: Array.isArray(breadcrumbs) ? breadcrumbs : breadcrumbs === false ? [] : DEFAULT_OPTIONS.breadcrumbs,
+    events: Array.isArray(events) ? events : events === false ? [] : DEFAULT_OPTIONS.events,
   };
 
   return {
     name: INTEGRATION_NAME,
+    setupOnce() {
+      // noop
+    },
     setup(client: NodeClient) {
       const { breadcrumbs, events } = options;
       const allReasons = Array.from(new Set([...breadcrumbs, ...events]));

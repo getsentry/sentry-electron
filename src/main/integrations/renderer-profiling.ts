@@ -59,6 +59,9 @@ const INTEGRATION_NAME = 'RendererProfiling';
 const rendererProfiling: IntegrationFn = () => {
   return {
     name: INTEGRATION_NAME,
+    setupOnce() {
+      // noop
+    },
     setup(client) {
       const options = client.getOptions() as ElectronMainOptionsInternal;
       if (!options.enableRendererProfiling) {
@@ -92,9 +95,10 @@ const rendererProfiling: IntegrationFn = () => {
           for (let j = 1; j < item.length; j++) {
             const event = item[j] as Event;
 
-            if (event && event.contexts && event.contexts.profile && event.contexts.profile.profile_id) {
+            if (event?.contexts?.profile?.profile_id) {
               profile_id = event.contexts.profile.profile_id as string;
               // This can be removed as it's no longer needed
+              // biome-ignore lint/performance/noDelete: not including this is JSON output is more important than perf
               delete event.contexts.profile;
             }
           }

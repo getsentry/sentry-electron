@@ -10,7 +10,7 @@ import { getIPC } from '../ipc';
  */
 export class EventToMain implements Integration {
   /** @inheritDoc */
-  public static id: string = 'EventToMain';
+  public static id = 'EventToMain';
 
   /** @inheritDoc */
   public readonly name: string;
@@ -29,7 +29,7 @@ export class EventToMain implements Integration {
       event.breadcrumbs = event.breadcrumbs || [];
 
       // Remove the environment as it defaults to 'production' and overwrites the main process environment
-      delete event.environment;
+      event.environment = undefined;
 
       ipc.sendEvent(JSON.stringify(normalize(event, 20, 2_000)));
       // Events are handled and sent from the main process so we return null here so nothing is sent from the renderer

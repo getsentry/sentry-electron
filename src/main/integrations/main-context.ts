@@ -10,6 +10,9 @@ const INTEGRATION_NAME = 'MainContext';
 const mainContext: IntegrationFn = () => {
   return {
     name: INTEGRATION_NAME,
+    setupOnce() {
+      // noop
+    },
     async processEvent(event, _, client) {
       const clientOptions = client.getOptions();
       const normalized = normalizeEvent(event, app.getAppPath());
