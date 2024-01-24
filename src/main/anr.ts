@@ -2,7 +2,6 @@ import { captureEvent, createGetModuleFromFilename, getClient, NodeClient, Stack
 import { Event } from '@sentry/types';
 import { callFrameToStackFrame, logger, stripSentryFramesAndReverse, watchdogTimer } from '@sentry/utils';
 import { app, WebContents } from 'electron';
-import { sep } from 'path';
 
 import { RendererStatus } from '../common';
 import { Anr } from './integrations/anr';
