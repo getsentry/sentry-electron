@@ -69,7 +69,7 @@ function rendererDebugger(contents: WebContents, pausedStack: (frames: StackFram
 
   // Collect scriptId -> url map so we can look up the filenames later
   const scripts = new Map<string, string>();
-  const getModuleFromFilename = createGetModuleFromFilename(app.getAppPath() + sep);
+  const getModuleFromFilename = createGetModuleFromFilename(app.getAppPath());
 
   contents.debugger.on('message', (_, method, params) => {
     if (method === 'Debugger.scriptParsed') {
