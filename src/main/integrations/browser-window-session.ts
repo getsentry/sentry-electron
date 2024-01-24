@@ -77,6 +77,9 @@ const browserWindowSession: IntegrationFn = (options: Options = {}) => {
 
   return {
     name: INTEGRATION_NAME,
+    setupOnce() {
+      // noop
+    },
     setup() {
       app.on('browser-window-created', (_event, window) => {
         window.on('focus', windowStateChanged);

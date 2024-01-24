@@ -1,6 +1,11 @@
-/* eslint-disable deprecation/deprecation */
-import { convertIntegrationFnToClass, getDynamicSamplingContextFromClient } from '@sentry/core';
-import { getCurrentHub } from '@sentry/node';
+import {
+  addBreadcrumb,
+  /* eslint-disable deprecation/deprecation */
+  convertIntegrationFnToClass,
+  getClient,
+  getCurrentScope,
+  getDynamicSamplingContextFromClient,
+} from '@sentry/core';
 import { DynamicSamplingContext, IntegrationFn, Span, TracePropagationTargets } from '@sentry/types';
 import {
   dynamicSamplingContextToSentryBaggageHeader,
@@ -174,11 +179,8 @@ function createWrappedRequestFactory(
 
   return function wrappedRequestMethodFactory(originalRequestMethod: RequestMethod): RequestMethod {
     return function requestMethod(this: typeof electronNet, reqOptions: RequestOptions): ClientRequest {
-      // eslint-disable-next-line @typescript-eslint/no-this-alias
-      const netModule = this;
-
       const { url, method } = parseOptions(reqOptions);
-      const request = originalRequestMethod.apply(netModule, [reqOptions]) as ClientRequest;
+      const request = originalRequestMethod.apply(this, [reqOptions]) as ClientRequest;
 
       if (url.match(/sentry_key/) || request.getHeader('x-sentry-auth')) {
         return request;
@@ -186,8 +188,7 @@ function createWrappedRequestFactory(
 
       let span: Span | undefined;
 
-      const hub = getCurrentHub();
-      const scope = hub.getScope();
+      const scope = getCurrentScope();
       if (scope && shouldCreateSpan(method, url)) {
         const parentSpan = scope.getSpan();
 
@@ -208,7 +209,7 @@ function createWrappedRequestFactory(
             const { traceId, sampled, dsc } = scope.getPropagationContext();
             const sentryTraceHeader = generateSentryTraceHeader(traceId, undefined, sampled);
 
-            const client = hub.getClient();
+            const client = getClient();
             const dynamicSamplingContext =
               dsc || (client ? getDynamicSamplingContextFromClient(traceId, client, scope) : undefined);
 
@@ -219,10 +220,8 @@ function createWrappedRequestFactory(
 
       return request
         .once('response', function (this: ClientRequest, res: IncomingMessage): void {
-          // eslint-disable-next-line @typescript-eslint/no-this-alias
-          const req = this;
           if (options.breadcrumbs !== false) {
-            addRequestBreadcrumb('response', method, url, req, res);
+            addRequestBreadcrumb('response', method, url, this, res);
           }
           if (span) {
             if (res.statusCode) {
@@ -232,11 +231,8 @@ function createWrappedRequestFactory(
           }
         })
         .once('error', function (this: ClientRequest, _error: Error): void {
-          // eslint-disable-next-line @typescript-eslint/no-this-alias
-          const req = this;
-
           if (options.breadcrumbs !== false) {
-            addRequestBreadcrumb('error', method, url, req, undefined);
+            addRequestBreadcrumb('error', method, url, this, undefined);
           }
           if (span) {
             span.setHttpStatus(500);
@@ -257,14 +253,14 @@ function addRequestBreadcrumb(
   req: ClientRequest,
   res?: IncomingMessage,
 ): void {
-  getCurrentHub().addBreadcrumb(
+  addBreadcrumb(
     {
       type: 'http',
       category: 'electron.net',
       data: {
         url,
         method: method,
-        status_code: res && res.statusCode,
+        status_code: res?.statusCode,
       },
     },
     {
@@ -280,8 +276,11 @@ const INTEGRATION_NAME = 'Net';
 const net: IntegrationFn = (options: NetOptions = {}) => {
   return {
     name: INTEGRATION_NAME,
+    setupOnce() {
+      // noop
+    },
     setup() {
-      const clientOptions = getCurrentHub().getClient()?.getOptions();
+      const clientOptions = getClient()?.getOptions();
 
       // No need to instrument if we don't want to track anything
       if (options.breadcrumbs === false && options.tracing === false) {

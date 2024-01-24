@@ -17,6 +17,9 @@ const INTEGRATION_NAME = 'MainProcessSession';
 const mainProcessSession: IntegrationFn = (options: Options = {}) => {
   return {
     name: INTEGRATION_NAME,
+    setupOnce() {
+      // noop
+    },
     setup() {
       startSession(!!options.sendOnCreate);
       endSessionOnExit();

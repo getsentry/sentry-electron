@@ -29,9 +29,9 @@ export const whenAppReady: Promise<void> = (() => {
             resolve();
           });
         });
-  } else {
-    return Promise.resolve();
   }
+
+  return Promise.resolve();
 })();
 
 /**

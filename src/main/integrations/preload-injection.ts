@@ -36,12 +36,15 @@ const INTEGRATION_NAME = 'PreloadInjection';
 const preloadInjection: IntegrationFn = () => {
   return {
     name: INTEGRATION_NAME,
+    setupOnce() {
+      // noop
+    },
     setup(client) {
       const options = client.getOptions() as ElectronMainOptionsInternal;
 
       // If classic IPC mode is disabled, we shouldn't attempt to inject preload scripts
       // eslint-disable-next-line no-bitwise
-      if ((options.ipcMode & IPCMode.Classic) == 0) {
+      if ((options.ipcMode & IPCMode.Classic) === 0) {
         return;
       }
 

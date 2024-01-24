@@ -178,6 +178,9 @@ const sentryMinidump: IntegrationFn = () => {
 
   return {
     name: INTEGRATION_NAME,
+    setupOnce() {
+      // noop
+    },
     setup(client: NodeClient): void {
       // Mac AppStore builds cannot run the crash reporter due to the sandboxing
       // requirements. In this case, we prevent enabling native crashes entirely.

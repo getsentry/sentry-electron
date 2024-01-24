@@ -80,7 +80,7 @@
                 "function": "{{function}}",
                 "in_app": true,
                 "lineno": 0,
-                "module": "main"
+                "module": "dist:main"
               }
             ]
           },

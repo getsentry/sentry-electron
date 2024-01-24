@@ -145,6 +145,9 @@ const electronBreadcrumbs: IntegrationFn = (userOptions: Partial<ElectronBreadcr
 
   return {
     name: INTEGRATION_NAME,
+    setupOnce() {
+      // noop
+    },
     setup(client: NodeClient) {
       const clientOptions = client.getOptions() as ElectronMainOptions | undefined;
 

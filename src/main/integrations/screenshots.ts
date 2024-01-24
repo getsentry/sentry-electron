@@ -11,6 +11,9 @@ const INTEGRATION_NAME = 'Screenshots';
 const screenshots: IntegrationFn = () => {
   return {
     name: INTEGRATION_NAME,
+    setupOnce() {
+      // noop
+    },
     async processEvent(event, hint, client) {
       const attachScreenshot = !!(client.getOptions() as ElectronMainOptions).attachScreenshot;
 

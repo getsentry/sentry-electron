@@ -1,7 +1,8 @@
 import { expect, should, use } from 'chai';
 import * as http from 'http';
 import chaiAsPromised = require('chai-as-promised');
-import { getActiveTransaction, setAsyncContextStrategy, Span } from '@sentry/core';
+// eslint-disable-next-line deprecation/deprecation
+import { getActiveTransaction, setAsyncContextStrategy, Span, spanToJSON } from '@sentry/core';
 import { createTransport, Hub, NodeClient } from '@sentry/node';
 import { ClientOptions, Transaction, TransactionContext } from '@sentry/types';
 import { resolvedSyncPromise } from '@sentry/utils';
@@ -66,8 +67,10 @@ function createHubOnScope(customOptions: Partial<ClientOptions> = {}): Hub {
     ...customOptions,
   });
 
+  // eslint-disable-next-line deprecation/deprecation
   hub.bindClient(new NodeClient(options));
 
+  // eslint-disable-next-line deprecation/deprecation
   hub.getScope().setUser({
     id: 'uid123',
     segment: 'segmentA',
@@ -82,18 +85,21 @@ function createTransactionOnScope(
 ): [Transaction, Hub] {
   const hub = createHubOnScope(customOptions);
 
+  // eslint-disable-next-line deprecation/deprecation
   const transaction = hub.startTransaction({
     name: 'dogpark',
     traceId: '12312012123120121231201212312012',
     ...customContext,
   });
 
+  // eslint-disable-next-line deprecation/deprecation
   hub.getScope().setSpan(transaction);
 
   return [transaction, hub];
 }
 
 function getSpans(transaction: Transaction): Span[] {
+  // eslint-disable-next-line deprecation/deprecation
   return (transaction as unknown as Span).spanRecorder?.spans as Span[];
 }
 
@@ -120,7 +126,8 @@ describe.skip('net integration', () => {
     expect(spans.length).to.equal(2);
 
     // our span is at index 1 because the transaction itself is at index 0
-    expect(spans[1].description).to.equal(`GET http://localhost:${TEST_SERVER_PORT}/`);
+    expect(spanToJSON(spans[1]).description).to.equal(`GET http://localhost:${TEST_SERVER_PORT}/`);
+    // eslint-disable-next-line deprecation/deprecation
     expect(spans[1].op).to.equal('http.client');
 
     expect(headers['sentry-trace']).not.to.be.empty;
@@ -163,7 +170,8 @@ describe.skip('net integration', () => {
       expect(spans.length).to.equal(2);
 
       // our span is at index 1 because the transaction itself is at index 0
-      expect(spans[1].description).to.equal(`GET http://localhost:${TEST_SERVER_PORT}/`);
+      expect(spanToJSON(spans[1]).description).to.equal(`GET http://localhost:${TEST_SERVER_PORT}/`);
+      // eslint-disable-next-line deprecation/deprecation
       expect(spans[1].op).to.equal('http.client');
 
       expect(headers['sentry-trace']).not.to.be.empty;
@@ -179,7 +187,8 @@ describe.skip('net integration', () => {
       expect(spans.length).to.equal(2);
 
       // our span is at index 1 because the transaction itself is at index 0
-      expect(spans[1].description).to.equal(`GET http://localhost:${TEST_SERVER_PORT}/`);
+      expect(spanToJSON(spans[1]).description).to.equal(`GET http://localhost:${TEST_SERVER_PORT}/`);
+      // eslint-disable-next-line deprecation/deprecation
       expect(spans[1].op).to.equal('http.client');
 
       expect(headers['sentry-trace']).to.be.undefined;
@@ -198,7 +207,8 @@ describe.skip('net integration', () => {
       expect(spans.length).to.equal(2);
 
       // our span is at index 1 because the transaction itself is at index 0
-      expect(spans[1].description).to.equal(`GET http://localhost:${TEST_SERVER_PORT}/`);
+      expect(spanToJSON(spans[1]).description).to.equal(`GET http://localhost:${TEST_SERVER_PORT}/`);
+      // eslint-disable-next-line deprecation/deprecation
       expect(spans[1].op).to.equal('http.client');
 
       expect(headers['sentry-trace']).not.to.be.empty;
@@ -215,7 +225,8 @@ describe.skip('net integration', () => {
       expect(spans.length).to.equal(2);
 
       // our span is at index 1 because the transaction itself is at index 0
-      expect(spans[1].description).to.equal(`GET http://localhost:${TEST_SERVER_PORT}/`);
+      expect(spanToJSON(spans[1]).description).to.equal(`GET http://localhost:${TEST_SERVER_PORT}/`);
+      // eslint-disable-next-line deprecation/deprecation
       expect(spans[1].op).to.equal('http.client');
 
       expect(headers['sentry-trace']).to.be.undefined;
@@ -229,6 +240,7 @@ describe.skip('net integration', () => {
         integrations: [new Net()],
       });
       const headers = await makeRequest();
+      // eslint-disable-next-line deprecation/deprecation
       const transaction = getActiveTransaction();
 
       expect(transaction).to.be.undefined;

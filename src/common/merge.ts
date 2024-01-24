@@ -6,6 +6,7 @@ function removePrivateProperties(event: Event): void {
   for (const span of event.spans || []) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     delete (span as any).spanRecorder;
+    // eslint-disable-next-line deprecation/deprecation
     delete span.transaction;
   }
 }

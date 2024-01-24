@@ -15,8 +15,8 @@ import {
 import { checkPreviousSession, sessionCrashed, unreportedDuringLastSession } from '../sessions';
 
 /** Is object defined and has keys */
-function hasKeys(obj: any): boolean {
-  return obj != undefined && Object.keys(obj).length > 0;
+function hasKeys(obj: object | undefined): boolean {
+  return obj !== undefined && Object.keys(obj).length > 0;
 }
 
 /** Gets a Scope object with user, tags and extra */
@@ -97,7 +97,7 @@ const INTEGRATION_NAME = 'ElectronMinidump';
 
 const electronMinidump: IntegrationFn = () => {
   /** Counter used to ensure no race condition when updating extra params */
-  let updateEpoch: number = 0;
+  let updateEpoch = 0;
   let customRelease: string | undefined;
 
   async function getNativeUploaderEvent(scope: ScopeData): Promise<Event> {
@@ -170,6 +170,9 @@ const electronMinidump: IntegrationFn = () => {
 
   return {
     name: INTEGRATION_NAME,
+    setupOnce() {
+      // noop
+    },
     setup(client: NodeClient) {
       // Mac AppStore builds cannot run the crash reporter due to the sandboxing
       // requirements. In this case, we prevent enabling native crashes entirely.

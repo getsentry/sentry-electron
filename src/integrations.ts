@@ -76,7 +76,7 @@ export function getIntegrations(): Integrations {
  */
 class EmptyIntegration implements Integration {
   /** @inheritDoc */
-  public static id: string = 'EmptyIntegration';
+  public static id = 'EmptyIntegration';
 
   /** @inheritDoc */
   public readonly name: string;

@@ -8,6 +8,9 @@ const INTEGRATION_NAME = 'OnUncaughtException';
 const onUncaughtException: IntegrationFn = () => {
   return {
     name: INTEGRATION_NAME,
+    setupOnce() {
+      // noop
+    },
     setup(client: NodeClient) {
       const options = client.getOptions();
 
