@@ -13,6 +13,7 @@ import { MetricsAggregator } from './integrations/metrics-aggregator';
 import { electronRendererStackParser } from './stack-parse';
 import { makeRendererTransport } from './transport';
 
+// eslint-disable-next-line deprecation/deprecation
 export const defaultIntegrations = [...defaultBrowserIntegrations, new ScopeToMain(), new MetricsAggregator()];
 
 interface ElectronRendererOptions extends BrowserOptions {
@@ -41,7 +42,7 @@ interface ElectronRendererOptions extends BrowserOptions {
 export function init<O extends ElectronRendererOptions>(
   options: ElectronRendererOptions & O = {} as ElectronRendererOptions & O,
   // This parameter name ensures that TypeScript error messages contain a hint for fixing SDK version mismatches
-  originalInit: (if_you_get_a_typescript_error_ensure_sdks_use_version_v7_94_1: O) => void = browserInit,
+  originalInit: (if_you_get_a_typescript_error_ensure_sdks_use_version_v7_98_0: O) => void = browserInit,
 ): void {
   ensureProcess('renderer');
 

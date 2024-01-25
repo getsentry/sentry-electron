@@ -76,7 +76,12 @@ export {
   startInactiveSpan,
   startSpanManual,
   continueTrace,
+  parameterize,
   metrics,
+  functionToStringIntegration,
+  inboundFiltersIntegration,
+  linkedErrorsIntegration,
+  requestDataIntegration,
 } from '@sentry/core';
 export type { SpanStatusType } from '@sentry/core';
 

@@ -34,6 +34,7 @@ export const defaultIntegrations: Integration[] = [
   new AdditionalContext(),
   new Screenshots(),
   new RendererProfiling(),
+  // eslint-disable-next-line deprecation/deprecation
   ...defaultNodeIntegrations.filter(
     (integration) => integration.name !== 'OnUncaughtException' && integration.name !== 'Context',
   ),
