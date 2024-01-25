@@ -5,11 +5,11 @@
   </head>
   <body>
     <script>
-      const { init, Replay } = require('@sentry/electron/renderer');
+      const { init, replayIntegration } = require('@sentry/electron/renderer');
 
       init({
         debug: true,
-        integrations: [new Replay()],
+        integrations: [replayIntegration()],
         replaysSessionSampleRate: 0,
         replaysOnErrorSampleRate: 1,
       });

@@ -73,6 +73,12 @@ export {
   startInactiveSpan,
   startSpanManual,
   continueTrace,
+  // eslint-disable-next-line deprecation/deprecation
+  ModuleMetadata,
+  moduleMetadataIntegration,
+  functionToStringIntegration,
+  inboundFiltersIntegration,
+  parameterize,
 } from '@sentry/core';
 export type { SpanStatusType } from '@sentry/core';
 
@@ -94,10 +100,22 @@ export {
   // eslint-disable-next-line deprecation/deprecation
   lastEventId,
   showReportDialog,
+  // eslint-disable-next-line deprecation/deprecation
   Replay,
+  replayIntegration,
+  replayCanvasIntegration,
+  feedbackIntegration,
+  sendFeedback,
+  breadcrumbsIntegration,
+  dedupeIntegration,
+  globalHandlersIntegration,
+  httpContextIntegration,
+  linkedErrorsIntegration,
+  browserApiErrorsIntegration,
 } from '@sentry/browser';
 // eslint-disable-next-line deprecation/deprecation
 export type { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
 
+// eslint-disable-next-line deprecation/deprecation
 export const Integrations = { ...BrowserIntegrations, ...ElectronRendererIntegrations };
 export { init, defaultIntegrations } from './sdk';
