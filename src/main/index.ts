@@ -85,6 +85,20 @@ export {
 } from '@sentry/core';
 export type { SpanStatusType } from '@sentry/core';
 
+export { electronBreadcrumbsIntegration } from './integrations/electron-breadcrumbs';
+export { onUncaughtExceptionIntegration } from './integrations/onuncaughtexception';
+export { mainContextIntegration } from './integrations/main-context';
+export { sentryMinidumpIntegration } from './integrations/sentry-minidump';
+export { electronMinidumpIntegration } from './integrations/electron-minidump';
+export { preloadInjectionIntegration } from './integrations/preload-injection';
+export { mainProcessSessionIntegration } from './integrations/main-process-session';
+export { browserWindowSessionIntegration } from './integrations/browser-window-session';
+export { additionalContextIntegration } from './integrations/additional-context';
+export { electronNetIntegration } from './integrations/net-breadcrumbs';
+export { childProcessIntegration } from './integrations/child-process';
+export { screenshotsIntegration } from './integrations/screenshots';
+export { rendererProfileFromIpc } from './integrations/renderer-profiling';
+
 export type { NodeOptions } from '@sentry/node';
 // eslint-disable-next-line deprecation/deprecation
 export { flush, close, NodeClient, lastEventId } from '@sentry/node';

@@ -1,5 +1,5 @@
-import { convertIntegrationFnToClass } from '@sentry/core';
-import { Event, IntegrationFn, Profile } from '@sentry/types';
+import { convertIntegrationFnToClass, defineIntegration } from '@sentry/core';
+import { Event, Profile } from '@sentry/types';
 import { forEachEnvelopeItem, LRUMap } from '@sentry/utils';
 import { app } from 'electron';
 
@@ -56,7 +56,10 @@ function addJsProfilingHeader(
 
 const INTEGRATION_NAME = 'RendererProfiling';
 
-const rendererProfiling: IntegrationFn = () => {
+/**
+ * Injects 'js-profiling' document policy headers and ensures that profiles get forwarded with transactions
+ */
+export const rendererProfilingIntegration = defineIntegration(() => {
   return {
     name: INTEGRATION_NAME,
     setupOnce() {
@@ -122,10 +125,12 @@ const rendererProfiling: IntegrationFn = () => {
       });
     },
   };
-};
+});
 
 /**
  * Injects 'js-profiling' document policy headers and ensures that profiles get forwarded with transactions
+ *
+ * @deprecated Use `rendererProfilingIntegration()` instead
  */
 // eslint-disable-next-line deprecation/deprecation
-export const RendererProfiling = convertIntegrationFnToClass(INTEGRATION_NAME, rendererProfiling);
+export const RendererProfiling = convertIntegrationFnToClass(INTEGRATION_NAME, rendererProfilingIntegration);

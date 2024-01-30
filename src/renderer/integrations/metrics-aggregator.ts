@@ -6,7 +6,12 @@ import { ElectronRendererMetricsAggregator } from '../metrics';
 
 const INTEGRATION_NAME = 'MetricsAggregator';
 
-const metricsAggregatorIntegration: IntegrationFn = () => {
+/**
+ * Enables Sentry metrics monitoring.
+ *
+ * @experimental This API is experimental and might having breaking changes in the future.
+ */
+export const metricsAggregatorIntegration: IntegrationFn = () => {
   return {
     name: INTEGRATION_NAME,
     setupOnce() {
@@ -22,6 +27,8 @@ const metricsAggregatorIntegration: IntegrationFn = () => {
  * Enables Sentry metrics monitoring.
  *
  * @experimental This API is experimental and might having breaking changes in the future.
+ *
+ * @deprecated Use `metricsAggregatorIntegration()` instead
  */
 // eslint-disable-next-line deprecation/deprecation
 export const MetricsAggregator = convertIntegrationFnToClass(INTEGRATION_NAME, metricsAggregatorIntegration);

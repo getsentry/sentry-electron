@@ -1,13 +1,13 @@
 const path = require('path');
 
 const { app, BrowserWindow } = require('electron');
-const { init, Integrations } = require('@sentry/electron');
+const { init, childProcessIntegration } = require('@sentry/electron');
 
 init({
   dsn: '__DSN__',
   debug: true,
   autoSessionTracking: false,
-  integrations: [new Integrations.ChildProcess({ events: ['killed'] })],
+  integrations: [childProcessIntegration({ events: ['killed'] })],
   onFatalError: () => {},
 });
 

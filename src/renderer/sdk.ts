@@ -8,13 +8,17 @@ import { logger } from '@sentry/utils';
 
 import { ensureProcess, RendererProcessAnrOptions } from '../common';
 import { enableAnrRendererMessages } from './anr';
-import { ScopeToMain } from './integrations';
-import { MetricsAggregator } from './integrations/metrics-aggregator';
+import { metricsAggregatorIntegration } from './integrations/metrics-aggregator';
+import { scopeToMainIntegration } from './integrations/scope-to-main';
 import { electronRendererStackParser } from './stack-parse';
 import { makeRendererTransport } from './transport';
 
-// eslint-disable-next-line deprecation/deprecation
-export const defaultIntegrations = [...defaultBrowserIntegrations, new ScopeToMain(), new MetricsAggregator()];
+export const defaultIntegrations = [
+  // eslint-disable-next-line deprecation/deprecation
+  ...defaultBrowserIntegrations,
+  scopeToMainIntegration(),
+  metricsAggregatorIntegration(),
+];
 
 interface ElectronRendererOptions extends BrowserOptions {
   /**

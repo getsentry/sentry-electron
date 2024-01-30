@@ -2,11 +2,12 @@ import {
   addBreadcrumb,
   /* eslint-disable deprecation/deprecation */
   convertIntegrationFnToClass,
+  defineIntegration,
   getClient,
   getCurrentScope,
   getDynamicSamplingContextFromClient,
 } from '@sentry/core';
-import { DynamicSamplingContext, IntegrationFn, Span, TracePropagationTargets } from '@sentry/types';
+import { DynamicSamplingContext, Span, TracePropagationTargets } from '@sentry/types';
 import {
   dynamicSamplingContextToSentryBaggageHeader,
   fill,
@@ -20,7 +21,7 @@ import * as urlModule from 'url';
 
 type ShouldTraceFn = (method: string, url: string) => boolean;
 
-interface NetOptions {
+export interface NetOptions {
   /**
    * Whether breadcrumbs should be captured for net requests
    *
@@ -109,7 +110,6 @@ type RequestOptions = string | ClientRequestConstructorOptions;
 type RequestMethod = (opt: RequestOptions) => ClientRequest;
 type WrappedRequestMethodFactory = (original: RequestMethod) => RequestMethod;
 
-/** */
 function createWrappedRequestFactory(
   options: NetOptions,
   tracePropagationTargets: TracePropagationTargets | undefined,
@@ -273,7 +273,10 @@ function addRequestBreadcrumb(
 
 const INTEGRATION_NAME = 'Net';
 
-const net: IntegrationFn = (options: NetOptions = {}) => {
+/**
+ * Electron 'net' module integration
+ */
+export const electronNetIntegration = defineIntegration((options: NetOptions = {}) => {
   return {
     name: INTEGRATION_NAME,
     setupOnce() {
@@ -290,8 +293,12 @@ const net: IntegrationFn = (options: NetOptions = {}) => {
       fill(electronNet, 'request', createWrappedRequestFactory(options, clientOptions?.tracePropagationTargets));
     },
   };
-};
+});
 
-/** http module integration */
+/**
+ * Electron 'net' module integration
+ *
+ * @deprecated Use `electronNetIntegration()` instead
+ */
 // eslint-disable-next-line deprecation/deprecation
-export const Net = convertIntegrationFnToClass(INTEGRATION_NAME, net);
+export const Net = convertIntegrationFnToClass(INTEGRATION_NAME, electronNetIntegration);

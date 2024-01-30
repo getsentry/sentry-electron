@@ -1,5 +1,4 @@
-import { convertIntegrationFnToClass } from '@sentry/core';
-import { IntegrationFn } from '@sentry/types';
+import { convertIntegrationFnToClass, defineIntegration } from '@sentry/core';
 import { app, BrowserWindow } from 'electron';
 
 import { ELECTRON_MAJOR_VERSION } from '../electron-normalize';
@@ -18,7 +17,7 @@ function focusedWindow(): boolean {
   return false;
 }
 
-interface Options {
+export interface Options {
   /**
    * Number of seconds to wait before ending a session after the app loses focus.
    *
@@ -32,7 +31,12 @@ type SessionState = { name: 'active' } | { name: 'inactive' } | { name: 'timeout
 
 const INTEGRATION_NAME = 'BrowserWindowSession';
 
-const browserWindowSession: IntegrationFn = (options: Options = {}) => {
+/**
+ * Tracks sessions as BrowserWindows focus.
+ *
+ * Supports Electron >= v12
+ */
+export const browserWindowSessionIntegration = defineIntegration((options: Options = {}) => {
   if (ELECTRON_MAJOR_VERSION < 12) {
     throw new Error('BrowserWindowSession requires Electron >= v12');
   }
@@ -100,12 +104,14 @@ const browserWindowSession: IntegrationFn = (options: Options = {}) => {
       endSessionOnExit();
     },
   };
-};
+});
 
 /**
- * Tracks sessions as BrowserWindows focused.
+ * Tracks sessions as BrowserWindows focus.
  *
  * Supports Electron >= v12
+ *
+ * @deprecated Use `browserWindowSessionIntegration()` instead
  */
 // eslint-disable-next-line deprecation/deprecation
-export const BrowserWindowSession = convertIntegrationFnToClass(INTEGRATION_NAME, browserWindowSession);
+export const BrowserWindowSession = convertIntegrationFnToClass(INTEGRATION_NAME, browserWindowSessionIntegration);

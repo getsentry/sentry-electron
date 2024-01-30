@@ -6,34 +6,32 @@ import { Integration, Options } from '@sentry/types';
 import { Session, session, WebContents } from 'electron';
 
 import { getDefaultEnvironment, getDefaultReleaseName, getSdkInfo } from './context';
-import {
-  AdditionalContext,
-  ChildProcess,
-  ElectronBreadcrumbs,
-  MainContext,
-  MainProcessSession,
-  Net,
-  OnUncaughtException,
-  PreloadInjection,
-  RendererProfiling,
-  Screenshots,
-  SentryMinidump,
-} from './integrations';
+import { additionalContextIntegration } from './integrations/additional-context';
+import { childProcessIntegration } from './integrations/child-process';
+import { electronBreadcrumbsIntegration } from './integrations/electron-breadcrumbs';
+import { mainContextIntegration } from './integrations/main-context';
+import { mainProcessSessionIntegration } from './integrations/main-process-session';
+import { electronNetIntegration } from './integrations/net-breadcrumbs';
+import { onUncaughtExceptionIntegration } from './integrations/onuncaughtexception';
+import { preloadInjectionIntegration } from './integrations/preload-injection';
+import { rendererProfilingIntegration } from './integrations/renderer-profiling';
+import { screenshotsIntegration } from './integrations/screenshots';
+import { sentryMinidumpIntegration } from './integrations/sentry-minidump';
 import { configureIPC } from './ipc';
 import { defaultStackParser } from './stack-parse';
 import { ElectronOfflineTransportOptions, makeElectronOfflineTransport } from './transports/electron-offline-net';
 
 export const defaultIntegrations: Integration[] = [
-  new SentryMinidump(),
-  new ElectronBreadcrumbs(),
-  new Net(),
-  new MainContext(),
-  new ChildProcess(),
-  new OnUncaughtException(),
-  new PreloadInjection(),
-  new AdditionalContext(),
-  new Screenshots(),
-  new RendererProfiling(),
+  sentryMinidumpIntegration(),
+  electronBreadcrumbsIntegration(),
+  electronNetIntegration(),
+  mainContextIntegration(),
+  childProcessIntegration(),
+  onUncaughtExceptionIntegration(),
+  preloadInjectionIntegration(),
+  additionalContextIntegration(),
+  screenshotsIntegration(),
+  rendererProfilingIntegration(),
   // eslint-disable-next-line deprecation/deprecation
   ...defaultNodeIntegrations.filter(
     (integration) => integration.name !== 'OnUncaughtException' && integration.name !== 'Context',
@@ -118,7 +116,7 @@ export function init(userOptions: ElectronMainOptions): void {
   // Unless autoSessionTracking is specifically disabled, we track sessions as the
   // lifetime of the Electron main process
   if (options.autoSessionTracking !== false) {
-    defaults.push(new MainProcessSession());
+    defaults.push(mainProcessSessionIntegration());
     // We don't want nodejs autoSessionTracking
     options.autoSessionTracking = false;
   }

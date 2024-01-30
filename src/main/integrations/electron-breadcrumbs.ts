@@ -1,6 +1,6 @@
-import { addBreadcrumb, convertIntegrationFnToClass } from '@sentry/core';
+import { addBreadcrumb, convertIntegrationFnToClass, defineIntegration } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
-import { Breadcrumb, IntegrationFn } from '@sentry/types';
+import { Breadcrumb } from '@sentry/types';
 import { app, autoUpdater, BrowserWindow, powerMonitor, screen, WebContents } from 'electron';
 
 import { onBrowserWindowCreated, onWebContentsCreated, whenAppReady } from '../electron-normalize';
@@ -11,7 +11,7 @@ import { ElectronMainOptions } from '../sdk';
 type EventFunction = (name: string) => boolean;
 type EventTypes = boolean | string[] | EventFunction | undefined;
 
-interface ElectronBreadcrumbsOptions<T> {
+export interface ElectronBreadcrumbsOptions<T> {
   /**
    * app events
    *
@@ -105,97 +105,106 @@ export function normalizeOptions(
 
 const INTEGRATION_NAME = 'ElectronBreadcrumbs';
 
-const electronBreadcrumbs: IntegrationFn = (userOptions: Partial<ElectronBreadcrumbsOptions<EventTypes>> = {}) => {
-  const options: ElectronBreadcrumbsOptions<EventFunction | false> = {
-    ...DEFAULT_OPTIONS,
-    ...normalizeOptions(userOptions),
-  };
+/**
+ * Adds breadcrumbs for Electron events.
+ */
+export const electronBreadcrumbsIntegration = defineIntegration(
+  (userOptions: Partial<ElectronBreadcrumbsOptions<EventTypes>> = {}) => {
+    const options: ElectronBreadcrumbsOptions<EventFunction | false> = {
+      ...DEFAULT_OPTIONS,
+      ...normalizeOptions(userOptions),
+    };
 
-  function patchEventEmitter(
-    emitter: NodeJS.EventEmitter | WebContents | BrowserWindow,
-    category: string,
-    shouldCapture: EventFunction | undefined | false,
-    id?: number | undefined,
-  ): void {
-    const emit = emitter.emit.bind(emitter) as (event: string, ...args: unknown[]) => boolean;
+    function patchEventEmitter(
+      emitter: NodeJS.EventEmitter | WebContents | BrowserWindow,
+      category: string,
+      shouldCapture: EventFunction | undefined | false,
+      id?: number | undefined,
+    ): void {
+      const emit = emitter.emit.bind(emitter) as (event: string, ...args: unknown[]) => boolean;
 
-    emitter.emit = (event: string, ...args: unknown[]) => {
-      if (shouldCapture && shouldCapture(event)) {
-        const breadcrumb: Breadcrumb = {
-          category: 'electron',
-          message: `${category}.${event}`,
-          timestamp: new Date().getTime() / 1_000,
-          type: 'ui',
-        };
+      emitter.emit = (event: string, ...args: unknown[]) => {
+        if (shouldCapture && shouldCapture(event)) {
+          const breadcrumb: Breadcrumb = {
+            category: 'electron',
+            message: `${category}.${event}`,
+            timestamp: new Date().getTime() / 1_000,
+            type: 'ui',
+          };
 
-        if (id) {
-          breadcrumb.data = { ...getRendererProperties(id) };
+          if (id) {
+            breadcrumb.data = { ...getRendererProperties(id) };
 
-          if (!options.captureWindowTitles && breadcrumb.data?.title) {
-            delete breadcrumb.data?.title;
+            if (!options.captureWindowTitles && breadcrumb.data?.title) {
+              delete breadcrumb.data?.title;
+            }
           }
+
+          addBreadcrumb(breadcrumb);
         }
 
-        addBreadcrumb(breadcrumb);
-      }
+        return emit(event, ...args);
+      };
+    }
 
-      return emit(event, ...args);
+    return {
+      name: INTEGRATION_NAME,
+      setupOnce() {
+        // noop
+      },
+      setup(client: NodeClient) {
+        const clientOptions = client.getOptions() as ElectronMainOptions | undefined;
+
+        trackRendererProperties();
+
+        whenAppReady.then(
+          () => {
+            // We can't access these until app 'ready'
+            if (options.screen) {
+              patchEventEmitter(screen, 'screen', options.screen);
+            }
+
+            if (options.powerMonitor) {
+              patchEventEmitter(powerMonitor, 'powerMonitor', options.powerMonitor);
+            }
+          },
+          () => {
+            // ignore
+          },
+        );
+
+        if (options.app) {
+          patchEventEmitter(app, 'app', options.app);
+        }
+
+        if (options.autoUpdater) {
+          patchEventEmitter(autoUpdater, 'autoUpdater', options.autoUpdater);
+        }
+
+        if (options.browserWindow) {
+          onBrowserWindowCreated((window) => {
+            const id = window.webContents.id;
+            const windowName = clientOptions?.getRendererName?.(window.webContents) || 'window';
+            patchEventEmitter(window, windowName, options.browserWindow, id);
+          });
+        }
+
+        if (options.webContents) {
+          onWebContentsCreated((contents) => {
+            const id = contents.id;
+            const webContentsName = clientOptions?.getRendererName?.(contents) || 'renderer';
+            patchEventEmitter(contents, webContentsName, options.webContents, id);
+          });
+        }
+      },
     };
-  }
+  },
+);
 
-  return {
-    name: INTEGRATION_NAME,
-    setupOnce() {
-      // noop
-    },
-    setup(client: NodeClient) {
-      const clientOptions = client.getOptions() as ElectronMainOptions | undefined;
-
-      trackRendererProperties();
-
-      whenAppReady.then(
-        () => {
-          // We can't access these until app 'ready'
-          if (options.screen) {
-            patchEventEmitter(screen, 'screen', options.screen);
-          }
-
-          if (options.powerMonitor) {
-            patchEventEmitter(powerMonitor, 'powerMonitor', options.powerMonitor);
-          }
-        },
-        () => {
-          // ignore
-        },
-      );
-
-      if (options.app) {
-        patchEventEmitter(app, 'app', options.app);
-      }
-
-      if (options.autoUpdater) {
-        patchEventEmitter(autoUpdater, 'autoUpdater', options.autoUpdater);
-      }
-
-      if (options.browserWindow) {
-        onBrowserWindowCreated((window) => {
-          const id = window.webContents.id;
-          const windowName = clientOptions?.getRendererName?.(window.webContents) || 'window';
-          patchEventEmitter(window, windowName, options.browserWindow, id);
-        });
-      }
-
-      if (options.webContents) {
-        onWebContentsCreated((contents) => {
-          const id = contents.id;
-          const webContentsName = clientOptions?.getRendererName?.(contents) || 'renderer';
-          patchEventEmitter(contents, webContentsName, options.webContents, id);
-        });
-      }
-    },
-  };
-};
-
-/** Adds breadcrumbs for Electron events. */
+/**
+ * Adds breadcrumbs for Electron events.
+ *
+ * @deprecated Use `electronBreadcrumbsIntegration()` instead
+ */
 // eslint-disable-next-line deprecation/deprecation
-export const ElectronBreadcrumbs = convertIntegrationFnToClass(INTEGRATION_NAME, electronBreadcrumbs);
+export const ElectronBreadcrumbs = convertIntegrationFnToClass(INTEGRATION_NAME, electronBreadcrumbsIntegration);

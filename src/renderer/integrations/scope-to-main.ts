@@ -1,12 +1,14 @@
-import { convertIntegrationFnToClass, getCurrentScope } from '@sentry/core';
-import { IntegrationFn } from '@sentry/types';
+import { convertIntegrationFnToClass, defineIntegration, getCurrentScope } from '@sentry/core';
 import { normalize } from '@sentry/utils';
 
 import { getIPC } from '../ipc';
 
 const INTEGRATION_NAME = 'ScopeToMain';
 
-const scopeToMain: IntegrationFn = () => {
+/**
+ * Passes scope changes to the main process.
+ */
+export const scopeToMainIntegration = defineIntegration(() => {
   return {
     name: INTEGRATION_NAME,
     setupOnce() {
@@ -25,10 +27,12 @@ const scopeToMain: IntegrationFn = () => {
       }
     },
   };
-};
+});
 
 /**
  * Passes scope changes to the main process.
+ *
+ * @deprecated Use `scopeToMainIntegration()` instead
  */
 // eslint-disable-next-line deprecation/deprecation
-export const ScopeToMain = convertIntegrationFnToClass(INTEGRATION_NAME, scopeToMain);
+export const ScopeToMain = convertIntegrationFnToClass(INTEGRATION_NAME, scopeToMainIntegration);
