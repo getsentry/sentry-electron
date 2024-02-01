@@ -1,7 +1,7 @@
 const path = require('path');
 
 const { app, BrowserWindow } = require('electron');
-const { init, electronMinidumpIntegration, mainProcessSessionIntegration } = require('@sentry/electron');
+const { init, electronMinidumpIntegration, mainProcessSessionIntegration } = require('@sentry/electron/main');
 
 app.commandLine.appendSwitch('enable-crashpad');
 
