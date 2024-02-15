@@ -1,3 +1,4 @@
+/* eslint-disable deprecation/deprecation */
 import { Integration } from '@sentry/types';
 import { dynamicRequire } from '@sentry/utils';
 

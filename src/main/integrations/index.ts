@@ -1,3 +1,4 @@
+/* eslint-disable deprecation/deprecation */
 export { ElectronBreadcrumbs } from './electron-breadcrumbs';
 export { OnUncaughtException } from './onuncaughtexception';
 export { MainContext } from './main-context';

@@ -1,6 +1,6 @@
-import { applyScopeDataToEvent, convertIntegrationFnToClass, getCurrentScope } from '@sentry/core';
+import { applyScopeDataToEvent, convertIntegrationFnToClass, defineIntegration, getCurrentScope } from '@sentry/core';
 import { NodeClient, NodeOptions } from '@sentry/node';
-import { Event, IntegrationFn, ScopeData } from '@sentry/types';
+import { Event, ScopeData } from '@sentry/types';
 import { logger, makeDsn, SentryError, uuid4 } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
@@ -95,7 +95,10 @@ export function minidumpUrlFromDsn(dsn: string): string | undefined {
 
 const INTEGRATION_NAME = 'ElectronMinidump';
 
-const electronMinidump: IntegrationFn = () => {
+/**
+ * Sends minidumps via the Electron built-in uploader.
+ */
+export const electronMinidumpIntegration = defineIntegration(() => {
   /** Counter used to ensure no race condition when updating extra params */
   let updateEpoch = 0;
   let customRelease: string | undefined;
@@ -212,8 +215,12 @@ const electronMinidump: IntegrationFn = () => {
       }, logger.error);
     },
   };
-};
+});
 
-/** Sends minidumps via the Electron built-in uploader. */
+/**
+ * Sends minidumps via the Electron built-in uploader.
+ *
+ * @deprecated Use `electronMinidumpIntegration()` instead
+ */
 // eslint-disable-next-line deprecation/deprecation
-export const ElectronMinidump = convertIntegrationFnToClass(INTEGRATION_NAME, electronMinidump);
+export const ElectronMinidump = convertIntegrationFnToClass(INTEGRATION_NAME, electronMinidumpIntegration);

@@ -1,3 +1,4 @@
+/* eslint-disable deprecation/deprecation */
 import { expect, should, use } from 'chai';
 import * as http from 'http';
 import chaiAsPromised = require('chai-as-promised');

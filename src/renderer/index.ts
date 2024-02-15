@@ -83,6 +83,9 @@ export {
 } from '@sentry/core';
 export type { SpanStatusType } from '@sentry/core';
 
+export { scopeToMainIntegration } from './integrations/scope-to-main';
+export { metricsAggregatorIntegration } from './integrations/metrics-aggregator';
+
 import { metrics as coreMetrics } from '@sentry/core';
 
 import { MetricsAggregator } from './integrations/metrics-aggregator';

@@ -1,12 +1,12 @@
-import { addBreadcrumb, captureMessage, convertIntegrationFnToClass } from '@sentry/core';
+import { addBreadcrumb, captureMessage, convertIntegrationFnToClass, defineIntegration } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
-import { IntegrationFn, SeverityLevel } from '@sentry/types';
+import { SeverityLevel } from '@sentry/types';
 
 import { OrBool } from '../../common/types';
 import { EXIT_REASONS, ExitReason, onChildProcessGone, onRendererProcessGone } from '../electron-normalize';
 import { ElectronMainOptions } from '../sdk';
 
-interface ChildProcessOptions {
+export interface ChildProcessOptions {
   /** Child process events that generate breadcrumbs */
   breadcrumbs: Readonly<ExitReason[]>;
   /** Child process events that generate Sentry events */
@@ -38,7 +38,10 @@ function getMessageAndSeverity(reason: ExitReason, proc?: string): { message: st
 
 const INTEGRATION_NAME = 'ChildProcess';
 
-const childProcess: IntegrationFn = (userOptions: Partial<OrBool<ChildProcessOptions>> = {}) => {
+/**
+ * Adds breadcrumbs for Electron child process events.
+ */
+export const childProcessIntegration = defineIntegration((userOptions: Partial<OrBool<ChildProcessOptions>> = {}) => {
   const { breadcrumbs, events } = userOptions;
 
   const options: ChildProcessOptions = {
@@ -102,8 +105,12 @@ const childProcess: IntegrationFn = (userOptions: Partial<OrBool<ChildProcessOpt
       }
     },
   };
-};
+});
 
-/** Adds breadcrumbs for Electron events. */
+/**
+ * Adds breadcrumbs for Electron child process events.
+ *
+ * @deprecated Use `childProcessIntegration()` instead
+ */
 // eslint-disable-next-line deprecation/deprecation
-export const ChildProcess = convertIntegrationFnToClass(INTEGRATION_NAME, childProcess);
+export const ChildProcess = convertIntegrationFnToClass(INTEGRATION_NAME, childProcessIntegration);

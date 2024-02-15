@@ -1,5 +1,5 @@
-import { convertIntegrationFnToClass } from '@sentry/core';
-import { DeviceContext, IntegrationFn } from '@sentry/types';
+import { convertIntegrationFnToClass, defineIntegration } from '@sentry/core';
+import { DeviceContext } from '@sentry/types';
 import { app, screen as electronScreen } from 'electron';
 import { CpuInfo, cpus } from 'os';
 
@@ -22,7 +22,10 @@ const DEFAULT_OPTIONS: AdditionalContextOptions = {
 
 const INTEGRATION_NAME = 'AdditionalContext';
 
-const additionalContext: IntegrationFn = (userOptions: Partial<AdditionalContextOptions> = {}) => {
+/**
+ * Adds additional Electron context to events
+ */
+export const additionalContextIntegration = defineIntegration((userOptions: Partial<AdditionalContextOptions> = {}) => {
   const _lazyDeviceContext: DeviceContext = {};
 
   const options = {
@@ -95,8 +98,12 @@ const additionalContext: IntegrationFn = (userOptions: Partial<AdditionalContext
       return mergeEvents(event, { contexts: { device } });
     },
   };
-};
+});
 
-/** Adds Electron context to events and normalises paths. */
+/**
+ * Adds additional Electron context to events
+ *
+ * @deprecated Use `additionalContextIntegration()z instead
+ */
 // eslint-disable-next-line deprecation/deprecation
-export const AdditionalContext = convertIntegrationFnToClass(INTEGRATION_NAME, additionalContext);
+export const AdditionalContext = convertIntegrationFnToClass(INTEGRATION_NAME, additionalContextIntegration);

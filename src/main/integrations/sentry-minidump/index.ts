@@ -1,6 +1,13 @@
-import { applyScopeDataToEvent, captureEvent, convertIntegrationFnToClass, getCurrentScope, Scope } from '@sentry/core';
+import {
+  applyScopeDataToEvent,
+  captureEvent,
+  convertIntegrationFnToClass,
+  defineIntegration,
+  getCurrentScope,
+  Scope,
+} from '@sentry/core';
 import { NodeClient } from '@sentry/node';
-import { Event, IntegrationFn, ScopeData } from '@sentry/types';
+import { Event, ScopeData } from '@sentry/types';
 import { logger, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
@@ -21,7 +28,10 @@ interface PreviousRun {
 
 const INTEGRATION_NAME = 'SentryMinidump';
 
-const sentryMinidump: IntegrationFn = () => {
+/**
+ * Sends minidumps via the Sentry uploader
+ */
+export const sentryMinidumpIntegration = defineIntegration(() => {
   /** Store to persist context information beyond application crashes. */
   let scopeStore: BufferedWriteStore<PreviousRun> | undefined;
   // We need to store the scope in a variable here so it can be attached to minidumps
@@ -232,8 +242,12 @@ const sentryMinidump: IntegrationFn = () => {
         .catch((error) => logger.error(error));
     },
   };
-};
+});
 
-/** Sends minidumps via the Sentry uploader */
+/**
+ * Sends minidumps via the Sentry uploader
+ *
+ * @deprecated Use `sentryMinidumpIntegration()` instead
+ */
 // eslint-disable-next-line deprecation/deprecation
-export const SentryMinidump = convertIntegrationFnToClass(INTEGRATION_NAME, sentryMinidump);
+export const SentryMinidump = convertIntegrationFnToClass(INTEGRATION_NAME, sentryMinidumpIntegration);

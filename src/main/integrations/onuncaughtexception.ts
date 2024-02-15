@@ -1,11 +1,12 @@
-import { convertIntegrationFnToClass, getCurrentScope } from '@sentry/core';
+import { convertIntegrationFnToClass, defineIntegration, getCurrentScope } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
-import { Event, IntegrationFn } from '@sentry/types';
+import { Event } from '@sentry/types';
 import { dialog } from 'electron';
 
 const INTEGRATION_NAME = 'OnUncaughtException';
 
-const onUncaughtException: IntegrationFn = () => {
+/** Capture unhandled errors. */
+export const onUncaughtExceptionIntegration = defineIntegration(() => {
   return {
     name: INTEGRATION_NAME,
     setupOnce() {
@@ -60,8 +61,12 @@ const onUncaughtException: IntegrationFn = () => {
       });
     },
   };
-};
+});
 
-/** Capture unhandled errors. */
+/**
+ * Capture unhandled errors.
+ *
+ * @deprecated Use `onUncaughtExceptionIntegration()` instead
+ */
 // eslint-disable-next-line deprecation/deprecation
-export const OnUncaughtException = convertIntegrationFnToClass(INTEGRATION_NAME, onUncaughtException);
+export const OnUncaughtException = convertIntegrationFnToClass(INTEGRATION_NAME, onUncaughtExceptionIntegration);
