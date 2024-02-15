@@ -9,7 +9,7 @@
       const {
         addTracingExtensions,
         init,
-        BrowserProfilingIntegration,
+        browserProfilingIntegration,
         startSpan,
       } = require('@sentry/electron/renderer');
 
@@ -17,7 +17,7 @@
 
       init({
         debug: true,
-        integrations: [new BrowserProfilingIntegration()],
+        integrations: [browserProfilingIntegration()],
         tracesSampleRate: 1,
         profilesSampleRate: 1,
       });

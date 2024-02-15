@@ -5,11 +5,11 @@
   </head>
   <body>
     <script>
-      const { init, BrowserTracing } = require('@sentry/electron/renderer');
+      const { init, browserTracingIntegration } = require('@sentry/electron/renderer');
 
       init({
         debug: true,
-        integrations: [new BrowserTracing()],
+        integrations: [browserTracingIntegration()],
         tracesSampleRate: 1,
       });
     </script>
