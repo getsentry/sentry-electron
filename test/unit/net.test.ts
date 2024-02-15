@@ -55,6 +55,7 @@ function mockAsyncContextStrategy(getHub: () => Hub): void {
 }
 
 function createHubOnScope(customOptions: Partial<ClientOptions> = {}): Hub {
+  // eslint-disable-next-line deprecation/deprecation
   const hub = new Hub();
   mockAsyncContextStrategy(() => hub);
 

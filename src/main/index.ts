@@ -62,6 +62,7 @@ export {
   setTag,
   setTags,
   setUser,
+  // eslint-disable-next-line deprecation/deprecation
   spanStatusfromHttpCode,
   // eslint-disable-next-line deprecation/deprecation
   trace,

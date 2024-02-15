@@ -59,6 +59,7 @@ export {
   setTag,
   setTags,
   setUser,
+  // eslint-disable-next-line deprecation/deprecation
   spanStatusfromHttpCode,
   // eslint-disable-next-line deprecation/deprecation
   trace,
@@ -95,7 +96,9 @@ export const metrics = {
 export {
   addTracingExtensions,
   BrowserClient,
+  // eslint-disable-next-line deprecation/deprecation
   BrowserTracing,
+  // eslint-disable-next-line deprecation/deprecation
   BrowserProfilingIntegration,
   // eslint-disable-next-line deprecation/deprecation
   lastEventId,
@@ -112,6 +115,8 @@ export {
   httpContextIntegration,
   linkedErrorsIntegration,
   browserApiErrorsIntegration,
+  browserTracingIntegration,
+  browserProfilingIntegration,
 } from '@sentry/browser';
 // eslint-disable-next-line deprecation/deprecation
 export type { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
