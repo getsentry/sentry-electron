@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 4.19.0
+
+- feat: Update from [v7.101.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.101.0) to
+  [v7.102.1](https://github.com/getsentry/sentry-javascript/releases/tag/7.102.1) of JavaScript SDKs (#823)
+- feat: Deprecate class based integrations in favor of new functional style (#822)
+
 ## 4.18.0
 
 - feat: Update from [v7.92.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.92.0) to
