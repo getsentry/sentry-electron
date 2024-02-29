@@ -99,6 +99,7 @@ export { electronNetIntegration } from './integrations/net-breadcrumbs';
 export { childProcessIntegration } from './integrations/child-process';
 export { screenshotsIntegration } from './integrations/screenshots';
 export { rendererProfileFromIpc } from './integrations/renderer-profiling';
+export { anrIntegration } from './integrations/anr';
 
 export type { NodeOptions } from '@sentry/node';
 // eslint-disable-next-line deprecation/deprecation
@@ -106,6 +107,10 @@ export { flush, close, NodeClient, lastEventId } from '@sentry/node';
 
 export { makeElectronTransport } from './transports/electron-net';
 export { makeElectronOfflineTransport } from './transports/electron-offline-net';
+
+/**
+ * @deprecated All integrations are now exported from the root of the package.
+ */
 export const Integrations = { ...NodeIntegrations, ...ElectronMainIntegrations };
 
 export type { ElectronMainOptions } from './sdk';
