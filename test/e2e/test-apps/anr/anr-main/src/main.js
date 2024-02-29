@@ -1,13 +1,13 @@
 const crypto = require('crypto');
 
 const { app } = require('electron');
-const { init, Integrations } = require('@sentry/electron/main');
+const { init, anrIntegration } = require('@sentry/electron/main');
 
 init({
   dsn: '__DSN__',
   debug: true,
   onFatalError: () => {},
-  integrations: [new Integrations.Anr({ captureStackTrace: true, anrThreshold: 1000 })],
+  integrations: [anrIntegration({ captureStackTrace: true, anrThreshold: 1000 })],
 });
 
 function longWork() {

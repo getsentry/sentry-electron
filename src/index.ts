@@ -207,11 +207,11 @@ export async function flush(timeout?: number): Promise<boolean> {
  * @deprecated Use `Anr` integration instead.
  *
  * ```js
- * import { init, Integrations } from '@sentry/electron';
+ * import { init, anrIntegration } from '@sentry/electron';
  *
  * init({
  *   dsn: "__DSN__",
- *   integrations: [new Integrations.Anr({ captureStackTrace: true })],
+ *   integrations: [anrIntegration({ captureStackTrace: true })],
  * });
  * ```
  */

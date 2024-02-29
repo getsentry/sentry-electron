@@ -186,15 +186,16 @@ interface LegacyOptions {
  * @deprecated Use `Anr` integration instead.
  *
  * ```js
- * import { init, Integrations } from '@sentry/electron';
+ * import { init, anrIntegration } from '@sentry/electron';
  *
  * init({
  *   dsn: "__DSN__",
- *   integrations: [new Integrations.Anr({ captureStackTrace: true })],
+ *   integrations: [anrIntegration({ captureStackTrace: true })],
  * });
  * ```
  */
 export function enableMainProcessAnrDetection(options: Partial<LegacyOptions> = {}): Promise<void> {
+  // eslint-disable-next-line deprecation/deprecation
   const integration = new Anr(options);
   const client = getClient() as NodeClient;
   integration.setup?.(client);

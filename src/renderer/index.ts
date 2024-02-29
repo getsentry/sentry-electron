@@ -124,6 +124,9 @@ export {
 // eslint-disable-next-line deprecation/deprecation
 export type { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
 
+/**
+ * @deprecated All integrations are now exported from the root of the package.
+ */
 // eslint-disable-next-line deprecation/deprecation
 export const Integrations = { ...BrowserIntegrations, ...ElectronRendererIntegrations };
 export { init, defaultIntegrations } from './sdk';
