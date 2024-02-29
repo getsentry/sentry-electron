@@ -34,6 +34,10 @@ export function normalizeEvent(event: Event, basePath: string): Event {
     request.url = normalizeUrlToBase(request.url, basePath);
   }
 
+  if (event.contexts?.feedback?.url && typeof event.contexts.feedback.url === 'string') {
+    event.contexts.feedback.url = normalizeUrlToBase(event.contexts.feedback.url, basePath);
+  }
+
   event.contexts = {
     ...event.contexts,
     runtime: {

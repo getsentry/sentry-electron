@@ -101,7 +101,7 @@ function eventFromEnvelope(envelope: Envelope): [Event, Attachment[], Profile | 
   let profile: Profile | undefined;
 
   forEachEnvelopeItem(envelope, (item, type) => {
-    if (type === 'event' || type === 'transaction') {
+    if (type === 'event' || type === 'transaction' || type === 'feedback') {
       event = Array.isArray(item) ? (item as EventItem)[1] : undefined;
     } else if (type === 'attachment') {
       const [headers, data] = item as AttachmentItem;
