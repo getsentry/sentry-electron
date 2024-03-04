@@ -1,5 +1,5 @@
 import { Event, Profile, ReplayEvent, Session, Transaction } from '@sentry/types';
-import { forEachEnvelopeItem, parseEnvelope } from '@sentry/utils';
+import { dropUndefinedKeys, forEachEnvelopeItem, parseEnvelope } from '@sentry/utils';
 import { Server } from 'http';
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
@@ -129,7 +129,12 @@ export class TestServer {
       let metrics: string | undefined;
 
       forEachEnvelopeItem(envelope, ([headers, item]) => {
-        if (headers.type === 'event' || headers.type === 'transaction' || headers.type === 'session') {
+        if (
+          headers.type === 'event' ||
+          headers.type === 'transaction' ||
+          headers.type === 'session' ||
+          headers.type === 'feedback'
+        ) {
           data = item as Event | Transaction | Session;
         }
 
@@ -155,15 +160,17 @@ export class TestServer {
       });
 
       if (data || metrics) {
-        this._addEvent({
-          data: data || {},
-          attachments,
-          profile,
-          metrics,
-          appId: ctx.params.id,
-          sentryKey: keyMatch[1],
-          method: 'envelope',
-        });
+        this._addEvent(
+          dropUndefinedKeys({
+            data: data || {},
+            attachments,
+            profile,
+            metrics,
+            appId: ctx.params.id,
+            sentryKey: keyMatch[1],
+            method: 'envelope',
+          }),
+        );
 
         ctx.status = 200;
         ctx.body = 'Success';
