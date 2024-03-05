@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 4.20.0
+
+- feat: Update from [v7.102.1](https://github.com/getsentry/sentry-javascript/releases/tag/7.102.1) to
+  [v7.105.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.105.0) of JavaScript SDKs (#837, #841)
+- feat: Deprecate `Anr` class based integration in favor of new functional style (#822)
+- feat: Support and test `Sentry.sendFeedback` (#839)
+
 ## 4.19.0
 
 - feat: Update from [v7.101.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.101.0) to
