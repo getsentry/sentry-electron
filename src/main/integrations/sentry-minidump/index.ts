@@ -28,11 +28,23 @@ interface PreviousRun {
 
 const INTEGRATION_NAME = 'SentryMinidump';
 
+interface Options {
+  /**
+   * Maximum number of minidumps to send per session
+   * Once this number has been reached, no more minidumps will be sent
+   *
+   * default: 10
+   */
+  maxMinidumpsPerSession?: number;
+}
+
 /**
  * Sends minidumps via the Sentry uploader
  */
-export const sentryMinidumpIntegration = defineIntegration(() => {
-  /** Store to persist context information beyond application crashes. */
+export const sentryMinidumpIntegration = defineIntegration((options: Options = {}) => {
+  // The remaining number of minidumps that can be sent in this session
+  let minidumpsRemaining = options.maxMinidumpsPerSession || 10;
+  // Store to persist context information beyond application crashes.
   let scopeStore: BufferedWriteStore<PreviousRun> | undefined;
   // We need to store the scope in a variable here so it can be attached to minidumps
   let scopeLastRun: Promise<PreviousRun> | undefined;
@@ -106,17 +118,20 @@ export const sentryMinidumpIntegration = defineIntegration(() => {
       return false;
     }
 
-    // If the SDK is not enabled, tell the loader to delete all minidumps
-    const deleteAll = client.getOptions().enabled === false;
+    // If the SDK is not enabled, or we've already reached the minidump limit, tell the loader to delete all minidumps
+    const deleteAll = client.getOptions().enabled === false || minidumpsRemaining <= 0;
 
-    let minidumpSent = false;
+    let minidumpFound = false;
     await minidumpLoader?.(deleteAll, (attachment) => {
-      captureEvent(event as Event, { attachments: [attachment] });
-      minidumpSent = true;
+      minidumpFound = true;
+
+      if (minidumpsRemaining > 0) {
+        minidumpsRemaining -= 1;
+        captureEvent(event as Event, { attachments: [attachment] });
+      }
     });
 
-    // Unset to recover memory
-    return minidumpSent;
+    return minidumpFound;
   }
 
   async function sendRendererCrash(
@@ -224,7 +239,7 @@ export const sentryMinidumpIntegration = defineIntegration(() => {
       onChildProcessGone(EXIT_REASONS, (details) => sendChildProcessCrash(client, options, details));
 
       // Start to submit recent minidump crashes. This will load breadcrumbs and
-      // context information that was cached on disk prior to the crash.
+      // context information that was cached on disk in the previous app run, prior to the crash.
       sendNativeCrashes(client, {
         level: 'fatal',
         platform: 'native',
