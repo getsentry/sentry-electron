@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Refresh the page so the renderer SDK gets loaded multiple times -->
+    <meta http-equiv="refresh" content="1" />
+  </head>
+  <body>
+    <script>
+      const { init } = require('@sentry/electron');
+
+      init({
+        debug: true,
+      });
+    </script>
+  </body>
+</html>
