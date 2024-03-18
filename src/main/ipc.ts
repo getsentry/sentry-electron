@@ -258,11 +258,15 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
 function configureClassic(options: ElectronMainOptionsInternal): void {
   ipcMain.on(IPCChannel.RENDERER_START, ({ sender }) => {
     const id = sender.id;
+    // Keep track of renderers that are using IPC
+    KNOWN_RENDERERS = KNOWN_RENDERERS || new Set();
+
+    if (KNOWN_RENDERERS.has(id)) {
+      return;
+    }
 
     // In older Electron, sender can be destroyed before this callback is called
     if (!sender.isDestroyed()) {
-      // Keep track of renderers that are using IPC
-      KNOWN_RENDERERS = KNOWN_RENDERERS || new Set();
       KNOWN_RENDERERS.add(id);
 
       sender.once('destroyed', () => {
