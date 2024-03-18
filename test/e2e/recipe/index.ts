@@ -235,6 +235,12 @@ export class RecipeRunner {
 
     await context.waitForEvents(testServer, totalEvents);
 
+    // If a test need to ensure no other events are received after the expected number of events, wait a bit longer
+    if (this._recipe.metadata.waitAfterExpectedEvents) {
+      log(`Waiting ${this._recipe.metadata.waitAfterExpectedEvents}ms to see if any more events are sent...`);
+      await delay(this._recipe.metadata.waitAfterExpectedEvents);
+    }
+
     if (totalEvents !== testServer.events.length) {
       throw new Error(`Expected ${expectedEvents.length} events but server has ${testServer.events.length} events`);
     }

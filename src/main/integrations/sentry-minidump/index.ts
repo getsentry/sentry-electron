@@ -118,6 +118,10 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
       return false;
     }
 
+    if (minidumpsRemaining <= 0) {
+      logger.log('Not sending minidumps because the limit has been reached');
+    }
+
     // If the SDK is not enabled, or we've already reached the minidump limit, tell the loader to delete all minidumps
     const deleteAll = client.getOptions().enabled === false || minidumpsRemaining <= 0;
 
