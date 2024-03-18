@@ -1,3 +1,4 @@
+import { parseSemver } from '@sentry/utils';
 import { ChildProcess, spawn, spawnSync } from 'child_process';
 import { rmSync } from 'fs';
 import { homedir } from 'os';
@@ -47,6 +48,7 @@ export class TestContext {
    */
   public constructor(
     private readonly _electronPath: string,
+    private readonly _electronVersion: string,
     private readonly _appPath: string,
     private readonly _appName: string,
   ) {}
@@ -66,7 +68,15 @@ export class TestContext {
       this._clearAppUserData();
     }
 
-    const childProcess = spawn(this._electronPath, [this._appPath], { env });
+    const version = parseSemver(this._electronVersion);
+
+    const args = [this._appPath];
+    // Older versions of Electron no longer work correctly on 'ubuntu-latest' with sandbox
+    if (process.platform === 'linux' && (version.major || 0) < 13) {
+      args.push('--no-sandbox');
+    }
+
+    const childProcess = spawn(this._electronPath, args, { env });
 
     function logLinesWithoutEmpty(input: string): void {
       input
@@ -126,7 +136,7 @@ export class TestContext {
   public async waitForTrue(
     method: () => boolean | Promise<boolean>,
     message: () => string = () => 'Timeout',
-    timeout: number = 8_000,
+    timeout: number = 12_000,
   ): Promise<void> {
     if (!this.mainProcess) {
       throw new Error('Invariant violation: Call .start() first');

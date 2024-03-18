@@ -32,6 +32,7 @@ module.exports = {
       rules: {
         'no-console': 'off',
         '@typescript-eslint/no-unsafe-member-access': 'off',
+        '@typescript-eslint/member-ordering': 'off',
       },
     },
   ],
@@ -39,5 +40,8 @@ module.exports = {
     '@typescript-eslint/no-var-requires': 'off',
     '@sentry-internal/sdk/no-async-await': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/consistent-type-imports': 'off',
+    '@sentry-internal/sdk/no-optional-chaining': 'off',
+    '@sentry-internal/sdk/no-nullish-coalescing': 'off',
   },
 };

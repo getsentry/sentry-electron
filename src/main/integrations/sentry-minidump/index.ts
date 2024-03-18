@@ -1,87 +1,56 @@
-import { captureEvent, getCurrentHub, Scope } from '@sentry/core';
+import {
+  applyScopeDataToEvent,
+  captureEvent,
+  convertIntegrationFnToClass,
+  defineIntegration,
+  getCurrentScope,
+  Scope,
+} from '@sentry/core';
 import { NodeClient } from '@sentry/node';
-import { Event, Integration } from '@sentry/types';
-import { basename, logger, SentryError } from '@sentry/utils';
+import { Event, ScopeData } from '@sentry/types';
+import { logger, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
 import { mergeEvents } from '../../../common';
-import { getEventDefaults } from '../../context';
+import { getDefaultEnvironment, getDefaultReleaseName, getEventDefaults } from '../../context';
 import { EXIT_REASONS, onChildProcessGone, onRendererProcessGone } from '../../electron-normalize';
-import { sentryCachePath } from '../../fs';
+import { getSentryCachePath } from '../../fs';
 import { getRendererProperties, trackRendererProperties } from '../../renderers';
 import { ElectronMainOptions } from '../../sdk';
 import { checkPreviousSession, sessionCrashed } from '../../sessions';
 import { BufferedWriteStore } from '../../store';
-import { deleteMinidump, getMinidumpLoader, MinidumpLoader } from './minidump-loader';
+import { getMinidumpLoader, MinidumpLoader } from './minidump-loader';
 
-/** Sends minidumps via the Sentry uploader */
-export class SentryMinidump implements Integration {
-  /** @inheritDoc */
-  public static id: string = 'SentryMinidump';
+interface PreviousRun {
+  scope: ScopeData;
+  event?: Event;
+}
 
-  /** @inheritDoc */
-  public name: string = SentryMinidump.id;
+const INTEGRATION_NAME = 'SentryMinidump';
 
-  /** Store to persist context information beyond application crashes. */
-  private _scopeStore?: BufferedWriteStore<Scope>;
+interface Options {
+  /**
+   * Maximum number of minidumps to send per session
+   * Once this number has been reached, no more minidumps will be sent
+   *
+   * default: 10
+   */
+  maxMinidumpsPerSession?: number;
+}
 
-  /** Temp store for the scope of last run */
-  private _scopeLastRun?: Promise<Scope>;
+/**
+ * Sends minidumps via the Sentry uploader
+ */
+export const sentryMinidumpIntegration = defineIntegration((options: Options = {}) => {
+  // The remaining number of minidumps that can be sent in this session
+  let minidumpsRemaining = options.maxMinidumpsPerSession || 10;
+  // Store to persist context information beyond application crashes.
+  let scopeStore: BufferedWriteStore<PreviousRun> | undefined;
+  // We need to store the scope in a variable here so it can be attached to minidumps
+  let scopeLastRun: Promise<PreviousRun> | undefined;
+  let minidumpLoader: MinidumpLoader | undefined;
 
-  private _minidumpLoader?: MinidumpLoader;
-
-  /** @inheritDoc */
-  public setupOnce(): void {
-    // Mac AppStore builds cannot run the crash reporter due to the sandboxing
-    // requirements. In this case, we prevent enabling native crashes entirely.
-    // https://electronjs.org/docs/tutorial/mac-app-store-submission-guide#limitations-of-mas-build
-    if (process.mas) {
-      return;
-    }
-
-    this._startCrashReporter();
-
-    this._scopeStore = new BufferedWriteStore<Scope>(sentryCachePath, 'scope_v2', new Scope());
-    // We need to store the scope in a variable here so it can be attached to minidumps
-    this._scopeLastRun = this._scopeStore.get();
-
-    this._setupScopeListener();
-
-    const client = getCurrentHub().getClient<NodeClient>();
-    const options = client?.getOptions() as ElectronMainOptions;
-
-    if (!options?.dsn) {
-      throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
-    }
-
-    trackRendererProperties();
-
-    this._minidumpLoader = getMinidumpLoader();
-
-    onRendererProcessGone(EXIT_REASONS, (contents, details) => this._sendRendererCrash(options, contents, details));
-    onChildProcessGone(EXIT_REASONS, (details) => this._sendChildProcessCrash(options, details));
-
-    // Start to submit recent minidump crashes. This will load breadcrumbs and
-    // context information that was cached on disk prior to the crash.
-    this._sendNativeCrashes({
-      level: 'fatal',
-      platform: 'native',
-      tags: {
-        'event.environment': 'native',
-        'event.process': 'browser',
-        event_type: 'native',
-      },
-    })
-      .then((minidumpsFound) =>
-        // Check for previous uncompleted session. If a previous session exists
-        // and no minidumps were found, its likely an abnormal exit
-        checkPreviousSession(minidumpsFound),
-      )
-      .catch((error) => logger.error(error));
-  }
-
-  /** Starts the native crash reporter */
-  private _startCrashReporter(): void {
+  function startCrashReporter(): void {
     logger.log('Starting Electron crashReporter');
 
     crashReporter.start({
@@ -95,10 +64,82 @@ export class SentryMinidump implements Integration {
     });
   }
 
-  /**
-   * Helper function for sending renderer crashes
-   */
-  private async _sendRendererCrash(
+  function setupScopeListener(currentRelease: string, currentEnvironment: string): void {
+    const scopeChanged = (updatedScope: Scope): void => {
+      // Since the initial scope read is async, we need to ensure that any writes do not beat that
+      // https://github.com/getsentry/sentry-electron/issues/585
+      setImmediate(async () =>
+        scopeStore?.set({
+          scope: updatedScope.getScopeData(),
+          event: await getEventDefaults(currentRelease, currentEnvironment),
+        }),
+      );
+    };
+
+    const scope = getCurrentScope();
+
+    if (scope) {
+      scope.addScopeListener(scopeChanged);
+      // Ensure at least one event is written to disk
+      scopeChanged(scope);
+    }
+  }
+
+  async function sendNativeCrashes(client: NodeClient, eventIn: Event): Promise<boolean> {
+    // Whenever we are called, assume that the crashes we are going to load down
+    // below have occurred recently. This means, we can use the same event data
+    // for all minidumps that we load now. There are two conditions:
+    //
+    //  1. The application crashed and we are just starting up. The stored
+    //     breadcrumbs and context reflect the state during the application
+    //     crash.
+    //
+    //  2. A renderer process crashed recently and we have just been notified
+    //     about it. Just use the breadcrumbs and context information we have
+    //     right now and hope that the delay was not too long.
+
+    const event = eventIn;
+
+    // If this is a native main process crash, we need to apply the scope and context from the previous run
+    if (event.tags?.['event.process'] === 'browser') {
+      const previousRun = await scopeLastRun;
+      if (previousRun) {
+        if (previousRun.scope) {
+          applyScopeDataToEvent(event, previousRun.scope);
+        }
+
+        event.release = previousRun.event?.release || event.release;
+        event.environment = previousRun.event?.environment || event.environment;
+        event.contexts = previousRun.event?.contexts || event.contexts;
+      }
+    }
+
+    if (!event) {
+      return false;
+    }
+
+    if (minidumpsRemaining <= 0) {
+      logger.log('Not sending minidumps because the limit has been reached');
+    }
+
+    // If the SDK is not enabled, or we've already reached the minidump limit, tell the loader to delete all minidumps
+    const deleteAll = client.getOptions().enabled === false || minidumpsRemaining <= 0;
+
+    let minidumpFound = false;
+    await minidumpLoader?.(deleteAll, (attachment) => {
+      minidumpFound = true;
+
+      if (minidumpsRemaining > 0) {
+        minidumpsRemaining -= 1;
+        captureEvent(event as Event, { attachments: [attachment] });
+      }
+    });
+
+    return minidumpFound;
+  }
+
+  async function sendRendererCrash(
+    client: NodeClient,
     options: ElectronMainOptions,
     contents: Electron.WebContents,
     details: Partial<Electron.RenderProcessGoneDetails>,
@@ -126,17 +167,15 @@ export class SentryMinidump implements Integration {
       },
     });
 
-    const found = await this._sendNativeCrashes(event);
+    const found = await sendNativeCrashes(client, event);
 
     if (found) {
       sessionCrashed();
     }
   }
 
-  /**
-   * Helper function for sending child process crashes
-   */
-  private async _sendChildProcessCrash(
+  async function sendChildProcessCrash(
+    client: NodeClient,
     options: ElectronMainOptions,
     details: Omit<Electron.Details, 'exitCode'>,
   ): Promise<void> {
@@ -159,113 +198,75 @@ export class SentryMinidump implements Integration {
       },
     });
 
-    const found = await this._sendNativeCrashes(event);
+    const found = await sendNativeCrashes(client, event);
 
     if (found) {
       sessionCrashed();
     }
   }
 
-  /**
-   * Adds a scope listener to persist changes to disk.
-   */
-  private _setupScopeListener(): void {
-    const hubScope = getCurrentHub().getScope();
-    if (hubScope) {
-      hubScope.addScopeListener((updatedScope) => {
-        const scope = Scope.clone(updatedScope);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        (scope as any)._eventProcessors = [];
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        (scope as any)._scopeListeners = [];
-
-        // Since the initial scope read is async, we need to ensure that any writes do not beat that
-        // https://github.com/getsentry/sentry-electron/issues/585
-        setImmediate(() => {
-          void this._scopeStore?.set(scope);
-        });
-      });
-    }
-  }
-
-  /**
-   * Loads new native crashes from disk and sends them to Sentry.
-   *
-   * Returns true if one or more minidumps were found
-   */
-  private async _sendNativeCrashes(event: Event): Promise<boolean> {
-    // Whenever we are called, assume that the crashes we are going to load down
-    // below have occurred recently. This means, we can use the same event data
-    // for all minidumps that we load now. There are two conditions:
-    //
-    //  1. The application crashed and we are just starting up. The stored
-    //     breadcrumbs and context reflect the state during the application
-    //     crash.
-    //
-    //  2. A renderer process crashed recently and we have just been notified
-    //     about it. Just use the breadcrumbs and context information we have
-    //     right now and hope that the delay was not too long.
-
-    if (this._minidumpLoader === undefined) {
-      throw new SentryError('Invariant violation: Native crashes not enabled');
-    }
-
-    try {
-      const minidumps = await this._minidumpLoader();
-
-      if (minidumps.length > 0) {
-        const hub = getCurrentHub();
-        const client = hub.getClient();
-
-        if (!client) {
-          return true;
-        }
-
-        const enabled = client.getOptions().enabled;
-
-        // If the SDK is not enabled, we delete the minidump files so they
-        // dont accumulate and/or get sent later
-        if (enabled === false) {
-          minidumps.forEach(deleteMinidump);
-          return false;
-        }
-
-        const storedScope = Scope.clone(await this._scopeLastRun);
-        let newEvent = await storedScope.applyToEvent(event);
-
-        const hubScope = hub.getScope();
-        newEvent = hubScope ? await hubScope.applyToEvent(event) : event;
-
-        if (!newEvent) {
-          return false;
-        }
-
-        for (const minidump of minidumps) {
-          const data = await minidump.load();
-
-          if (data) {
-            captureEvent(newEvent, {
-              attachments: [
-                {
-                  attachmentType: 'event.minidump',
-                  filename: basename(minidump.path),
-                  data,
-                },
-              ],
-            });
-          }
-
-          void deleteMinidump(minidump);
-        }
-
-        // Unset to recover memory
-        this._scopeLastRun = undefined;
-        return true;
+  return {
+    name: INTEGRATION_NAME,
+    setupOnce() {
+      // noop
+    },
+    setup(client: NodeClient): void {
+      // Mac AppStore builds cannot run the crash reporter due to the sandboxing
+      // requirements. In this case, we prevent enabling native crashes entirely.
+      // https://electronjs.org/docs/tutorial/mac-app-store-submission-guide#limitations-of-mas-build
+      if (process.mas) {
+        return;
       }
-    } catch (_oO) {
-      logger.error('Error while sending native crash.');
-    }
 
-    return false;
-  }
-}
+      startCrashReporter();
+
+      scopeStore = new BufferedWriteStore<PreviousRun>(getSentryCachePath(), 'scope_v3', {
+        scope: new Scope().getScopeData(),
+      });
+      scopeLastRun = scopeStore.get();
+      minidumpLoader = getMinidumpLoader();
+
+      const options = client.getOptions();
+
+      const currentRelease = options?.release || getDefaultReleaseName();
+      const currentEnvironment = options?.environment || getDefaultEnvironment();
+
+      setupScopeListener(currentRelease, currentEnvironment);
+
+      if (!options?.dsn) {
+        throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
+      }
+
+      trackRendererProperties();
+
+      onRendererProcessGone(EXIT_REASONS, (contents, details) => sendRendererCrash(client, options, contents, details));
+      onChildProcessGone(EXIT_REASONS, (details) => sendChildProcessCrash(client, options, details));
+
+      // Start to submit recent minidump crashes. This will load breadcrumbs and
+      // context information that was cached on disk in the previous app run, prior to the crash.
+      sendNativeCrashes(client, {
+        level: 'fatal',
+        platform: 'native',
+        tags: {
+          'event.environment': 'native',
+          'event.process': 'browser',
+          event_type: 'native',
+        },
+      })
+        .then((minidumpsFound) =>
+          // Check for previous uncompleted session. If a previous session exists
+          // and no minidumps were found, its likely an abnormal exit
+          checkPreviousSession(minidumpsFound),
+        )
+        .catch((error) => logger.error(error));
+    },
+  };
+});
+
+/**
+ * Sends minidumps via the Sentry uploader
+ *
+ * @deprecated Use `sentryMinidumpIntegration()` instead
+ */
+// eslint-disable-next-line deprecation/deprecation
+export const SentryMinidump = convertIntegrationFnToClass(INTEGRATION_NAME, sentryMinidumpIntegration);

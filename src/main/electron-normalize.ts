@@ -2,10 +2,13 @@ import { parseSemver } from '@sentry/utils';
 import { app, BrowserWindow, crashReporter, NativeImage, WebContents } from 'electron';
 import { basename } from 'path';
 
+import { RENDERER_ID_HEADER } from '../common/ipc';
 import { Optional } from '../common/types';
 
 const parsed = parseSemver(process.versions.electron);
 const version = { major: parsed.major || 0, minor: parsed.minor || 0, patch: parsed.patch || 0 };
+
+export const ELECTRON_MAJOR_VERSION = version.major;
 
 /** Returns if the app is packaged. Copied from Electron to support < v3 */
 export const isPackaged = (() => {
@@ -18,13 +21,17 @@ export const isPackaged = (() => {
 
 /** A promise that is resolved when the app is ready */
 export const whenAppReady: Promise<void> = (() => {
-  return app.isReady()
-    ? Promise.resolve()
-    : new Promise<void>((resolve) => {
-        app.once('ready', () => {
-          resolve();
+  if (app) {
+    return app.isReady()
+      ? Promise.resolve()
+      : new Promise<void>((resolve) => {
+          app.once('ready', () => {
+            resolve();
+          });
         });
-      });
+  }
+
+  return Promise.resolve();
 })();
 
 /**
@@ -43,7 +50,7 @@ export const EXIT_REASONS = [
   'launch-failed',
   'integrity-failure',
 ] as const;
-export type ExitReason = typeof EXIT_REASONS[number];
+export type ExitReason = (typeof EXIT_REASONS)[number];
 export const CRASH_REASONS: Readonly<ExitReason[]> = ['crashed', 'oom'] as const;
 
 /** Same as the Electron interface but with optional exitCode */
@@ -203,4 +210,51 @@ export function capturePage(window: BrowserWindow): Promise<NativeImage> {
   }
 
   return window.capturePage();
+}
+
+/**
+ * Electron >= 25 support `protocol.handle`
+ */
+function supportsProtocolHandle(): boolean {
+  return version.major >= 25;
+}
+
+interface InternalRequest {
+  windowId?: string;
+  url: string;
+  body?: Buffer;
+}
+
+/**
+ * Registers a custom protocol to receive events from the renderer
+ *
+ * Uses `protocol.handle` if available, otherwise falls back to `protocol.registerStringProtocol`
+ */
+export function registerProtocol(
+  protocol: Electron.Protocol,
+  scheme: string,
+  callback: (request: InternalRequest) => void,
+): void {
+  if (supportsProtocolHandle()) {
+    protocol.handle(scheme, async (request) => {
+      callback({
+        windowId: request.headers.get(RENDERER_ID_HEADER) || undefined,
+        url: request.url,
+        body: Buffer.from(await request.arrayBuffer()),
+      });
+
+      return new Response('');
+    });
+  } else {
+    // eslint-disable-next-line deprecation/deprecation
+    protocol.registerStringProtocol(scheme, (request, complete) => {
+      callback({
+        windowId: request.headers[RENDERER_ID_HEADER],
+        url: request.url,
+        body: request.uploadData?.[0]?.bytes,
+      });
+
+      complete('');
+    });
+  }
 }

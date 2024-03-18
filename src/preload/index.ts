@@ -1,12 +1,10 @@
 /**
  * This preload script may be used with sandbox mode enabled which means regular require is not available.
- *
- * npm script `build:preload` calls `node ./scripts/build-preload.js` which inlines ipc and transpiles to JavaScript
  */
 
 import { contextBridge, ipcRenderer } from 'electron';
 
-import { IPCChannel } from '../common/ipc';
+import { IPCChannel, MetricIPCMessage, RendererStatus } from '../common/ipc';
 
 // eslint-disable-next-line no-restricted-globals
 if (window.__SENTRY_IPC__) {
@@ -14,9 +12,12 @@ if (window.__SENTRY_IPC__) {
   console.log('Sentry Electron preload has already been run');
 } else {
   const ipcObject = {
+    sendRendererStart: () => ipcRenderer.send(IPCChannel.RENDERER_START),
     sendScope: (scopeJson: string) => ipcRenderer.send(IPCChannel.SCOPE, scopeJson),
     sendEvent: (eventJson: string) => ipcRenderer.send(IPCChannel.EVENT, eventJson),
     sendEnvelope: (envelope: Uint8Array | string) => ipcRenderer.send(IPCChannel.ENVELOPE, envelope),
+    sendStatus: (status: RendererStatus) => ipcRenderer.send(IPCChannel.STATUS, status),
+    sendAddMetric: (metric: MetricIPCMessage) => ipcRenderer.send(IPCChannel.ADD_METRIC, metric),
   };
 
   // eslint-disable-next-line no-restricted-globals

@@ -1,78 +1,49 @@
-/* eslint-disable deprecation/deprecation */
-import { getCurrentHub } from '@sentry/core';
-import { Integration, Span } from '@sentry/types';
-import { fill } from '@sentry/utils';
-import { ClientRequest, ClientRequestConstructorOptions, IncomingMessage, net } from 'electron';
+import {
+  addBreadcrumb,
+  /* eslint-disable deprecation/deprecation */
+  convertIntegrationFnToClass,
+  defineIntegration,
+  getClient,
+  getCurrentScope,
+  getDynamicSamplingContextFromClient,
+} from '@sentry/core';
+import { DynamicSamplingContext, Span, TracePropagationTargets } from '@sentry/types';
+import {
+  dynamicSamplingContextToSentryBaggageHeader,
+  fill,
+  generateSentryTraceHeader,
+  logger,
+  LRUMap,
+  stringMatchesSomePattern,
+} from '@sentry/utils';
+import { ClientRequest, ClientRequestConstructorOptions, IncomingMessage, net as electronNet } from 'electron';
 import * as urlModule from 'url';
-
-import { OrBool, OrFalse } from '../../common/types';
 
 type ShouldTraceFn = (method: string, url: string) => boolean;
 
-interface NetOptions {
+export interface NetOptions {
   /**
    * Whether breadcrumbs should be captured for net requests
    *
    * Defaults to: true
    */
-  breadcrumbs: boolean;
+  breadcrumbs?: boolean;
   /**
    * Whether to capture transaction spans for net requests
    *
    * true | false | (method: string, url: string) => boolean
    * Defaults to: true
    */
-  tracing: ShouldTraceFn;
+  tracing?: ShouldTraceFn | boolean;
+
   /**
-   * Whether to add 'sentry-trace' headers to outgoing requests
+   * @deprecated Use `tracePropagationTargets` client option instead.
    *
-   * true | false | (method: string, url: string) => boolean
-   * Defaults to: true
+   * Sentry.init({
+   *   tracePropagationTargets: ['api.site.com'],
+   * })
    */
-  tracingOrigins: ShouldTraceFn;
-}
-
-const DEFAULT_OPTIONS: NetOptions = {
-  breadcrumbs: true,
-  tracing: (_method, _url) => true,
-  tracingOrigins: (_method, _url) => true,
-};
-
-/** Converts all user supplied options to T | false */
-export function normalizeOptions(options: Partial<OrBool<NetOptions>>): Partial<OrFalse<NetOptions>> {
-  return (Object.keys(options) as (keyof NetOptions)[]).reduce((obj, k) => {
-    if (typeof options[k] === 'function' || options[k] === false) {
-      obj[k] = options[k] as boolean & (false | ShouldTraceFn);
-    }
-    return obj;
-  }, {} as Partial<OrFalse<NetOptions>>);
-}
-
-/** http module integration */
-export class Net implements Integration {
-  /** @inheritDoc */
-  public static id: string = 'Net';
-
-  /** @inheritDoc */
-  public name: string = Net.id;
-
-  private readonly _options: OrFalse<NetOptions>;
-
-  /** @inheritDoc */
-  public constructor(options: Partial<OrBool<NetOptions>> = {}) {
-    this._options = {
-      ...DEFAULT_OPTIONS,
-      ...normalizeOptions(options),
-    };
-  }
-
-  /** @inheritDoc */
-  public setupOnce(): void {
-    // No need to instrument if we don't want to track anything
-    if (this._options.breadcrumbs || this._options.tracing) {
-      fill(net, 'request', createWrappedRequestFactory(this._options));
-    }
-  }
+  tracingOrigins?: ShouldTraceFn | boolean;
 }
 
 /**
@@ -120,19 +91,96 @@ function parseOptions(optionsIn: ClientRequestConstructorOptions | string): { me
   };
 }
 
+function addHeadersToRequest(
+  request: Electron.ClientRequest,
+  url: string,
+  sentryTraceHeader: string,
+  dynamicSamplingContext?: Partial<DynamicSamplingContext>,
+): void {
+  logger.log(`[Tracing] Adding sentry-trace header ${sentryTraceHeader} to outgoing request to "${url}": `);
+  request.setHeader('sentry-trace', sentryTraceHeader);
+
+  const sentryBaggageHeader = dynamicSamplingContextToSentryBaggageHeader(dynamicSamplingContext);
+  if (sentryBaggageHeader) {
+    request.setHeader('baggage', sentryBaggageHeader);
+  }
+}
+
 type RequestOptions = string | ClientRequestConstructorOptions;
 type RequestMethod = (opt: RequestOptions) => ClientRequest;
 type WrappedRequestMethodFactory = (original: RequestMethod) => RequestMethod;
 
-/** */
-function createWrappedRequestFactory(options: OrFalse<NetOptions>): WrappedRequestMethodFactory {
-  return function wrappedRequestMethodFactory(originalRequestMethod: RequestMethod): RequestMethod {
-    return function requestMethod(this: typeof net, reqOptions: RequestOptions): ClientRequest {
-      // eslint-disable-next-line @typescript-eslint/no-this-alias
-      const netModule = this;
+function createWrappedRequestFactory(
+  options: NetOptions,
+  tracePropagationTargets: TracePropagationTargets | undefined,
+): WrappedRequestMethodFactory {
+  // We're caching results so we don't have to recompute regexp every time we create a request.
+  const createSpanUrlMap = new LRUMap<string, boolean>(100);
+  const headersUrlMap = new LRUMap<string, boolean>(100);
 
+  const shouldCreateSpan = (method: string, url: string): boolean => {
+    if (options.tracing === undefined) {
+      return true;
+    }
+
+    if (options.tracing === false) {
+      return false;
+    }
+
+    const key = `${method}:${url}`;
+
+    const cachedDecision = createSpanUrlMap.get(key);
+    if (cachedDecision !== undefined) {
+      return cachedDecision;
+    }
+
+    const decision = options.tracing === true || options.tracing(method, url);
+    createSpanUrlMap.set(key, decision);
+    return decision;
+  };
+
+  // This will be considerably simpler once `tracingOrigins` is removed in the next major release
+  const shouldAttachTraceData = (method: string, url: string): boolean => {
+    if (options.tracingOrigins === false) {
+      return false;
+    }
+
+    // Neither integration nor client options are set or integration option is set to true
+    if (
+      (options.tracingOrigins === undefined && tracePropagationTargets === undefined) ||
+      options.tracingOrigins === true
+    ) {
+      return true;
+    }
+
+    const key = `${method}:${url}`;
+
+    const cachedDecision = headersUrlMap.get(key);
+    if (cachedDecision !== undefined) {
+      return cachedDecision;
+    }
+
+    if (tracePropagationTargets) {
+      const decision = stringMatchesSomePattern(url, tracePropagationTargets);
+      headersUrlMap.set(key, decision);
+      return decision;
+    }
+
+    if (options.tracingOrigins) {
+      const decision = options.tracingOrigins(method, url);
+      headersUrlMap.set(key, decision);
+      return decision;
+    }
+
+    // We cannot reach here since either `tracePropagationTargets` or `tracingOrigins` will be defined but TypeScript
+    // cannot infer that
+    return true;
+  };
+
+  return function wrappedRequestMethodFactory(originalRequestMethod: RequestMethod): RequestMethod {
+    return function requestMethod(this: typeof electronNet, reqOptions: RequestOptions): ClientRequest {
       const { url, method } = parseOptions(reqOptions);
-      const request = originalRequestMethod.apply(netModule, [reqOptions]) as ClientRequest;
+      const request = originalRequestMethod.apply(this, [reqOptions]) as ClientRequest;
 
       if (url.match(/sentry_key/) || request.getHeader('x-sentry-auth')) {
         return request;
@@ -140,8 +188,8 @@ function createWrappedRequestFactory(options: OrFalse<NetOptions>): WrappedReque
 
       let span: Span | undefined;
 
-      const scope = getCurrentHub().getScope();
-      if (scope && options.tracing && options.tracing(method, url)) {
+      const scope = getCurrentScope();
+      if (scope && shouldCreateSpan(method, url)) {
         const parentSpan = scope.getSpan();
 
         if (parentSpan) {
@@ -150,18 +198,30 @@ function createWrappedRequestFactory(options: OrFalse<NetOptions>): WrappedReque
             op: 'http.client',
           });
 
-          if (options.tracingOrigins && options.tracingOrigins(method, url)) {
-            request.setHeader('sentry-trace', span.toTraceparent());
+          if (shouldAttachTraceData(method, url)) {
+            const sentryTraceHeader = span.toTraceparent();
+            const dynamicSamplingContext = span?.transaction?.getDynamicSamplingContext();
+
+            addHeadersToRequest(request, url, sentryTraceHeader, dynamicSamplingContext);
+          }
+        } else {
+          if (shouldAttachTraceData(method, url)) {
+            const { traceId, sampled, dsc } = scope.getPropagationContext();
+            const sentryTraceHeader = generateSentryTraceHeader(traceId, undefined, sampled);
+
+            const client = getClient();
+            const dynamicSamplingContext =
+              dsc || (client ? getDynamicSamplingContextFromClient(traceId, client, scope) : undefined);
+
+            addHeadersToRequest(request, url, sentryTraceHeader, dynamicSamplingContext);
           }
         }
       }
 
       return request
         .once('response', function (this: ClientRequest, res: IncomingMessage): void {
-          // eslint-disable-next-line @typescript-eslint/no-this-alias
-          const req = this;
-          if (options.breadcrumbs) {
-            addRequestBreadcrumb('response', method, url, req, res);
+          if (options.breadcrumbs !== false) {
+            addRequestBreadcrumb('response', method, url, this, res);
           }
           if (span) {
             if (res.statusCode) {
@@ -171,11 +231,8 @@ function createWrappedRequestFactory(options: OrFalse<NetOptions>): WrappedReque
           }
         })
         .once('error', function (this: ClientRequest, _error: Error): void {
-          // eslint-disable-next-line @typescript-eslint/no-this-alias
-          const req = this;
-
-          if (options.breadcrumbs) {
-            addRequestBreadcrumb('error', method, url, req, undefined);
+          if (options.breadcrumbs !== false) {
+            addRequestBreadcrumb('error', method, url, this, undefined);
           }
           if (span) {
             span.setHttpStatus(500);
@@ -196,14 +253,14 @@ function addRequestBreadcrumb(
   req: ClientRequest,
   res?: IncomingMessage,
 ): void {
-  getCurrentHub().addBreadcrumb(
+  addBreadcrumb(
     {
       type: 'http',
       category: 'electron.net',
       data: {
         url,
         method: method,
-        status_code: res && res.statusCode,
+        status_code: res?.statusCode,
       },
     },
     {
@@ -213,3 +270,35 @@ function addRequestBreadcrumb(
     },
   );
 }
+
+const INTEGRATION_NAME = 'Net';
+
+/**
+ * Electron 'net' module integration
+ */
+export const electronNetIntegration = defineIntegration((options: NetOptions = {}) => {
+  return {
+    name: INTEGRATION_NAME,
+    setupOnce() {
+      // noop
+    },
+    setup() {
+      const clientOptions = getClient()?.getOptions();
+
+      // No need to instrument if we don't want to track anything
+      if (options.breadcrumbs === false && options.tracing === false) {
+        return;
+      }
+
+      fill(electronNet, 'request', createWrappedRequestFactory(options, clientOptions?.tracePropagationTargets));
+    },
+  };
+});
+
+/**
+ * Electron 'net' module integration
+ *
+ * @deprecated Use `electronNetIntegration()` instead
+ */
+// eslint-disable-next-line deprecation/deprecation
+export const Net = convertIntegrationFnToClass(INTEGRATION_NAME, electronNetIntegration);

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <script>
+      const { init } = require('@sentry/electron/renderer');
+      const { captureConsoleIntegration } = require('@sentry/integrations');
+
+      init({
+        debug: true,
+        integrations: [captureConsoleIntegration()],
+      });
+
+      setTimeout(() => {
+        console.error('This is an error message');
+      }, 1000);
+    </script>
+  </body>
+</html>

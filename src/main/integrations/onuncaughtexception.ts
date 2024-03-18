@@ -1,51 +1,72 @@
-import { getCurrentHub } from '@sentry/core';
+import { convertIntegrationFnToClass, defineIntegration, getCurrentScope } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
-import { Event, Integration } from '@sentry/types';
+import { Event } from '@sentry/types';
 import { dialog } from 'electron';
 
+const INTEGRATION_NAME = 'OnUncaughtException';
+
 /** Capture unhandled errors. */
-export class OnUncaughtException implements Integration {
-  /** @inheritDoc */
-  public static id: string = 'OnUncaughtException';
+export const onUncaughtExceptionIntegration = defineIntegration(() => {
+  return {
+    name: INTEGRATION_NAME,
+    setupOnce() {
+      // noop
+    },
+    setup(client: NodeClient) {
+      const options = client.getOptions();
 
-  /** @inheritDoc */
-  public name: string = OnUncaughtException.id;
+      global.process.on('uncaughtException', (error: Error) => {
+        const scope = getCurrentScope();
 
-  /**
-   * @inheritDoc
-   */
-  public setupOnce(): void {
-    const options = getCurrentHub().getClient<NodeClient>()?.getOptions();
+        scope.addEventProcessor(async (event: Event) => ({
+          ...event,
+          level: 'fatal',
+        }));
 
-    global.process.on('uncaughtException', (error: Error) => {
-      const self = getCurrentHub().getIntegration(OnUncaughtException);
-      if (self) {
-        getCurrentHub().withScope(async (scope) => {
-          scope.addEventProcessor(async (event: Event) => ({
-            ...event,
-            level: 'fatal',
-          }));
+        client.captureException(
+          error,
+          {
+            originalException: error,
+            data: {
+              mechanism: {
+                handled: false,
+                type: 'generic',
+              },
+            },
+          },
+          scope,
+        );
 
-          const nodeClient = getCurrentHub().getClient() as NodeClient;
-          nodeClient.captureException(error, { originalException: error }, getCurrentHub().getScope());
-          await nodeClient.flush(nodeClient.getOptions().shutdownTimeout || 2000);
+        client.flush(options.shutdownTimeout || 2000).then(
+          () => {
+            if (options?.onFatalError) {
+              options.onFatalError(error);
+            } else if (global.process.listenerCount('uncaughtException') <= 2) {
+              // In addition to this handler there is always one in Electron
+              // The dialog is only shown if there are no other handlers
+              // eslint-disable-next-line no-console
+              console.error('Uncaught Exception:');
+              // eslint-disable-next-line no-console
+              console.error(error);
+              const ref = error.stack;
+              const stack = ref !== undefined ? ref : `${error.name}: ${error.message}`;
+              const message = `Uncaught Exception:\n${stack}`;
+              dialog.showErrorBox('A JavaScript error occurred in the main process', message);
+            }
+          },
+          () => {
+            // ignore
+          },
+        );
+      });
+    },
+  };
+});
 
-          if (options?.onFatalError) {
-            options.onFatalError(error);
-          } else if (global.process.listenerCount('uncaughtException') <= 2) {
-            // In addition to this handler there is always one in Electron
-            // The dialog is only shown if there are no other handlers
-            // eslint-disable-next-line no-console
-            console.error('Uncaught Exception:');
-            // eslint-disable-next-line no-console
-            console.error(error);
-            const ref = error.stack;
-            const stack = ref !== undefined ? ref : `${error.name}: ${error.message}`;
-            const message = `Uncaught Exception:\n${stack}`;
-            dialog.showErrorBox('A JavaScript error occurred in the main process', message);
-          }
-        });
-      }
-    });
-  }
-}
+/**
+ * Capture unhandled errors.
+ *
+ * @deprecated Use `onUncaughtExceptionIntegration()` instead
+ */
+// eslint-disable-next-line deprecation/deprecation
+export const OnUncaughtException = convertIntegrationFnToClass(INTEGRATION_NAME, onUncaughtExceptionIntegration);

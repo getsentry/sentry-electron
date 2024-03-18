@@ -59,6 +59,14 @@
       "ip_address": "{{auto}}",
       "id": "abc-123"
     },
+    "debug_meta": {
+      "images": [
+        {
+          "code_file": "app:///dist/renderer.js",
+          "type": "sourcemap"
+        }
+      ]
+    },
     "exception": {
       "values": [
         {
@@ -83,7 +91,7 @@
             ]
           },
           "mechanism": {
-            "handled": true,
+            "handled": false,
             "type": "instrument"
           }
         }

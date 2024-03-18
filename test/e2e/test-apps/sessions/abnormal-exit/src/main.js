@@ -1,11 +1,12 @@
 const path = require('path');
 
 const { app, BrowserWindow } = require('electron');
-const { init } = require('@sentry/electron');
+const { init, mainProcessSessionIntegration } = require('@sentry/electron/main');
 
 init({
   dsn: '__DSN__',
   debug: true,
+  integrations: [mainProcessSessionIntegration({ sendOnCreate: true })],
   onFatalError: () => {},
 });
 
@@ -23,12 +24,10 @@ app.on('ready', () => {
 
 // We only exit abnormally on the first run
 // The second run is where the session is uploaded
-if (process.env.APP_FIRST_RUN) {
-  setTimeout(() => {
+setTimeout(() => {
+  if (process.env.APP_FIRST_RUN) {
     process.exit();
-  }, 1000);
-} else {
-  setTimeout(() => {
+  } else {
     app.quit();
-  }, 2000);
-}
+  }
+}, 4000);

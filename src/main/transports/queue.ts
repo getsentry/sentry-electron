@@ -26,17 +26,15 @@ export interface QueuedTransportRequest extends TransportRequest {
 
 /** A request queue that is persisted to disk to survive app restarts */
 export class PersistedRequestQueue {
-  private readonly _queue: BufferedWriteStore<PersistedRequest[]> = new BufferedWriteStore(
-    this._queuePath,
-    'queue',
-    [],
-  );
+  private readonly _queue: BufferedWriteStore<PersistedRequest[]>;
 
   public constructor(
     private readonly _queuePath: string,
     private readonly _maxAgeDays: number = 30,
     private readonly _maxCount: number = 30,
-  ) {}
+  ) {
+    this._queue = new BufferedWriteStore(this._queuePath, 'queue', []);
+  }
 
   /** Adds a request to the queue */
   public async add(request: QueuedTransportRequest): Promise<number> {
@@ -52,7 +50,7 @@ export class PersistedRequestQueue {
       while (queue.length > this._maxCount) {
         const removed = queue.shift();
         if (removed) {
-          void this._removeBody(removed.bodyPath);
+          this._removeBody(removed.bodyPath);
         }
       }
 
@@ -80,7 +78,7 @@ export class PersistedRequestQueue {
         // We drop events created in v3 of the SDK or before the cut-off
         if ('type' in found || found.date.getTime() < cutOff) {
           // we're dropping this event so delete the body
-          void this._removeBody(found.bodyPath);
+          this._removeBody(found.bodyPath);
           found = undefined;
         } else {
           pendingCount = queue.length;
@@ -93,7 +91,7 @@ export class PersistedRequestQueue {
     if (found) {
       try {
         const body = await readFileAsync(join(this._queuePath, found.bodyPath));
-        void this._removeBody(found.bodyPath);
+        this._removeBody(found.bodyPath);
 
         return {
           request: {
@@ -111,11 +109,9 @@ export class PersistedRequestQueue {
   }
 
   /** Removes the body of the request */
-  private async _removeBody(bodyPath: string): Promise<void> {
-    try {
-      await unlinkAsync(join(this._queuePath, bodyPath));
-    } catch (_) {
-      //
-    }
+  private _removeBody(bodyPath: string): void {
+    unlinkAsync(join(this._queuePath, bodyPath)).catch(() => {
+      // ignore
+    });
   }
 }

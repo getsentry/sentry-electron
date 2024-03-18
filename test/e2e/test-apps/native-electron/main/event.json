@@ -61,7 +61,6 @@
       "username": "some_user"
     },
     "event_id": "{{id}}",
-    "timestamp": 0,
     "breadcrumbs": [],
     "tags": {
       "event.environment": "native",

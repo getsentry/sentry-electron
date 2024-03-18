@@ -61,7 +61,7 @@ describe('E2E Tests', () => {
                 }
 
                 const [appPath, appName] = await recipe.prepare(this, distDir);
-                testContext = new TestContext(await electronPath, appPath, appName);
+                testContext = new TestContext(await electronPath, electronVersion, appPath, appName);
                 await recipe.runTests(testContext, testServer);
               });
             }
@@ -79,7 +79,7 @@ describe('E2E Tests', () => {
             }
 
             const [appPath, appName] = await recipe.prepare(this, distDir);
-            testContext = new TestContext(await electronPath, appPath, appName);
+            testContext = new TestContext(await electronPath, electronVersion, appPath, appName);
             await recipe.runTests(testContext, testServer);
           });
         }

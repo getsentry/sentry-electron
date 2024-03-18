@@ -5,33 +5,34 @@ import { defaultIntegrations as defaultNodeIntegrations, init as nodeInit, NodeO
 import { Integration, Options } from '@sentry/types';
 import { Session, session, WebContents } from 'electron';
 
-import { getDefaultEnvironment, getDefaultReleaseName } from './context';
-import {
-  AdditionalContext,
-  ChildProcess,
-  ElectronBreadcrumbs,
-  MainContext,
-  MainProcessSession,
-  Net,
-  OnUncaughtException,
-  PreloadInjection,
-  Screenshots,
-  SentryMinidump,
-} from './integrations';
+import { getDefaultEnvironment, getDefaultReleaseName, getSdkInfo } from './context';
+import { additionalContextIntegration } from './integrations/additional-context';
+import { childProcessIntegration } from './integrations/child-process';
+import { electronBreadcrumbsIntegration } from './integrations/electron-breadcrumbs';
+import { mainContextIntegration } from './integrations/main-context';
+import { mainProcessSessionIntegration } from './integrations/main-process-session';
+import { electronNetIntegration } from './integrations/net-breadcrumbs';
+import { onUncaughtExceptionIntegration } from './integrations/onuncaughtexception';
+import { preloadInjectionIntegration } from './integrations/preload-injection';
+import { rendererProfilingIntegration } from './integrations/renderer-profiling';
+import { screenshotsIntegration } from './integrations/screenshots';
+import { sentryMinidumpIntegration } from './integrations/sentry-minidump';
 import { configureIPC } from './ipc';
+import { defaultStackParser } from './stack-parse';
 import { ElectronOfflineTransportOptions, makeElectronOfflineTransport } from './transports/electron-offline-net';
-import { SDK_VERSION } from './version';
 
 export const defaultIntegrations: Integration[] = [
-  new SentryMinidump(),
-  new ElectronBreadcrumbs(),
-  new Net(),
-  new MainContext(),
-  new ChildProcess(),
-  new OnUncaughtException(),
-  new PreloadInjection(),
-  new AdditionalContext(),
-  new Screenshots(),
+  sentryMinidumpIntegration(),
+  electronBreadcrumbsIntegration(),
+  electronNetIntegration(),
+  mainContextIntegration(),
+  childProcessIntegration(),
+  onUncaughtExceptionIntegration(),
+  preloadInjectionIntegration(),
+  additionalContextIntegration(),
+  screenshotsIntegration(),
+  rendererProfilingIntegration(),
+  // eslint-disable-next-line deprecation/deprecation
   ...defaultNodeIntegrations.filter(
     (integration) => integration.name !== 'OnUncaughtException' && integration.name !== 'Context',
   ),
@@ -75,6 +76,13 @@ export interface ElectronMainOptionsInternal extends Options<ElectronOfflineTran
    * renderers.
    */
   attachScreenshot?: boolean;
+
+  /**
+   * Enables injection of 'js-profiling' document policy headers and ensure profiles are forwarded with transactions
+   *
+   * Requires Electron 15+
+   */
+  enableRendererProfiling?: boolean;
 }
 
 // getSessions and ipcMode properties are optional because they have defaults
@@ -83,7 +91,7 @@ export type ElectronMainOptions = Pick<Partial<ElectronMainOptionsInternal>, 'ge
   NodeOptions;
 
 const defaultOptions: ElectronMainOptionsInternal = {
-  _metadata: { sdk: { name: 'sentry.javascript.electron', version: SDK_VERSION } },
+  _metadata: { sdk: getSdkInfo() },
   ipcMode: IPCMode.Both,
   getSessions: () => [session.defaultSession],
 };
@@ -108,9 +116,13 @@ export function init(userOptions: ElectronMainOptions): void {
   // Unless autoSessionTracking is specifically disabled, we track sessions as the
   // lifetime of the Electron main process
   if (options.autoSessionTracking !== false) {
-    defaults.push(new MainProcessSession());
+    defaults.push(mainProcessSessionIntegration());
     // We don't want nodejs autoSessionTracking
     options.autoSessionTracking = false;
+  }
+
+  if (options.stackParser === undefined) {
+    options.stackParser = defaultStackParser;
   }
 
   setDefaultIntegrations(defaults, options);
@@ -123,21 +135,32 @@ export function init(userOptions: ElectronMainOptions): void {
   nodeInit(options);
 }
 
-/** Sets the default integrations and ensures that multiple minidump integrations are not enabled */
+/** A list of integrations which cause default integrations to be removed */
+const INTEGRATION_OVERRIDES = [
+  { override: 'ElectronMinidump', remove: 'SentryMinidump' },
+  { override: 'BrowserWindowSession', remove: 'MainProcessSession' },
+];
+
+/** Sets the default integrations and ensures that multiple minidump or session integrations are not enabled */
 function setDefaultIntegrations(defaults: Integration[], options: ElectronMainOptions): void {
   if (options.defaultIntegrations === undefined) {
-    // If ElectronMinidump has been included, automatically remove SentryMinidump
-    if (Array.isArray(options.integrations) && options.integrations.some((i) => i.name === 'ElectronMinidump')) {
-      options.defaultIntegrations = defaults.filter((integration) => integration.name !== 'SentryMinidump');
+    const removeDefaultsMatching = (user: Integration[], defaults: Integration[]): Integration[] => {
+      const toRemove = INTEGRATION_OVERRIDES.filter(({ override }) => user.some((i) => i.name === override)).map(
+        ({ remove }) => remove,
+      );
+
+      return defaults.filter((i) => !toRemove.includes(i.name));
+    };
+
+    if (Array.isArray(options.integrations)) {
+      options.defaultIntegrations = removeDefaultsMatching(options.integrations, defaults);
       return;
     } else if (typeof options.integrations === 'function') {
       const originalFn = options.integrations;
 
       options.integrations = (integrations) => {
-        const userIntegrations = originalFn(integrations);
-        return userIntegrations.some((i) => i.name === 'ElectronMinidump')
-          ? userIntegrations.filter((integration) => integration.name !== 'SentryMinidump')
-          : userIntegrations;
+        const resultIntegrations = originalFn(integrations);
+        return removeDefaultsMatching(resultIntegrations, resultIntegrations);
       };
     }
 

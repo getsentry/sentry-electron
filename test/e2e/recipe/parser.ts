@@ -17,6 +17,8 @@ export interface TestMetadata {
   runTwice?: boolean;
   expectedError?: string;
   distPath?: string;
+  skipEsmAutoTransform?: boolean;
+  waitAfterExpectedEvents?: number;
 }
 
 export interface TestRecipe {

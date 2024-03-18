@@ -4,7 +4,7 @@ import { logger } from '@sentry/utils';
 import { net } from 'electron';
 import { join } from 'path';
 
-import { sentryCachePath } from '../fs';
+import { getSentryCachePath } from '../fs';
 import { createElectronNetRequestExecutor, ElectronNetTransportOptions } from './electron-net';
 import { PersistedRequestQueue } from './queue';
 
@@ -59,7 +59,7 @@ function isRateLimited(result: TransportMakeRequestResponse): boolean {
 export function makeElectronOfflineTransport(options: ElectronOfflineTransportOptions): Transport {
   const netMakeRequest = createElectronNetRequestExecutor(options.url, options.headers || {});
   const queue: PersistedRequestQueue = new PersistedRequestQueue(
-    join(sentryCachePath, 'queue'),
+    join(getSentryCachePath(), 'queue'),
     options.maxQueueAgeDays,
     options.maxQueueCount,
   );
@@ -140,7 +140,7 @@ export function makeElectronOfflineTransport(options: ElectronOfflineTransportOp
     }
 
     if (action == 'queue') {
-      return await queueRequest(request);
+      return queueRequest(request);
     }
 
     logger.log('Dropping request');

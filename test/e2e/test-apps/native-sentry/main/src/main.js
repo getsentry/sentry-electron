@@ -28,8 +28,12 @@ app.on('ready', () => {
   // We only crash on the first run
   // The second run is where the crash is uploaded
   if (process.env.APP_FIRST_RUN) {
+    console.log('main process breadcrumb from first crashing run');
+
     setTimeout(() => {
       process.crash();
-    }, 500);
+    }, 2000);
+  } else {
+    console.log('main process breadcrumb from second run');
   }
 });

@@ -1,7 +1,7 @@
 const path = require('path');
 
 const { app, BrowserWindow } = require('electron');
-const { init, Integrations } = require('@sentry/electron');
+const { init, electronMinidumpIntegration } = require('@sentry/electron/main');
 
 app.commandLine.appendSwitch('enable-crashpad');
 
@@ -10,7 +10,7 @@ init({
   debug: true,
   release: 'custom-name',
   autoSessionTracking: false,
-  integrations: [new Integrations.ElectronMinidump()],
+  integrations: [electronMinidumpIntegration()],
   initialScope: { user: { username: 'some_user' } },
   onFatalError: () => {},
 });

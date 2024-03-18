@@ -1,0 +1,85 @@
+{
+  "method": "envelope",
+  "sentryKey": "37f8a2ee37c0409d8970bc7559c7c7e4",
+  "appId": "277345",
+  "data": {
+    "sdk": {
+      "name": "sentry.javascript.electron",
+      "packages": [
+        {
+          "name": "npm:@sentry/electron",
+          "version": "{{version}}"
+        }
+      ],
+      "version": "{{version}}"
+    },
+    "contexts": {
+      "app": {
+        "app_name": "anr-main",
+        "app_version": "1.0.0",
+        "app_start_time": "{{time}}"
+      },
+      "browser": {
+        "name": "Chrome"
+      },
+      "chrome": {
+        "name": "Chrome",
+        "type": "runtime",
+        "version": "{{version}}"
+      },
+      "device": {
+        "arch": "{{arch}}",
+        "family": "Desktop",
+        "memory_size": 0,
+        "processor_count": 0,
+        "processor_frequency": 0,
+        "cpu_description": "{{cpu}}"
+      },
+      "node": {
+        "name": "Node",
+        "type": "runtime",
+        "version": "{{version}}"
+      },
+      "os": {
+        "name": "{{platform}}",
+        "version": "{{version}}"
+      },
+      "runtime": {
+        "name": "Electron",
+        "version": "{{version}}"
+      },
+      "trace": {
+        "span_id": "{{id}}",
+        "trace_id": "{{id}}"
+      }
+    },
+    "release": "anr-main@1.0.0",
+    "environment": "development",
+    "exception": {
+      "values": [
+        {
+          "type": "ApplicationNotResponding",
+          "value": "Application Not Responding for at least 1000 ms",
+          "mechanism": { "type": "ANR" },
+          "stacktrace": {
+            "frames": [
+              {
+                "colno": 0,
+                "function": "longWork",
+                "in_app": true,
+                "lineno": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "level": "error",
+    "platform": "node",
+    "tags": {
+      "event.environment": "javascript",
+      "event.origin": "electron",
+      "event.process": "browser"
+    }
+  }
+}

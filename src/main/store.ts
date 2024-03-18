@@ -27,7 +27,7 @@ export class Store<T> {
   /** Value used to initialize data for the first time. */
   private readonly _initial: T;
   /** A mutex to ensure that there aren't races while reading and writing files */
-  private _lock: Mutex = new Mutex();
+  private readonly _lock: Mutex;
 
   /**
    * Creates a new store.
@@ -37,6 +37,7 @@ export class Store<T> {
    * @param initial An initial value to initialize data with.
    */
   public constructor(path: string, id: string, initial: T) {
+    this._lock = new Mutex();
     this._path = join(path, `${id}.json`);
     this._initial = initial;
   }
@@ -77,7 +78,7 @@ export class Store<T> {
    * constructor is used.
    */
   public async get(): Promise<T> {
-    return await this._lock.runExclusive(async () => {
+    return this._lock.runExclusive(async () => {
       if (this._data === undefined) {
         try {
           this._data = JSON.parse(await readFileAsync(this._path, 'utf8'), dateReviver) as T;
@@ -117,8 +118,6 @@ export class Store<T> {
  * Extends Store to throttle writes.
  */
 export class BufferedWriteStore<T> extends Store<T> {
-  /** The minimum time between writes */
-  private readonly _throttleTime?: number;
   /** A write that hasn't been written to disk yet */
   private _pendingWrite: { data: T; timeout: NodeJS.Timeout } | undefined;
 
@@ -130,9 +129,8 @@ export class BufferedWriteStore<T> extends Store<T> {
    * @param initial An initial value to initialize data with.
    * @param throttleTime The minimum time between writes
    */
-  public constructor(path: string, id: string, initial: T, throttleTime: number = 500) {
+  public constructor(path: string, id: string, initial: T, private readonly _throttleTime: number = 500) {
     super(path, id, initial);
-    this._throttleTime = throttleTime;
   }
 
   /** @inheritdoc */
@@ -153,7 +151,9 @@ export class BufferedWriteStore<T> extends Store<T> {
       const data = this._pendingWrite.data;
       // Clear the pending write immediately so that subsequent writes can be queued
       this._pendingWrite = undefined;
-      void super.set(data);
+      super.set(data).catch(() => {
+        // ignore
+      });
     }
   }
 }

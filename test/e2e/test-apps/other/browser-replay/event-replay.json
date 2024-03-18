@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "replay_event",
+    "replay_start_timestamp": 0,
+    "timestamp": 0,
+    "error_ids": [
+      "{{id}}"
+    ],
+    "trace_ids": [],
+    "urls": [
+      "app:///src/index.html"
+    ],
+    "replay_id": "{{id}}",
+    "segment_id": 0,
+    "replay_type": "buffer",
+    "event_id": "{{id}}",
+    "environment": "production",
+    "sdk": {
+      "version": "{{version}}",
+      "name": "sentry.javascript.browser"
+    },
+    "request": {
+      "url": "app:///src/index.html"
+    },
+    "platform": "javascript"
+  },
+  "attachments": [],
+  "sentryKey": "37f8a2ee37c0409d8970bc7559c7c7e4",
+  "method": "envelope"
+}

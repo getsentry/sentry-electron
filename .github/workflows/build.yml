@@ -15,8 +15,10 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: volta-cli/action@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: 'package.json'
       - name: Install
         run: yarn install
       - name: Build
@@ -24,7 +26,7 @@ jobs:
       - name: Pack
         run: yarn pack
       - name: Archive Artifacts
-        uses: actions/upload-artifact@v3.1.1
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ github.sha }}
           path: |
@@ -38,8 +40,10 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: volta-cli/action@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: 'package.json'
       - run: yarn install
       - name: Run Linter
         run: yarn lint
@@ -49,13 +53,15 @@ jobs:
     needs: build
     runs-on: ${{ matrix.os }}
     strategy:
-      # we want that the matrix keeps running, default is to cancel them if it fails.
+      # we want that the matrix keeps running, default is to cancel all if one fails.
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v2
-      - uses: volta-cli/action@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: 'package.json'
       - run: yarn install
       - name: Run Unit Tests
         run: yarn test
@@ -72,13 +78,22 @@ jobs:
     env:
       ELECTRON_VERSION: ${{ matrix.electron }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: volta-cli/action@v3
-      - uses: actions/cache@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          path: |
-            **/.cache/**/*.zip
-          key: ${{ runner.os }}-${{ matrix.electron }}
+          node-version-file: 'package.json'
       - run: yarn install
       - name: Run E2E Tests
         run: yarn e2e
+
+  required_jobs_passed:
+    name: All required jobs passed or were skipped
+    needs: [build, lint, test, e2e]
+    # Always run this, even if a dependent job failed
+    if: always()
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Check for failures
+        if: contains(needs.*.result, 'failure')
+        run: |
+          echo "One of the dependent jobs have failed. You may need to re-run it." && exit 1

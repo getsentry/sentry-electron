@@ -1,0 +1,28 @@
+name: Create PR for new SDK versions
+on:
+  schedule:
+    # At 9am every day
+    - cron: '0 9 * * *'
+
+jobs:
+  test:
+    name: Check new versions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: 'package.json'
+      - run: yarn install
+      - name: Update Versions
+        run: yarn update-sdk-versions
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: test/new-sdk-version
+          delete-branch: true
+          title: 'test: New Sentry SDK version'
+          commit-message: 'test: New Sentry SDK version'
+          body: |
+            Automatically generated PR to test new Sentry SDK version

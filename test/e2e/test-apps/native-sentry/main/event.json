@@ -60,7 +60,23 @@
     },
     "event_id": "{{id}}",
     "timestamp": 0,
-    "breadcrumbs": [],
+    "breadcrumbs": [
+      {
+        "category": "console",
+        "level": "log",
+        "message": "main process breadcrumb from first crashing run"
+      },
+      {
+        "category": "console",
+        "level": "log",
+        "message": "renderer process breadcrumb from first crashing run"
+      },
+      {
+        "category": "console",
+        "level": "log",
+        "message": "main process breadcrumb from second run"
+      }
+    ],
     "tags": {
       "event.environment": "native",
       "event.origin": "electron",

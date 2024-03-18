@@ -1,4 +1,5 @@
-import { DeviceContext, Event, EventProcessor, Integration } from '@sentry/types';
+import { convertIntegrationFnToClass, defineIntegration } from '@sentry/core';
+import { DeviceContext } from '@sentry/types';
 import { app, screen as electronScreen } from 'electron';
 import { CpuInfo, cpus } from 'os';
 
@@ -19,82 +20,90 @@ const DEFAULT_OPTIONS: AdditionalContextOptions = {
   language: true,
 };
 
-/** Adds Electron context to events and normalises paths. */
-export class AdditionalContext implements Integration {
-  /** @inheritDoc */
-  public static id: string = 'AdditionalContext';
+const INTEGRATION_NAME = 'AdditionalContext';
 
-  /** @inheritDoc */
-  public name: string = AdditionalContext.id;
+/**
+ * Adds additional Electron context to events
+ */
+export const additionalContextIntegration = defineIntegration((userOptions: Partial<AdditionalContextOptions> = {}) => {
+  const _lazyDeviceContext: DeviceContext = {};
 
-  private readonly _options: AdditionalContextOptions;
-  private _lazyDeviceContext: DeviceContext = {};
+  const options = {
+    ...DEFAULT_OPTIONS,
+    ...userOptions,
+  };
 
-  public constructor(options: Partial<AdditionalContextOptions> = {}) {
-    this._options = {
-      ...DEFAULT_OPTIONS,
-      ...options,
-    };
-  }
-
-  /** @inheritDoc */
-  public setupOnce(addGlobalEventProcessor: (callback: EventProcessor) => void): void {
-    addGlobalEventProcessor(async (event: Event) => this._addAdditionalContext(event));
-
-    // Some metrics are only available after app ready so we lazily load them
-    void whenAppReady.then(() => {
-      const { language, screen } = this._options;
-
-      if (language) {
-        this._lazyDeviceContext.language = app.getLocale();
-      }
-
-      if (screen) {
-        this._setPrimaryDisplayInfo();
-
-        electronScreen.on('display-metrics-changed', () => {
-          this._setPrimaryDisplayInfo();
-        });
-      }
-    });
-  }
-
-  /** Adds additional context to event */
-  private _addAdditionalContext(event: Event): Event {
-    const device: DeviceContext = this._lazyDeviceContext;
-
-    const { memory, cpu } = this._options;
-
-    if (memory) {
-      const { total, free } = process.getSystemMemoryInfo();
-      device.memory_size = total * 1024;
-      device.free_memory = free * 1024;
-    }
-
-    if (cpu) {
-      const cpuInfo: CpuInfo[] | undefined = cpus();
-      if (cpuInfo && cpuInfo.length) {
-        const firstCpu = cpuInfo[0];
-
-        device.processor_count = cpuInfo.length;
-        device.cpu_description = firstCpu.model;
-        device.processor_frequency = firstCpu.speed;
-
-        if (app.runningUnderARM64Translation) {
-          device.machine_arch = 'arm64';
-        }
-      }
-    }
-
-    return mergeEvents(event, { contexts: { device } });
-  }
-
-  /** Sets the display info */
-  private _setPrimaryDisplayInfo(): void {
+  function _setPrimaryDisplayInfo(): void {
     const display = electronScreen.getPrimaryDisplay();
     const width = Math.floor(display.size.width * display.scaleFactor);
     const height = Math.floor(display.size.height * display.scaleFactor);
-    this._lazyDeviceContext.screen_density = display.scaleFactor;
-    this._lazyDeviceContext.screen_resolution = `${width}x${height}`;
+    _lazyDeviceContext.screen_density = display.scaleFactor;
+    _lazyDeviceContext.screen_resolution = `${width}x${height}`;
   }
-}
+
+  return {
+    name: INTEGRATION_NAME,
+    setupOnce() {
+      // noop
+    },
+    setup() {
+      // Some metrics are only available after app ready so we lazily load them
+      whenAppReady.then(
+        () => {
+          const { language, screen } = options;
+
+          if (language) {
+            _lazyDeviceContext.language = app.getLocale();
+          }
+
+          if (screen) {
+            _setPrimaryDisplayInfo();
+
+            electronScreen.on('display-metrics-changed', () => {
+              _setPrimaryDisplayInfo();
+            });
+          }
+        },
+        () => {
+          // ignore
+        },
+      );
+    },
+    processEvent(event) {
+      const device: DeviceContext = _lazyDeviceContext;
+
+      const { memory, cpu } = options;
+
+      if (memory) {
+        const { total, free } = process.getSystemMemoryInfo();
+        device.memory_size = total * 1024;
+        device.free_memory = free * 1024;
+      }
+
+      if (cpu) {
+        const cpuInfo: CpuInfo[] | undefined = cpus();
+        if (cpuInfo?.length) {
+          const firstCpu = cpuInfo[0];
+
+          device.processor_count = cpuInfo.length;
+          device.cpu_description = firstCpu.model;
+          device.processor_frequency = firstCpu.speed;
+
+          if (app.runningUnderARM64Translation) {
+            device.machine_arch = 'arm64';
+          }
+        }
+      }
+
+      return mergeEvents(event, { contexts: { device } });
+    },
+  };
+});
+
+/**
+ * Adds additional Electron context to events
+ *
+ * @deprecated Use `additionalContextIntegration()z instead
+ */
+// eslint-disable-next-line deprecation/deprecation
+export const AdditionalContext = convertIntegrationFnToClass(INTEGRATION_NAME, additionalContextIntegration);

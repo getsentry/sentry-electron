@@ -69,14 +69,14 @@
                 "colno": 0,
                 "filename": "app:///src/main.js",
                 "function": "{{function}}",
-                "module": "main",
+                "module": "src:main",
                 "in_app": true,
                 "lineno": 0
               }
             ]
           },
           "mechanism": {
-            "handled": true,
+            "handled": false,
             "type": "generic"
           }
         }

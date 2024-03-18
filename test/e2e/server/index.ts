@@ -1,5 +1,5 @@
-import { Event, Session, Transaction } from '@sentry/types';
-import { forEachEnvelopeItem, parseEnvelope } from '@sentry/utils';
+import { Event, Profile, ReplayEvent, Session, Transaction } from '@sentry/types';
+import { dropUndefinedKeys, forEachEnvelopeItem, parseEnvelope } from '@sentry/utils';
 import { Server } from 'http';
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
@@ -8,6 +8,7 @@ import { Readable } from 'stream';
 import { inspect, TextDecoder, TextEncoder } from 'util';
 import { gunzipSync } from 'zlib';
 
+import { delay } from '../../helpers';
 import { eventIsSession } from '../recipe';
 import { createLogger } from '../utils';
 import { parseMultipart, sentryEventFromFormFields } from './multi-part';
@@ -17,6 +18,7 @@ const log = createLogger('Test Server');
 export const SERVER_PORT = 8123;
 export const RATE_LIMIT_ID = 666;
 export const ERROR_ID = 999;
+export const HANG_ID = 777;
 
 interface Attachment {
   filename?: string;
@@ -36,6 +38,10 @@ export interface TestServerEvent<T = unknown> {
   namespacedData?: Record<string, any>;
   /** Attachments */
   attachments?: Attachment[];
+  /** Profiling data */
+  profile?: Profile;
+  /** Metrics data */
+  metrics?: string;
   /** API method used for submission */
   method: 'envelope' | 'minidump' | 'store';
 }
@@ -102,6 +108,11 @@ export class TestServer {
         return;
       }
 
+      if (ctx.params.id === HANG_ID.toString()) {
+        await delay(10_000);
+        return;
+      }
+
       const auth = (ctx.headers['x-sentry-auth'] as string) || ctx.url;
       const keyMatch = auth.match(/sentry_key=([a-f0-9]*)/);
       if (!keyMatch) {
@@ -112,27 +123,54 @@ export class TestServer {
 
       const envelope = parseEnvelope(await getRequestBody(ctx), new TextEncoder(), new TextDecoder());
 
-      let data: Event | Transaction | Session | undefined;
+      let data: Event | Transaction | Session | ReplayEvent | undefined;
       const attachments: Attachment[] = [];
+      let profile: Profile | undefined;
+      let metrics: string | undefined;
 
       forEachEnvelopeItem(envelope, ([headers, item]) => {
-        if (headers.type === 'event' || headers.type === 'transaction' || headers.type === 'session') {
+        if (
+          headers.type === 'event' ||
+          headers.type === 'transaction' ||
+          headers.type === 'session' ||
+          headers.type === 'feedback'
+        ) {
           data = item as Event | Transaction | Session;
+        }
+
+        if (headers.type === 'replay_event') {
+          const replayItem = item as ReplayEvent;
+          // We only want to capture replay events that link up to errors as there may be others we don't care about
+          if (Array.isArray(replayItem.error_ids) && replayItem.error_ids.length > 0) {
+            data = replayItem;
+          }
         }
 
         if (headers.type === 'attachment') {
           attachments.push(headers);
         }
+
+        if (headers.type === 'statsd') {
+          metrics = item.toString();
+        }
+
+        if (headers.type === 'profile') {
+          profile = item as unknown as Profile;
+        }
       });
 
-      if (data) {
-        this._addEvent({
-          data,
-          attachments,
-          appId: ctx.params.id,
-          sentryKey: keyMatch[1],
-          method: 'envelope',
-        });
+      if (data || metrics) {
+        this._addEvent(
+          dropUndefinedKeys({
+            data: data || {},
+            attachments,
+            profile,
+            metrics,
+            appId: ctx.params.id,
+            sentryKey: keyMatch[1],
+            method: 'envelope',
+          }),
+        );
 
         ctx.status = 200;
         ctx.body = 'Success';
@@ -230,8 +268,13 @@ export class TestServer {
     });
   }
 
-  private _addEvent(event: TestServerEvent<Event | Transaction | Session>): void {
-    const type = eventIsSession(event.data) ? 'session' : 'event';
+  private _addEvent(event: TestServerEvent<Event | Transaction | Session | ReplayEvent>): void {
+    const type = eventIsSession(event.data)
+      ? 'session'
+      : (event.data as ReplayEvent)?.type === 'replay_event'
+      ? 'replay'
+      : 'event';
+
     log(`Received '${type}' on '${event.method}' endpoint`, inspect(event, false, null, true));
     this.events.push(event);
   }

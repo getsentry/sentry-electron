@@ -1,13 +1,21 @@
 /* eslint-disable complexity */
-import { Event, Session, Transaction } from '@sentry/types';
+import { Event, Profile, ReplayEvent, Session, Transaction } from '@sentry/types';
+
+import { TestServerEvent } from '../server';
 
 type EventOrSession = Event | Transaction | Session;
 
-export function normalize(event: EventOrSession): EventOrSession {
-  if (eventIsSession(event)) {
-    return normalizeSession(event as Session);
+export function normalize(event: TestServerEvent<Event | Transaction | Session>): void {
+  if (eventIsSession(event.data)) {
+    normalizeSession(event.data as Session);
   } else {
-    return normalizeEvent(event as Event);
+    normalizeEvent(event.data as Event & ReplayEvent);
+  }
+
+  normalizeProfile(event.profile);
+
+  if (event.metrics) {
+    event.metrics = event.metrics.replace(/T\d{1,10}\n/g, 'T0000000000\n');
   }
 }
 
@@ -21,7 +29,7 @@ export function eventIsSession(data: EventOrSession): boolean {
  * All properties that are timestamps, versions, ids or variables that may vary
  * by platform are replaced with placeholder strings
  */
-function normalizeSession(session: Session): Session {
+function normalizeSession(session: Session): void {
   if (session.sid) {
     session.sid = '{{id}}';
   }
@@ -37,8 +45,6 @@ function normalizeSession(session: Session): Session {
   if (session.duration) {
     session.duration = 0;
   }
-
-  return session;
 }
 
 /**
@@ -47,13 +53,13 @@ function normalizeSession(session: Session): Session {
  * All properties that are timestamps, versions, ids or variables that may vary
  * by platform are replaced with placeholder strings
  */
-function normalizeEvent(event: Event): Event {
+function normalizeEvent(event: Event & ReplayEvent): void {
   if (event.sdk?.version) {
     event.sdk.version = '{{version}}';
   }
 
   if (event?.sdk?.packages) {
-    for (const pkg of event?.sdk?.packages) {
+    for (const pkg of event?.sdk?.packages || []) {
       if (pkg.version) {
         pkg.version = '{{version}}';
       }
@@ -126,24 +132,48 @@ function normalizeEvent(event: Event): Event {
     delete event.contexts.trace.tags;
   }
 
+  if (event?.tags?.replayId) {
+    event.tags.replayId = '{{replay_id}}';
+  }
+
+  if (event.replay_id) {
+    event.replay_id = '{{id}}';
+  }
+
+  if ((event as any).replay_start_timestamp) {
+    (event as any).replay_start_timestamp = 0;
+  }
+
+  if (Array.isArray(event.error_ids) && event.error_ids.length > 0) {
+    event.error_ids = ['{{id}}'];
+  }
+
   if (event.start_timestamp) {
     event.start_timestamp = 0;
   }
 
   if (event.exception?.values?.[0].stacktrace?.frames) {
-    for (const frame of event.exception?.values?.[0].stacktrace?.frames) {
+    for (const frame of event.exception?.values?.[0].stacktrace?.frames || []) {
       frame.colno = 0;
       frame.lineno = 0;
-      frame.function = '{{function}}';
+      if (frame.function !== 'longWork') {
+        frame.function = '{{function}}';
+      }
+      frame.filename = frame.filename?.replace(/\.mjs$/, '.js');
     }
   }
 
-  event.timestamp = 0;
+  if (event.timestamp) {
+    event.timestamp = 0;
+  }
+
   if ((event as any).start_timestamp) {
     (event as any).start_timestamp = 0;
   }
 
-  event.event_id = '{{id}}';
+  if (event.event_id) {
+    event.event_id = '{{id}}';
+  }
 
   if (event.spans) {
     for (const span of event.spans) {
@@ -176,6 +206,13 @@ function normalizeEvent(event: Event): Event {
       breadcrumb.timestamp = 0;
     }
   }
+}
 
-  return event;
+export function normalizeProfile(profile: Profile | undefined): void {
+  if (!profile) {
+    return;
+  }
+
+  profile.event_id = '{{id}}';
+  profile.timestamp = '{{time}}';
 }

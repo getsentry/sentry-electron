@@ -1,32 +1,58 @@
-import { getCurrentHub, makeSession, updateSession } from '@sentry/core';
+import {
+  captureSession,
+  endSession as endSessionCore,
+  getClient,
+  getCurrentScope,
+  makeSession,
+  startSession as startSessionCore,
+  updateSession,
+} from '@sentry/core';
 import { flush, NodeClient } from '@sentry/node';
 import { SerializedSession, Session, SessionContext, SessionStatus } from '@sentry/types';
 import { logger } from '@sentry/utils';
+import { app } from 'electron';
 
-import { sentryCachePath } from './fs';
+import { getSentryCachePath } from './fs';
 import { Store } from './store';
 
 const PERSIST_INTERVAL_MS = 60_000;
 
 /** Stores the app session in case of termination due to main process crash or app killed */
-const sessionStore = new Store<SessionContext | undefined>(sentryCachePath, 'session', undefined);
+let sessionStore: Store<SessionContext | undefined> | undefined;
+/** Previous session if it did not exit cleanly */
+let previousSession: Promise<Partial<Session> | undefined> | undefined;
 
-/** Previous session that did not exit cleanly */
-let previousSession: Promise<Partial<Session> | undefined> | undefined = sessionStore.get();
+function getSessionStore(): Store<SessionContext | undefined> {
+  if (!sessionStore) {
+    sessionStore = new Store<SessionContext | undefined>(getSentryCachePath(), 'session', undefined);
+    previousSession = sessionStore.get();
+  }
+
+  return sessionStore;
+}
 
 let persistTimer: NodeJS.Timer | undefined;
 
 /** Starts a session */
-export async function startSession(): Promise<void> {
-  const hub = getCurrentHub();
-  await sessionStore.set(hub.startSession());
+export function startSession(sendOnCreate: boolean): void {
+  const session = startSessionCore();
+
+  if (sendOnCreate) {
+    captureSession();
+  }
+
+  getSessionStore()
+    .set(session)
+    .catch(() => {
+      // Does not throw
+    });
 
   // Every PERSIST_INTERVAL, write the session to disk
   persistTimer = setInterval(async () => {
-    const currentSession = hub.getScope()?.getSession();
+    const currentSession = getCurrentScope().getSession();
     // Only bother saving if it hasn't already ended
     if (currentSession && currentSession.status === 'ok') {
-      await sessionStore.set(currentSession);
+      await getSessionStore().set(currentSession);
     }
   }, PERSIST_INTERVAL_MS);
 }
@@ -38,13 +64,12 @@ export async function endSession(): Promise<void> {
     clearInterval(persistTimer);
   }
 
-  const hub = getCurrentHub();
-  const session = hub.getScope()?.getSession();
+  const session = getCurrentScope().getSession();
 
   if (session) {
     if (session.status === 'ok') {
       logger.log('Ending session');
-      hub.endSession();
+      endSessionCore();
     } else {
       logger.log('Session was already ended');
     }
@@ -52,9 +77,9 @@ export async function endSession(): Promise<void> {
     logger.log('No session');
   }
 
-  await sessionStore.clear();
+  await getSessionStore().clear();
 
-  await flush();
+  await flush(2_000);
 }
 
 /** Determines if a Date is likely to have occurred in the previous uncompleted session */
@@ -63,9 +88,9 @@ export async function unreportedDuringLastSession(crashDate: Date | undefined): 
     return false;
   }
 
-  const previousSessionModified = await sessionStore.getModifiedDate();
+  const previousSessionModified = await getSessionStore().getModifiedDate();
   // There is no previous session
-  if (previousSessionModified == undefined) {
+  if (previousSessionModified === undefined) {
     return false;
   }
 
@@ -84,7 +109,7 @@ export async function unreportedDuringLastSession(crashDate: Date | undefined): 
 
 /** Checks if the previous session needs sending as crashed or abnormal  */
 export async function checkPreviousSession(crashed: boolean): Promise<void> {
-  const client = getCurrentHub().getClient<NodeClient>();
+  const client = getClient<NodeClient>();
 
   const previous = await previousSession;
 
@@ -122,8 +147,7 @@ export function sessionCrashed(): void {
   }
 
   logger.log('Session Crashed');
-  const hub = getCurrentHub();
-  const session = hub.getScope()?.getSession();
+  const session = getCurrentScope().getSession();
 
   if (!session) {
     logger.log('No session to update');
@@ -132,10 +156,69 @@ export function sessionCrashed(): void {
 
   if (session.status === 'ok') {
     logger.log('Setting session as crashed');
-    updateSession(session, { status: 'crashed', errors: (session.errors += 1) });
+    const errors = session.errors + 1;
+    updateSession(session, { status: 'crashed', errors });
   } else {
     logger.log('Session already ended');
   }
 
-  hub.captureSession();
+  captureSession();
 }
+
+/** Sets the current session as ANR */
+export function sessionAnr(): void {
+  // stop persisting session
+  if (persistTimer) {
+    clearInterval(persistTimer);
+  }
+
+  const session = getCurrentScope().getSession();
+
+  if (!session) {
+    return;
+  }
+
+  if (session.status === 'ok') {
+    logger.log('Setting session as abnormal ANR');
+    updateSession(session, { status: 'abnormal', abnormal_mechanism: 'anr_foreground' });
+    captureSession();
+  }
+}
+
+/**
+ * End the current session on app exit
+ */
+export function endSessionOnExit(): void {
+  // 'before-quit' is always called before 'will-quit' so we listen there and ensure our 'will-quit' handler is still
+  // the last listener
+  app.on('before-quit', () => {
+    // We track the end of sessions via the 'will-quit' event which is the last event emitted before close.
+    //
+    // We need to be the last 'will-quit' listener so as not to interfere with any user defined listeners which may
+    // call `event.preventDefault()` to abort the exit.
+    app.removeListener('will-quit', exitHandler);
+    app.on('will-quit', exitHandler);
+  });
+}
+
+/** Handles the exit */
+const exitHandler: (event: Electron.Event) => Promise<void> = async (event: Electron.Event) => {
+  if (event.defaultPrevented) {
+    return;
+  }
+
+  logger.log('[Session] Exit Handler');
+
+  // Stop the exit so we have time to send the session
+  event.preventDefault();
+
+  try {
+    // End the session
+    await endSession();
+  } catch (e) {
+    // Ignore and log any errors which would prevent app exit
+    logger.warn('[Session] Error ending session:', e);
+  }
+
+  app.exit();
+};

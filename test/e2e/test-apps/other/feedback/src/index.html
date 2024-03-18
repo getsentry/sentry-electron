@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <script>
+      const crypto = require('crypto');
+      const { init, sendFeedback } = require('@sentry/electron/renderer');
+
+      init({
+        debug: true,
+      });
+
+      setTimeout(() => {
+        sendFeedback({
+          name: 'John Doe',
+          email: 'john@doe.com',
+          message: 'I really like your App, thanks!',
+        });
+      }, 500);
+    </script>
+  </body>
+</html>

@@ -1,4 +1,5 @@
 import { Event } from '@sentry/types';
+import { parseSemver } from '@sentry/utils';
 import { expect } from 'chai';
 import { spawnSync } from 'child_process';
 import { mkdirSync, writeFileSync } from 'fs';
@@ -7,7 +8,7 @@ import { dirname, join } from 'path';
 import { SDK_VERSION } from '../../../src/main/version';
 import { delay } from '../../helpers';
 import { TestContext } from '../context';
-import { ERROR_ID, RATE_LIMIT_ID, SERVER_PORT, TestServer, TestServerEvent } from '../server';
+import { ERROR_ID, HANG_ID, RATE_LIMIT_ID, SERVER_PORT, TestServer, TestServerEvent } from '../server';
 import { createLogger, getTestLog, walkSync } from '../utils';
 import { evaluateCondition } from './eval';
 import { eventIsSession, normalize } from './normalize';
@@ -51,6 +52,51 @@ export function getCategorisedTestRecipes(electronVersion: string): Record<strin
     }
     return obj;
   }, {} as Record<string, RecipeRunner[]>);
+}
+
+function insertAfterLastImport(content: string, insert: string): string {
+  const lines = content.split('\n');
+  const importCount = lines.filter((l) => l.startsWith('import ')).length;
+
+  let output = '';
+  let count = 0;
+  for (const line of lines) {
+    output += `${line}\n`;
+
+    if (line.startsWith('import ')) {
+      count += 1;
+    }
+
+    if (count === importCount) {
+      output += `${insert}\n`;
+      count += 1;
+    }
+  }
+
+  return output;
+}
+
+function convertToEsm(filename: string, content: string): [string, string] {
+  if (filename.endsWith('package.json')) {
+    const obj = JSON.parse(content);
+    obj.main = obj.main.replace(/\.js$/, '.mjs');
+    return [filename, JSON.stringify(obj)];
+  }
+
+  if (filename.endsWith('main.js')) {
+    return [
+      filename.replace(/\.js$/, '.mjs'),
+      insertAfterLastImport(
+        content
+          .replace(/(?:const|var) (\{[\s\S]*?\}) = require\((\S*?)\)/g, 'import $1 from $2')
+          .replace(/(?:const|var) (\S*) = require\((\S*)\)/g, 'import * as $1 from $2'),
+        `import * as url from 'url';
+const __dirname = url.fileURLToPath(new url.URL('.', import.meta.url));`,
+      ),
+    ];
+  }
+
+  return [filename, content];
 }
 
 export class RecipeRunner {
@@ -105,9 +151,6 @@ export class RecipeRunner {
     for (const file of Object.keys(this._recipe.files)) {
       log(`Writing file '${file}'`);
 
-      const path = join(appPath, file);
-
-      mkdirSync(dirname(path), { recursive: true });
       let content = this._recipe.files[file];
 
       // Replace with the test server localhost DSN
@@ -115,7 +158,8 @@ export class RecipeRunner {
         .replace('__DSN__', `http://${SENTRY_KEY}@localhost:${SERVER_PORT}/277345`)
         .replace('__INCORRECT_DSN__', `http://${SENTRY_KEY}@localhost:9999/277345`)
         .replace('__RATE_LIMIT_DSN__', `http://${SENTRY_KEY}@localhost:${SERVER_PORT}/${RATE_LIMIT_ID}`)
-        .replace('__ERROR_DSN__', `http://${SENTRY_KEY}@localhost:${SERVER_PORT}/${ERROR_ID}`);
+        .replace('__ERROR_DSN__', `http://${SENTRY_KEY}@localhost:${SERVER_PORT}/${ERROR_ID}`)
+        .replace('__HANG_DSN__', `http://${SENTRY_KEY}@localhost:${SERVER_PORT}/${HANG_ID}`);
 
       if (file.endsWith('package.json')) {
         content = content
@@ -124,12 +168,21 @@ export class RecipeRunner {
             /"@sentry\/electron": ".*"/,
             `"@sentry/electron": "file:./../../../../sentry-electron-${SDK_VERSION}.tgz"`,
           )
-          // We replace the Sentry JavaScript dependency versions to match that of @sentry/electron
-          .replace(/"@sentry\/tracing": ".*"/, `"@sentry/tracing": "${JS_VERSION}"`)
+          // We replace the Sentry JavaScript dependency versions to match that of @sentry/core
+          .replace(/"@sentry\/replay": ".*"/, `"@sentry/replay": "${JS_VERSION}"`)
           .replace(/"@sentry\/react": ".*"/, `"@sentry/react": "${JS_VERSION}"`)
+          .replace(/"@sentry\/integrations": ".*"/, `"@sentry/integrations": "${JS_VERSION}"`)
           .replace(/"@sentry\/vue": ".*"/, `"@sentry/vue": "${JS_VERSION}"`);
       }
 
+      let filename = file;
+
+      if (!this._recipe.metadata.skipEsmAutoTransform && (parseSemver(this._electronVersion).major || 0) >= 28) {
+        [filename, content] = convertToEsm(file, content);
+      }
+
+      const path = join(appPath, filename);
+      mkdirSync(dirname(path), { recursive: true });
       writeFileSync(path, content);
     }
 
@@ -182,6 +235,12 @@ export class RecipeRunner {
 
     await context.waitForEvents(testServer, totalEvents);
 
+    // If a test need to ensure no other events are received after the expected number of events, wait a bit longer
+    if (this._recipe.metadata.waitAfterExpectedEvents) {
+      log(`Waiting ${this._recipe.metadata.waitAfterExpectedEvents}ms to see if any more events are sent...`);
+      await delay(this._recipe.metadata.waitAfterExpectedEvents);
+    }
+
     if (totalEvents !== testServer.events.length) {
       throw new Error(`Expected ${expectedEvents.length} events but server has ${testServer.events.length} events`);
     }
@@ -205,7 +264,7 @@ export class RecipeRunner {
     }
 
     for (const event of testServer.events) {
-      event.data = normalize(event.data);
+      normalize(event);
     }
 
     for (const [i, expectedEvent] of expectedEvents.entries()) {

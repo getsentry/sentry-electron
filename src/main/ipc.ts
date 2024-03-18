@@ -1,12 +1,65 @@
-import { captureEvent, configureScope, getCurrentHub, Scope } from '@sentry/core';
-import { Attachment, AttachmentItem, Envelope, Event, EventItem } from '@sentry/types';
+import { BaseClient, captureEvent, getClient, getCurrentScope } from '@sentry/core';
+import {
+  Attachment,
+  AttachmentItem,
+  ClientOptions,
+  Envelope,
+  Event,
+  EventItem,
+  Profile,
+  ScopeData,
+} from '@sentry/types';
 import { forEachEnvelopeItem, logger, parseEnvelope, SentryError } from '@sentry/utils';
-import { app, ipcMain, protocol, WebContents } from 'electron';
+import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
 import { TextDecoder, TextEncoder } from 'util';
 
-import { IPCChannel, IPCMode, mergeEvents, PROTOCOL_SCHEME } from '../common';
-import { supportsFullProtocol, whenAppReady } from './electron-normalize';
+import {
+  IPCChannel,
+  IPCMode,
+  mergeEvents,
+  MetricIPCMessage,
+  normalizeUrlsInReplayEnvelope,
+  PROTOCOL_SCHEME,
+  RendererStatus,
+} from '../common';
+import { createRendererAnrStatusHandler } from './anr';
+import { registerProtocol, supportsFullProtocol, whenAppReady } from './electron-normalize';
+import { rendererProfileFromIpc } from './integrations/renderer-profiling';
 import { ElectronMainOptionsInternal } from './sdk';
+
+let KNOWN_RENDERERS: Set<number> | undefined;
+let WINDOW_ID_TO_WEB_CONTENTS: Map<string, number> | undefined;
+
+const SENTRY_CUSTOM_SCHEME = {
+  scheme: PROTOCOL_SCHEME,
+  privileges: { bypassCSP: true, corsEnabled: true, supportFetchAPI: true, secure: true },
+};
+
+function newProtocolRenderer(): void {
+  KNOWN_RENDERERS = KNOWN_RENDERERS || new Set();
+  WINDOW_ID_TO_WEB_CONTENTS = WINDOW_ID_TO_WEB_CONTENTS || new Map();
+
+  for (const wc of webContents.getAllWebContents()) {
+    const wcId = wc.id;
+    if (KNOWN_RENDERERS.has(wcId)) {
+      continue;
+    }
+
+    if (!wc.isDestroyed()) {
+      wc.executeJavaScript('window.__SENTRY_RENDERER_ID__').then((windowId: string | undefined) => {
+        if (windowId && KNOWN_RENDERERS && WINDOW_ID_TO_WEB_CONTENTS) {
+          KNOWN_RENDERERS.add(wcId);
+          WINDOW_ID_TO_WEB_CONTENTS.set(windowId, wcId);
+
+          wc.once('destroyed', () => {
+            KNOWN_RENDERERS?.delete(wcId);
+            WINDOW_ID_TO_WEB_CONTENTS?.delete(windowId);
+          });
+        }
+      }, logger.error);
+    }
+  }
+}
 
 function captureEventFromRenderer(
   options: ElectronMainOptionsInternal,
@@ -42,26 +95,29 @@ function handleEvent(options: ElectronMainOptionsInternal, jsonEvent: string, co
   captureEventFromRenderer(options, event, [], contents);
 }
 
-function eventFromEnvelope(envelope: Envelope): [Event, Attachment[]] | undefined {
+function eventFromEnvelope(envelope: Envelope): [Event, Attachment[], Profile | undefined] | undefined {
   let event: Event | undefined;
   const attachments: Attachment[] = [];
+  let profile: Profile | undefined;
 
   forEachEnvelopeItem(envelope, (item, type) => {
-    if (type === 'event' || type === 'transaction') {
+    if (type === 'event' || type === 'transaction' || type === 'feedback') {
       event = Array.isArray(item) ? (item as EventItem)[1] : undefined;
     } else if (type === 'attachment') {
-      const [headers, bin] = item as AttachmentItem;
+      const [headers, data] = item as AttachmentItem;
 
       attachments.push({
         filename: headers.filename,
         attachmentType: headers.attachment_type,
         contentType: headers.content_type,
-        data: bin,
+        data,
       });
+    } else if (type === 'profile') {
+      profile = item[1] as unknown as Profile;
     }
   });
 
-  return event ? [event, attachments] : undefined;
+  return event ? [event, attachments, profile] : undefined;
 }
 
 function handleEnvelope(options: ElectronMainOptionsInternal, env: Uint8Array | string, contents?: WebContents): void {
@@ -69,11 +125,38 @@ function handleEnvelope(options: ElectronMainOptionsInternal, env: Uint8Array | 
 
   const eventAndAttachments = eventFromEnvelope(envelope);
   if (eventAndAttachments) {
-    const [event, attachments] = eventAndAttachments;
+    const [event, attachments, profile] = eventAndAttachments;
+
+    if (profile) {
+      // We have a 'profile' item and there is no way for us to pass this through event capture
+      // so store them in a cache and reattach them via the `beforeEnvelope` hook before sending
+      rendererProfileFromIpc(event, profile);
+    }
+
     captureEventFromRenderer(options, event, attachments, contents);
   } else {
+    const normalizedEnvelope = normalizeUrlsInReplayEnvelope(envelope, app.getAppPath());
     // Pass other types of envelope straight to the transport
-    void getCurrentHub().getClient()?.getTransport()?.send(envelope);
+    void getClient()?.getTransport()?.send(normalizedEnvelope);
+  }
+}
+
+function handleMetric(metric: MetricIPCMessage): void {
+  const client = getClient<BaseClient<ClientOptions>>();
+
+  if (client?.metricsAggregator) {
+    client.metricsAggregator.add(
+      metric.metricType,
+      metric.name,
+      metric.value,
+      metric.unit,
+      metric.tags,
+      metric.timestamp,
+    );
+  } else {
+    logger.warn(
+      `Metric was dropped because the aggregator is not configured in the main process. Enable via '_experiments.metricsAggregator: true' in your init call.`,
+    );
   }
 }
 
@@ -86,39 +169,36 @@ function hasKeys(obj: any): boolean {
  * Handle scope updates from renderer processes
  */
 function handleScope(options: ElectronMainOptionsInternal, jsonScope: string): void {
-  let rendererScope: Scope;
+  let sentScope: ScopeData;
   try {
-    rendererScope = JSON.parse(jsonScope) as Scope;
+    sentScope = JSON.parse(jsonScope) as ScopeData;
   } catch {
     logger.warn('sentry-electron received an invalid scope message');
     return;
   }
 
-  const sentScope = Scope.clone(rendererScope) as any;
-  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-  configureScope((scope) => {
-    if (hasKeys(sentScope._user)) {
-      scope.setUser(sentScope._user);
-    }
+  const scope = getCurrentScope();
 
-    if (hasKeys(sentScope._tags)) {
-      scope.setTags(sentScope._tags);
-    }
+  if (hasKeys(sentScope.user)) {
+    scope.setUser(sentScope.user);
+  }
 
-    if (hasKeys(sentScope._extra)) {
-      scope.setExtras(sentScope._extra);
-    }
+  if (hasKeys(sentScope.tags)) {
+    scope.setTags(sentScope.tags);
+  }
 
-    for (const attachment of sentScope._attachments || []) {
-      scope.addAttachment(attachment);
-    }
+  if (hasKeys(sentScope.extra)) {
+    scope.setExtras(sentScope.extra);
+  }
 
-    const breadcrumb = sentScope._breadcrumbs.pop();
-    if (breadcrumb) {
-      scope.addBreadcrumb(breadcrumb, options?.maxBreadcrumbs || 100);
-    }
-  });
-  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+  for (const attachment of sentScope.attachments || []) {
+    scope.addAttachment(attachment);
+  }
+
+  const breadcrumb = sentScope.breadcrumbs.pop();
+  if (breadcrumb) {
+    scope.addBreadcrumb(breadcrumb, options?.maxBreadcrumbs || 100);
+  }
 }
 
 /** Enables Electron protocol handling */
@@ -127,28 +207,45 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
     throw new SentryError("Sentry SDK should be initialized before the Electron app 'ready' event is fired");
   }
 
-  protocol.registerSchemesAsPrivileged([
-    {
-      scheme: PROTOCOL_SCHEME,
-      privileges: { bypassCSP: true, corsEnabled: true, supportFetchAPI: true },
+  protocol.registerSchemesAsPrivileged([SENTRY_CUSTOM_SCHEME]);
+
+  // We Proxy this function so that later user calls to registerSchemesAsPrivileged don't overwrite our custom scheme
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  protocol.registerSchemesAsPrivileged = new Proxy(protocol.registerSchemesAsPrivileged, {
+    apply: (target, __, args: Parameters<typeof protocol.registerSchemesAsPrivileged>) => {
+      target([...args[0], SENTRY_CUSTOM_SCHEME]);
     },
-  ]);
+  });
+
+  const rendererStatusChanged = createRendererAnrStatusHandler();
 
   whenAppReady
     .then(() => {
       for (const sesh of options.getSessions()) {
-        sesh.protocol.registerStringProtocol(PROTOCOL_SCHEME, (request, callback) => {
-          const data = request.uploadData?.[0]?.bytes;
+        registerProtocol(sesh.protocol, PROTOCOL_SCHEME, (request) => {
+          const getWebContents = (): WebContents | undefined => {
+            const webContentsId = request.windowId ? WINDOW_ID_TO_WEB_CONTENTS?.get(request.windowId) : undefined;
+            return webContentsId ? webContents.fromId(webContentsId) : undefined;
+          };
 
-          if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.EVENT}`) && data) {
-            handleEvent(options, data.toString());
+          const data = request.body;
+          if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.RENDERER_START}`)) {
+            newProtocolRenderer();
+          } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.EVENT}`) && data) {
+            handleEvent(options, data.toString(), getWebContents());
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.SCOPE}`) && data) {
             handleScope(options, data.toString());
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.ENVELOPE}`) && data) {
-            handleEnvelope(options, data);
+            handleEnvelope(options, data, getWebContents());
+          } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.ADD_METRIC}`) && data) {
+            handleMetric(JSON.parse(data.toString()) as MetricIPCMessage);
+          } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.STATUS}`) && data) {
+            const contents = getWebContents();
+            if (contents) {
+              const status = (JSON.parse(data.toString()) as { status: RendererStatus }).status;
+              rendererStatusChanged(status, contents);
+            }
           }
-
-          callback('');
         });
       }
     })
@@ -159,9 +256,28 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
  * Hooks IPC for communication with the renderer processes
  */
 function configureClassic(options: ElectronMainOptionsInternal): void {
+  ipcMain.on(IPCChannel.RENDERER_START, ({ sender }) => {
+    const id = sender.id;
+
+    // In older Electron, sender can be destroyed before this callback is called
+    if (!sender.isDestroyed()) {
+      // Keep track of renderers that are using IPC
+      KNOWN_RENDERERS = KNOWN_RENDERERS || new Set();
+      KNOWN_RENDERERS.add(id);
+
+      sender.once('destroyed', () => {
+        KNOWN_RENDERERS?.delete(id);
+      });
+    }
+  });
   ipcMain.on(IPCChannel.EVENT, ({ sender }, jsonEvent: string) => handleEvent(options, jsonEvent, sender));
   ipcMain.on(IPCChannel.SCOPE, (_, jsonScope: string) => handleScope(options, jsonScope));
   ipcMain.on(IPCChannel.ENVELOPE, ({ sender }, env: Uint8Array | string) => handleEnvelope(options, env, sender));
+
+  const rendererStatusChanged = createRendererAnrStatusHandler();
+  ipcMain.on(IPCChannel.STATUS, ({ sender }, status: RendererStatus) => rendererStatusChanged(status, sender));
+
+  ipcMain.on(IPCChannel.ADD_METRIC, (_, metric: MetricIPCMessage) => handleMetric(metric));
 }
 
 /** Sets up communication channels with the renderer */

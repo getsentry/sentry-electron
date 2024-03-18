@@ -2,6 +2,150 @@
 
 ## Unreleased
 
+## 4.20.0
+
+- feat: Update from [v7.102.1](https://github.com/getsentry/sentry-javascript/releases/tag/7.102.1) to
+  [v7.105.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.105.0) of JavaScript SDKs (#837, #841)
+- feat: Deprecate `Anr` class based integration in favor of new functional style (#822)
+- feat: Support and test `Sentry.sendFeedback` (#839)
+
+## 4.19.0
+
+- feat: Update from [v7.101.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.101.0) to
+  [v7.102.1](https://github.com/getsentry/sentry-javascript/releases/tag/7.102.1) of JavaScript SDKs (#823)
+- feat: Deprecate class based integrations in favor of new functional style (#822)
+
+## 4.18.0
+
+- feat: Update from [v7.92.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.92.0) to
+  [v7.101.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.101.0) of JavaScript SDKs (#815, #821, #826)
+
+## 4.17.0
+
+- feat: Update from [v7.90.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.90.0) to
+  [v7.92.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.92.0) of JavaScript SDKs (#810)
+- feat: Re-work ANR detection to use worker thread (#810)
+- feat: Add support for performance metrics (#811)
+- test: Ensure correct scope for main process native crashes (#812)
+
+## 4.16.0
+
+- feat: Update from [v7.84.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.84.0) to
+  [v7.90.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.90.0) of JavaScript SDKs (#800)
+- feat: Browser profiling (#799)
+
+## 4.15.1
+
+- fix: Don't call `app.getPath('userData')` before SDK `init` (#797)
+
+## 4.15.0
+
+- feat: Update from [v7.74.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.74.0) to
+  [v7.84.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.84.0) of JavaScript SDKs (#779, #786, #788)
+- fix: Patch registerSchemesAsPrivileged so sentry scheme isn't overwritten (#787)
+- fix: Add missing exports (#790)
+
+## 4.14.0
+
+- feat: Renderer process ANR detection with stack traces (#770)
+  - Update from [v7.73.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.73.0) to
+  [v7.74.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.74.0) of JavaScript SDKs
+- fix: Hide ANR child process from dock (#777)
+- test: Electron v28 main process ESM (#773)
+
+## 4.13.0
+
+- feat: Add App Not Responding detection for main process (#753)
+- feat: Update from [v7.68.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.68.0) to
+  [v7.73.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.73.0) of JavaScript SDKs (#766)
+
+## 4.12.0
+
+- feat: Identify `webContents` of renderers via custom protocol (#762)
+- fix: Re-work Sentry minidump loader (#761)
+- feat: Node compatible ESM build for main process (#756)
+
+**Note:** Node ESM support is in beta until Electron v28 has a beta release and can be tested with the full test suite.
+
+## 4.11.1
+
+fix: Don't send minidumps that are too small to be valid (#748)
+
+## 4.11.0
+
+- feat: Add optional `BrowserWindowSession` to track sessions as window in foreground (#725)
+- feat: Update from [v7.63.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.63.0) to
+  [v7.68.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.68.0) of JavaScript SDKs (#738)
+- **feat: Mark errors caught by the SDK as unhandled**
+
+As per the changes in the JavaScript SDKs [for
+v7.67.0](https://github.com/getsentry/sentry-javascript/blob/develop/CHANGELOG.md#7670), this release fixes inconsistent
+behaviour of when our SDKs classify captured errors as unhandled. Previously, some of our instrumentations correctly set
+unhandled, while others set handled.
+
+Going forward, all errors caught automatically from our SDKs will be marked as unhandled.
+If you manually capture errors (e.g. by calling `Sentry.captureException`), your errors will continue to be reported as handled.
+
+This change might lead to a decrease in reported crash-free sessions and consequently in your release health score.
+If you have concerns about this, feel free to open an issue.
+
+## 4.10.0
+
+- feat: Optionally send sessions when they're created (#715)
+- feat: Update from [v7.61.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.61.0) to [v7.63.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.63.0) of JavaScript SDKs (#719)
+
+## 4.9.0
+
+- fix: Ensure context from previous run is used for native main crashes (#683)
+- feat: Tracing without performance (#710)
+- feat: Deprecate `tracingOrigins` for `tracePropagationTargets` (#703)
+- feat: Use `protocol.handle` on Electron >= v25 (#704)
+- test: Update from [v7.58.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.58.0) to [v7.61.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.61.0) of JavaScript SDKs (#709)
+
+## 4.8.0
+
+- feat: Update to [v7.58.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.58.0) of JavaScript SDKs
+  (#699)
+- fix: Normalize filename before parsing into module name (#699)
+
+## 4.7.0
+
+- feat: Update to [v7.57.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.57.0) of JavaScript SDKs
+  (#690)
+
+## 4.6.0
+
+- feat: Update to [v7.50.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.50.0) of JavaScript SDKs
+  (#671)
+- fix: Fix debug ID matching by normalizing `debug_meta` paths (#676)
+
+## 4.5.0
+
+- feat: Update to [v7.48.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.48.0) of JavaScript SDKs
+  (#662)
+- fix: IPC protocol should be registered as secure (#664)
+
+## 4.4.0
+
+- feat: Update to [v7.46.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.46.0) of JavaScript SDKs
+  (#657)
+
+## 4.3.0
+
+- fix: Add 2 second timeout to session flushing (#644)
+- feat: Update dependencies (#640)
+- feat: Update Sentry SDKs to 7.37.1 (#636)
+- fix: Replay should be re-exported (#633)
+
+## 4.2.0
+
+- feat: Update JavaScript SDKs to 7.30.0 and add support for Replay in renderers (#618)
+- feat: Use a transport to send events to main process rather than via integration (#610)
+- test: Add test to ensure window titles don't end up in breadcrumbs when disabled (#594)
+- fix: Use POST for main process ping so it does not result in fetch breadcrumb (#612)
+- CI: Use volta-cli/action to use the correct node version (#609)
+- CI: Auto-generate PRs for JavaScript SDK updates (#608)
+
 ## 4.1.2
 
 - fix: Ensure the scope writes do not beat the initial async scope read (#593)

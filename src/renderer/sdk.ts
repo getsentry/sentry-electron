@@ -6,12 +6,36 @@ import {
 } from '@sentry/browser';
 import { logger } from '@sentry/utils';
 
-import { ensureProcess } from '../common';
-import { ScopeToMain } from './integrations';
+import { ensureProcess, RendererProcessAnrOptions } from '../common';
+import { enableAnrRendererMessages } from './anr';
+import { metricsAggregatorIntegration } from './integrations/metrics-aggregator';
+import { scopeToMainIntegration } from './integrations/scope-to-main';
 import { electronRendererStackParser } from './stack-parse';
 import { makeRendererTransport } from './transport';
 
-export const defaultIntegrations = [...defaultBrowserIntegrations, new ScopeToMain()];
+export const defaultIntegrations = [
+  // eslint-disable-next-line deprecation/deprecation
+  ...defaultBrowserIntegrations,
+  scopeToMainIntegration(),
+  metricsAggregatorIntegration(),
+];
+
+interface ElectronRendererOptions extends BrowserOptions {
+  /**
+   * Enables ANR detection in this renderer process.
+   *
+   * Optionally accepts an object of options to configure ANR detection.
+   *
+   * {
+   *   pollInterval: number; // Defaults to 1000ms
+   *   anrThreshold: number; // Defaults to 5000ms
+   *   captureStackTrace: boolean; // Defaults to false
+   * }
+   *
+   * Defaults to 'false'.
+   */
+  anrDetection?: Partial<RendererProcessAnrOptions> | boolean;
+}
 
 /**
  * Initialize Sentry in the Electron renderer process
@@ -19,10 +43,10 @@ export const defaultIntegrations = [...defaultBrowserIntegrations, new ScopeToMa
  * @param originalInit Optional init function for a specific framework SDK
  * @returns
  */
-export function init<O extends BrowserOptions>(
-  options: BrowserOptions & O = {} as BrowserOptions & O,
+export function init<O extends ElectronRendererOptions>(
+  options: ElectronRendererOptions & O = {} as ElectronRendererOptions & O,
   // This parameter name ensures that TypeScript error messages contain a hint for fixing SDK version mismatches
-  originalInit: (if_you_get_a_typescript_error_ensure_sdks_use_version_v7_29_0: O) => void = browserInit,
+  originalInit: (if_you_get_a_typescript_error_ensure_sdks_use_version_v7_105_0: O) => void = browserInit,
 ): void {
   ensureProcess('renderer');
 
@@ -36,7 +60,7 @@ If init has been called in the preload and contextIsolation is disabled, is not 
   window.__SENTRY__RENDERER_INIT__ = true;
 
   // We don't want browser session tracking enabled by default because we already have Electron
-  // specific session tracking
+  // specific session tracking from the main process.
   if (options.autoSessionTracking === undefined) {
     options.autoSessionTracking = false;
   }
@@ -60,6 +84,10 @@ If init has been called in the preload and contextIsolation is disabled, is not 
 
   if (options.transport === undefined) {
     options.transport = makeRendererTransport;
+  }
+
+  if (options.anrDetection) {
+    enableAnrRendererMessages(options.anrDetection === true ? {} : options.anrDetection);
   }
 
   // We only handle initialScope in the main process otherwise it can cause race conditions over IPC

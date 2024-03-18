@@ -2,8 +2,8 @@
   "name": "electron-react-boilerplate",
   "scripts": {
     "build": "concurrently \"npm run build:main\" \"npm run build:renderer\"",
-    "build:main": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.main.prod.ts",
-    "build:renderer": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.renderer.prod.ts"
+    "build:main": "cross-env NODE_ENV=production TS_NODE_PROJECT=tsconfig.json TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.main.prod.ts",
+    "build:renderer": "cross-env NODE_ENV=production TS_NODE_PROJECT=tsconfig.json TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.renderer.prod.ts"
   },
   "devDependencies": {
     "@pmmmwh/react-refresh-webpack-plugin": "0.5.4",
@@ -28,7 +28,7 @@
     "css-loader": "^6.5.1",
     "css-minimizer-webpack-plugin": "^3.3.1",
     "detect-port": "^1.3.0",
-    "electron": "^16.0.5",
+    "electron": "^23.0.0",
     "electron-builder": "22.13.1",
     "electron-devtools-installer": "^3.2.0",
     "electron-notarize": "^1.1.1",

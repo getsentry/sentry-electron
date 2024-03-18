@@ -58,6 +58,14 @@
     "user": {
       "ip_address": "{{auto}}"
     },
+    "debug_meta": {
+      "images": [
+        {
+          "code_file": "app:///dist/renderer/index.js",
+          "type": "sourcemap"
+        }
+      ]
+    },
     "exception": {
       "values": [
         {
@@ -67,7 +75,7 @@
             "frames": []
           },
           "mechanism": {
-            "handled": true,
+            "handled": false,
             "type": "instrument"
           }
         }

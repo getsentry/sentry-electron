@@ -1,3 +1,4 @@
+/* eslint-disable deprecation/deprecation */
 import { Integration } from '@sentry/types';
 import { dynamicRequire } from '@sentry/utils';
 
@@ -19,18 +20,19 @@ import { EventToMain, ScopeToMain } from './renderer/integrations';
 /** Convenience interface used to expose Integrations */
 export interface Integrations {
   // For main process
-  SentryMinidump: SentryMinidump;
-  ElectronMinidump: ElectronMinidump;
-  ElectronBreadcrumbs: ElectronBreadcrumbs;
-  MainContext: MainContext;
-  OnUncaughtExcept: OnUncaughtException;
-  PreloadInjection: PreloadInjection;
-  MainProcessSession: MainProcessSession;
-  AdditionalContext: AdditionalContext;
-  ChildProcess: ChildProcess;
-  Screenshots: Screenshots;
+  SentryMinidump: typeof SentryMinidump;
+  ElectronMinidump: typeof ElectronMinidump;
+  ElectronBreadcrumbs: typeof ElectronBreadcrumbs;
+  MainContext: typeof MainContext;
+  OnUncaughtExcept: typeof OnUncaughtException;
+  PreloadInjection: typeof PreloadInjection;
+  MainProcessSession: typeof MainProcessSession;
+  AdditionalContext: typeof AdditionalContext;
+  ChildProcess: typeof ChildProcess;
+  Screenshots: typeof Screenshots;
   // For renderer process
-  ScopeToMain: ScopeToMain;
+  ScopeToMain: typeof ScopeToMain;
+  // eslint-disable-next-line deprecation/deprecation
   EventToMain: EventToMain;
 }
 
@@ -75,10 +77,14 @@ export function getIntegrations(): Integrations {
  */
 class EmptyIntegration implements Integration {
   /** @inheritDoc */
-  public static id: string = 'EmptyIntegration';
+  public static id = 'EmptyIntegration';
 
   /** @inheritDoc */
-  public name: string = EmptyIntegration.id;
+  public readonly name: string;
+
+  public constructor() {
+    this.name = EmptyIntegration.id;
+  }
 
   /** @inheritDoc */
   public setupOnce(): void {

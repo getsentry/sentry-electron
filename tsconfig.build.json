@@ -1,23 +1,15 @@
 {
   "extends": "./node_modules/@sentry-internal/typescript/tsconfig.json",
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "src/preload/*.ts"
-  ],
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "src/preload/**/*.ts"],
   "compilerOptions": {
     "skipLibCheck": true,
     "baseUrl": ".",
-    "lib": [
-      "es7",
-      "dom"
-    ],
-    "module": "commonjs",
+    "lib": ["ES7", "DOM"],
+    "module": "ESNext",
     "outDir": ".",
     "rootDir": "src",
-    "target": "es6",
-    "esModuleInterop": true,
+    "target": "ES6",
+    "esModuleInterop": true
   }
 }
