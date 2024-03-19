@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 4.21.0
+
+- feat: Update from [v7.105.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.105.0) to
+  [v7.107.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.107.0) of JavaScript SDKs (#844)
+- feat: Limit minidumps sent per app session (#846)
+- fix: Duplicate event hookup (#849)
+
 ## 4.20.0
 
 - feat: Update from [v7.102.1](https://github.com/getsentry/sentry-javascript/releases/tag/7.102.1) to
