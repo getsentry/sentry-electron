@@ -1,6 +1,6 @@
 import { convertIntegrationFnToClass, defineIntegration } from '@sentry/core';
 import { anrIntegration as nodeAnrIntegration } from '@sentry/node';
-import { app } from 'electron';
+import { app, powerMonitor } from 'electron';
 
 import { ELECTRON_MAJOR_VERSION } from '../electron-normalize';
 
@@ -12,7 +12,7 @@ export const anrIntegration = defineIntegration((options: Parameters<typeof node
     throw new Error('Main process ANR detection requires Electron v22+');
   }
 
-  return nodeAnrIntegration({
+  const integration = nodeAnrIntegration({
     ...options,
     staticTags: {
       'event.environment': 'javascript',
@@ -22,6 +22,16 @@ export const anrIntegration = defineIntegration((options: Parameters<typeof node
     },
     appRootPath: app.getAppPath(),
   });
+
+  powerMonitor.on('suspend', () => {
+    integration.stopWorker();
+  });
+
+  powerMonitor.on('resume', () => {
+    integration.startWorker();
+  });
+
+  return integration;
 });
 
 /**
