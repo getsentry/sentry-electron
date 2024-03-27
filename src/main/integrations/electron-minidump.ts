@@ -1,4 +1,4 @@
-import { applyScopeDataToEvent, convertIntegrationFnToClass, defineIntegration } from '@sentry/core';
+import { applyScopeDataToEvent, defineIntegration } from '@sentry/core';
 import { NodeClient, NodeOptions } from '@sentry/node';
 import { Event, ScopeData } from '@sentry/types';
 import { logger, makeDsn, SentryError, uuid4 } from '@sentry/utils';
@@ -94,8 +94,6 @@ export function minidumpUrlFromDsn(dsn: string): string | undefined {
   }/api/${projectId}/minidump/?sentry_key=${publicKey}`;
 }
 
-const INTEGRATION_NAME = 'ElectronMinidump';
-
 /**
  * Sends minidumps via the Electron built-in uploader.
  */
@@ -171,7 +169,7 @@ export const electronMinidumpIntegration = defineIntegration(() => {
   }
 
   return {
-    name: INTEGRATION_NAME,
+    name: 'ElectronMinidump',
     setupOnce() {
       // noop
     },
@@ -184,7 +182,7 @@ export const electronMinidumpIntegration = defineIntegration(() => {
       }
 
       if (rendererRequiresCrashReporterStart()) {
-        throw new SentryError(`The '${INTEGRATION_NAME}' integration is only supported with Electron >= v9`);
+        throw new SentryError(`The '${'ElectronMinidump'}' integration is only supported with Electron >= v9`);
       }
 
       const clientOptions = client.getOptions();
@@ -215,11 +213,3 @@ export const electronMinidumpIntegration = defineIntegration(() => {
     },
   };
 });
-
-/**
- * Sends minidumps via the Electron built-in uploader.
- *
- * @deprecated Use `electronMinidumpIntegration()` instead
- */
-// eslint-disable-next-line deprecation/deprecation
-export const ElectronMinidump = convertIntegrationFnToClass(INTEGRATION_NAME, electronMinidumpIntegration);

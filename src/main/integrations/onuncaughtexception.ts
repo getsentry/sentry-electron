@@ -1,13 +1,11 @@
-import { convertIntegrationFnToClass, defineIntegration } from '@sentry/core';
+import { defineIntegration } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { dialog } from 'electron';
-
-const INTEGRATION_NAME = 'OnUncaughtException';
 
 /** Capture unhandled errors. */
 export const onUncaughtExceptionIntegration = defineIntegration(() => {
   return {
-    name: INTEGRATION_NAME,
+    name: 'OnUncaughtException',
     setupOnce() {
       // noop
     },
@@ -53,11 +51,3 @@ export const onUncaughtExceptionIntegration = defineIntegration(() => {
     },
   };
 });
-
-/**
- * Capture unhandled errors.
- *
- * @deprecated Use `onUncaughtExceptionIntegration()` instead
- */
-// eslint-disable-next-line deprecation/deprecation
-export const OnUncaughtException = convertIntegrationFnToClass(INTEGRATION_NAME, onUncaughtExceptionIntegration);

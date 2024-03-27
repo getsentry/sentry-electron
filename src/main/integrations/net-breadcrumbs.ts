@@ -1,7 +1,5 @@
 import {
   addBreadcrumb,
-  /* eslint-disable deprecation/deprecation */
-  convertIntegrationFnToClass,
   defineIntegration,
   getClient,
   getCurrentScope,
@@ -41,15 +39,6 @@ export interface NetOptions {
    * Defaults to: true
    */
   tracing?: ShouldTraceFn | boolean;
-
-  /**
-   * @deprecated Use `tracePropagationTargets` client option instead.
-   *
-   * Sentry.init({
-   *   tracePropagationTargets: ['api.site.com'],
-   * })
-   */
-  tracingOrigins?: ShouldTraceFn | boolean;
 }
 
 /**
@@ -88,6 +77,7 @@ function parseOptions(optionsIn: ClientRequestConstructorOptions | string): { me
     urlObj.pathname = pathObj.pathname;
     urlObj.search = pathObj.search;
     urlObj.hash = pathObj.hash;
+    // eslint-disable-next-line deprecation/deprecation
     url = urlModule.format(urlObj);
   }
 
@@ -147,18 +137,6 @@ function createWrappedRequestFactory(
 
   // This will be considerably simpler once `tracingOrigins` is removed in the next major release
   const shouldAttachTraceData = (method: string, url: string): boolean => {
-    if (options.tracingOrigins === false) {
-      return false;
-    }
-
-    // Neither integration nor client options are set or integration option is set to true
-    if (
-      (options.tracingOrigins === undefined && tracePropagationTargets === undefined) ||
-      options.tracingOrigins === true
-    ) {
-      return true;
-    }
-
     const key = `${method}:${url}`;
 
     const cachedDecision = headersUrlMap.get(key);
@@ -168,12 +146,6 @@ function createWrappedRequestFactory(
 
     if (tracePropagationTargets) {
       const decision = stringMatchesSomePattern(url, tracePropagationTargets);
-      headersUrlMap.set(key, decision);
-      return decision;
-    }
-
-    if (options.tracingOrigins) {
-      const decision = options.tracingOrigins(method, url);
       headersUrlMap.set(key, decision);
       return decision;
     }
@@ -279,14 +251,12 @@ function addRequestBreadcrumb(
   );
 }
 
-const INTEGRATION_NAME = 'Net';
-
 /**
  * Electron 'net' module integration
  */
 export const electronNetIntegration = defineIntegration((options: NetOptions = {}) => {
   return {
-    name: INTEGRATION_NAME,
+    name: 'Net',
     setupOnce() {
       // noop
     },
@@ -302,11 +272,3 @@ export const electronNetIntegration = defineIntegration((options: NetOptions = {
     },
   };
 });
-
-/**
- * Electron 'net' module integration
- *
- * @deprecated Use `electronNetIntegration()` instead
- */
-// eslint-disable-next-line deprecation/deprecation
-export const Net = convertIntegrationFnToClass(INTEGRATION_NAME, electronNetIntegration);

@@ -1,6 +1,5 @@
 import { dynamicRequire } from '@sentry/utils';
 
-import { getIntegrations, removeEmptyIntegrations } from './integrations';
 import { ElectronMainOptions } from './main';
 import { BrowserOptions } from './renderer';
 
@@ -56,8 +55,6 @@ export {
   continueTrace,
   metrics,
 } from '@sentry/core';
-
-export const Integrations = getIntegrations();
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ElectronOptions extends ElectronMainOptions, Omit<BrowserOptions, 'transportOptions' | 'transport'> {
@@ -132,9 +129,6 @@ import * as Sentry from '@sentry/electron/renderer';`);
  * @see ElectronOptions for documentation on configuration options.
  */
 export function init(options: Partial<ElectronOptions>): void {
-  // Filter out any EmptyIntegrations
-  removeEmptyIntegrations(options);
-
   getEntryPoint().init(options);
 }
 

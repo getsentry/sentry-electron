@@ -1,15 +1,13 @@
-import { convertIntegrationFnToClass, defineIntegration } from '@sentry/core';
+import { defineIntegration } from '@sentry/core';
 import { app } from 'electron';
 
 import { mergeEvents, normalizeEvent } from '../../common';
 import { getEventDefaults } from '../context';
 
-const INTEGRATION_NAME = 'MainContext';
-
 /** Adds Electron context to events and normalises paths. */
 export const mainContextIntegration = defineIntegration(() => {
   return {
-    name: INTEGRATION_NAME,
+    name: 'MainContext',
     setupOnce() {
       // noop
     },
@@ -21,11 +19,3 @@ export const mainContextIntegration = defineIntegration(() => {
     },
   };
 });
-
-/**
- * Adds Electron context to events and normalises paths.
- *
- * @deprecated Use `mainContextIntegration()` instead
- */
-// eslint-disable-next-line deprecation/deprecation
-export const MainContext = convertIntegrationFnToClass(INTEGRATION_NAME, mainContextIntegration);

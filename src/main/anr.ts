@@ -1,10 +1,9 @@
-import { captureEvent, createGetModuleFromFilename, getClient, NodeClient, StackFrame } from '@sentry/node';
+import { captureEvent, createGetModuleFromFilename, getClient, StackFrame } from '@sentry/node';
 import { Event } from '@sentry/types';
 import { callFrameToStackFrame, logger, stripSentryFramesAndReverse, watchdogTimer } from '@sentry/utils';
 import { app, WebContents } from 'electron';
 
 import { RendererStatus } from '../common';
-import { Anr } from './integrations/anr';
 import { ElectronMainOptions } from './sdk';
 import { sessionAnr } from './sessions';
 
@@ -172,32 +171,4 @@ export function createRendererAnrStatusHandler(): (status: RendererStatus, conte
       watchdog.enabled(message.status === 'visible');
     }
   };
-}
-
-interface LegacyOptions {
-  entryScript: string;
-  pollInterval: number;
-  anrThreshold: number;
-  captureStackTrace: boolean;
-  debug: boolean;
-}
-
-/**
- * @deprecated Use `Anr` integration instead.
- *
- * ```js
- * import { init, anrIntegration } from '@sentry/electron';
- *
- * init({
- *   dsn: "__DSN__",
- *   integrations: [anrIntegration({ captureStackTrace: true })],
- * });
- * ```
- */
-export function enableMainProcessAnrDetection(options: Partial<LegacyOptions> = {}): Promise<void> {
-  // eslint-disable-next-line deprecation/deprecation
-  const integration = new Anr(options);
-  const client = getClient() as NodeClient;
-  integration.setup?.(client);
-  return Promise.resolve();
 }

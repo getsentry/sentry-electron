@@ -1,4 +1,4 @@
-import { addBreadcrumb, convertIntegrationFnToClass, defineIntegration } from '@sentry/core';
+import { addBreadcrumb, defineIntegration } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { Breadcrumb } from '@sentry/types';
 import { app, autoUpdater, BrowserWindow, powerMonitor, screen, WebContents } from 'electron';
@@ -103,8 +103,6 @@ export function normalizeOptions(
   }, {} as Partial<ElectronBreadcrumbsOptions<EventFunction | false>>);
 }
 
-const INTEGRATION_NAME = 'ElectronBreadcrumbs';
-
 /**
  * Adds breadcrumbs for Electron events.
  */
@@ -148,7 +146,7 @@ export const electronBreadcrumbsIntegration = defineIntegration(
     }
 
     return {
-      name: INTEGRATION_NAME,
+      name: 'ElectronBreadcrumbs',
       setupOnce() {
         // noop
       },
@@ -200,11 +198,3 @@ export const electronBreadcrumbsIntegration = defineIntegration(
     };
   },
 );
-
-/**
- * Adds breadcrumbs for Electron events.
- *
- * @deprecated Use `electronBreadcrumbsIntegration()` instead
- */
-// eslint-disable-next-line deprecation/deprecation
-export const ElectronBreadcrumbs = convertIntegrationFnToClass(INTEGRATION_NAME, electronBreadcrumbsIntegration);

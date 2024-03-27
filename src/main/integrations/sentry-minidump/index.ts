@@ -1,10 +1,4 @@
-import {
-  applyScopeDataToEvent,
-  captureEvent,
-  convertIntegrationFnToClass,
-  defineIntegration,
-  Scope,
-} from '@sentry/core';
+import { applyScopeDataToEvent, captureEvent, defineIntegration, Scope } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { Event, ScopeData } from '@sentry/types';
 import { logger, SentryError } from '@sentry/utils';
@@ -25,8 +19,6 @@ interface PreviousRun {
   scope: ScopeData;
   event?: Event;
 }
-
-const INTEGRATION_NAME = 'SentryMinidump';
 
 interface Options {
   /**
@@ -204,7 +196,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
   }
 
   return {
-    name: INTEGRATION_NAME,
+    name: 'SentryMinidump',
     setupOnce() {
       // noop
     },
@@ -260,11 +252,3 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
     },
   };
 });
-
-/**
- * Sends minidumps via the Sentry uploader
- *
- * @deprecated Use `sentryMinidumpIntegration()` instead
- */
-// eslint-disable-next-line deprecation/deprecation
-export const SentryMinidump = convertIntegrationFnToClass(INTEGRATION_NAME, sentryMinidumpIntegration);

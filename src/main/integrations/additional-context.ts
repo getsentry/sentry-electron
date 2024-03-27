@@ -1,4 +1,4 @@
-import { convertIntegrationFnToClass, defineIntegration } from '@sentry/core';
+import { defineIntegration } from '@sentry/core';
 import { DeviceContext } from '@sentry/types';
 import { app, screen as electronScreen } from 'electron';
 import { CpuInfo, cpus } from 'os';
@@ -20,8 +20,6 @@ const DEFAULT_OPTIONS: AdditionalContextOptions = {
   language: true,
 };
 
-const INTEGRATION_NAME = 'AdditionalContext';
-
 /**
  * Adds additional Electron context to events
  */
@@ -42,7 +40,7 @@ export const additionalContextIntegration = defineIntegration((userOptions: Part
   }
 
   return {
-    name: INTEGRATION_NAME,
+    name: 'AdditionalContext',
     setupOnce() {
       // noop
     },
@@ -99,11 +97,3 @@ export const additionalContextIntegration = defineIntegration((userOptions: Part
     },
   };
 });
-
-/**
- * Adds additional Electron context to events
- *
- * @deprecated Use `additionalContextIntegration()z instead
- */
-// eslint-disable-next-line deprecation/deprecation
-export const AdditionalContext = convertIntegrationFnToClass(INTEGRATION_NAME, additionalContextIntegration);

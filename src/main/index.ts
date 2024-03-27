@@ -74,7 +74,6 @@ export { rendererProfileFromIpc } from './integrations/renderer-profiling';
 export { anrIntegration } from './integrations/anr';
 
 export type { NodeOptions } from '@sentry/node';
-// eslint-disable-next-line deprecation/deprecation
 export { flush, close, NodeClient, metrics } from '@sentry/node';
 
 export { makeElectronTransport } from './transports/electron-net';
@@ -83,5 +82,3 @@ export { makeElectronOfflineTransport } from './transports/electron-offline-net'
 export type { ElectronMainOptions } from './sdk';
 export { init, getDefaultIntegrations } from './sdk';
 export { IPCMode } from '../common';
-// eslint-disable-next-line deprecation/deprecation
-export { enableMainProcessAnrDetection } from './anr';

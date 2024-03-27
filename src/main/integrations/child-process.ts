@@ -1,4 +1,4 @@
-import { addBreadcrumb, captureMessage, convertIntegrationFnToClass, defineIntegration } from '@sentry/core';
+import { addBreadcrumb, captureMessage, defineIntegration } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { SeverityLevel } from '@sentry/types';
 
@@ -36,8 +36,6 @@ function getMessageAndSeverity(reason: ExitReason, proc?: string): { message: st
   }
 }
 
-const INTEGRATION_NAME = 'ChildProcess';
-
 /**
  * Adds breadcrumbs for Electron child process events.
  */
@@ -50,7 +48,7 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
   };
 
   return {
-    name: INTEGRATION_NAME,
+    name: 'ChildProcess',
     setupOnce() {
       // noop
     },
@@ -106,11 +104,3 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
     },
   };
 });
-
-/**
- * Adds breadcrumbs for Electron child process events.
- *
- * @deprecated Use `childProcessIntegration()` instead
- */
-// eslint-disable-next-line deprecation/deprecation
-export const ChildProcess = convertIntegrationFnToClass(INTEGRATION_NAME, childProcessIntegration);

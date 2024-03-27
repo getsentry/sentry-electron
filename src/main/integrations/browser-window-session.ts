@@ -1,4 +1,4 @@
-import { convertIntegrationFnToClass, defineIntegration } from '@sentry/core';
+import { defineIntegration } from '@sentry/core';
 import { app, BrowserWindow } from 'electron';
 
 import { ELECTRON_MAJOR_VERSION } from '../electron-normalize';
@@ -28,8 +28,6 @@ export interface Options {
 
 // The state can be, active, inactive, or waiting for a timeout
 type SessionState = { name: 'active' } | { name: 'inactive' } | { name: 'timeout'; timer: NodeJS.Timeout };
-
-const INTEGRATION_NAME = 'BrowserWindowSession';
 
 /**
  * Tracks sessions as BrowserWindows focus.
@@ -80,7 +78,7 @@ export const browserWindowSessionIntegration = defineIntegration((options: Optio
   }
 
   return {
-    name: INTEGRATION_NAME,
+    name: 'BrowserWindowSession',
     setupOnce() {
       // noop
     },
@@ -105,13 +103,3 @@ export const browserWindowSessionIntegration = defineIntegration((options: Optio
     },
   };
 });
-
-/**
- * Tracks sessions as BrowserWindows focus.
- *
- * Supports Electron >= v12
- *
- * @deprecated Use `browserWindowSessionIntegration()` instead
- */
-// eslint-disable-next-line deprecation/deprecation
-export const BrowserWindowSession = convertIntegrationFnToClass(INTEGRATION_NAME, browserWindowSessionIntegration);

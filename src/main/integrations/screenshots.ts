@@ -1,18 +1,16 @@
-import { convertIntegrationFnToClass, defineIntegration } from '@sentry/core';
+import { defineIntegration } from '@sentry/core';
 import { logger } from '@sentry/utils';
 import { BrowserWindow } from 'electron';
 
 import { capturePage } from '../electron-normalize';
 import { ElectronMainOptions } from '../sdk';
 
-const INTEGRATION_NAME = 'Screenshots';
-
 /**
  * Captures and attaches screenshots to events
  */
 export const screenshotsIntegration = defineIntegration(() => {
   return {
-    name: INTEGRATION_NAME,
+    name: 'Screenshots',
     setupOnce() {
       // noop
     },
@@ -52,11 +50,3 @@ export const screenshotsIntegration = defineIntegration(() => {
     },
   };
 });
-
-/**
- * Adds Screenshots to events
- *
- * @deprecated Use `screenshotsIntegration()` instead
- */
-// eslint-disable-next-line deprecation/deprecation
-export const Screenshots = convertIntegrationFnToClass(INTEGRATION_NAME, screenshotsIntegration);

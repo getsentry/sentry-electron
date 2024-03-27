@@ -1,4 +1,4 @@
-import { convertIntegrationFnToClass, defineIntegration } from '@sentry/core';
+import { defineIntegration } from '@sentry/core';
 import { logger } from '@sentry/utils';
 import { app } from 'electron';
 import { existsSync } from 'fs';
@@ -30,8 +30,6 @@ function getPreloadPath(): string | number | undefined {
   return undefined;
 }
 
-const INTEGRATION_NAME = 'PreloadInjection';
-
 /**
  * Injects the preload script into the provided sessions.
  *
@@ -39,7 +37,7 @@ const INTEGRATION_NAME = 'PreloadInjection';
  */
 export const preloadInjectionIntegration = defineIntegration(() => {
   return {
-    name: INTEGRATION_NAME,
+    name: 'PreloadInjection',
     setupOnce() {
       // noop
     },
@@ -70,13 +68,3 @@ export const preloadInjectionIntegration = defineIntegration(() => {
     },
   };
 });
-
-/**
- * Injects the preload script into the provided sessions.
- *
- * Defaults to injecting into the defaultSession
- *
- * @deprecated Use `preloadInjectionIntegration()` instead
- */
-// eslint-disable-next-line deprecation/deprecation
-export const PreloadInjection = convertIntegrationFnToClass(INTEGRATION_NAME, preloadInjectionIntegration);
