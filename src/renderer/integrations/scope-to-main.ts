@@ -1,6 +1,7 @@
-import { convertIntegrationFnToClass, defineIntegration, getCurrentScope } from '@sentry/core';
+import { convertIntegrationFnToClass, defineIntegration } from '@sentry/core';
 import { normalize } from '@sentry/utils';
 
+import { addScopeListener } from '../../common/scope';
 import { getIPC } from '../ipc';
 
 const INTEGRATION_NAME = 'ScopeToMain';
@@ -15,16 +16,15 @@ export const scopeToMainIntegration = defineIntegration(() => {
       // noop
     },
     setup() {
-      const scope = getCurrentScope();
-      if (scope) {
-        const ipc = getIPC();
+      const ipc = getIPC();
 
-        scope.addScopeListener((updatedScope) => {
-          ipc.sendScope(JSON.stringify(normalize(updatedScope.getScopeData(), 20, 2_000)));
-          scope.clearBreadcrumbs();
-          scope.clearAttachments();
-        });
-      }
+      addScopeListener((merged, current, isolated) => {
+        ipc.sendScope(JSON.stringify(normalize(merged, 20, 2_000)));
+        current.clearBreadcrumbs();
+        current.clearAttachments();
+        isolated.clearBreadcrumbs();
+        isolated.clearAttachments();
+      });
     },
   };
 });

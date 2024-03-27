@@ -1,7 +1,7 @@
 const path = require('path');
 
 const { app, BrowserWindow } = require('electron');
-const { init, configureScope } = require('@sentry/electron');
+const { init, getCurrentScope } = require('@sentry/electron');
 
 init({
   dsn: '__DSN__',
@@ -10,11 +10,10 @@ init({
   onFatalError: () => {},
 });
 
-configureScope((scope) => {
-  scope.setExtra('some-extra', 'extra-value');
-  scope.setTag('a-tag', 'tag-value');
-  scope.setUser({ id: '1234567890' });
-});
+const scope = getCurrentScope();
+scope.setExtra('some-extra', 'extra-value');
+scope.setTag('a-tag', 'tag-value');
+scope.setUser({ id: '1234567890' });
 
 console.log('Some logging from the main process');
 

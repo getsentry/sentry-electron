@@ -1,7 +1,7 @@
 const path = require('path');
 
 const { app, BrowserWindow } = require('electron');
-const { init, configureScope } = require('@sentry/electron');
+const { init, getCurrentScope } = require('@sentry/electron');
 
 init({
   dsn: '__DSN__',
@@ -10,9 +10,7 @@ init({
   onFatalError: () => {},
 });
 
-configureScope((scope) => {
-  scope.setTag('app-run', process.env.APP_FIRST_RUN ? 'first' : 'second');
-});
+getCurrentScope().setTag('app-run', process.env.APP_FIRST_RUN ? 'first' : 'second');
 
 app.on('ready', () => {
   const mainWindow = new BrowserWindow({

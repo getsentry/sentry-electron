@@ -5,8 +5,7 @@
   </head>
   <body>
     <script>
-      const { init } = require('@sentry/electron/renderer');
-      const { captureConsoleIntegration } = require('@sentry/integrations');
+      const { init, captureConsoleIntegration } = require('@sentry/electron/renderer');
 
       init({
         debug: true,

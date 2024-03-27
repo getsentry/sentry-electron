@@ -1,24 +1,22 @@
 /* eslint-disable no-restricted-globals */
 import {
   BrowserOptions,
-  defaultIntegrations as defaultBrowserIntegrations,
+  getDefaultIntegrations as getDefaultBrowserIntegrations,
   init as browserInit,
 } from '@sentry/browser';
+import { Integration } from '@sentry/types';
 import { logger } from '@sentry/utils';
 
 import { ensureProcess, RendererProcessAnrOptions } from '../common';
 import { enableAnrRendererMessages } from './anr';
-import { metricsAggregatorIntegration } from './integrations/metrics-aggregator';
 import { scopeToMainIntegration } from './integrations/scope-to-main';
 import { electronRendererStackParser } from './stack-parse';
 import { makeRendererTransport } from './transport';
 
-export const defaultIntegrations = [
-  // eslint-disable-next-line deprecation/deprecation
-  ...defaultBrowserIntegrations,
-  scopeToMainIntegration(),
-  metricsAggregatorIntegration(),
-];
+/** Get the default integrations for the renderer SDK. */
+export function getDefaultIntegrations(_options: ElectronRendererOptions): Integration[] {
+  return [...getDefaultBrowserIntegrations({}), scopeToMainIntegration()];
+}
 
 interface ElectronRendererOptions extends BrowserOptions {
   /**
@@ -46,7 +44,7 @@ interface ElectronRendererOptions extends BrowserOptions {
 export function init<O extends ElectronRendererOptions>(
   options: ElectronRendererOptions & O = {} as ElectronRendererOptions & O,
   // This parameter name ensures that TypeScript error messages contain a hint for fixing SDK version mismatches
-  originalInit: (if_you_get_a_typescript_error_ensure_sdks_use_version_v7_108_0: O) => void = browserInit,
+  originalInit: (if_you_get_a_typescript_error_ensure_sdks_use_version_v8_0_0_alpha_7: O) => void = browserInit,
 ): void {
   ensureProcess('renderer');
 
@@ -70,7 +68,7 @@ If init has been called in the preload and contextIsolation is disabled, is not 
   options.sendClientReports = false;
 
   if (options.defaultIntegrations === undefined) {
-    options.defaultIntegrations = defaultIntegrations;
+    options.defaultIntegrations = getDefaultIntegrations(options);
   }
 
   if (options.stackParser === undefined) {

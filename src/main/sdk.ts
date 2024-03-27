@@ -1,7 +1,20 @@
 import { ensureProcess, IPCMode } from '../common';
 ensureProcess('main');
 
-import { defaultIntegrations as defaultNodeIntegrations, init as nodeInit, NodeOptions } from '@sentry/node';
+import {
+  consoleIntegration,
+  contextLinesIntegration,
+  functionToStringIntegration,
+  httpIntegration,
+  inboundFiltersIntegration,
+  init as nodeInit,
+  linkedErrorsIntegration,
+  localVariablesIntegration,
+  nativeNodeFetchIntegration,
+  NodeOptions,
+  onUnhandledRejectionIntegration,
+  requestDataIntegration,
+} from '@sentry/node';
 import { Integration, Options } from '@sentry/types';
 import { Session, session, WebContents } from 'electron';
 
@@ -21,22 +34,34 @@ import { configureIPC } from './ipc';
 import { defaultStackParser } from './stack-parse';
 import { ElectronOfflineTransportOptions, makeElectronOfflineTransport } from './transports/electron-offline-net';
 
-export const defaultIntegrations: Integration[] = [
-  sentryMinidumpIntegration(),
-  electronBreadcrumbsIntegration(),
-  electronNetIntegration(),
-  mainContextIntegration(),
-  childProcessIntegration(),
-  onUncaughtExceptionIntegration(),
-  preloadInjectionIntegration(),
-  additionalContextIntegration(),
-  screenshotsIntegration(),
-  rendererProfilingIntegration(),
-  // eslint-disable-next-line deprecation/deprecation
-  ...defaultNodeIntegrations.filter(
-    (integration) => integration.name !== 'OnUncaughtException' && integration.name !== 'Context',
-  ),
-];
+/** Get the default integrations for the main process SDK. */
+export function getDefaultIntegrations(_options: ElectronMainOptions): Integration[] {
+  return [
+    // Node integrations
+    inboundFiltersIntegration(),
+    functionToStringIntegration(),
+    linkedErrorsIntegration(),
+    requestDataIntegration(),
+    consoleIntegration(),
+    httpIntegration(),
+    nativeNodeFetchIntegration(),
+    onUnhandledRejectionIntegration(),
+    contextLinesIntegration(),
+    localVariablesIntegration(),
+
+    // Electron integrations
+    sentryMinidumpIntegration(),
+    electronBreadcrumbsIntegration(),
+    electronNetIntegration(),
+    mainContextIntegration(),
+    childProcessIntegration(),
+    onUncaughtExceptionIntegration(),
+    preloadInjectionIntegration(),
+    additionalContextIntegration(),
+    screenshotsIntegration(),
+    rendererProfilingIntegration(),
+  ];
+}
 
 export interface ElectronMainOptionsInternal extends Options<ElectronOfflineTransportOptions> {
   /**
@@ -101,7 +126,7 @@ const defaultOptions: ElectronMainOptionsInternal = {
  */
 export function init(userOptions: ElectronMainOptions): void {
   const options: ElectronMainOptionsInternal = Object.assign(defaultOptions, userOptions);
-  const defaults = defaultIntegrations;
+  const defaults = getDefaultIntegrations(options);
 
   // If we don't set a release, @sentry/node will automatically fetch from environment variables
   if (options.release === undefined) {

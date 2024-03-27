@@ -12,5 +12,5 @@ const coreVersion = packageJson.dependencies['@sentry/core'];
 const coreVersionVar = coreVersion.replace(/\./g, '_');
 const rendererSdkPath = join(__dirname, '../src/renderer/sdk.ts');
 let rendererSdk = readFileSync(rendererSdkPath, { encoding: 'utf8' });
-rendererSdk = rendererSdk.replace(/version_v\d+_\d+_\d+/, `version_v${coreVersionVar}`);
+rendererSdk = rendererSdk.replace(/version_v\d+_\d+_\d+[a-z_0-9]*/, `version_v${coreVersionVar.replace(/-/, '_')}`);
 writeFileSync(rendererSdkPath, rendererSdk);

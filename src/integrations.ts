@@ -15,7 +15,7 @@ import {
   Screenshots,
   SentryMinidump,
 } from './main/integrations';
-import { EventToMain, ScopeToMain } from './renderer/integrations';
+import { ScopeToMain } from './renderer/integrations/scope-to-main';
 
 /** Convenience interface used to expose Integrations */
 export interface Integrations {
@@ -32,8 +32,6 @@ export interface Integrations {
   Screenshots: typeof Screenshots;
   // For renderer process
   ScopeToMain: typeof ScopeToMain;
-  // eslint-disable-next-line deprecation/deprecation
-  EventToMain: EventToMain;
 }
 
 /** Return all Electron integrations and add EmptyIntegrations for integrations missing in this process. */

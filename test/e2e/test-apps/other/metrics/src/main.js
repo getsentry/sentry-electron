@@ -1,16 +1,13 @@
 const path = require('path');
 
 const { app, BrowserWindow } = require('electron');
-const Sentry = require('@sentry/electron');
+const Sentry = require('@sentry/electron/main');
 
 Sentry.init({
   dsn: '__DSN__',
   debug: true,
   autoSessionTracking: false,
   onFatalError: () => {},
-  _experiments: {
-    metricsAggregator: true,
-  },
 });
 
 Sentry.metrics.gauge('parallel_requests', 2, { tags: { type: 'a' } });

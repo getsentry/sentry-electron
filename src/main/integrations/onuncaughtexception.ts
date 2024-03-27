@@ -1,6 +1,5 @@
-import { convertIntegrationFnToClass, defineIntegration, getCurrentScope } from '@sentry/core';
+import { convertIntegrationFnToClass, defineIntegration } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
-import { Event } from '@sentry/types';
 import { dialog } from 'electron';
 
 const INTEGRATION_NAME = 'OnUncaughtException';
@@ -16,26 +15,18 @@ export const onUncaughtExceptionIntegration = defineIntegration(() => {
       const options = client.getOptions();
 
       global.process.on('uncaughtException', (error: Error) => {
-        const scope = getCurrentScope();
-
-        scope.addEventProcessor(async (event: Event) => ({
-          ...event,
-          level: 'fatal',
-        }));
-
-        client.captureException(
-          error,
-          {
-            originalException: error,
-            data: {
-              mechanism: {
-                handled: false,
-                type: 'generic',
-              },
+        client.captureException(error, {
+          originalException: error,
+          captureContext: {
+            level: 'fatal',
+          },
+          data: {
+            mechanism: {
+              handled: false,
+              type: 'generic',
             },
           },
-          scope,
-        );
+        });
 
         client.flush(options.shutdownTimeout || 2000).then(
           () => {

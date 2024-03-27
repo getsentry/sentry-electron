@@ -6,8 +6,14 @@ import {
   getClient,
   getCurrentScope,
   getDynamicSamplingContextFromClient,
+  getDynamicSamplingContextFromSpan,
+  getIsolationScope,
+  SentryNonRecordingSpan,
+  setHttpStatus,
+  spanToTraceHeader,
+  startInactiveSpan,
 } from '@sentry/core';
-import { DynamicSamplingContext, Span, TracePropagationTargets } from '@sentry/types';
+import { DynamicSamplingContext, TracePropagationTargets } from '@sentry/types';
 import {
   dynamicSamplingContextToSentryBaggageHeader,
   fill,
@@ -186,35 +192,38 @@ function createWrappedRequestFactory(
         return request;
       }
 
-      let span: Span | undefined;
-
-      const scope = getCurrentScope();
-      if (scope && shouldCreateSpan(method, url)) {
-        const parentSpan = scope.getSpan();
-
-        if (parentSpan) {
-          span = parentSpan.startChild({
-            description: `${method} ${url}`,
+      const span = shouldCreateSpan(method, url)
+        ? startInactiveSpan({
+            name: `${method} ${url}`,
+            onlyIfParent: true,
+            attributes: {
+              url,
+              type: 'net.request',
+              'http.method': method,
+            },
             op: 'http.client',
-          });
+          })
+        : new SentryNonRecordingSpan();
 
-          if (shouldAttachTraceData(method, url)) {
-            const sentryTraceHeader = span.toTraceparent();
-            const dynamicSamplingContext = span?.transaction?.getDynamicSamplingContext();
+      if (shouldAttachTraceData(method, url)) {
+        const { traceId, spanId, sampled, dsc } = {
+          ...getIsolationScope().getPropagationContext(),
+          ...getCurrentScope().getPropagationContext(),
+        };
 
-            addHeadersToRequest(request, url, sentryTraceHeader, dynamicSamplingContext);
-          }
+        if (span.isRecording()) {
+          const sentryTraceHeader = spanToTraceHeader(span);
+          const dynamicSamplingContext = dsc || getDynamicSamplingContextFromSpan(span);
+
+          addHeadersToRequest(request, url, sentryTraceHeader, dynamicSamplingContext);
         } else {
-          if (shouldAttachTraceData(method, url)) {
-            const { traceId, sampled, dsc } = scope.getPropagationContext();
-            const sentryTraceHeader = generateSentryTraceHeader(traceId, undefined, sampled);
+          const sentryTraceHeader = generateSentryTraceHeader(traceId, spanId, sampled);
 
-            const client = getClient();
-            const dynamicSamplingContext =
-              dsc || (client ? getDynamicSamplingContextFromClient(traceId, client, scope) : undefined);
+          const client = getClient();
+          const dynamicSamplingContext =
+            dsc || (client ? getDynamicSamplingContextFromClient(traceId, client) : undefined);
 
-            addHeadersToRequest(request, url, sentryTraceHeader, dynamicSamplingContext);
-          }
+          addHeadersToRequest(request, url, sentryTraceHeader, dynamicSamplingContext);
         }
       }
 
@@ -223,21 +232,20 @@ function createWrappedRequestFactory(
           if (options.breadcrumbs !== false) {
             addRequestBreadcrumb('response', method, url, this, res);
           }
-          if (span) {
-            if (res.statusCode) {
-              span.setHttpStatus(res.statusCode);
-            }
-            span.finish();
+
+          if (res.statusCode) {
+            setHttpStatus(span, res.statusCode);
           }
+
+          span.end();
         })
         .once('error', function (this: ClientRequest, _error: Error): void {
           if (options.breadcrumbs !== false) {
             addRequestBreadcrumb('error', method, url, this, undefined);
           }
-          if (span) {
-            span.setHttpStatus(500);
-            span.finish();
-          }
+
+          setHttpStatus(span, 500);
+          span.end();
         });
     };
   };

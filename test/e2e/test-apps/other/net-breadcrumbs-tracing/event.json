@@ -54,8 +54,11 @@
         "timestamp": 0,
         "description": "GET http://localhost:8123/something",
         "status": "not_found",
-        "tags": {
-          "http.status_code": "404"
+        "data": {
+          "http.method": "GET",
+          "http.response.status_code": 404,
+          "sentry.op": "http.client",
+          "type": "net.request"
         }
       }
     ],

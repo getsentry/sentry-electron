@@ -64,7 +64,7 @@
         "span_id": "{{id}}",
         "start_timestamp": 0,
         "parent_span_id": "{{id}}",
-        "op": "initializeServices",
+        "description": "initializeServices",
         "timestamp": 0
       }
     ],

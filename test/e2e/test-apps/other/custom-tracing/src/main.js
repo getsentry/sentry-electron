@@ -12,13 +12,11 @@ Sentry.init({
 });
 
 async function doTransaction() {
-  const transaction = Sentry.startTransaction({ name: 'InitSequence', op: 'task' });
-  const initializeServicesSpan = transaction.startChild({ op: 'initializeServices' });
-
-  setTimeout(() => {
-    initializeServicesSpan.finish();
-    transaction.finish();
-  }, 500);
+  await Sentry.startSpan({ name: 'InitSequence', op: 'task' }, async () => {
+    await Sentry.startSpan({ name: 'initializeServices' }, async () => {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    });
+  });
 }
 
 app.on('ready', () => doTransaction());
