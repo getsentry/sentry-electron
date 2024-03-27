@@ -59,9 +59,6 @@ function addJsProfilingHeader(
 export const rendererProfilingIntegration = defineIntegration(() => {
   return {
     name: 'RendererProfiling',
-    setupOnce() {
-      // noop
-    },
     setup(client) {
       const options = client.getOptions() as ElectronMainOptionsInternal;
       if (!options.enableRendererProfiling) {

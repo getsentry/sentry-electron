@@ -146,9 +146,6 @@ export const electronBreadcrumbsIntegration = defineIntegration(
 
     return {
       name: 'ElectronBreadcrumbs',
-      setupOnce() {
-        // noop
-      },
       setup(client: NodeClient) {
         const clientOptions = client.getOptions() as ElectronMainOptions | undefined;
 

@@ -10,9 +10,6 @@ import { ElectronMainOptions } from '../sdk';
 export const screenshotsIntegration = defineIntegration(() => {
   return {
     name: 'Screenshots',
-    setupOnce() {
-      // noop
-    },
     async processEvent(event, hint, client) {
       const attachScreenshot = !!(client.getOptions() as ElectronMainOptions).attachScreenshot;
 

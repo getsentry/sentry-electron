@@ -40,9 +40,6 @@ export const additionalContextIntegration = defineIntegration((userOptions: Part
 
   return {
     name: 'AdditionalContext',
-    setupOnce() {
-      // noop
-    },
     setup() {
       // Some metrics are only available after app ready so we lazily load them
       app.whenReady().then(

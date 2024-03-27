@@ -15,8 +15,8 @@ import { electronRendererStackParser } from './stack-parse';
 import { makeRendererTransport } from './transport';
 
 /** Get the default integrations for the renderer SDK. */
-export function getDefaultIntegrations(_options: ElectronRendererOptions): Integration[] {
-  return [...getDefaultBrowserIntegrations({}), scopeToMainIntegration()];
+export function getDefaultIntegrations(options: ElectronRendererOptions): Integration[] {
+  return [...getDefaultBrowserIntegrations(options), scopeToMainIntegration()];
 }
 
 interface ElectronRendererOptions extends BrowserOptions {

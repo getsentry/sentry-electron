@@ -39,6 +39,7 @@
   "scripts": {
     "prebuild": "yarn clean && node scripts/update-version.js",
     "build": "rollup --config rollup.config.js",
+    "postbuild": "node scripts/check-exports.mjs",
     "clean": "rimraf coverage esm main preload renderer index.* integrations.* ipc.* sentry-electron*.tgz",
     "prelint": "node scripts/update-version.js",
     "lint": "run-s lint:prettier lint:eslint",
@@ -103,7 +104,7 @@
     "yaml": "^2.2.1"
   },
   "volta": {
-    "node": "18.12.1",
+    "node": "20.12.0",
     "yarn": "1.22.19"
   }
 }

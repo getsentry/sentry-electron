@@ -6,9 +6,6 @@ import { dialog } from 'electron';
 export const onUncaughtExceptionIntegration = defineIntegration(() => {
   return {
     name: 'OnUncaughtException',
-    setupOnce() {
-      // noop
-    },
     setup(client: NodeClient) {
       const options = client.getOptions();
 

@@ -10,9 +10,6 @@ import { getIPC } from '../ipc';
 export const scopeToMainIntegration = defineIntegration(() => {
   return {
     name: 'ScopeToMain',
-    setupOnce() {
-      // noop
-    },
     setup() {
       const ipc = getIPC();
 

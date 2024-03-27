@@ -9,9 +9,6 @@ import { normalizeEvent } from '../normalize';
 export const mainContextIntegration = defineIntegration(() => {
   return {
     name: 'MainContext',
-    setupOnce() {
-      // noop
-    },
     async processEvent(event, _, client) {
       const clientOptions = client.getOptions();
       const normalized = normalizeEvent(event, app.getAppPath());
