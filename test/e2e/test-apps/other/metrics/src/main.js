@@ -1,7 +1,7 @@
 const path = require('path');
 
 const { app, BrowserWindow } = require('electron');
-const Sentry = require('@sentry/electron/renderer');
+const Sentry = require('@sentry/electron/main');
 
 Sentry.init({
   dsn: '__DSN__',
