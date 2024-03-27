@@ -1,4 +1,3 @@
 description: Good Session - Window
 category: Sessions
 command: yarn
-condition: version.major >= 12

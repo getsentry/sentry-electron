@@ -2,7 +2,6 @@ import { defineIntegration } from '@sentry/core';
 import { logger } from '@sentry/utils';
 import { BrowserWindow } from 'electron';
 
-import { capturePage } from '../electron-normalize';
 import { ElectronMainOptions } from '../sdk';
 
 /**
@@ -33,7 +32,7 @@ export const screenshotsIntegration = defineIntegration(() => {
           try {
             if (!window.isDestroyed() && window.isVisible()) {
               const filename = count === 1 ? 'screenshot.png' : `screenshot-${count}.png`;
-              const image = await capturePage(window);
+              const image = await window.capturePage();
 
               hint.attachments.push({ filename, data: image.toPNG(), contentType: 'image/png' });
 

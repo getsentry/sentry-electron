@@ -5,17 +5,14 @@ import { existsSync } from 'fs';
 import { isAbsolute, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
-import { IPCMode } from '../../common';
-import { rendererRequiresCrashReporterStart } from '../electron-normalize';
+import { IPCMode } from '../../common/ipc';
 import { ElectronMainOptionsInternal } from '../sdk';
 
 // After bundling with webpack, require.resolve can return number so we include that in the types
 // to ensure we check for that!
 function getPreloadPath(): string | number | undefined {
   try {
-    return rendererRequiresCrashReporterStart()
-      ? require.resolve('../../preload/legacy.js')
-      : require.resolve('../../preload/index.js');
+    return require.resolve('../../preload/index.js');
   } catch (_) {
     try {
       // This could be ESM

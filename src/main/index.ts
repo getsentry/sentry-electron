@@ -1,4 +1,4 @@
-import { ensureProcess } from '../common';
+import { ensureProcess } from '../common/process';
 ensureProcess('main');
 
 export type {
@@ -81,4 +81,4 @@ export { makeElectronOfflineTransport } from './transports/electron-offline-net'
 
 export type { ElectronMainOptions } from './sdk';
 export { init, getDefaultIntegrations } from './sdk';
-export { IPCMode } from '../common';
+export { IPCMode } from '../common/ipc';

@@ -13,18 +13,12 @@ import {
 import { forEachEnvelopeItem, logger, parseEnvelope, SentryError } from '@sentry/utils';
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
 
-import {
-  IPCChannel,
-  IPCMode,
-  mergeEvents,
-  MetricIPCMessage,
-  normalizeUrlsInReplayEnvelope,
-  PROTOCOL_SCHEME,
-  RendererStatus,
-} from '../common';
+import { IPCChannel, IPCMode, MetricIPCMessage, PROTOCOL_SCHEME, RendererStatus } from '../common/ipc';
 import { createRendererAnrStatusHandler } from './anr';
-import { registerProtocol, supportsFullProtocol, whenAppReady } from './electron-normalize';
+import { registerProtocol } from './electron-normalize';
 import { rendererProfileFromIpc } from './integrations/renderer-profiling';
+import { mergeEvents } from './merge';
+import { normalizeUrlsInReplayEnvelope } from './normalize';
 import { ElectronMainOptionsInternal } from './sdk';
 
 let KNOWN_RENDERERS: Set<number> | undefined;
@@ -212,7 +206,8 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
 
   const rendererStatusChanged = createRendererAnrStatusHandler();
 
-  whenAppReady
+  app
+    .whenReady()
     .then(() => {
       for (const sesh of options.getSessions()) {
         registerProtocol(sesh.protocol, PROTOCOL_SCHEME, (request) => {
@@ -279,12 +274,8 @@ function configureClassic(options: ElectronMainOptionsInternal): void {
 
 /** Sets up communication channels with the renderer */
 export function configureIPC(options: ElectronMainOptionsInternal): void {
-  if (!supportsFullProtocol() && options.ipcMode === IPCMode.Protocol) {
-    throw new SentryError('IPCMode.Protocol is only supported in Electron >= v5');
-  }
-
   // eslint-disable-next-line no-bitwise
-  if (supportsFullProtocol() && (options.ipcMode & IPCMode.Protocol) > 0) {
+  if ((options.ipcMode & IPCMode.Protocol) > 0) {
     configureProtocol(options);
   }
 

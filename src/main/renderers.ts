@@ -1,8 +1,6 @@
 import { normalizeUrlToBase } from '@sentry/utils';
 import { app } from 'electron';
 
-import { onWebContentsCreated } from './electron-normalize';
-
 interface Renderer {
   id: number;
   url?: string;
@@ -35,7 +33,7 @@ export function trackRendererProperties(): void {
     renderers.set(id, state);
   }
 
-  onWebContentsCreated((contents) => {
+  app.on('web-contents-created', (_, contents) => {
     const id = contents.id;
 
     contents.on('did-navigate', (_, url) => updateUrl(id, url));

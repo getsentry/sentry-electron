@@ -1,7 +1,6 @@
 import { defineIntegration } from '@sentry/core';
 import { app, BrowserWindow } from 'electron';
 
-import { ELECTRON_MAJOR_VERSION } from '../electron-normalize';
 import { endSession, endSessionOnExit, startSession } from '../sessions';
 
 function focusedWindow(): boolean {
@@ -35,10 +34,6 @@ type SessionState = { name: 'active' } | { name: 'inactive' } | { name: 'timeout
  * Supports Electron >= v12
  */
 export const browserWindowSessionIntegration = defineIntegration((options: Options = {}) => {
-  if (ELECTRON_MAJOR_VERSION < 12) {
-    throw new Error('BrowserWindowSession requires Electron >= v12');
-  }
-
   let _state: SessionState = { name: 'inactive' };
 
   function windowStateChanged(): void {

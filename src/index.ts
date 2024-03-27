@@ -61,7 +61,7 @@ export interface ElectronOptions extends ElectronMainOptions, Omit<BrowserOption
   //
 }
 
-export { IPCMode } from './common';
+export { IPCMode } from './common/ipc';
 
 interface ProcessEntryPoint {
   init: (options: Partial<ElectronOptions>) => void;

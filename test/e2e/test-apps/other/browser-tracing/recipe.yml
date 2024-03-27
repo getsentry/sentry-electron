@@ -1,4 +1,4 @@
 description: Browser Tracing
 command: yarn
 # Browser Tracing fails on Electron v24
-condition: version.major >= 3 && version.major != 24
+condition: version.major != 24

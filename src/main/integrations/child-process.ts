@@ -1,10 +1,14 @@
 import { addBreadcrumb, captureMessage, defineIntegration } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { SeverityLevel } from '@sentry/types';
+import { app } from 'electron';
 
-import { OrBool } from '../../common/types';
-import { EXIT_REASONS, ExitReason, onChildProcessGone, onRendererProcessGone } from '../electron-normalize';
+import { EXIT_REASONS, ExitReason } from '../electron-normalize';
 import { ElectronMainOptions } from '../sdk';
+
+type OrBool<T> = {
+  [P in keyof T]: T[P] | boolean;
+};
 
 export interface ChildProcessOptions {
   /** Child process events that generate breadcrumbs */
@@ -60,7 +64,7 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
       if (allReasons.length > 0) {
         const clientOptions = client.getOptions() as ElectronMainOptions;
 
-        onChildProcessGone(allReasons, (details) => {
+        app.on('child-process-gone', (_, details) => {
           const { reason } = details;
 
           // Capture message first
@@ -80,7 +84,7 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
           }
         });
 
-        onRendererProcessGone(allReasons, (contents, details) => {
+        app.on('render-process-gone', (_, contents, details) => {
           const { reason } = details;
           const name = clientOptions?.getRendererName?.(contents) || 'renderer';
 

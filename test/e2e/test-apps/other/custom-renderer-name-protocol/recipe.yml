@@ -1,3 +1,2 @@
 description: Custom Renderer Name via Protocol
 command: yarn
-condition: version.major >= 5
