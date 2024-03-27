@@ -7,12 +7,10 @@ import {
   TransportRequestExecutor,
 } from '@sentry/types';
 import { dropUndefinedKeys } from '@sentry/utils';
-import { net } from 'electron';
+import { app, net } from 'electron';
 import { Readable, Writable } from 'stream';
 import { URL } from 'url';
 import { createGzip } from 'zlib';
-
-import { whenAppReady } from '../electron-normalize';
 
 export interface ElectronNetTransportOptions extends BaseTransportOptions {
   /** Define custom headers */
@@ -64,7 +62,7 @@ export function createElectronNetRequestExecutor(
   baseHeaders['Content-Type'] = 'application/x-sentry-envelope';
 
   return function makeRequest(request: TransportRequest): Promise<TransportMakeRequestResponse> {
-    return whenAppReady.then(
+    return app.whenReady().then(
       () =>
         new Promise((resolve, reject) => {
           let bodyStream = streamFromBody(request.body);

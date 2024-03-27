@@ -7,7 +7,8 @@ import {
 import { Integration } from '@sentry/types';
 import { logger } from '@sentry/utils';
 
-import { ensureProcess, RendererProcessAnrOptions } from '../common';
+import { RendererProcessAnrOptions } from '../common/ipc';
+import { ensureProcess } from '../common/process';
 import { enableAnrRendererMessages } from './anr';
 import { scopeToMainIntegration } from './integrations/scope-to-main';
 import { electronRendererStackParser } from './stack-parse';

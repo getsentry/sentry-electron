@@ -1,4 +1,4 @@
-import { ensureProcess, IPCMode } from '../common';
+import { ensureProcess } from '../common/process';
 ensureProcess('main');
 
 import {
@@ -18,6 +18,7 @@ import {
 import { Integration, Options } from '@sentry/types';
 import { Session, session, WebContents } from 'electron';
 
+import { IPCMode } from '../common/ipc';
 import { getDefaultEnvironment, getDefaultReleaseName, getSdkInfo } from './context';
 import { additionalContextIntegration } from './integrations/additional-context';
 import { childProcessIntegration } from './integrations/child-process';

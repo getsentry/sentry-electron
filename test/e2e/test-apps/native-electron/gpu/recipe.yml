@@ -1,4 +1,4 @@
 description: Native GPU Crash
 category: Native (Electron Uploader)
 command: yarn
-condition: version.major >= 13 && usesCrashpad
+condition: usesCrashpad

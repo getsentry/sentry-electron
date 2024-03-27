@@ -4,15 +4,11 @@ import { Event, ScopeData } from '@sentry/types';
 import { logger, makeDsn, SentryError, uuid4 } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
-import { mergeEvents, normalizeEvent } from '../../common';
 import { addScopeListener, getScopeData } from '../../common/scope';
 import { getEventDefaults, getSdkInfo } from '../context';
-import {
-  CRASH_REASONS,
-  onRendererProcessGone,
-  rendererRequiresCrashReporterStart,
-  usesCrashpad,
-} from '../electron-normalize';
+import { CRASH_REASONS, usesCrashpad } from '../electron-normalize';
+import { mergeEvents } from '../merge';
+import { normalizeEvent } from '../normalize';
 import { checkPreviousSession, sessionCrashed, unreportedDuringLastSession } from '../sessions';
 
 /** Is object defined and has keys */
@@ -181,10 +177,6 @@ export const electronMinidumpIntegration = defineIntegration(() => {
         return;
       }
 
-      if (rendererRequiresCrashReporterStart()) {
-        throw new SentryError(`The '${'ElectronMinidump'}' integration is only supported with Electron >= v9`);
-      }
-
       const clientOptions = client.getOptions();
 
       if (!clientOptions?.dsn) {
@@ -196,8 +188,10 @@ export const electronMinidumpIntegration = defineIntegration(() => {
       startCrashReporter(clientOptions);
 
       // If a renderer process crashes, mark any existing session as crashed
-      onRendererProcessGone(CRASH_REASONS, (_, __) => {
-        sessionCrashed();
+      app.on('render-process-gone', (_, __, details) => {
+        if (CRASH_REASONS.includes(details.reason)) {
+          sessionCrashed();
+        }
       });
 
       // If we're using the Crashpad minidump uploader, we set extra parameters whenever the scope updates

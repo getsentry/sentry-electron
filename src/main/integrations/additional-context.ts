@@ -3,8 +3,7 @@ import { DeviceContext } from '@sentry/types';
 import { app, screen as electronScreen } from 'electron';
 import { CpuInfo, cpus } from 'os';
 
-import { mergeEvents } from '../../common';
-import { whenAppReady } from '../electron-normalize';
+import { mergeEvents } from '../merge';
 
 export interface AdditionalContextOptions {
   cpu: boolean;
@@ -46,7 +45,7 @@ export const additionalContextIntegration = defineIntegration((userOptions: Part
     },
     setup() {
       // Some metrics are only available after app ready so we lazily load them
-      whenAppReady.then(
+      app.whenReady().then(
         () => {
           const { language, screen } = options;
 

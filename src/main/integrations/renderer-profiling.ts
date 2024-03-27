@@ -3,9 +3,8 @@ import { Event, Profile } from '@sentry/types';
 import { forEachEnvelopeItem, LRUMap } from '@sentry/utils';
 import { app } from 'electron';
 
-import { normaliseProfile } from '../../common';
 import { getDefaultEnvironment, getDefaultReleaseName } from '../context';
-import { ELECTRON_MAJOR_VERSION } from '../electron-normalize';
+import { normaliseProfile } from '../normalize';
 import { ElectronMainOptionsInternal } from '../sdk';
 
 const DOCUMENT_POLICY_HEADER = 'Document-Policy';
@@ -67,10 +66,6 @@ export const rendererProfilingIntegration = defineIntegration(() => {
       const options = client.getOptions() as ElectronMainOptionsInternal;
       if (!options.enableRendererProfiling) {
         return;
-      }
-
-      if (ELECTRON_MAJOR_VERSION < 15) {
-        throw new Error('Renderer profiling requires Electron 15+ (Chromium 94+)');
       }
 
       RENDERER_PROFILES = new LRUMap(10);

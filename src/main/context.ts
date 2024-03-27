@@ -5,7 +5,6 @@ import { app } from 'electron';
 import { platform, release } from 'os';
 import { join } from 'path';
 
-import { isPackaged } from './electron-normalize';
 import { readDirAsync, readFileAsync } from './fs';
 import { SDK_VERSION } from './version';
 
@@ -285,7 +284,7 @@ export function getDefaultReleaseName(): string {
 
 /** Gets the default environment */
 export function getDefaultEnvironment(): string {
-  return isPackaged ? 'production' : 'development';
+  return app.isPackaged ? 'production' : 'development';
 }
 
 /**

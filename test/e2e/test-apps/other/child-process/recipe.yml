@@ -1,3 +1,2 @@
 description: Child process breadcrumbs & events
 command: yarn
-condition: version.major >= 4

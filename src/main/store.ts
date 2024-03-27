@@ -1,8 +1,8 @@
 import { logger } from '@sentry/utils';
 import { dirname, join } from 'path';
 
-import { Mutex } from '../common/mutex';
 import { mkdirp, readFileAsync, statAsync, unlinkAsync, writeFileAsync } from './fs';
+import { Mutex } from './mutex';
 
 const dateFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.*\d{0,10}Z$/;
 

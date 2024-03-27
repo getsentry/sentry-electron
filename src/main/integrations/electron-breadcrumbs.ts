@@ -3,7 +3,6 @@ import { NodeClient } from '@sentry/node';
 import { Breadcrumb } from '@sentry/types';
 import { app, autoUpdater, BrowserWindow, powerMonitor, screen, WebContents } from 'electron';
 
-import { onBrowserWindowCreated, onWebContentsCreated, whenAppReady } from '../electron-normalize';
 import { getRendererProperties, trackRendererProperties } from '../renderers';
 import { ElectronMainOptions } from '../sdk';
 
@@ -155,7 +154,7 @@ export const electronBreadcrumbsIntegration = defineIntegration(
 
         trackRendererProperties();
 
-        whenAppReady.then(
+        app.whenReady().then(
           () => {
             // We can't access these until app 'ready'
             if (options.screen) {
@@ -180,7 +179,7 @@ export const electronBreadcrumbsIntegration = defineIntegration(
         }
 
         if (options.browserWindow) {
-          onBrowserWindowCreated((window) => {
+          app.on('browser-window-created', (_, window) => {
             const id = window.webContents.id;
             const windowName = clientOptions?.getRendererName?.(window.webContents) || 'window';
             patchEventEmitter(window, windowName, options.browserWindow, id);
@@ -188,7 +187,7 @@ export const electronBreadcrumbsIntegration = defineIntegration(
         }
 
         if (options.webContents) {
-          onWebContentsCreated((contents) => {
+          app.on('web-contents-created', (_, contents) => {
             const id = contents.id;
             const webContentsName = clientOptions?.getRendererName?.(contents) || 'renderer';
             patchEventEmitter(contents, webContentsName, options.webContents, id);

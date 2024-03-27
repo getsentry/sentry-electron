@@ -1,8 +1,9 @@
 import { defineIntegration } from '@sentry/core';
 import { app } from 'electron';
 
-import { mergeEvents, normalizeEvent } from '../../common';
 import { getEventDefaults } from '../context';
+import { mergeEvents } from '../merge';
+import { normalizeEvent } from '../normalize';
 
 /** Adds Electron context to events and normalises paths. */
 export const mainContextIntegration = defineIntegration(() => {

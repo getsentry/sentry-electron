@@ -4,11 +4,11 @@ import { Event, ScopeData } from '@sentry/types';
 import { logger, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
-import { mergeEvents } from '../../../common';
 import { addScopeListener, getScopeData } from '../../../common/scope';
 import { getDefaultEnvironment, getDefaultReleaseName, getEventDefaults } from '../../context';
-import { EXIT_REASONS, onChildProcessGone, onRendererProcessGone } from '../../electron-normalize';
+import { EXIT_REASONS } from '../../electron-normalize';
 import { getSentryCachePath } from '../../fs';
+import { mergeEvents } from '../../merge';
 import { getRendererProperties, trackRendererProperties } from '../../renderers';
 import { ElectronMainOptions } from '../../sdk';
 import { checkPreviousSession, sessionCrashed } from '../../sessions';
@@ -229,8 +229,16 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
 
       trackRendererProperties();
 
-      onRendererProcessGone(EXIT_REASONS, (contents, details) => sendRendererCrash(client, options, contents, details));
-      onChildProcessGone(EXIT_REASONS, (details) => sendChildProcessCrash(client, options, details));
+      app.on('render-process-gone', async (_, contents, details) => {
+        if (EXIT_REASONS.includes(details.reason)) {
+          await sendRendererCrash(client, options, contents, details);
+        }
+      });
+      app.on('child-process-gone', async (_, details) => {
+        if (EXIT_REASONS.includes(details.reason)) {
+          await sendChildProcessCrash(client, options, details);
+        }
+      });
 
       // Start to submit recent minidump crashes. This will load breadcrumbs and
       // context information that was cached on disk in the previous app run, prior to the crash.

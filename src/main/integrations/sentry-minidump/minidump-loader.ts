@@ -1,10 +1,11 @@
 import { Attachment } from '@sentry/types';
 import { basename, logger } from '@sentry/utils';
+import { app } from 'electron';
 import { join } from 'path';
 
-import { Mutex } from '../../../common/mutex';
-import { getCrashesDirectory, usesCrashpad } from '../../electron-normalize';
+import { usesCrashpad } from '../../electron-normalize';
 import { readDirAsync, readFileAsync, statAsync, unlinkAsync } from '../../fs';
+import { Mutex } from '../../mutex';
 
 /** Maximum number of days to keep a minidump before deleting it. */
 const MAX_AGE_DAYS = 30;
@@ -147,7 +148,7 @@ async function readDirsAsync(paths: string[]): Promise<string[]> {
 }
 
 function crashpadMinidumpLoader(): MinidumpLoader {
-  const crashesDirectory: string = getCrashesDirectory();
+  const crashesDirectory: string = app.getPath('crashDumps');
   const crashpadSubDirectory = process.platform === 'win32' ? 'reports' : 'completed';
 
   const dumpDirectories = [join(crashesDirectory, crashpadSubDirectory)];
@@ -197,7 +198,7 @@ function removeBreakpadMetadata(crashesDirectory: string, paths: string[]): void
 }
 
 function breakpadMinidumpLoader(): MinidumpLoader {
-  const crashesDirectory: string = getCrashesDirectory();
+  const crashesDirectory: string = app.getPath('crashDumps');
 
   return createMinidumpLoader(async () => {
     // Breakpad stores all minidump files along with a metadata file directly in

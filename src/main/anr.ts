@@ -3,7 +3,7 @@ import { Event } from '@sentry/types';
 import { callFrameToStackFrame, logger, stripSentryFramesAndReverse, watchdogTimer } from '@sentry/utils';
 import { app, WebContents } from 'electron';
 
-import { RendererStatus } from '../common';
+import { RendererStatus } from '../common/ipc';
 import { ElectronMainOptions } from './sdk';
 import { sessionAnr } from './sessions';
 
