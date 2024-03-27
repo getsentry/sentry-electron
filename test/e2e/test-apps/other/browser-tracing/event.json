@@ -55,24 +55,6 @@
     },
     "spans": [
       {
-        "description": "domContentLoadedEvent",
-        "op": "browser",
-        "parent_span_id": "{{id}}",
-        "span_id": "{{id}}",
-        "start_timestamp": 0,
-        "timestamp": 0,
-        "trace_id": "{{id}}"
-      },
-      {
-        "description": "loadEvent",
-        "op": "browser",
-        "parent_span_id": "{{id}}",
-        "span_id": "{{id}}",
-        "start_timestamp": 0,
-        "timestamp": 0,
-        "trace_id": "{{id}}"
-      },
-      {
         "description": "connect",
         "op": "browser",
         "parent_span_id": "{{id}}",
