@@ -1,5 +1,5 @@
 const { app } = require('electron');
-const { init, startTransaction, getCurrentHub } = require('@sentry/electron');
+const { flush, init, startSpan } = require('@sentry/electron');
 const fetch = require('electron-fetch');
 
 init({
@@ -10,15 +10,14 @@ init({
   onFatalError: () => {},
 });
 
-app.on('ready', () => {
-  const transaction = startTransaction({ name: 'some-transaction' });
-  getCurrentHub().configureScope((scope) => scope.setSpan(transaction));
-
-  fetch.default('http://localhost:8123/something').then(() => {
-    transaction.finish();
-
-    setTimeout(() => {
-      app.quit();
-    }, 1000);
+app.on('ready', async () => {
+  await startSpan({ name: 'some-transaction' }, async () => {
+    await fetch.default('http://localhost:8123/something');
   });
+
+  await flush();
+
+  setTimeout(() => {
+    app.quit();
+  }, 1000);
 });

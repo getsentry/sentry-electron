@@ -1,10 +1,8 @@
 // eslint-disable-next-line import/no-unresolved
-import { init, configureScope } from '@sentry/electron';
+import { init, getCurrentScope } from '@sentry/electron/renderer';
 
 init({
   debug: true,
 });
 
-configureScope((scope) => {
-  scope.setUser({ id: 'abc-123' });
-});
+getCurrentScope().setUser({ id: 'abc-123' });

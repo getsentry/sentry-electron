@@ -1,10 +1,11 @@
-import { applyScopeDataToEvent, convertIntegrationFnToClass, defineIntegration, getCurrentScope } from '@sentry/core';
+import { applyScopeDataToEvent, convertIntegrationFnToClass, defineIntegration } from '@sentry/core';
 import { NodeClient, NodeOptions } from '@sentry/node';
 import { Event, ScopeData } from '@sentry/types';
 import { logger, makeDsn, SentryError, uuid4 } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
 import { mergeEvents, normalizeEvent } from '../../common';
+import { addScopeListener, getScopeData } from '../../common/scope';
 import { getEventDefaults, getSdkInfo } from '../context';
 import {
   CRASH_REASONS,
@@ -21,7 +22,7 @@ function hasKeys(obj: object | undefined): boolean {
 
 /** Gets a Scope object with user, tags and extra */
 function getScope(options: NodeOptions): Event {
-  const scope = getCurrentScope().getScopeData();
+  const scope = getScopeData();
 
   if (!scope) {
     return {};
@@ -164,9 +165,7 @@ export const electronMinidumpIntegration = defineIntegration(() => {
   }
 
   function setupScopeListener(): void {
-    getCurrentScope().addScopeListener((updatedScope) => {
-      const scope = updatedScope.getScopeData();
-      scope.eventProcessors = [];
+    addScopeListener((scope) => {
       updateExtraParams(scope);
     });
   }

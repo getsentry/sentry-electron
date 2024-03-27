@@ -3,7 +3,6 @@ import {
   captureEvent,
   convertIntegrationFnToClass,
   defineIntegration,
-  getCurrentScope,
   Scope,
 } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
@@ -12,6 +11,7 @@ import { logger, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
 import { mergeEvents } from '../../../common';
+import { addScopeListener, getScopeData } from '../../../common/scope';
 import { getDefaultEnvironment, getDefaultReleaseName, getEventDefaults } from '../../context';
 import { EXIT_REASONS, onChildProcessGone, onRendererProcessGone } from '../../electron-normalize';
 import { getSentryCachePath } from '../../fs';
@@ -65,24 +65,22 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
   }
 
   function setupScopeListener(currentRelease: string, currentEnvironment: string): void {
-    const scopeChanged = (updatedScope: Scope): void => {
+    function scopeChanged(scope: ScopeData): void {
       // Since the initial scope read is async, we need to ensure that any writes do not beat that
       // https://github.com/getsentry/sentry-electron/issues/585
       setImmediate(async () =>
         scopeStore?.set({
-          scope: updatedScope.getScopeData(),
+          scope,
           event: await getEventDefaults(currentRelease, currentEnvironment),
         }),
       );
-    };
-
-    const scope = getCurrentScope();
-
-    if (scope) {
-      scope.addScopeListener(scopeChanged);
-      // Ensure at least one event is written to disk
-      scopeChanged(scope);
     }
+
+    addScopeListener((scope) => {
+      scopeChanged(scope);
+    });
+
+    scopeChanged(getScopeData());
   }
 
   async function sendNativeCrashes(client: NodeClient, eventIn: Event): Promise<boolean> {

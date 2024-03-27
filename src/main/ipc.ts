@@ -1,4 +1,5 @@
 import { BaseClient, captureEvent, getClient, getCurrentScope } from '@sentry/core';
+import { metrics } from '@sentry/node';
 import {
   Attachment,
   AttachmentItem,
@@ -11,7 +12,6 @@ import {
 } from '@sentry/types';
 import { forEachEnvelopeItem, logger, parseEnvelope, SentryError } from '@sentry/utils';
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
-import { TextDecoder, TextEncoder } from 'util';
 
 import {
   IPCChannel,
@@ -121,7 +121,7 @@ function eventFromEnvelope(envelope: Envelope): [Event, Attachment[], Profile | 
 }
 
 function handleEnvelope(options: ElectronMainOptionsInternal, env: Uint8Array | string, contents?: WebContents): void {
-  const envelope = parseEnvelope(env, new TextEncoder(), new TextDecoder());
+  const envelope = parseEnvelope(env);
 
   const eventAndAttachments = eventFromEnvelope(envelope);
   if (eventAndAttachments) {
@@ -144,20 +144,13 @@ function handleEnvelope(options: ElectronMainOptionsInternal, env: Uint8Array | 
 function handleMetric(metric: MetricIPCMessage): void {
   const client = getClient<BaseClient<ClientOptions>>();
 
-  if (client?.metricsAggregator) {
-    client.metricsAggregator.add(
-      metric.metricType,
-      metric.name,
-      metric.value,
-      metric.unit,
-      metric.tags,
-      metric.timestamp,
-    );
-  } else {
-    logger.warn(
-      `Metric was dropped because the aggregator is not configured in the main process. Enable via '_experiments.metricsAggregator: true' in your init call.`,
-    );
+  if (!client) {
+    return;
   }
+
+  const metricsAggregator = metrics.getMetricsAggregatorForClient(client);
+
+  metricsAggregator.add(metric.metricType, metric.name, metric.value, metric.unit, metric.tags, metric.timestamp);
 }
 
 /** Is object defined and has keys */

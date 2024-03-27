@@ -14,8 +14,6 @@ export type {
   EventHint,
   Exception,
   Session,
-  // eslint-disable-next-line deprecation/deprecation
-  Severity,
   SeverityLevel,
   Span,
   StackFrame,
@@ -26,22 +24,13 @@ export type {
 } from '@sentry/types';
 
 export {
-  // eslint-disable-next-line deprecation/deprecation
-  addGlobalEventProcessor,
   addEventProcessor,
   addBreadcrumb,
   addIntegration,
   captureException,
   captureEvent,
   captureMessage,
-  // eslint-disable-next-line deprecation/deprecation
-  configureScope,
   createTransport,
-  // eslint-disable-next-line deprecation/deprecation
-  extractTraceparentData,
-  // eslint-disable-next-line deprecation/deprecation
-  getActiveTransaction,
-  getHubFromCarrier,
   // eslint-disable-next-line deprecation/deprecation
   getCurrentHub,
   getClient,
@@ -49,40 +38,24 @@ export {
   getGlobalScope,
   getIsolationScope,
   Hub,
-  // eslint-disable-next-line deprecation/deprecation
-  lastEventId,
-  // eslint-disable-next-line deprecation/deprecation
-  makeMain,
-  runWithAsyncContext,
   Scope,
-  // eslint-disable-next-line deprecation/deprecation
-  startTransaction,
   setContext,
   setExtra,
   setExtras,
   setTag,
   setTags,
   setUser,
-  // eslint-disable-next-line deprecation/deprecation
-  spanStatusfromHttpCode,
-  // eslint-disable-next-line deprecation/deprecation
-  trace,
   withScope,
   captureCheckIn,
   withMonitor,
   setMeasurement,
   getActiveSpan,
   startSpan,
-  // eslint-disable-next-line deprecation/deprecation
-  startActiveSpan,
   startInactiveSpan,
   startSpanManual,
   continueTrace,
   metrics,
 } from '@sentry/core';
-export type { SpanStatusType } from '@sentry/core';
-
-import type { enableAnrDetection as enableNodeAnrDetection } from '@sentry/node';
 
 export const Integrations = getIntegrations();
 
@@ -97,8 +70,6 @@ interface ProcessEntryPoint {
   init: (options: Partial<ElectronOptions>) => void;
   close?: (timeout?: number) => Promise<boolean>;
   flush?: (timeout?: number) => Promise<boolean>;
-  // eslint-disable-next-line deprecation/deprecation
-  enableMainProcessAnrDetection?(options: Parameters<typeof enableNodeAnrDetection>[0]): Promise<void>;
 }
 
 /** Fetches the SDK entry point for the current process */
@@ -201,27 +172,4 @@ export async function flush(timeout?: number): Promise<boolean> {
   }
 
   throw new Error('The Electron SDK should be flushed from the main process');
-}
-
-/**
- * @deprecated Use `Anr` integration instead.
- *
- * ```js
- * import { init, anrIntegration } from '@sentry/electron';
- *
- * init({
- *   dsn: "__DSN__",
- *   integrations: [anrIntegration({ captureStackTrace: true })],
- * });
- * ```
- */
-// eslint-disable-next-line deprecation/deprecation
-export function enableMainProcessAnrDetection(options: Parameters<typeof enableNodeAnrDetection>[0]): Promise<void> {
-  const entryPoint = getEntryPoint();
-
-  if (entryPoint.enableMainProcessAnrDetection) {
-    return entryPoint.enableMainProcessAnrDetection(options);
-  }
-
-  throw new Error('ANR detection should be started in the main process');
 }

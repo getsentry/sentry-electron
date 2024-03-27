@@ -1,7 +1,6 @@
 import * as path from 'path';
 
 import { app, BrowserWindow } from 'electron';
-// eslint-disable-next-line import/no-unresolved
 import { init } from '@sentry/electron/main';
 
 init({

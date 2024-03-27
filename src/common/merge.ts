@@ -3,11 +3,13 @@ import deepMerge from 'deepmerge';
 
 /** Removes private properties from event before merging */
 function removePrivateProperties(event: Event): void {
+  // These contain recursive structures and are not meant to be serialized
+  delete event.sdkProcessingMetadata?.capturedSpanScope;
+  delete event.sdkProcessingMetadata?.capturedSpanIsolationScope;
+
   for (const span of event.spans || []) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     delete (span as any).spanRecorder;
-    // eslint-disable-next-line deprecation/deprecation
-    delete span.transaction;
   }
 }
 
