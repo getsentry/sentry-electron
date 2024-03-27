@@ -1,4 +1,4 @@
-import { convertIntegrationFnToClass, defineIntegration } from '@sentry/core';
+import { defineIntegration } from '@sentry/core';
 import { anrIntegration as nodeAnrIntegration } from '@sentry/node';
 import { app, powerMonitor } from 'electron';
 
@@ -33,9 +33,3 @@ export const anrIntegration = defineIntegration((options: Parameters<typeof node
 
   return integration;
 });
-
-/**
- * @deprecated Use `anrIntegration()` instead.
- */
-// eslint-disable-next-line deprecation/deprecation
-export const Anr = convertIntegrationFnToClass(anrIntegration.name, anrIntegration);
