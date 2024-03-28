@@ -53,9 +53,6 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
 
   return {
     name: 'ChildProcess',
-    setupOnce() {
-      // noop
-    },
     setup(client: NodeClient) {
       const { breadcrumbs, events } = options;
       const allReasons = Array.from(new Set([...breadcrumbs, ...events]));

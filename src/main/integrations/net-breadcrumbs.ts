@@ -257,9 +257,6 @@ function addRequestBreadcrumb(
 export const electronNetIntegration = defineIntegration((options: NetOptions = {}) => {
   return {
     name: 'Net',
-    setupOnce() {
-      // noop
-    },
     setup() {
       const clientOptions = getClient()?.getOptions();
 

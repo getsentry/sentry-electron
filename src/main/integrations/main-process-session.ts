@@ -15,9 +15,6 @@ export interface Options {
 export const mainProcessSessionIntegration = defineIntegration((options: Options = {}) => {
   return {
     name: 'MainProcessSession',
-    setupOnce() {
-      // noop
-    },
     setup() {
       startSession(!!options.sendOnCreate);
       endSessionOnExit();

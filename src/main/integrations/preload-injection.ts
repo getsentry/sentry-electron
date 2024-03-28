@@ -35,9 +35,6 @@ function getPreloadPath(): string | number | undefined {
 export const preloadInjectionIntegration = defineIntegration(() => {
   return {
     name: 'PreloadInjection',
-    setupOnce() {
-      // noop
-    },
     setup(client) {
       const options = client.getOptions() as ElectronMainOptionsInternal;
 

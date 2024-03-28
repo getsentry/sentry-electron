@@ -74,9 +74,6 @@ export const browserWindowSessionIntegration = defineIntegration((options: Optio
 
   return {
     name: 'BrowserWindowSession',
-    setupOnce() {
-      // noop
-    },
     setup() {
       app.on('browser-window-created', (_event, window) => {
         window.on('focus', windowStateChanged);

@@ -166,9 +166,6 @@ export const electronMinidumpIntegration = defineIntegration(() => {
 
   return {
     name: 'ElectronMinidump',
-    setupOnce() {
-      // noop
-    },
     setup(client: NodeClient) {
       // Mac AppStore builds cannot run the crash reporter due to the sandboxing
       // requirements. In this case, we prevent enabling native crashes entirely.
