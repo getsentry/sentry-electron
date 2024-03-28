@@ -45,7 +45,7 @@ interface ElectronRendererOptions extends BrowserOptions {
 export function init<O extends ElectronRendererOptions>(
   options: ElectronRendererOptions & O = {} as ElectronRendererOptions & O,
   // This parameter name ensures that TypeScript error messages contain a hint for fixing SDK version mismatches
-  originalInit: (if_you_get_a_typescript_error_ensure_sdks_use_version_v8_0_0_alpha_7: O) => void = browserInit,
+  originalInit: (if_you_get_a_typescript_error_ensure_sdks_use_version_v7_108_0: O) => void = browserInit,
 ): void {
   ensureProcess('renderer');
 
