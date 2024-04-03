@@ -32,6 +32,7 @@ describe('E2E Tests', () => {
       const electronPath = downloadElectron(electronVersion);
 
       beforeEach(async () => {
+        await electronPath;
         testServer.clearEvents();
         clearTestLog();
       });
