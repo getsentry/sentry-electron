@@ -1,9 +1,12 @@
-const { builtinModules } = require('module');
-const { resolve } = require('path');
+import { builtinModules } from 'node:module';
+import { resolve } from 'node:path';
+import { readFileSync } from 'node:fs';
 
-const typescript = require('@rollup/plugin-typescript');
+import typescript from '@rollup/plugin-typescript';
 
-const dependencies = Object.keys(require(resolve(process.cwd(), 'package.json')).dependencies || {});
+const pkgJson = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json')));
+
+const dependencies = Object.keys(pkgJson.dependencies || {});
 const external = [...builtinModules, 'electron', ...dependencies];
 
 const outputOptions = {
@@ -20,7 +23,7 @@ const outputOptions = {
 // a simple plugin that adds a package.json file with type: module
 const modulePackageJson = {
   name: 'package-json-module-type',
-  generateBundle(_, __) {
+  generateBundle() {
     this.emitFile({
       type: 'asset',
       fileName: 'package.json',
@@ -67,7 +70,7 @@ function bundlePreload(format, input, output) {
   };
 }
 
-module.exports = [
+export default [
   transpileFiles('cjs', ['src/index.ts', 'src/main/index.ts', 'src/renderer/index.ts'], '.'),
   transpileFiles('esm', ['src/index.ts', 'src/main/index.ts', 'src/renderer/index.ts'], './esm'),
   bundlePreload('cjs', 'src/preload/index.ts', './preload/index.js'),

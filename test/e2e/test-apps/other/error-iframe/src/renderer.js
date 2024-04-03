@@ -1,6 +1,6 @@
 /* eslint-env browser */
 // eslint-disable-next-line import/no-unresolved
-import { init } from '@sentry/electron';
+import { init } from '@sentry/electron/renderer';
 
 init({
   debug: true,

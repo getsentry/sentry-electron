@@ -1,7 +1,7 @@
 const path = require('path');
 
 const { app, BrowserWindow, protocol } = require('electron');
-const { init, IPCMode } = require('@sentry/electron');
+const { init, IPCMode } = require('@sentry/electron/main');
 
 init({
   dsn: '__DSN__',

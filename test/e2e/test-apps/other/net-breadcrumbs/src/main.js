@@ -1,5 +1,5 @@
 const { app } = require('electron');
-const { init } = require('@sentry/electron');
+const { init } = require('@sentry/electron/main');
 const fetch = require('electron-fetch');
 
 init({

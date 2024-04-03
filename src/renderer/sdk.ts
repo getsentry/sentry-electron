@@ -8,7 +8,6 @@ import { Integration } from '@sentry/types';
 import { logger } from '@sentry/utils';
 
 import { RendererProcessAnrOptions } from '../common/ipc';
-import { ensureProcess } from '../common/process';
 import { enableAnrRendererMessages } from './anr';
 import { scopeToMainIntegration } from './integrations/scope-to-main';
 import { electronRendererStackParser } from './stack-parse';
@@ -47,8 +46,6 @@ export function init<O extends ElectronRendererOptions>(
   // This parameter name ensures that TypeScript error messages contain a hint for fixing SDK version mismatches
   originalInit: (if_you_get_a_typescript_error_ensure_sdks_use_version_v8_0_0_alpha_7: O) => void = browserInit,
 ): void {
-  ensureProcess('renderer');
-
   // Ensure the browser SDK is only init'ed once.
   if (window?.__SENTRY__RENDERER_INIT__) {
     logger.warn(`The browser SDK has already been initialized.

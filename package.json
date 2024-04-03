@@ -38,7 +38,7 @@
   },
   "scripts": {
     "prebuild": "yarn clean && node scripts/update-version.js",
-    "build": "rollup --config rollup.config.js",
+    "build": "rollup --config rollup.config.mjs",
     "postbuild": "node scripts/check-exports.mjs",
     "clean": "rimraf coverage esm main preload renderer index.* integrations.* ipc.* sentry-electron*.tgz",
     "prelint": "node scripts/update-version.js",
@@ -61,12 +61,11 @@
     "@sentry/node": "8.0.0-alpha.7",
     "@sentry/types": "8.0.0-alpha.7",
     "@sentry/utils": "8.0.0-alpha.7",
-    "deepmerge": "4.3.0",
-    "tslib": "^2.5.0"
+    "deepmerge": "4.3.1"
   },
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "^15.2.1",
-    "@rollup/plugin-typescript": "^11.1.4",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.6",
     "@sentry-internal/eslint-config-sdk": "8.0.0-alpha.7",
     "@sentry-internal/typescript": "8.0.0-alpha.7",
     "@types/busboy": "^0.2.3",
@@ -96,9 +95,9 @@
     "npm-run-all": "^4.1.5",
     "prettier": "^2.8.4",
     "rimraf": "^3.0.2",
-    "rollup": "^3.29.4",
     "tmp": "^0.2.1",
     "ts-node": "^10.9.1",
+    "rollup": "^4.13.1",
     "typescript": "^4.9.5",
     "xvfb-maybe": "^0.2.1",
     "yaml": "^2.2.1"

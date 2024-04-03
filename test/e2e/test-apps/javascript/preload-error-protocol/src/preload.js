@@ -1,4 +1,4 @@
-const { init } = require('@sentry/electron');
+const { init } = require('@sentry/electron/renderer');
 
 init({
   debug: true,

@@ -1,7 +1,7 @@
 const path = require('path');
 
 const { app, BrowserWindow } = require('electron');
-const { init } = require('@sentry/electron');
+const { init } = require('@sentry/electron/main');
 
 init({
   dsn: process.env.APP_FIRST_RUN ? '__RATE_LIMIT_DSN__' : '__DSN__',

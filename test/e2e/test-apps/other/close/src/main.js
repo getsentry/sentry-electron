@@ -1,7 +1,7 @@
 const path = require('path');
 
 const { app, BrowserWindow } = require('electron');
-const { init, close } = require('@sentry/electron');
+const { init, close } = require('@sentry/electron/main');
 
 init({
   dsn: '__DSN__',
