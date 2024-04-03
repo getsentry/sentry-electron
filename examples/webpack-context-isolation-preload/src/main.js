@@ -3,7 +3,7 @@ import * as url from 'url';
 
 import { app, BrowserWindow } from 'electron';
 // eslint-disable-next-line import/no-unresolved
-import { init } from '@sentry/electron';
+import { init } from '@sentry/electron/main';
 
 init({
   dsn: '__DSN__',

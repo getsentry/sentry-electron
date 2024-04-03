@@ -1,5 +1,0 @@
-description: Error thrown if renderer code loaded in main process
-command: yarn && yarn build
-timeout: 120
-expectedError: This code is intended to run in the Electron renderer
-skipEsmAutoTransform: true

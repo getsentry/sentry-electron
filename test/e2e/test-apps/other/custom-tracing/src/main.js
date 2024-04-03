@@ -1,7 +1,7 @@
 // eslint-disable-next-line import/order
 const { app } = require('electron');
 
-const Sentry = require('@sentry/electron');
+const Sentry = require('@sentry/electron/main');
 
 Sentry.init({
   dsn: '__DSN__',

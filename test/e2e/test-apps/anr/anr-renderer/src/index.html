@@ -6,7 +6,7 @@
   <body>
     <script>
       const crypto = require('crypto');
-      const { init } = require('@sentry/electron');
+      const { init } = require('@sentry/electron/renderer');
 
       function longWork() {
         for (let i = 0; i < 100; i++) {
