@@ -32,7 +32,9 @@ export function getDefaultEnvironment(): string {
   return app.isPackaged ? 'production' : 'development';
 }
 
-/** */
+/**
+ * Gets the default event data by calling all event processors.
+ */
 export async function getEventDefaults(client: NodeClient): Promise<Event> {
   let event: Event | null = { message: 'test' };
   const eventHint: EventHint = {};
