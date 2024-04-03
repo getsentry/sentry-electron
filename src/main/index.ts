@@ -1,6 +1,3 @@
-import { ensureProcess } from '../common/process';
-ensureProcess('main');
-
 export type {
   Breadcrumb,
   BreadcrumbHint,

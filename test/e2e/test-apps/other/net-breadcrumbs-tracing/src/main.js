@@ -1,5 +1,5 @@
 const { app } = require('electron');
-const { flush, init, startSpan } = require('@sentry/electron');
+const { flush, init, startSpan } = require('@sentry/electron/main');
 const fetch = require('electron-fetch');
 
 init({

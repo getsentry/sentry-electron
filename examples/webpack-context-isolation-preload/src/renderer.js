@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/no-unresolved
-import { init, getCurrentScope } from '@sentry/electron';
+import { init, getCurrentScope } from '@sentry/electron/renderer';
 
 init({
   debug: true,

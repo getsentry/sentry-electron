@@ -5,11 +5,12 @@
   "compilerOptions": {
     "skipLibCheck": true,
     "baseUrl": ".",
-    "lib": ["ES7", "DOM"],
+    "lib": ["ES2020", "DOM"],
     "module": "ESNext",
     "outDir": ".",
     "rootDir": "src",
-    "target": "ES6",
-    "esModuleInterop": true
+    "target": "ES2020",
+    "esModuleInterop": true,
+    "ignoreDeprecations": "5.0"
   }
 }
