@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 4.22.0
+
+- feat: Update from [v7.107.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.107.0) to
+  [v7.109.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.109.0) of JavaScript SDKs (#856, #867)
+- fix: Stop Anr worker when app suspends (#858)
+
 ## 4.21.0
 
 - feat: Update from [v7.105.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.105.0) to
