@@ -1,3 +1,9 @@
+const log = require('why-is-node-running');
+
+setInterval(() => {
+  log();
+}, 20_000);
+
 import { should, use } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import chaiSubset from 'chai-subset';
