@@ -64,9 +64,6 @@
     ],
     "release": "net-breadcrumbs-tracing@1.0.0",
     "environment": "development",
-    "user": {
-      "ip_address": "{{auto}}"
-    },
     "type": "transaction",
     "transaction": "some-transaction",
     "event_id": "{{id}}",
@@ -76,8 +73,7 @@
     "breadcrumbs": [],
     "tags": {
       "event.environment": "javascript",
-      "event.origin": "electron",
-      "event_type": "javascript"
+      "event.origin": "electron"
     }
   }
 }

@@ -96,15 +96,14 @@ export function minidumpUrlFromDsn(dsn: string): string | undefined {
 export const electronMinidumpIntegration = defineIntegration(() => {
   /** Counter used to ensure no race condition when updating extra params */
   let updateEpoch = 0;
-  let customRelease: string | undefined;
 
-  async function getNativeUploaderEvent(scope: ScopeData): Promise<Event> {
-    const event = mergeEvents(await getEventDefaults(customRelease), {
+  async function getNativeUploaderEvent(client: NodeClient, scope: ScopeData): Promise<Event> {
+    const event = mergeEvents(await getEventDefaults(client), {
       sdk: getSdkInfo(),
       event_id: uuid4(),
       level: 'fatal',
       platform: 'native',
-      tags: { 'event.environment': 'native', event_type: 'native' },
+      tags: { 'event.environment': 'native' },
     });
 
     applyScopeDataToEvent(event, scope);
@@ -115,11 +114,11 @@ export const electronMinidumpIntegration = defineIntegration(() => {
     return normalizeEvent(event, app.getAppPath());
   }
 
-  function updateExtraParams(scope: ScopeData): void {
+  function updateExtraParams(client: NodeClient, scope: ScopeData): void {
     updateEpoch += 1;
     const currentEpoch = updateEpoch;
 
-    getNativeUploaderEvent(scope)
+    getNativeUploaderEvent(client, scope)
       .then((event) => {
         if (currentEpoch !== updateEpoch) {
           return;
@@ -158,9 +157,9 @@ export const electronMinidumpIntegration = defineIntegration(() => {
     });
   }
 
-  function setupScopeListener(): void {
+  function setupScopeListener(client: NodeClient): void {
     addScopeListener((scope) => {
-      updateExtraParams(scope);
+      updateExtraParams(client, scope);
     });
   }
 
@@ -180,8 +179,6 @@ export const electronMinidumpIntegration = defineIntegration(() => {
         throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
       }
 
-      customRelease = clientOptions.release;
-
       startCrashReporter(clientOptions);
 
       // If a renderer process crashes, mark any existing session as crashed
@@ -193,7 +190,7 @@ export const electronMinidumpIntegration = defineIntegration(() => {
 
       // If we're using the Crashpad minidump uploader, we set extra parameters whenever the scope updates
       if (usesCrashpad()) {
-        setupScopeListener();
+        setupScopeListener(client);
       }
 
       // Check if last crash report was likely to have been unreported in the last session

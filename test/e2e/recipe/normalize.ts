@@ -114,8 +114,12 @@ function normalizeEvent(event: Event & ReplayEvent): void {
     event.contexts.device.screen_density = 1;
   }
 
-  if (event.contexts?.device?.language) {
-    event.contexts.device.language = '{{language}}';
+  if (event.contexts?.culture?.locale) {
+    event.contexts.culture.locale = '{{locale}}';
+  }
+
+  if (event.contexts?.culture?.timezone) {
+    event.contexts.culture.timezone = '{{timezone}}';
   }
 
   if (event.contexts?.os?.name) {
