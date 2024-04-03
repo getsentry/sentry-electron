@@ -5,10 +5,9 @@ import { logger, SentryError } from '@sentry/utils';
 import { app, crashReporter } from 'electron';
 
 import { addScopeListener, getScopeData } from '../../../common/scope';
-import { getDefaultEnvironment, getDefaultReleaseName, getEventDefaults } from '../../context';
+import { getEventDefaults } from '../../context';
 import { EXIT_REASONS } from '../../electron-normalize';
 import { getSentryCachePath } from '../../fs';
-import { mergeEvents } from '../../merge';
 import { getRendererProperties, trackRendererProperties } from '../../renderers';
 import { ElectronMainOptions } from '../../sdk';
 import { checkPreviousSession, sessionCrashed } from '../../sessions';
@@ -56,14 +55,14 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
     });
   }
 
-  function setupScopeListener(currentRelease: string, currentEnvironment: string): void {
+  function setupScopeListener(client: NodeClient): void {
     function scopeChanged(scope: ScopeData): void {
       // Since the initial scope read is async, we need to ensure that any writes do not beat that
       // https://github.com/getsentry/sentry-electron/issues/585
       setImmediate(async () =>
         scopeStore?.set({
           scope,
-          event: await getEventDefaults(currentRelease, currentEnvironment),
+          event: await getEventDefaults(client),
         }),
       );
     }
@@ -134,12 +133,12 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
     contents: Electron.WebContents,
     details: Partial<Electron.RenderProcessGoneDetails>,
   ): Promise<void> {
-    const { getRendererName, release, environment } = options;
+    const { getRendererName } = options;
     const crashedProcess = getRendererName?.(contents) || 'renderer';
 
     logger.log(`'${crashedProcess}' process '${details.reason}'`);
 
-    const event = mergeEvents(await getEventDefaults(release, environment), {
+    const found = await sendNativeCrashes(client, {
       contexts: {
         electron: {
           crashed_url: getRendererProperties(contents.id)?.url || 'unknown',
@@ -153,11 +152,8 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
         'event.environment': 'native',
         'event.process': crashedProcess,
         'exit.reason': details.reason,
-        event_type: 'native',
       },
     });
-
-    const found = await sendNativeCrashes(client, event);
 
     if (found) {
       sessionCrashed();
@@ -171,9 +167,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
   ): Promise<void> {
     logger.log(`${details.type} process has ${details.reason}`);
 
-    const { release, environment } = options;
-
-    const event = mergeEvents(await getEventDefaults(release, environment), {
+    const found = await sendNativeCrashes(client, {
       contexts: {
         electron: { details },
       },
@@ -187,8 +181,6 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
         event_type: 'native',
       },
     });
-
-    const found = await sendNativeCrashes(client, event);
 
     if (found) {
       sessionCrashed();
@@ -215,10 +207,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
 
       const options = client.getOptions();
 
-      const currentRelease = options?.release || getDefaultReleaseName();
-      const currentEnvironment = options?.environment || getDefaultEnvironment();
-
-      setupScopeListener(currentRelease, currentEnvironment);
+      setupScopeListener(client);
 
       if (!options?.dsn) {
         throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
@@ -245,7 +234,6 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
         tags: {
           'event.environment': 'native',
           'event.process': 'browser',
-          event_type: 'native',
         },
       })
         .then((minidumpsFound) =>

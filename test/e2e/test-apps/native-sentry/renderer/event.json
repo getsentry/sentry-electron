@@ -36,8 +36,11 @@
         "processor_frequency": 0,
         "cpu_description": "{{cpu}}",
         "screen_resolution":"{{screen}}",
-        "screen_density": 1,
-        "language": "{{language}}"
+        "screen_density": 1
+      },
+      "culture": {
+        "locale": "{{locale}}",
+        "timezone": "{{timezone}}"
       },
       "node": {
         "name": "Node",
@@ -58,17 +61,13 @@
     },
     "release": "native-sentry-renderer@1.0.0",
     "environment": "development",
-    "user": {
-      "ip_address": "{{auto}}"
-    },
     "event_id": "{{id}}",
     "timestamp": 0,
     "breadcrumbs": [],
     "tags": {
       "event.environment": "native",
       "event.origin": "electron",
-      "event.process": "renderer",
-      "event_type": "native"
+      "event.process": "renderer"
     }
   },
   "attachments": [ { "attachment_type": "event.minidump" } ]

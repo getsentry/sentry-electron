@@ -8,6 +8,7 @@ import {
   linkedErrorsIntegration,
   localVariablesIntegration,
   nativeNodeFetchIntegration,
+  nodeContextIntegration,
   NodeOptions,
   onUnhandledRejectionIntegration,
   requestDataIntegration,
@@ -20,9 +21,10 @@ import { getDefaultEnvironment, getDefaultReleaseName, getSdkInfo } from './cont
 import { additionalContextIntegration } from './integrations/additional-context';
 import { childProcessIntegration } from './integrations/child-process';
 import { electronBreadcrumbsIntegration } from './integrations/electron-breadcrumbs';
-import { mainContextIntegration } from './integrations/main-context';
+import { electronContextIntegration } from './integrations/electron-context';
 import { mainProcessSessionIntegration } from './integrations/main-process-session';
 import { electronNetIntegration } from './integrations/net-breadcrumbs';
+import { normalizePathsIntegration } from './integrations/normalize-paths';
 import { onUncaughtExceptionIntegration } from './integrations/onuncaughtexception';
 import { preloadInjectionIntegration } from './integrations/preload-injection';
 import { rendererProfilingIntegration } from './integrations/renderer-profiling';
@@ -46,13 +48,15 @@ export function getDefaultIntegrations(_options: ElectronMainOptions): Integrati
     onUnhandledRejectionIntegration(),
     contextLinesIntegration(),
     localVariablesIntegration(),
+    nodeContextIntegration(),
 
     // Electron integrations
     sentryMinidumpIntegration(),
     electronBreadcrumbsIntegration(),
     electronNetIntegration(),
-    mainContextIntegration(),
+    electronContextIntegration(),
     childProcessIntegration(),
+    normalizePathsIntegration(),
     onUncaughtExceptionIntegration(),
     preloadInjectionIntegration(),
     additionalContextIntegration(),

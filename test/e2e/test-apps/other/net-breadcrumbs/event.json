@@ -46,9 +46,6 @@
     },
     "release": "net-breadcrumbs@1.0.0",
     "environment": "development",
-    "user": {
-      "ip_address": "{{auto}}"
-    },
     "exception": {
       "values": [
         {
@@ -91,8 +88,7 @@
     "tags": {
       "event.environment": "javascript",
       "event.origin": "electron",
-      "event.process": "browser",
-      "event_type": "javascript"
+      "event.process": "browser"
     }
   }
 }

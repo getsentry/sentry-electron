@@ -116,7 +116,6 @@ export type { NodeOptions } from '@sentry/node';
 
 export { electronBreadcrumbsIntegration } from './integrations/electron-breadcrumbs';
 export { onUncaughtExceptionIntegration } from './integrations/onuncaughtexception';
-export { mainContextIntegration } from './integrations/main-context';
 export { sentryMinidumpIntegration } from './integrations/sentry-minidump';
 export { electronMinidumpIntegration } from './integrations/electron-minidump';
 export { preloadInjectionIntegration } from './integrations/preload-injection';
@@ -127,6 +126,8 @@ export { electronNetIntegration } from './integrations/net-breadcrumbs';
 export { childProcessIntegration } from './integrations/child-process';
 export { screenshotsIntegration } from './integrations/screenshots';
 export { rendererProfileFromIpc } from './integrations/renderer-profiling';
+export { normalizePathsIntegration } from './integrations/normalize-paths';
+export { electronContextIntegration } from './integrations/electron-context';
 export { anrIntegration } from './integrations/anr';
 
 export { makeElectronTransport } from './transports/electron-net';

@@ -36,8 +36,11 @@
         "processor_frequency": 0,
         "cpu_description": "{{cpu}}",
         "screen_resolution":"{{screen}}",
-        "screen_density": 1,
-        "language": "{{language}}"
+        "screen_density": 1
+      },
+      "culture": {
+        "locale": "{{locale}}",
+        "timezone": "{{timezone}}"
       },
       "node": {
         "name": "Node",
@@ -55,9 +58,6 @@
     },
     "release": "electron-vite@1.0.0",
     "environment": "development",
-    "user": {
-      "ip_address": "{{auto}}"
-    },
     "debug_meta": {
       "images": [
         {
@@ -92,8 +92,7 @@
     "tags": {
       "event.environment": "javascript",
       "event.origin": "electron",
-      "event.process": "renderer",
-      "event_type": "javascript"
+      "event.process": "renderer"
     }
   }
 }

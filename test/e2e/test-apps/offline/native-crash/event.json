@@ -49,17 +49,13 @@
     },
     "release": "offline-native-crash@1.0.0",
     "environment": "development",
-    "user": {
-      "ip_address": "{{auto}}"
-    },
     "event_id": "{{id}}",
     "timestamp": 0,
     "breadcrumbs": [],
     "tags": {
       "event.environment": "native",
       "event.origin": "electron",
-      "event.process": "renderer",
-      "event_type": "native"
+      "event.process": "renderer"
     }
   },
   "attachments": [ { "attachment_type": "event.minidump" } ]
