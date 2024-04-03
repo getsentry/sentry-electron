@@ -7,7 +7,7 @@ import { addItemToEnvelope, createEnvelope, forEachEnvelopeItem, normalizeUrlToB
  *
  * @param event The event to normalize.
  */
-export function normalizeEvent(event: Event, basePath: string): Event {
+export function normalizePaths(event: Event, basePath: string): Event {
   // Retrieve stack traces and normalize their paths. Without this, grouping
   // would not work due to usernames in file paths.
   for (const exception of event.exception?.values || []) {
@@ -38,26 +38,6 @@ export function normalizeEvent(event: Event, basePath: string): Event {
     event.contexts.feedback.url = normalizeUrlToBase(event.contexts.feedback.url, basePath);
   }
 
-  event.contexts = {
-    ...event.contexts,
-    runtime: {
-      name: 'Electron',
-      version: process.versions.electron,
-    },
-  };
-
-  // The user agent is parsed by Sentry and would overwrite certain context
-  // information, which we don't want. Generally remove it, since we know that
-  // we are browsing with Chrome.
-  if (request.headers) {
-    delete request.headers['User-Agent'];
-  }
-
-  // The Node SDK includes server_name, which contains the machine name of the computer running Electron.
-  // In this case this is likely to include PII.
-  const { tags = {} } = event;
-  delete tags.server_name;
-  delete event.server_name;
   return event;
 }
 

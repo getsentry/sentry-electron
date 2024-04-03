@@ -10,12 +10,18 @@ export const electronContextIntegration = defineIntegration(() => {
     processEvent(event, _, client) {
       // We don't want to send the server_name as it includes the machine name which is potentially PII
       delete event.server_name;
+      delete event.tags?.server_name;
       // We delete the Node runtime context so our Electron runtime context is used instead
       delete event.contexts?.runtime;
 
-      const { release = getDefaultReleaseName(), environment = getDefaultEnvironment() } = client.getOptions();
+      // The user agent is parsed by Sentry and would overwrite certain context
+      // information, which we don't want. Generally remove it, since we know that
+      // we are browsing with Chrome.
+      if (event.request?.headers) {
+        delete event.request.headers['User-Agent'];
+      }
 
-      const build_type = process.mas ? 'app-store' : process.windowsStore ? 'windows-store' : undefined;
+      const { release = getDefaultReleaseName(), environment = getDefaultEnvironment() } = client.getOptions();
 
       return mergeEvents(
         {
@@ -23,7 +29,7 @@ export const electronContextIntegration = defineIntegration(() => {
             app: {
               app_name: app.name || app.getName(),
               app_version: app.getVersion(),
-              build_type,
+              build_type: process.mas ? 'app-store' : process.windowsStore ? 'windows-store' : undefined,
             },
             browser: {
               name: 'Chrome',

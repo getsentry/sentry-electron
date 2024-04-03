@@ -8,7 +8,7 @@ import { addScopeListener, getScopeData } from '../../common/scope';
 import { getEventDefaults, getSdkInfo } from '../context';
 import { CRASH_REASONS, usesCrashpad } from '../electron-normalize';
 import { mergeEvents } from '../merge';
-import { normalizeEvent } from '../normalize';
+import { normalizePaths } from '../normalize';
 import { checkPreviousSession, sessionCrashed, unreportedDuringLastSession } from '../sessions';
 
 /** Is object defined and has keys */
@@ -111,7 +111,7 @@ export const electronMinidumpIntegration = defineIntegration(() => {
     delete event.sdkProcessingMetadata;
 
     // Normalise paths
-    return normalizeEvent(event, app.getAppPath());
+    return normalizePaths(event, app.getAppPath());
   }
 
   function updateExtraParams(client: NodeClient, scope: ScopeData): void {
