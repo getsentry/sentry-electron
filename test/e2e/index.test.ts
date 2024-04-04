@@ -32,6 +32,8 @@ describe('E2E Tests', () => {
       const electronPath = downloadElectron(electronVersion);
 
       beforeEach(async function () {
+        this.timeout(60_000);
+        await electronPath;
         testServer.clearEvents();
         clearTestLog();
       });
