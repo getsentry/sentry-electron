@@ -53,7 +53,7 @@
     "pretest": "yarn build",
     "test": "vitest run --root=./test/unit",
     "pree2e": "rimraf --glob test/e2e/dist/**/node_modules/@sentry/** test/e2e/dist/**/yarn.lock test/e2e/dist/**/package-lock.json && node scripts/clean-cache.js && yarn build && npm pack",
-    "e2e": "vitest run --root=./test/e2e"
+    "e2e": "xvfb-maybe vitest run --root=./test/e2e"
   },
   "dependencies": {
     "@sentry/browser": "8.0.0-alpha.7",
