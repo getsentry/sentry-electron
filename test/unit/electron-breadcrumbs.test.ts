@@ -1,12 +1,9 @@
-import { expect, should, use } from 'chai';
-import chaiAsPromised = require('chai-as-promised');
+import { describe, expect, test } from 'vitest';
+
 import { normalizeOptions } from '../../src/main/integrations/electron-breadcrumbs';
 
-should();
-use(chaiAsPromised);
-
 describe('Electron Breadcrumbs', () => {
-  it('Normalize Options', () => {
+  test('Normalize Options', () => {
     const options = normalizeOptions({
       app: false,
       powerMonitor: true,

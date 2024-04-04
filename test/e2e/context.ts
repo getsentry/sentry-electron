@@ -27,9 +27,9 @@ function getDeleteDirectories(appName: string): string[] {
 const log = createLogger('Test Context');
 const appLog = createLogger('App');
 
-if (!process.env.DEBUG) {
+if (!process.env.DEBUG && !process.env.GITHUB_ACTIONS) {
   // tslint:disable-next-line
-  console.log('You can enable DEBUG=true to get verbose output.');
+  console.log('You can enable DEBUG=true to get verbose output from the tests.');
 }
 
 /** A class to start and stop Electron apps for E2E tests. */

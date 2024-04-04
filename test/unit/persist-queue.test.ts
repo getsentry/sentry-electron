@@ -1,12 +1,8 @@
-import { expect, should, use } from 'chai';
-import chaiAsPromised = require('chai-as-promised');
 import * as tmp from 'tmp';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { PersistedRequestQueue, QueuedTransportRequest } from '../../src/main/transports/queue';
 import { delay, expectFilesInDirectory } from '../helpers';
-
-should();
-use(chaiAsPromised);
 
 describe('PersistedRequestQueue', () => {
   let tempDir: tmp.DirResult;
@@ -20,7 +16,7 @@ describe('PersistedRequestQueue', () => {
     }
   });
 
-  it('Queues and returns a request', async () => {
+  test('Queues and returns a request', async () => {
     const queue = new PersistedRequestQueue(tempDir.name);
     await expectFilesInDirectory(tempDir.name, 0);
 
@@ -40,7 +36,7 @@ describe('PersistedRequestQueue', () => {
     await expectFilesInDirectory(tempDir.name, 1);
   });
 
-  it('Correctly returns pending request count', async () => {
+  test('Correctly returns pending request count', async () => {
     const queue = new PersistedRequestQueue(tempDir.name);
 
     const r1 = await queue.add({ body: 'just a string' });
@@ -55,7 +51,7 @@ describe('PersistedRequestQueue', () => {
     expect(r4?.pendingCount).to.equal(0);
   });
 
-  it('Drops requests when full', async () => {
+  test('Drops requests when full', async () => {
     const queue = new PersistedRequestQueue(tempDir.name, 30, 5);
 
     await queue.add({ body: '1' });
@@ -82,7 +78,7 @@ describe('PersistedRequestQueue', () => {
     await expectFilesInDirectory(tempDir.name, 1);
   });
 
-  it('Drops old events', async () => {
+  test('Drops old events', async () => {
     const queue = new PersistedRequestQueue(tempDir.name, 1, 5);
 
     await queue.add({ body: 'so old 1', date: new Date(Date.now() - 100_000_000) });

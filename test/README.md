@@ -34,9 +34,6 @@ versions will be tested.
 Each individual e2e test consists of a test recipe which is a self contained application in its own right. There are
 simple [functional test recipes](./e2e/test-apps/) and [example app recipes](../examples/).
 
-Recipes are run sequentially and the events submitted to the mock server are compared to the expected events using
-`chai-subset`.
-
 Each recipe should contain:
 
 - `recipe.yml` (details below)

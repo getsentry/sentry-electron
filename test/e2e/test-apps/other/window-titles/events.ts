@@ -1,5 +1,5 @@
 import { Event } from '@sentry/types';
-import { expect } from 'chai';
+import { expect } from 'vitest';
 
 import { TestServerEvent } from '../../../server';
 

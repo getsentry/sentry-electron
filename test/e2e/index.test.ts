@@ -1,7 +1,5 @@
-import { should, use } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import chaiSubset from 'chai-subset';
 import { join } from 'path';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, onTestFailed, test } from 'vitest';
 
 import { TestContext } from './context';
 import { downloadElectron } from './download';
@@ -9,20 +7,24 @@ import { getCategorisedTestRecipes, getExampleRecipes } from './recipe';
 import { TestServer } from './server';
 import { clearTestLog, getElectronTestVersions, outputTestLog } from './utils';
 
-should();
-use(chaiAsPromised);
-use(chaiSubset);
-
 const distDir = join(__dirname, 'dist');
+
+function hookTestFailure() {
+  if (process.env.FAILURE_LOG) {
+    onTestFailed(() => {
+      outputTestLog();
+    });
+  }
+}
 
 describe('E2E Tests', () => {
   const testServer = new TestServer();
 
-  before(() => {
+  beforeAll(() => {
     testServer.start();
   });
 
-  after(async () => {
+  afterAll(async () => {
     await testServer.stop();
   });
 
@@ -31,23 +33,16 @@ describe('E2E Tests', () => {
       let testContext: TestContext | undefined;
       const electronPath = downloadElectron(electronVersion);
 
-      beforeEach(async function () {
-        this.timeout(60_000);
+      beforeEach(async () => {
         await electronPath;
         testServer.clearEvents();
         clearTestLog();
-      });
+      }, 60_000);
 
-      afterEach(async function () {
-        this.timeout(10_000);
+      afterEach(async () => {
         await testContext?.stop();
-
-        if (process.env.FAILURE_LOG && this.currentTest?.state === 'failed') {
-          outputTestLog();
-        }
-
         testContext = undefined;
-      });
+      }, 10_000);
 
       describe('Functional Test Recipes', () => {
         const categories = getCategorisedTestRecipes(electronVersion);
@@ -55,17 +50,23 @@ describe('E2E Tests', () => {
         for (const category of Object.keys(categories)) {
           describe(category, () => {
             for (const recipe of categories[category]) {
-              const fn = recipe.only ? it.only : it;
+              const testFn = recipe.only ? test.only : test;
 
-              fn(recipe.description, async function () {
-                if (!recipe.shouldRun()) {
-                  this.skip();
-                }
+              testFn(
+                recipe.description,
+                async (ctx) => {
+                  if (!recipe.shouldRun()) {
+                    ctx.skip();
+                  }
 
-                const [appPath, appName] = await recipe.prepare(this, distDir);
-                testContext = new TestContext(await electronPath, electronVersion, appPath, appName);
-                await recipe.runTests(testContext, testServer);
-              });
+                  hookTestFailure();
+
+                  const [appPath, appName] = await recipe.prepare(distDir);
+                  testContext = new TestContext(await electronPath, electronVersion, appPath, appName);
+                  await recipe.runTests(testContext, testServer);
+                },
+                recipe.timeout,
+              );
             }
           });
         }
@@ -73,17 +74,23 @@ describe('E2E Tests', () => {
 
       describe('Example App Recipes', () => {
         for (const recipe of getExampleRecipes(electronVersion)) {
-          const fn = recipe.only ? it.only : it;
+          const testFn = recipe.only ? test.only : test;
 
-          fn(recipe.description, async function () {
-            if (!recipe.shouldRun()) {
-              this.skip();
-            }
+          testFn(
+            recipe.description,
+            async (ctx) => {
+              if (!recipe.shouldRun()) {
+                ctx.skip();
+              }
 
-            const [appPath, appName] = await recipe.prepare(this, distDir);
-            testContext = new TestContext(await electronPath, electronVersion, appPath, appName);
-            await recipe.runTests(testContext, testServer);
-          });
+              hookTestFailure();
+
+              const [appPath, appName] = await recipe.prepare(distDir);
+              testContext = new TestContext(await electronPath, electronVersion, appPath, appName);
+              await recipe.runTests(testContext, testServer);
+            },
+            recipe.timeout,
+          );
         }
       });
     });

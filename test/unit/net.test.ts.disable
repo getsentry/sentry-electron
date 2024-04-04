@@ -1,21 +1,17 @@
 /* eslint-disable deprecation/deprecation */
-import { expect, should, use } from 'chai';
-import * as http from 'http';
-import chaiAsPromised = require('chai-as-promised');
 // eslint-disable-next-line deprecation/deprecation
 import { getActiveTransaction, setAsyncContextStrategy, Span, spanToJSON } from '@sentry/core';
 import { createTransport, Hub, NodeClient } from '@sentry/node';
 import { ClientOptions, Transaction, TransactionContext } from '@sentry/types';
 import { resolvedSyncPromise } from '@sentry/utils';
 import { net } from 'electron';
+import * as http from 'http';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Net } from '../../src/main/integrations/net-breadcrumbs';
 
 // eslint-disable-next-line @typescript-eslint/unbound-method
 const originalRequest = net.request;
-
-should();
-use(chaiAsPromised);
 
 const TEST_SERVER_PORT = 8123;
 
@@ -120,7 +116,7 @@ describe.skip('net integration', () => {
     }
   });
 
-  it('creates spans and adds headers by default', async () => {
+  test('creates spans and adds headers by default', async () => {
     const [transaction] = createTransactionOnScope({ integrations: [new Net()] });
     const headers = await makeRequest();
 
@@ -136,7 +132,7 @@ describe.skip('net integration', () => {
   });
 
   describe('constructor options', () => {
-    it('tracing = false disables spans and headers', async () => {
+    test('tracing = false disables spans and headers', async () => {
       const [transaction] = createTransactionOnScope({
         integrations: [new Net({ tracing: false })],
       });
@@ -149,7 +145,7 @@ describe.skip('net integration', () => {
       expect(headers['sentry-trace']).to.be.undefined;
     });
 
-    it('tracing = fn can disable spans and headers', async () => {
+    test('tracing = fn can disable spans and headers', async () => {
       const [transaction] = createTransactionOnScope({
         integrations: [new Net({ tracing: () => false })],
       });
@@ -162,7 +158,7 @@ describe.skip('net integration', () => {
       expect(headers['sentry-trace']).to.be.undefined;
     });
 
-    it('tracing = fn can enable spans and headers', async () => {
+    test('tracing = fn can enable spans and headers', async () => {
       const [transaction] = createTransactionOnScope({
         integrations: [new Net({ tracing: () => true })],
       });
@@ -179,7 +175,7 @@ describe.skip('net integration', () => {
       expect(headers['sentry-trace']).not.to.be.empty;
     });
 
-    it('tracingOrigins = fn can disable headers', async () => {
+    test('tracingOrigins = fn can disable headers', async () => {
       const [transaction] = createTransactionOnScope({
         integrations: [new Net({ tracing: () => true, tracingOrigins: () => false })],
       });
@@ -198,7 +194,7 @@ describe.skip('net integration', () => {
   });
 
   describe('client options', () => {
-    it('tracePropagationTargets can enable headers', async () => {
+    test('tracePropagationTargets can enable headers', async () => {
       const [transaction] = createTransactionOnScope({
         tracePropagationTargets: ['localhost'],
         integrations: [new Net()],
@@ -216,7 +212,7 @@ describe.skip('net integration', () => {
       expect(headers['sentry-trace']).not.to.be.empty;
     });
 
-    it('tracePropagationTargets can disable headers', async () => {
+    test('tracePropagationTargets can disable headers', async () => {
       const [transaction] = createTransactionOnScope({
         tracePropagationTargets: ['api.localhost'],
         integrations: [new Net()],
@@ -236,7 +232,7 @@ describe.skip('net integration', () => {
   });
 
   describe('tracing without performance', () => {
-    it('adds headers without transaction', async () => {
+    test('adds headers without transaction', async () => {
       createHubOnScope({
         tracePropagationTargets: ['localhost'],
         integrations: [new Net()],
