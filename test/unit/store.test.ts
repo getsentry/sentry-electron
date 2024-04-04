@@ -1,14 +1,10 @@
-import { expect, should, use } from 'chai';
-import chaiAsPromised = require('chai-as-promised');
 import { join } from 'path';
 import * as tmp from 'tmp';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { readFileAsync } from '../../src/main/fs';
 import { BufferedWriteStore, Store } from '../../src/main/store';
 import { delay, expectFilesInDirectory } from '../helpers';
-
-should();
-use(chaiAsPromised);
 
 interface TestType {
   num: number;
@@ -27,7 +23,7 @@ describe('Store', () => {
     }
   });
 
-  it('Non throttled store', async () => {
+  test('Non throttled store', async () => {
     const store = new Store<TestType | undefined>(tempDir.name, 'test-store', undefined);
     await expectFilesInDirectory(tempDir.name, 0);
 
@@ -49,7 +45,7 @@ describe('Store', () => {
     await expectFilesInDirectory(tempDir.name, 0);
   });
 
-  it('Throttled store', async () => {
+  test('Throttled store', async () => {
     const store = new BufferedWriteStore<TestType | undefined>(tempDir.name, 'test-store', undefined);
     await expectFilesInDirectory(tempDir.name, 0);
 

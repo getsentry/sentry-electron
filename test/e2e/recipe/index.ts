@@ -1,9 +1,9 @@
 import { Event } from '@sentry/types';
 import { parseSemver } from '@sentry/utils';
-import { expect } from 'chai';
 import { spawnSync } from 'child_process';
 import { mkdirSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
+import { expect } from 'vitest';
 
 import { SDK_VERSION } from '../../../src/main/version';
 import { delay } from '../../helpers';
@@ -138,12 +138,13 @@ export class RecipeRunner {
     return pkg.name;
   }
 
-  public async prepare(context: Mocha.Context, testBasePath: string): Promise<[string, string]> {
-    log(`Preparing recipe '${this.description}'`);
-
+  public get timeout(): number {
     const timeout = (this._recipe.metadata.timeout || 30) * 1_000;
-    // macOS runs quite slowly in GitHub actions
-    context.timeout(process.platform === 'darwin' ? timeout * 2 : timeout);
+    return process.platform === 'darwin' ? timeout * 2 : timeout;
+  }
+
+  public async prepare(testBasePath: string): Promise<[string, string]> {
+    log(`Preparing recipe '${this.description}'`);
 
     let appPath = join(testBasePath, this._appName);
 
@@ -273,7 +274,7 @@ export class RecipeRunner {
       const isSession = eventIsSession(expectedEvent.data);
 
       log(`Comparing ${isSession ? 'session' : 'event'} ${i + 1} of ${expectedEvents.length}`);
-      expect(testServer.events).to.containSubset([expectedEvent]);
+      expect(testServer.events).containSubset([expectedEvent]);
     }
 
     log('Event comparisons passed!');
