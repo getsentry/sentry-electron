@@ -63,6 +63,7 @@ jobs:
           node-version-file: 'package.json'
       - run: yarn install
       - name: Run Unit Tests
+        timeout-minutes: 10
         run: yarn test
 
   e2e:

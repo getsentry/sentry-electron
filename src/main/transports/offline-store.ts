@@ -5,7 +5,7 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 
 import { getSentryCachePath } from '../fs';
-import { BufferedWriteStore } from '../store';
+import { Store } from '../store';
 
 /** Internal type used to expose the envelope date without having to read it into memory */
 interface PersistedRequest {
@@ -56,7 +56,7 @@ export function createOfflineStore(userOptions: Partial<OfflineStoreOptions>): O
     maxQueueSize: userOptions.maxQueueSize || 30,
     queuePath: userOptions.queuePath || join(getSentryCachePath(), 'queue'),
   };
-  const queue = new BufferedWriteStore<PersistedRequest[]>(options.queuePath, 'queue-2', []);
+  const queue = new Store<PersistedRequest[]>(options.queuePath, 'queue-2', []);
 
   function removeBody(id: string): void {
     fs.unlink(join(options.queuePath, id)).catch(() => {
