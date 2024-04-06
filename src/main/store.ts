@@ -95,8 +95,8 @@ export class Store<T> {
    * Updates data by passing it through the given function.
    * @param fn A function receiving the current data and returning new one.
    */
-  public async update(fn: (current: T) => T): Promise<void> {
-    await this.set(fn(await this.get()));
+  public async update(fn: (current: T) => T | Promise<T>): Promise<void> {
+    await this.set(await fn(await this.get()));
   }
 
   /** Returns store to its initial state */

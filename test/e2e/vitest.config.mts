@@ -6,6 +6,6 @@ export default defineConfig({
     retry: process.env.GITHUB_ACTIONS ? 3 : 0,
     disableConsoleIntercept: true,
     silent: false,
-    reporters: process.env.GITHUB_ACTIONS ? ['verbose', 'github-actions'] : ['verbose'],
+    reporters: process.env.GITHUB_ACTIONS || process.env.DEBUG ? ['basic', 'github-actions'] : ['verbose'],
   },
 });
