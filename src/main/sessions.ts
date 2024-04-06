@@ -12,7 +12,7 @@ import { SerializedSession, Session, SessionContext, SessionStatus } from '@sent
 import { logger } from '@sentry/utils';
 import { app } from 'electron';
 
-import { getSentryCachePath } from './fs';
+import { getSentryCachePath } from './electron-normalize';
 import { Store } from './store';
 
 const PERSIST_INTERVAL_MS = 60_000;

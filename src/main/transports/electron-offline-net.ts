@@ -4,7 +4,7 @@ import { logger } from '@sentry/utils';
 import { net } from 'electron';
 import { join } from 'path';
 
-import { getSentryCachePath } from '../fs';
+import { getSentryCachePath } from '../electron-normalize';
 import { createElectronNetRequestExecutor, ElectronNetTransportOptions } from './electron-net';
 import { PersistedRequestQueue } from './queue';
 
