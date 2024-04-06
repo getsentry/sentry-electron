@@ -1,8 +1,8 @@
+import { promises as fs } from 'fs';
 import { join } from 'path';
 import * as tmp from 'tmp';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { readFileAsync } from '../../src/main/fs';
 import { BufferedWriteStore, Store } from '../../src/main/store';
 import { delay, expectFilesInDirectory } from '../helpers';
 
@@ -30,7 +30,7 @@ describe('Store', () => {
     await store.set({ num: 99, str: 'just a string' });
     // It should have been written immediately
     await expectFilesInDirectory(tempDir.name, 1);
-    const contents = await readFileAsync(join(tempDir.name, 'test-store.json'), 'utf-8');
+    const contents = await fs.readFile(join(tempDir.name, 'test-store.json'), 'utf-8');
 
     expect(contents).to.equal('{"num":99,"str":"just a string"}');
 
@@ -57,19 +57,19 @@ describe('Store', () => {
     await delay(1_000);
     await expectFilesInDirectory(tempDir.name, 1);
 
-    const contents = await readFileAsync(join(tempDir.name, 'test-store.json'), 'utf-8');
+    const contents = await fs.readFile(join(tempDir.name, 'test-store.json'), 'utf-8');
     expect(contents).to.equal('{"num":990,"str":"just a string"}');
 
     await store.set({ num: 5_000, str: 'just a string' });
     await delay(100);
 
     // File should still contain the old value
-    const contents2 = await readFileAsync(join(tempDir.name, 'test-store.json'), 'utf-8');
+    const contents2 = await fs.readFile(join(tempDir.name, 'test-store.json'), 'utf-8');
     expect(contents2).to.equal('{"num":990,"str":"just a string"}');
 
     await delay(1_000);
     // File should now contain updated value
-    const contents3 = await readFileAsync(join(tempDir.name, 'test-store.json'), 'utf-8');
+    const contents3 = await fs.readFile(join(tempDir.name, 'test-store.json'), 'utf-8');
     expect(contents3).to.equal('{"num":5000,"str":"just a string"}');
 
     // Load a new store instance so it's forced to read from disk
