@@ -1,4 +1,4 @@
-description: Native Crash Rate Limit
+description: Native Crash Send Failure
 category: Offline
 command: yarn
 runTwice: true
