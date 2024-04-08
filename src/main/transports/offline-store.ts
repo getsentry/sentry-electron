@@ -56,7 +56,7 @@ export function createOfflineStore(userOptions: Partial<OfflineStoreOptions>): O
     maxQueueSize: userOptions.maxQueueSize || 30,
     queuePath: userOptions.queuePath || join(getSentryCachePath(), 'queue'),
   };
-  const queue = new Store<PersistedRequest[]>(options.queuePath, 'queue-2', []);
+  const queue = new Store<PersistedRequest[]>(options.queuePath, 'queue-v2', []);
 
   function removeBody(id: string): void {
     fs.unlink(join(options.queuePath, id)).catch(() => {
@@ -67,57 +67,58 @@ export function createOfflineStore(userOptions: Partial<OfflineStoreOptions>): O
   function removeStaleRequests(queue: PersistedRequest[]): void {
     while (queue[0] && isOutdated(queue[0], options.maxAgeDays)) {
       const removed = queue.shift() as PersistedRequest;
-      log('removing stale', removed);
+      log('Removing stale envelope', removed);
       removeBody(removed.id);
     }
   }
 
   return {
     insert: async (env) => {
-      logger.log('[offline store] Adding envelope to offline storage');
+      log('Adding envelope to offline storage');
 
       const id = uuid4();
 
-      await queue.update(async (queue) => {
+      try {
+        const data = serializeEnvelope(env);
+        await fs.mkdir(options.queuePath, { recursive: true });
+        await fs.writeFile(join(options.queuePath, id), data);
+      } catch (e) {
+        log('Failed to save', e);
+      }
+
+      await queue.update((queue) => {
         removeStaleRequests(queue);
 
         if (queue.length >= options.maxQueueSize) {
+          removeBody(id);
           return queue;
         }
 
-        try {
-          const data = serializeEnvelope(env);
-          await fs.mkdir(options.queuePath, { recursive: true });
-          await fs.writeFile(join(options.queuePath, id), data);
-          queue.push({ id, date: getSentAtFromEnvelope(env) || new Date() });
-        } catch (e) {
-          log('Failed to save', e);
-        }
+        queue.push({ id, date: getSentAtFromEnvelope(env) || new Date() });
 
         return queue;
       });
     },
     pop: async () => {
-      let envelope: Envelope | undefined;
-
-      await queue.update(async (queue) => {
+      log('Popping envelope from offline storage');
+      let request: PersistedRequest | undefined;
+      await queue.update((queue) => {
         removeStaleRequests(queue);
-
-        const request = queue.shift();
-        if (request) {
-          try {
-            const data = await fs.readFile(join(options.queuePath, request.id));
-            removeBody(request.id);
-            envelope = parseEnvelope(data);
-          } catch (e) {
-            log('Failed to read', e);
-          }
-        }
-
+        request = queue.shift();
         return queue;
       });
 
-      return envelope;
+      if (request) {
+        try {
+          const data = await fs.readFile(join(options.queuePath, request.id));
+          removeBody(request.id);
+          return parseEnvelope(data);
+        } catch (e) {
+          log('Failed to read', e);
+        }
+      }
+
+      return undefined;
     },
   };
 }
