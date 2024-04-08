@@ -1,10 +1,10 @@
 import { Attachment } from '@sentry/types';
 import { basename, logger } from '@sentry/utils';
 import { app } from 'electron';
+import { promises as fs } from 'fs';
 import { join } from 'path';
 
 import { usesCrashpad } from '../../electron-normalize';
-import { readDirAsync, readFileAsync, statAsync, unlinkAsync } from '../../fs';
 import { Mutex } from '../../mutex';
 
 /** Maximum number of days to keep a minidump before deleting it. */
@@ -53,7 +53,7 @@ export function createMinidumpLoader(
 
           logger.log('Found minidump', path);
 
-          let stats = await statAsync(path);
+          let stats = await fs.stat(path);
 
           const thirtyDaysAgo = new Date().getTime() - MAX_AGE_DAYS * MS_PER_DAY;
 
@@ -68,7 +68,7 @@ export function createMinidumpLoader(
             const twoSecondsAgo = new Date().getTime() - NOT_MODIFIED_MS;
 
             if (stats.mtimeMs < twoSecondsAgo) {
-              const file = await readFileAsync(path);
+              const file = await fs.readFile(path);
               const data = preProcessFile(file);
 
               if (data.length < 10_000 || data.subarray(0, 4).toString() !== MINIDUMP_HEADER) {
@@ -91,7 +91,7 @@ export function createMinidumpLoader(
             retries += 1;
             await delay(RETRY_DELAY_MS);
             // update the stats
-            stats = await statAsync(path);
+            stats = await fs.stat(path);
           }
 
           if (retries >= MAX_RETRIES) {
@@ -102,7 +102,7 @@ export function createMinidumpLoader(
         } finally {
           // We always attempt to delete the minidump
           try {
-            await unlinkAsync(path);
+            await fs.unlink(path);
           } catch (e) {
             logger.warn('Could not delete minidump', path);
           }
@@ -120,7 +120,7 @@ async function deleteCrashpadMetadataFile(crashesDirectory: string, waitMs: numb
 
   const metadataPath = join(crashesDirectory, 'metadata');
   try {
-    await unlinkAsync(metadataPath);
+    await fs.unlink(metadataPath);
     logger.log('Deleted Crashpad metadata file', metadataPath);
   } catch (e: any) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -138,7 +138,7 @@ async function readDirsAsync(paths: string[]): Promise<string[]> {
   const found: string[] = [];
   for (const path of paths) {
     try {
-      const files = await readDirAsync(path);
+      const files = await fs.readdir(path);
       found.push(...files.map((file) => join(path, file)));
     } catch (_) {
       //
@@ -187,7 +187,7 @@ function removeBreakpadMetadata(crashesDirectory: string, paths: string[]): void
       .map(async (file) => {
         const path = join(crashesDirectory, file);
         try {
-          await unlinkAsync(path);
+          await fs.unlink(path);
         } catch (e) {
           logger.warn('Could not delete', path);
         }
@@ -203,7 +203,7 @@ function breakpadMinidumpLoader(): MinidumpLoader {
   return createMinidumpLoader(async () => {
     // Breakpad stores all minidump files along with a metadata file directly in
     // the crashes directory.
-    const files = await readDirAsync(crashesDirectory);
+    const files = await fs.readdir(crashesDirectory);
     removeBreakpadMetadata(crashesDirectory, files);
     return files.filter((file) => file.endsWith('.dmp')).map((file) => join(crashesDirectory, file));
   }, minidumpFromBreakpadMultipart);

@@ -4,7 +4,7 @@ import { logger, parseEnvelope, serializeEnvelope, uuid4 } from '@sentry/utils';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 
-import { getSentryCachePath } from '../fs';
+import { getSentryCachePath } from '../electron-normalize';
 import { Store } from '../store';
 
 /** Internal type used to expose the envelope date without having to read it into memory */

@@ -1,7 +1,7 @@
 import { logger } from '@sentry/utils';
+import { promises as fs } from 'fs';
 import { dirname, join } from 'path';
 
-import { mkdirp, readFileAsync, statAsync, unlinkAsync, writeFileAsync } from './fs';
 import { Mutex } from './mutex';
 
 const dateFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.*\d{0,10}Z$/;
@@ -53,13 +53,13 @@ export class Store<T> {
       try {
         if (data === undefined) {
           try {
-            await unlinkAsync(this._path);
+            await fs.unlink(this._path);
           } catch (_) {
             //
           }
         } else {
-          await mkdirp(dirname(this._path));
-          await writeFileAsync(this._path, JSON.stringify(data));
+          await fs.mkdir(dirname(this._path), { recursive: true });
+          await fs.writeFile(this._path, JSON.stringify(data));
         }
       } catch (e) {
         logger.warn('Failed to write to store', e);
@@ -81,7 +81,7 @@ export class Store<T> {
     return this._lock.runExclusive(async () => {
       if (this._data === undefined) {
         try {
-          this._data = JSON.parse(await readFileAsync(this._path, 'utf8'), dateReviver) as T;
+          this._data = JSON.parse(await fs.readFile(this._path, 'utf8'), dateReviver) as T;
         } catch (e) {
           this._data = this._initial;
         }
@@ -107,7 +107,7 @@ export class Store<T> {
   /** Gets the Date that the file was last modified */
   public async getModifiedDate(): Promise<Date | undefined> {
     try {
-      return (await statAsync(this._path))?.mtime;
+      return (await fs.stat(this._path))?.mtime;
     } catch (_) {
       return undefined;
     }

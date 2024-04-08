@@ -1,5 +1,6 @@
 import { parseSemver } from '@sentry/utils';
 import { app } from 'electron';
+import { join } from 'path';
 
 import { RENDERER_ID_HEADER } from '../common/ipc';
 
@@ -19,6 +20,11 @@ export const EXIT_REASONS = [
 ] as const;
 export type ExitReason = (typeof EXIT_REASONS)[number];
 export const CRASH_REASONS: Readonly<ExitReason[]> = ['crashed', 'oom'] as const;
+
+/** Gets the Sentry Cache path */
+export function getSentryCachePath(): string {
+  return join(app.getPath('userData'), 'sentry');
+}
 
 /**
  * Uses Crashpad on Linux

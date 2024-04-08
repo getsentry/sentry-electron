@@ -6,8 +6,7 @@ import { app, crashReporter } from 'electron';
 
 import { addScopeListener, getScopeData } from '../../../common/scope';
 import { getEventDefaults } from '../../context';
-import { EXIT_REASONS } from '../../electron-normalize';
-import { getSentryCachePath } from '../../fs';
+import { EXIT_REASONS, getSentryCachePath } from '../../electron-normalize';
 import { getRendererProperties, trackRendererProperties } from '../../renderers';
 import { ElectronMainOptions } from '../../sdk';
 import { checkPreviousSession, sessionCrashed } from '../../sessions';
