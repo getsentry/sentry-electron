@@ -1,8 +1,8 @@
 import { TransportRequest } from '@sentry/types';
 import { logger, uuid4 } from '@sentry/utils';
+import { promises as fs } from 'fs';
 import { join } from 'path';
 
-import { readFileAsync, unlinkAsync, writeFileAsync } from '../fs';
 import { BufferedWriteStore } from '../store';
 
 const MILLISECONDS_PER_DAY = 86_400_000;
@@ -59,7 +59,7 @@ export class PersistedRequestQueue {
     });
 
     try {
-      await writeFileAsync(join(this._queuePath, bodyPath), request.body);
+      await fs.writeFile(join(this._queuePath, bodyPath), request.body);
     } catch (_) {
       //
     }
@@ -90,7 +90,7 @@ export class PersistedRequestQueue {
 
     if (found) {
       try {
-        const body = await readFileAsync(join(this._queuePath, found.bodyPath));
+        const body = await fs.readFile(join(this._queuePath, found.bodyPath));
         this._removeBody(found.bodyPath);
 
         return {
@@ -110,7 +110,7 @@ export class PersistedRequestQueue {
 
   /** Removes the body of the request */
   private _removeBody(bodyPath: string): void {
-    unlinkAsync(join(this._queuePath, bodyPath)).catch(() => {
+    fs.unlink(join(this._queuePath, bodyPath)).catch(() => {
       // ignore
     });
   }
