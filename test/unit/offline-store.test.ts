@@ -1,10 +1,13 @@
+import '../../scripts/electron-shim.mjs';
+
 import { createEventEnvelope } from '@sentry/core';
 import { Envelope, Event } from '@sentry/types';
 import * as tmp from 'tmp';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { createOfflineStore } from '../../src/main/transports/offline-store';
 import { delay, expectFilesInDirectory } from '../helpers';
+
+const { createOfflineStore } = await import('../../src/main/transports/offline-store');
 
 function EVENT_ENVELOPE(message: string = 'test', send_at?: Date) {
   const env = createEventEnvelope({ message });
