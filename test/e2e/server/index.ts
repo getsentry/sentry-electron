@@ -1,11 +1,11 @@
-import { Event, Profile, ReplayEvent, Session, Transaction } from '@sentry/types';
+import { Event, Profile, ReplayEvent, Session } from '@sentry/types';
 import { dropUndefinedKeys, forEachEnvelopeItem, parseEnvelope } from '@sentry/utils';
 import { Server } from 'http';
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
 import Router from 'koa-tree-router';
 import { Readable } from 'stream';
-import { inspect, TextDecoder, TextEncoder } from 'util';
+import { inspect } from 'util';
 import { gunzipSync } from 'zlib';
 
 import { delay } from '../../helpers';
@@ -72,7 +72,7 @@ async function getRequestBody(ctx: Koa.ParameterizedContext): Promise<Buffer> {
  */
 export class TestServer {
   /** All events received by this server instance. */
-  public events: TestServerEvent<Event | Transaction | Session>[] = [];
+  public events: TestServerEvent<Event | Session>[] = [];
   /** The internal HTTP server. */
   private _server?: Server;
 
@@ -121,9 +121,9 @@ export class TestServer {
         return;
       }
 
-      const envelope = parseEnvelope(await getRequestBody(ctx), new TextEncoder(), new TextDecoder());
+      const envelope = parseEnvelope(await getRequestBody(ctx));
 
-      let data: Event | Transaction | Session | ReplayEvent | undefined;
+      let data: Event | Session | ReplayEvent | undefined;
       const attachments: Attachment[] = [];
       let profile: Profile | undefined;
       let metrics: string | undefined;
@@ -135,7 +135,7 @@ export class TestServer {
           headers.type === 'session' ||
           headers.type === 'feedback'
         ) {
-          data = item as Event | Transaction | Session;
+          data = item as Event | Session;
         }
 
         if (headers.type === 'replay_event') {
@@ -268,7 +268,7 @@ export class TestServer {
     });
   }
 
-  private _addEvent(event: TestServerEvent<Event | Transaction | Session | ReplayEvent>): void {
+  private _addEvent(event: TestServerEvent<Event | Session | ReplayEvent>): void {
     const type = eventIsSession(event.data)
       ? 'session'
       : (event.data as ReplayEvent)?.type === 'replay_event'

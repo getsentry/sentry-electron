@@ -10,7 +10,6 @@ export type {
   StackFrame,
   Stacktrace,
   Thread,
-  Transaction,
   User,
   Session,
 } from '@sentry/types';
@@ -52,6 +51,7 @@ export {
   // eslint-disable-next-line deprecation/deprecation
   getCurrentHub,
   getCurrentScope,
+  getFeedback,
   getGlobalScope,
   getIsolationScope,
   getReplay,

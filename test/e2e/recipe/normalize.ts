@@ -1,11 +1,11 @@
 /* eslint-disable complexity */
-import { Event, Profile, ReplayEvent, Session, Transaction } from '@sentry/types';
+import { Event, Profile, ReplayEvent, Session } from '@sentry/types';
 
 import { TestServerEvent } from '../server';
 
-type EventOrSession = Event | Transaction | Session;
+type EventOrSession = Event | Session;
 
-export function normalize(event: TestServerEvent<Event | Transaction | Session>): void {
+export function normalize(event: TestServerEvent<Event | Session>): void {
   if (eventIsSession(event.data)) {
     normalizeSession(event.data as Session);
   } else {
