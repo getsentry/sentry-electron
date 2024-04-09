@@ -56,18 +56,18 @@
     "e2e": "xvfb-maybe vitest run --root=./test/e2e"
   },
   "dependencies": {
-    "@sentry/browser": "8.0.0-alpha.7",
-    "@sentry/core": "8.0.0-alpha.7",
-    "@sentry/node": "8.0.0-alpha.7",
-    "@sentry/types": "8.0.0-alpha.7",
-    "@sentry/utils": "8.0.0-alpha.7",
+    "@sentry/browser": "8.0.0-alpha.9",
+    "@sentry/core": "8.0.0-alpha.9",
+    "@sentry/node": "8.0.0-alpha.9",
+    "@sentry/types": "8.0.0-alpha.9",
+    "@sentry/utils": "8.0.0-alpha.9",
     "deepmerge": "4.3.1"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^11.1.6",
-    "@sentry-internal/eslint-config-sdk": "8.0.0-alpha.7",
-    "@sentry-internal/typescript": "8.0.0-alpha.7",
+    "@sentry-internal/eslint-config-sdk": "8.0.0-alpha.9",
+    "@sentry-internal/typescript": "8.0.0-alpha.9",
     "@types/busboy": "^0.2.3",
     "@types/form-data": "^2.5.0",
     "@types/koa": "^2.0.52",
