@@ -1,4 +1,5 @@
-description: Native Crash Rate Limit
+description: Native Crash Send Failure
 category: Offline
 command: yarn
+condition: "!(platform === 'win32' && version.major < 24)"
 runTwice: true
