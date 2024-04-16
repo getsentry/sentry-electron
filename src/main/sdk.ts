@@ -1,19 +1,24 @@
+import { getIntegrationsToSetup } from '@sentry/core';
 import {
   consoleIntegration,
   contextLinesIntegration,
   functionToStringIntegration,
+  getCurrentScope,
   httpIntegration,
   inboundFiltersIntegration,
-  init as nodeInit,
+  initOpenTelemetry,
   linkedErrorsIntegration,
   localVariablesIntegration,
   nativeNodeFetchIntegration,
+  NodeClient,
   nodeContextIntegration,
   NodeOptions,
   onUnhandledRejectionIntegration,
   requestDataIntegration,
 } from '@sentry/node';
+import { setOpenTelemetryContextAsyncContextStrategy } from '@sentry/opentelemetry';
 import { Integration, Options } from '@sentry/types';
+import { stackParserFromStackParserOptions } from '@sentry/utils';
 import { Session, session, WebContents } from 'electron';
 
 import { IPCMode } from '../common/ipc';
@@ -35,8 +40,20 @@ import { defaultStackParser } from './stack-parse';
 import { ElectronOfflineTransportOptions, makeElectronOfflineTransport } from './transports/electron-offline-net';
 
 /** Get the default integrations for the main process SDK. */
-export function getDefaultIntegrations(_options: ElectronMainOptions): Integration[] {
-  return [
+export function getDefaultIntegrations(options: ElectronMainOptions): Integration[] {
+  const integrations = [
+    // Electron integrations
+    sentryMinidumpIntegration(), // we want this to run first as it enables the native crash handler
+    electronBreadcrumbsIntegration(),
+    electronNetIntegration(),
+    electronContextIntegration(),
+    childProcessIntegration(),
+    normalizePathsIntegration(),
+    onUncaughtExceptionIntegration(),
+    preloadInjectionIntegration(),
+    additionalContextIntegration(),
+    screenshotsIntegration(),
+
     // Node integrations
     inboundFiltersIntegration(),
     functionToStringIntegration(),
@@ -49,23 +66,26 @@ export function getDefaultIntegrations(_options: ElectronMainOptions): Integrati
     contextLinesIntegration(),
     localVariablesIntegration(),
     nodeContextIntegration(),
-
-    // Electron integrations
-    sentryMinidumpIntegration(),
-    electronBreadcrumbsIntegration(),
-    electronNetIntegration(),
-    electronContextIntegration(),
-    childProcessIntegration(),
-    normalizePathsIntegration(),
-    onUncaughtExceptionIntegration(),
-    preloadInjectionIntegration(),
-    additionalContextIntegration(),
-    screenshotsIntegration(),
-    rendererProfilingIntegration(),
   ];
+
+  if (options.autoSessionTracking !== false) {
+    integrations.push(mainProcessSessionIntegration());
+  }
+
+  if (options.attachScreenshot) {
+    integrations.push(screenshotsIntegration());
+  }
+
+  if (options.enableRendererProfiling) {
+    integrations.push(rendererProfilingIntegration());
+  }
+
+  return integrations;
 }
 
-export interface ElectronMainOptionsInternal extends Options<ElectronOfflineTransportOptions> {
+export interface ElectronMainOptionsInternal
+  extends Options<ElectronOfflineTransportOptions>,
+    Omit<NodeOptions, 'transport' | 'transportOptions'> {
   /**
    * Inter-process communication mode to receive event and scope from renderers
    *
@@ -106,8 +126,6 @@ export interface ElectronMainOptionsInternal extends Options<ElectronOfflineTran
 
   /**
    * Enables injection of 'js-profiling' document policy headers and ensure profiles are forwarded with transactions
-   *
-   * Requires Electron 15+
    */
   enableRendererProfiling?: boolean;
 }
@@ -117,80 +135,61 @@ export type ElectronMainOptions = Pick<Partial<ElectronMainOptionsInternal>, 'ge
   Omit<ElectronMainOptionsInternal, 'getSessions' | 'ipcMode'> &
   NodeOptions;
 
-const defaultOptions: ElectronMainOptionsInternal = {
-  _metadata: { sdk: getSdkInfo() },
-  ipcMode: IPCMode.Both,
-  getSessions: () => [session.defaultSession],
-};
-
 /**
  * Initialize Sentry in the Electron main process
  */
 export function init(userOptions: ElectronMainOptions): void {
-  const options: ElectronMainOptionsInternal = Object.assign(defaultOptions, userOptions);
-  const defaults = getDefaultIntegrations(options);
+  const optionsWithDefaults = {
+    _metadata: { sdk: getSdkInfo() },
+    ipcMode: IPCMode.Both,
+    release: getDefaultReleaseName(),
+    environment: getDefaultEnvironment(),
+    defaultIntegrations: getDefaultIntegrations(userOptions),
+    transport: makeElectronOfflineTransport,
+    transportOptions: {},
+    getSessions: () => [session.defaultSession],
+    ...userOptions,
+    stackParser: stackParserFromStackParserOptions(userOptions.stackParser || defaultStackParser),
+  };
 
-  // If we don't set a release, @sentry/node will automatically fetch from environment variables
-  if (options.release === undefined) {
-    options.release = getDefaultReleaseName();
-  }
+  const options = {
+    ...optionsWithDefaults,
+    integrations: getIntegrationsToSetup(optionsWithDefaults),
+  };
 
-  // If we don't set an environment, @sentry/core defaults to production
-  if (options.environment === undefined) {
-    options.environment = getDefaultEnvironment();
-  }
-
-  // Unless autoSessionTracking is specifically disabled, we track sessions as the
-  // lifetime of the Electron main process
-  if (options.autoSessionTracking !== false) {
-    defaults.push(mainProcessSessionIntegration());
-    // We don't want nodejs autoSessionTracking
-    options.autoSessionTracking = false;
-  }
-
-  if (options.stackParser === undefined) {
-    options.stackParser = defaultStackParser;
-  }
-
-  setDefaultIntegrations(defaults, options);
-
-  if (options.dsn && options.transport === undefined) {
-    options.transport = makeElectronOfflineTransport;
-  }
-
+  removeRedundantIntegrations(options);
   configureIPC(options);
-  nodeInit(options);
+
+  setOpenTelemetryContextAsyncContextStrategy();
+
+  const scope = getCurrentScope();
+  scope.update(options.initialScope);
+
+  const client = new NodeClient(options);
+  scope.setClient(client);
+  client.init();
+
+  // If users opt-out of this, they _have_ to set up OpenTelemetry themselves
+  // There is no way to use this SDK without OpenTelemetry!
+  if (!options.skipOpenTelemetrySetup) {
+    initOpenTelemetry(client);
+  }
 }
 
 /** A list of integrations which cause default integrations to be removed */
 const INTEGRATION_OVERRIDES = [
-  { override: 'ElectronMinidump', remove: 'SentryMinidump' },
-  { override: 'BrowserWindowSession', remove: 'MainProcessSession' },
+  { userAdded: 'ElectronMinidump', toRemove: 'SentryMinidump' },
+  { userAdded: 'BrowserWindowSession', toRemove: 'MainProcessSession' },
 ];
 
 /** Sets the default integrations and ensures that multiple minidump or session integrations are not enabled */
-function setDefaultIntegrations(defaults: Integration[], options: ElectronMainOptions): void {
-  if (options.defaultIntegrations === undefined) {
-    const removeDefaultsMatching = (user: Integration[], defaults: Integration[]): Integration[] => {
-      const toRemove = INTEGRATION_OVERRIDES.filter(({ override }) => user.some((i) => i.name === override)).map(
-        ({ remove }) => remove,
-      );
-
-      return defaults.filter((i) => !toRemove.includes(i.name));
-    };
-
-    if (Array.isArray(options.integrations)) {
-      options.defaultIntegrations = removeDefaultsMatching(options.integrations, defaults);
-      return;
-    } else if (typeof options.integrations === 'function') {
-      const originalFn = options.integrations;
-
-      options.integrations = (integrations) => {
-        const resultIntegrations = originalFn(integrations);
-        return removeDefaultsMatching(resultIntegrations, resultIntegrations);
-      };
+function removeRedundantIntegrations(
+  // At this point we know that the integrations are an array
+  options: { integrations: Integration[] },
+): void {
+  for (const { userAdded, toRemove } of INTEGRATION_OVERRIDES) {
+    if (options.integrations.some((i) => i.name === userAdded)) {
+      options.integrations = options.integrations.filter((i) => i.name !== toRemove);
     }
-
-    options.defaultIntegrations = defaults;
   }
 }
