@@ -37,13 +37,13 @@ describe('createOfflineStore', () => {
     const queue = createOfflineStore({ queuePath: tempDir.name });
     await expectFilesInDirectory(tempDir.name, 0);
 
-    await queue.insert(EVENT_ENVELOPE());
+    await queue.push(EVENT_ENVELOPE());
     await delay(1_000);
     await expectFilesInDirectory(tempDir.name, 2);
 
     // We create a new queue to force reading from serialized store
     const queue2 = createOfflineStore({ queuePath: tempDir.name });
-    const popped = await queue2.pop();
+    const popped = await queue2.shift();
     expect(popped).to.not.be.undefined;
     expect(getMessageFromEventEnvelope(popped)).toBe('test');
 
@@ -54,20 +54,20 @@ describe('createOfflineStore', () => {
   test('Drops requests when full', async () => {
     const queue = createOfflineStore({ queuePath: tempDir.name, maxQueueSize: 5 });
 
-    await queue.insert(EVENT_ENVELOPE('1'));
-    await queue.insert(EVENT_ENVELOPE('2'));
-    await queue.insert(EVENT_ENVELOPE('3'));
-    await queue.insert(EVENT_ENVELOPE('4'));
-    await queue.insert(EVENT_ENVELOPE('5'));
-    await queue.insert(EVENT_ENVELOPE('6'));
-    await queue.insert(EVENT_ENVELOPE('7'));
+    await queue.push(EVENT_ENVELOPE('1'));
+    await queue.push(EVENT_ENVELOPE('2'));
+    await queue.push(EVENT_ENVELOPE('3'));
+    await queue.push(EVENT_ENVELOPE('4'));
+    await queue.push(EVENT_ENVELOPE('5'));
+    await queue.push(EVENT_ENVELOPE('6'));
+    await queue.push(EVENT_ENVELOPE('7'));
 
     await delay(1_000);
     await expectFilesInDirectory(tempDir.name, 6);
 
     const popped: Envelope[] = [];
     let pop: Envelope | undefined;
-    while ((pop = await queue.pop())) {
+    while ((pop = await queue.shift())) {
       popped.push(pop);
     }
 
@@ -81,17 +81,17 @@ describe('createOfflineStore', () => {
   test('Drops old events', async () => {
     const queue = createOfflineStore({ queuePath: tempDir.name, maxAgeDays: 1, maxQueueSize: 5 });
 
-    await queue.insert(EVENT_ENVELOPE('1', new Date(Date.now() - 100_000_000)));
-    await queue.insert(EVENT_ENVELOPE('2', new Date(Date.now() - 100_000_000)));
-    await queue.insert(EVENT_ENVELOPE('3', new Date(Date.now() - 100_000_000)));
-    await queue.insert(EVENT_ENVELOPE('4'));
+    await queue.push(EVENT_ENVELOPE('1', new Date(Date.now() - 100_000_000)));
+    await queue.push(EVENT_ENVELOPE('2', new Date(Date.now() - 100_000_000)));
+    await queue.push(EVENT_ENVELOPE('3', new Date(Date.now() - 100_000_000)));
+    await queue.push(EVENT_ENVELOPE('4'));
 
     await delay(1_000);
     await expectFilesInDirectory(tempDir.name, 2);
 
-    const pop = await queue.pop();
+    const pop = await queue.shift();
     expect(pop).toBeDefined();
-    const pop2 = await queue.pop();
+    const pop2 = await queue.shift();
     expect(pop2).toBeUndefined();
 
     await delay(1_000);

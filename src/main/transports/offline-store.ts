@@ -56,6 +56,7 @@ export function createOfflineStore(userOptions: Partial<OfflineStoreOptions>): O
     maxQueueSize: userOptions.maxQueueSize || 30,
     queuePath: userOptions.queuePath || join(getSentryCachePath(), 'queue'),
   };
+
   const queue = new Store<PersistedRequest[]>(options.queuePath, 'queue-v2', []);
 
   function removeBody(id: string): void {
@@ -72,34 +73,47 @@ export function createOfflineStore(userOptions: Partial<OfflineStoreOptions>): O
     }
   }
 
-  return {
-    insert: async (env) => {
-      log('Adding envelope to offline storage');
+  async function insert(env: Envelope, which: 'push' | 'unshift', previousDate?: Date): Promise<void> {
+    log(`${which}ing envelope into offline storage`);
 
-      const id = uuid4();
+    const id = uuid4();
 
-      try {
-        const data = serializeEnvelope(env);
-        await fs.mkdir(options.queuePath, { recursive: true });
-        await fs.writeFile(join(options.queuePath, id), data);
-      } catch (e) {
-        log('Failed to save', e);
-      }
+    try {
+      const data = serializeEnvelope(env);
+      await fs.mkdir(options.queuePath, { recursive: true });
+      await fs.writeFile(join(options.queuePath, id), data);
+    } catch (e) {
+      log('Failed to save', e);
+    }
 
-      await queue.update((queue) => {
+    await queue.update((queue) => {
+      if (which === 'push') {
         removeStaleRequests(queue);
 
         if (queue.length >= options.maxQueueSize) {
           removeBody(id);
           return queue;
         }
+      }
 
-        queue.push({ id, date: getSentAtFromEnvelope(env) || new Date() });
+      queue[which]({ id, date: previousDate || getSentAtFromEnvelope(env) || new Date() });
 
-        return queue;
-      });
+      return queue;
+    });
+  }
+
+  // We store the timestamp for the last envelope that was shifted out so that if it gets unshifted back in
+  // it can keep its original date
+  let lastShiftedDate: Date | undefined;
+
+  return {
+    push: async (env) => {
+      await insert(env, 'push');
     },
-    pop: async () => {
+    unshift: async (env) => {
+      await insert(env, 'unshift', lastShiftedDate);
+    },
+    shift: async () => {
       log('Popping envelope from offline storage');
       let request: PersistedRequest | undefined;
       await queue.update((queue) => {
@@ -112,6 +126,7 @@ export function createOfflineStore(userOptions: Partial<OfflineStoreOptions>): O
         try {
           const data = await fs.readFile(join(options.queuePath, request.id));
           removeBody(request.id);
+          lastShiftedDate = request.date;
           return parseEnvelope(data);
         } catch (e) {
           log('Failed to read', e);
