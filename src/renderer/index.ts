@@ -18,6 +18,7 @@ export {
   addBreadcrumb,
   addEventProcessor,
   addIntegration,
+  // eslint-disable-next-line deprecation/deprecation
   addTracingExtensions,
   breadcrumbsIntegration,
   browserApiErrorsIntegration,

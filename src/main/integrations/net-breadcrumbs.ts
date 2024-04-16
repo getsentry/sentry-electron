@@ -50,7 +50,8 @@ export interface NetOptions {
 function parseOptions(optionsIn: ClientRequestConstructorOptions | string): { method: string; url: string } {
   const { method, options } =
     typeof optionsIn === 'string'
-      ? { method: 'GET', options: urlModule.parse(optionsIn) }
+      ? // eslint-disable-next-line deprecation/deprecation
+        { method: 'GET', options: urlModule.parse(optionsIn) }
       : { method: (optionsIn.method || 'GET').toUpperCase(), options: optionsIn };
 
   let url = 'url' in options ? options.url : undefined;
@@ -73,11 +74,11 @@ function parseOptions(optionsIn: ClientRequestConstructorOptions | string): { me
       }
     }
 
+    // eslint-disable-next-line deprecation/deprecation
     const pathObj = urlModule.parse(options.path || '/');
     urlObj.pathname = pathObj.pathname;
     urlObj.search = pathObj.search;
     urlObj.hash = pathObj.hash;
-    // eslint-disable-next-line deprecation/deprecation
     url = urlModule.format(urlObj);
   }
 
