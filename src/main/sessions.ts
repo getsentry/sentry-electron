@@ -31,7 +31,7 @@ function getSessionStore(): Store<SessionContext | undefined> {
   return sessionStore;
 }
 
-let persistTimer: NodeJS.Timer | undefined;
+let persistTimer: ReturnType<typeof setInterval> | undefined;
 
 /** Starts a session */
 export function startSession(sendOnCreate: boolean): void {
