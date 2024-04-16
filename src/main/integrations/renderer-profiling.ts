@@ -61,6 +61,9 @@ export const rendererProfilingIntegration = defineIntegration(() => {
     name: 'RendererProfiling',
     setup(client) {
       const options = client.getOptions() as ElectronMainOptionsInternal;
+      if (!options.enableRendererProfiling) {
+        return;
+      }
 
       RENDERER_PROFILES = new LRUMap(10);
 

@@ -2,13 +2,21 @@ import { defineIntegration } from '@sentry/core';
 import { logger } from '@sentry/utils';
 import { BrowserWindow } from 'electron';
 
+import { ElectronMainOptions } from '../sdk';
+
 /**
  * Captures and attaches screenshots to events
  */
 export const screenshotsIntegration = defineIntegration(() => {
   return {
     name: 'Screenshots',
-    async processEvent(event, hint) {
+    async processEvent(event, hint, client) {
+      const attachScreenshot = !!(client.getOptions() as ElectronMainOptions).attachScreenshot;
+
+      if (!attachScreenshot) {
+        return event;
+      }
+
       // We don't capture screenshots for transactions or native crashes
       if (!event.transaction && event.platform !== 'native') {
         let count = 1;
