@@ -30,6 +30,7 @@ const ignoredBrowser = [
   'makeBrowserOfflineTransport',
   'makeFetchTransport',
   'makeMultiplexedTransport',
+  'lazyLoadIntegration',
 ];
 
 const ignoredNode = ['SDK_VERSION', 'makeNodeTransport', 'getSentryRelease'];
