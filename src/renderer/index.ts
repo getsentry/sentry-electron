@@ -46,6 +46,7 @@ export {
   getCurrentScope,
   getGlobalScope,
   getIsolationScope,
+  // eslint-disable-next-line deprecation/deprecation
   Hub,
   // eslint-disable-next-line deprecation/deprecation
   makeMain,
