@@ -10,15 +10,13 @@ export function getScopeData(): ScopeData {
 }
 
 /** Hooks both current and isolation scope changes and passes merged scope on changes  */
-export function addScopeListener(callback: (merged: ScopeData, current: Scope, isolation: Scope) => void): void {
+export function addScopeListener(callback: (merged: ScopeData, changed: Scope) => void): void {
   getIsolationScope().addScopeListener((isolation) => {
-    const current = getCurrentScope();
     const merged = getScopeData();
-    callback(merged, current, isolation);
+    callback(merged, isolation);
   });
   getCurrentScope().addScopeListener((current) => {
-    const isolation = getIsolationScope();
     const merged = getScopeData();
-    callback(merged, current, isolation);
+    callback(merged, current);
   });
 }
