@@ -1,3 +1,4 @@
+import { getCurrentScope } from '@sentry/node';
 import { Envelope, Event, Profile, ReplayEvent } from '@sentry/types';
 import { addItemToEnvelope, createEnvelope, forEachEnvelopeItem, normalizeUrlToBase } from '@sentry/utils';
 
@@ -71,6 +72,11 @@ export function normalizeUrlsInReplayEnvelope(envelope: Envelope, basePath: stri
     if (type === 'replay_event') {
       isReplay = true;
       const [headers, event] = item as [{ type: 'replay_event' }, ReplayEvent];
+
+      const currentScope = getCurrentScope().getScopeData();
+      event.breadcrumbs = currentScope.breadcrumbs;
+      event.tags = currentScope.tags;
+      event.user = currentScope.user;
 
       if (Array.isArray(event.urls)) {
         event.urls = event.urls.map((url) => normalizeUrlToBase(url, basePath));
