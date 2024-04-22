@@ -22,7 +22,12 @@
     "request": {
       "url": "app:///src/index.html"
     },
-    "platform": "javascript"
+    "platform": "javascript",
+    "breadcrumbs": [
+      {
+        "message": "Some renderer message"
+      }
+    ]
   },
   "attachments": [],
   "sentryKey": "37f8a2ee37c0409d8970bc7559c7c7e4",
