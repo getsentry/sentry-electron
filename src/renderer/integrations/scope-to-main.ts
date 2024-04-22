@@ -13,12 +13,10 @@ export const scopeToMainIntegration = defineIntegration(() => {
     setup() {
       const ipc = getIPC();
 
-      addScopeListener((merged, current, isolated) => {
+      addScopeListener((merged, changed) => {
         ipc.sendScope(JSON.stringify(normalize(merged, 20, 2_000)));
-        current.clearBreadcrumbs();
-        current.clearAttachments();
-        isolated.clearBreadcrumbs();
-        isolated.clearAttachments();
+        changed.clearBreadcrumbs();
+        changed.clearAttachments();
       });
     },
   };
