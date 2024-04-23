@@ -1,7 +1,130 @@
+# Upgrading from 4.x to 5.x
+
+Many breaking changes in v5 are due to changes in the underlying Sentry JavaScript SDKs so be sure to check the
+[JavaScript v8 migration
+docs](https://github.com/getsentry/sentry-javascript/blob/develop/MIGRATION.md#upgrading-from-7x-to-8x).
+
+## Supported Electron Versions
+
+The Sentry Node SDK now requires Node >= 14.18.0 which means the Sentry Electron SDK now supports Electron >= 15.0.0.
+
+## Initializing the SDK in v5
+
+From v5, the root export (`@sentry/electron`) is no longer used and will throw and error if it's imported.
+
+In previous versions of the SDK, this export would attempt to detect the Electron process type and import the correct
+entry point. This was problematic for many bundlers, caused issues with tree shaking and obfuscated the fact that the
+there are distinct SDKs for each Electron process.
+
+In the Electron main process you should import from `@sentry/electron/main`:
+```javascript
+import * as Sentry from '@sentry/electron/main';
+
+Sentry.init({
+  dsn: '__DSN__',
+  // ...more options
+});
+```
+
+In all Electron renderer processes you should import from `@sentry/electron/renderer`:
+```javascript
+// In the Electron renderer processes
+import * as Sentry from '@sentry/electron/renderer';
+
+// It's not a requirement to pass any options in the renderer processes because
+// much of the functionality is configured from the main process
+Sentry.init();
+```
+
+## Deprecated Class Based Integrations
+
+In v5, integrations are no longer classes and instead the are functions. Both the use as a class, as well as accessing
+integrations from the Integrations.XXX hash, is deprecated in favor of using the new functional integrations.
+
+
+| Old | New |
+| --- | --- |
+| `new Integrations.SentryMinidump()` | `sentryMinidumpIntegration()` |
+| `new Integrations.AdditionalContext()` | `additionalContextIntegration()` |
+| `new Integrations.Anr()` | `anrIntegration()` |
+| `new Integrations.BrowserWindowSession()` | `browserWindowSessionIntegration()` |
+| `new Integrations.ChildProcess()` | `childProcessIntegration()` |
+| `new Integrations.ElectronBreadcrumbs()` | `electronBreadcrumbsIntegration()` |
+| `new Integrations.ElectronMinidump()` | `electronMinidumpIntegration()` |
+| `new Integrations.MainProcessSession()` | `mainProcessSessionIntegration()` |
+| `new Integrations.Net()` | `electronNetIntegration()` |
+| `new Integrations.OnUncaughtException()` | `onUncaughtExceptionIntegration()` |
+| `new Integrations.PreloadInjection()` | `preloadInjectionIntegration()` |
+| `new Integrations.RendererProfiling()` | `rendererProfilingIntegration()` |
+| `new Integrations.Screenshots()` | `screenshotsIntegration()` |
+
+## New Default Integrations
+
+### `electronContextIntegration()`
+
+Adds Electron specific context information to events on top of that already supplied by the Node SDK.
+
+### `normalizePathsIntegration()`
+
+Normalizes paths in stack traces and URLs to be relative to the app root.
+
+## `event_type` tag removed
+
+The `event_type` tag was deprecated in favor of the `event.environment` tag in v4 and has been removed entirely in v5.
+
+## Offline Transport Options
+
+The offline transport now uses the logic from `@sentry/core` which more closely follows the transport specification.
+This means the `beforeSend` callback has been replaced by the `shouldSend` and `shouldStore` callbacks.
+
+Previously the `beforeSend` callback signature was:
+```typescript
+type BeforeSendResponse = 'send' | 'queue' | 'drop';
+
+/**
+ * Called before attempting to send an event to Sentry.
+ *
+ * Return 'send' to attempt to send the event.
+ * Return 'queue' to queue and persist the event for sending later.
+ * Return 'drop' to drop the event.
+ */
+beforeSend?: (request: TransportRequest) => BeforeSendResponse | Promise<BeforeSendResponse>;
+```
+
+The new `shouldSend` and `shouldStore` callbacks have the following signatures:
+```typescript
+/**
+ * Called before we attempt to send an envelope to Sentry.
+ *
+ * If this function returns false, `shouldStore` will be called to determine if the envelope should be stored.
+ *
+ * Default: () => true
+ *
+ * @param envelope The envelope that will be sent.
+ * @returns Whether we should attempt to send the envelope
+ */
+shouldSend?: (envelope: Envelope) => boolean | Promise<boolean>;
+
+/**
+ * Called before an event is stored.
+ *
+ * Return false to drop the envelope rather than store it.
+ *
+ * Default: () => true
+ *
+ * @param envelope The envelope that failed to send.
+ * @param error The error that occurred.
+ * @param retryDelay The current retry delay in milliseconds.
+ * @returns Whether we should store the envelope in the queue
+ */
+shouldStore?: (envelope: Envelope, error: Error, retryDelay: number) => boolean | Promise<boolean>;
+```
+
+
 # Upgrading from 3.x to 4.x
 
 All the breaking changes in v4 are due to changes in the underlying Sentry JavaScript SDKs so be sure to check the
-[JavaScript migration docs](https://github.com/getsentry/sentry-javascript/blob/master/MIGRATION.md#upgrading-from-6x-to-7x).
+[JavaScript v7 migration docs](https://github.com/getsentry/sentry-javascript/blob/master/MIGRATION.md#upgrading-from-6x-to-7x).
 
 # Upgrading from 2.x to 3.x
 

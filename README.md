@@ -21,29 +21,29 @@ Test](https://github.com/getsentry/sentry-electron/actions/workflows/build.yml/b
   [`@sentry/browser`](https://github.com/getsentry/sentry-javascript/tree/master/packages/browser))
 - Captures **native crashes** (Minidump crash reports) from renderers and the main process
 - Collects **breadcrumbs and context** information along with events across renderers and the main process
-- Supports `electron >= 2`
+- Supports `electron >= v15`
 
 ## Usage
 
 To use this SDK, call `init(options)` as early as possible in the entry modules in the main process as well as all
-renderer processes or further sub processes you spawn. This will initialize the SDK and hook into the environment.
+renderer processes or further sub processes you spawn. This will initialize the SDK and hook the environment.
 
+In the Electron main process:
 ```javascript
-import { init } from '@sentry/electron';
+import { init } from '@sentry/electron/main';
 
 init({
   dsn: '__DSN__',
   // ...
 });
 ```
-If you are using a JavaScript bundler, you may need to use the process specific imports to ensure the correct code is loaded for
-each process:
-```javascript
-// In the Electron main process
-import { init } from '@sentry/electron/main';
 
+In all Electron renderer processes:
+```javascript
 // In the Electron renderer processes
 import { init } from '@sentry/electron/renderer';
+
+init();
 ```
 
 If you are using a framework specific Sentry SDK, you can pass that `init` function as the second parameter in the
@@ -60,15 +60,13 @@ To set context information or send manual events, use the exported functions of 
 functions will not perform any action before you have called `init()`:
 
 ```javascript
-import * as Sentry from '@sentry/electron';
+import * as Sentry from '@sentry/electron/main';
 
 // Set user information, as well as tags and further extras
-Sentry.configureScope((scope) => {
-  scope.setExtra('battery', 0.7);
-  scope.setTag('user_mode', 'admin');
-  scope.setUser({ id: '4711' });
-  // scope.clear();
-});
+const scope = Sentry.getCurrentScope();
+scope.setExtra('battery', 0.7);
+scope.setTag('user_mode', 'admin');
+scope.setUser({ id: '4711' });
 
 // Add a breadcrumb for future events
 Sentry.addBreadcrumb({
