@@ -145,7 +145,7 @@ export function init(userOptions: ElectronMainOptions): void {
     release: getDefaultReleaseName(),
     environment: getDefaultEnvironment(),
     defaultIntegrations: getDefaultIntegrations(userOptions),
-    transport: makeElectronOfflineTransport,
+    transport: makeElectronOfflineTransport(),
     transportOptions: {},
     getSessions: () => [session.defaultSession],
     ...userOptions,
