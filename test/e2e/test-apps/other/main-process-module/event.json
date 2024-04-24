@@ -97,7 +97,12 @@
     "event_id": "{{id}}",
     "platform": "node",
     "timestamp": 0,
-    "breadcrumbs": [],
+    "breadcrumbs": [
+      {
+        "category": "console",
+        "message": "renderer logging"
+      }
+    ],
     "tags": {
       "event.environment": "javascript",
       "event.origin": "electron",

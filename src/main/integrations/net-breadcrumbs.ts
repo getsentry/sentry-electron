@@ -257,7 +257,7 @@ function addRequestBreadcrumb(
  */
 export const electronNetIntegration = defineIntegration((options: NetOptions = {}) => {
   return {
-    name: 'Net',
+    name: 'ElectronNet',
     setup() {
       const clientOptions = getClient()?.getOptions();
 

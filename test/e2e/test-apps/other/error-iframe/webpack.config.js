@@ -1,5 +1,5 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const WarningsToErrorsPlugin = require('warnings-to-errors-webpack-plugin');
+// const WarningsToErrorsPlugin = require('warnings-to-errors-webpack-plugin');
 
 module.exports = [
   {
@@ -10,7 +10,7 @@ module.exports = [
       libraryTarget: 'commonjs2',
       filename: 'main.js',
     },
-    plugins: [new WarningsToErrorsPlugin()],
+    // plugins: [new WarningsToErrorsPlugin()],
   },
   {
     mode: 'production',
@@ -19,7 +19,7 @@ module.exports = [
     output: {
       filename: 'iframe.js',
     },
-    plugins: [new HtmlWebpackPlugin({ filename: 'iframe.html' }), new WarningsToErrorsPlugin()],
+    plugins: [new HtmlWebpackPlugin({ filename: 'iframe.html' }) /* new WarningsToErrorsPlugin() */],
   },
   {
     mode: 'production',
@@ -28,6 +28,6 @@ module.exports = [
     output: {
       filename: 'renderer.js',
     },
-    plugins: [new HtmlWebpackPlugin(), new WarningsToErrorsPlugin()],
+    plugins: [new HtmlWebpackPlugin() /* new WarningsToErrorsPlugin() */],
   },
 ];

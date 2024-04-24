@@ -58,6 +58,11 @@ integrations from the Integrations.XXX hash, is deprecated in favor of using the
 | `new Integrations.RendererProfiling()` | `rendererProfilingIntegration()` |
 | `new Integrations.Screenshots()` | `screenshotsIntegration()` |
 
+### `additionalContextIntegration()` Changes
+
+The `additionalContextIntegration()` no longer includes the `cpu`, `memory` and `language` options. These are configured
+via the `nodeContextIntegration()` options.
+
 ## New Default Integrations
 
 ### `electronContextIntegration()`

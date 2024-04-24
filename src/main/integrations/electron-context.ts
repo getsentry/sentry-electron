@@ -4,6 +4,10 @@ import { app } from 'electron';
 import { getDefaultEnvironment, getDefaultReleaseName } from '../context';
 import { mergeEvents } from '../merge';
 
+function getAppMemory(): number {
+  return app.getAppMetrics().reduce((acc, metric) => acc + metric.memory.workingSetSize * 1024, 0);
+}
+
 export const electronContextIntegration = defineIntegration(() => {
   return {
     name: 'ElectronContext',
@@ -13,6 +17,9 @@ export const electronContextIntegration = defineIntegration(() => {
       delete event.tags?.server_name;
       // We delete the Node runtime context so our Electron runtime context is used instead
       delete event.contexts?.runtime;
+
+      // Electron is multi-process so the Node process memory will be inaccurate
+      delete event.contexts?.app?.app_memory;
 
       // The user agent is parsed by Sentry and would overwrite certain context
       // information, which we don't want. Generally remove it, since we know that
@@ -30,6 +37,8 @@ export const electronContextIntegration = defineIntegration(() => {
               app_name: app.name || app.getName(),
               app_version: app.getVersion(),
               build_type: process.mas ? 'app-store' : process.windowsStore ? 'windows-store' : undefined,
+              app_memory: getAppMemory(),
+              app_arch: process.arch,
             },
             browser: {
               name: 'Chrome',
@@ -40,7 +49,6 @@ export const electronContextIntegration = defineIntegration(() => {
               version: process.versions.chrome,
             },
             device: {
-              arch: process.arch,
               family: 'Desktop',
             },
             node: {
