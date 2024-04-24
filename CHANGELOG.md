@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 4.24.0
+
+- feat: Update from [v7.110.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.110.0) to
+  [v7.112.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.112.0) of JavaScript SDKs (#888)
+- fix: Missing Replay scope (#887)
+
 ## 4.23.0
 
 - feat: Update from [v7.109.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.109.0) to
