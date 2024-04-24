@@ -4,7 +4,6 @@ import {
   contextLinesIntegration,
   functionToStringIntegration,
   getCurrentScope,
-  httpIntegration,
   inboundFiltersIntegration,
   initOpenTelemetry,
   linkedErrorsIntegration,
@@ -14,9 +13,8 @@ import {
   nodeContextIntegration,
   NodeOptions,
   onUnhandledRejectionIntegration,
-  requestDataIntegration,
+  setNodeAsyncContextStrategy,
 } from '@sentry/node';
-import { setOpenTelemetryContextAsyncContextStrategy } from '@sentry/opentelemetry';
 import { Integration, Options } from '@sentry/types';
 import { stackParserFromStackParserOptions } from '@sentry/utils';
 import { Session, session, WebContents } from 'electron';
@@ -58,14 +56,12 @@ export function getDefaultIntegrations(options: ElectronMainOptions): Integratio
     inboundFiltersIntegration(),
     functionToStringIntegration(),
     linkedErrorsIntegration(),
-    requestDataIntegration(),
     consoleIntegration(),
-    httpIntegration(),
     nativeNodeFetchIntegration(),
     onUnhandledRejectionIntegration(),
     contextLinesIntegration(),
     localVariablesIntegration(),
-    nodeContextIntegration(),
+    nodeContextIntegration({ cloudResource: false }),
   ];
 
   if (options.autoSessionTracking !== false) {
@@ -160,7 +156,7 @@ export function init(userOptions: ElectronMainOptions): void {
   removeRedundantIntegrations(options);
   configureIPC(options);
 
-  setOpenTelemetryContextAsyncContextStrategy();
+  setNodeAsyncContextStrategy();
 
   const scope = getCurrentScope();
   scope.update(options.initialScope);

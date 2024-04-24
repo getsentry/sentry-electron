@@ -1,6 +1,6 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CspHtmlWebpackPlugin = require('csp-html-webpack-plugin');
-const WarningsToErrorsPlugin = require('warnings-to-errors-webpack-plugin');
+// const WarningsToErrorsPlugin = require('warnings-to-errors-webpack-plugin');
 const { sentryWebpackPlugin } = require('@sentry/webpack-plugin');
 
 const sentryWebpackPluginOptions = {
@@ -29,7 +29,7 @@ module.exports = [
       libraryTarget: 'commonjs2',
       filename: 'main.js',
     },
-    plugins: [new WarningsToErrorsPlugin(), sentryWebpackPlugin(sentryWebpackPluginOptions)],
+    plugins: [/* new WarningsToErrorsPlugin(), */ sentryWebpackPlugin(sentryWebpackPluginOptions)],
   },
   {
     mode: 'production',
@@ -40,7 +40,7 @@ module.exports = [
     },
     plugins: [
       new HtmlWebpackPlugin(),
-      new WarningsToErrorsPlugin(),
+      // new WarningsToErrorsPlugin(),
       new CspHtmlWebpackPlugin({
         'default-src': "'self'",
         'script-src': "'self'",

@@ -1,15 +1,5 @@
-import { BaseClient, captureEvent, getClient, getCurrentScope } from '@sentry/core';
-import { metrics } from '@sentry/node';
-import {
-  Attachment,
-  AttachmentItem,
-  ClientOptions,
-  Envelope,
-  Event,
-  EventItem,
-  Profile,
-  ScopeData,
-} from '@sentry/types';
+import { captureEvent, getClient, getCurrentScope, metrics } from '@sentry/node';
+import { Attachment, AttachmentItem, Envelope, Event, EventItem, Profile, ScopeData } from '@sentry/types';
 import { forEachEnvelopeItem, logger, parseEnvelope, SentryError } from '@sentry/utils';
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
 
@@ -136,7 +126,7 @@ function handleEnvelope(options: ElectronMainOptionsInternal, env: Uint8Array | 
 }
 
 function handleMetric(metric: MetricIPCMessage): void {
-  const client = getClient<BaseClient<ClientOptions>>();
+  const client = getClient();
 
   if (!client) {
     return;

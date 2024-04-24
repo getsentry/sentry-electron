@@ -1,4 +1,4 @@
-import { defineIntegration } from '@sentry/core';
+import { captureException, defineIntegration } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { dialog } from 'electron';
 
@@ -10,7 +10,7 @@ export const onUncaughtExceptionIntegration = defineIntegration(() => {
       const options = client.getOptions();
 
       global.process.on('uncaughtException', (error: Error) => {
-        client.captureException(error, {
+        captureException(error, {
           originalException: error,
           captureContext: {
             level: 'fatal',

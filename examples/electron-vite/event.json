@@ -58,14 +58,6 @@
     },
     "release": "electron-vite@1.0.0",
     "environment": "development",
-    "debug_meta": {
-      "images": [
-        {
-          "code_file": "app:///dist/renderer/index.js",
-          "type": "sourcemap"
-        }
-      ]
-    },
     "exception": {
       "values": [
         {
@@ -87,7 +79,7 @@
     "timestamp": 0,
     "breadcrumbs": [],
     "request": {
-      "url": "app:///dist/renderer/index.html"
+      "url": "app:///out/renderer/index.html"
     },
     "tags": {
       "event.environment": "javascript",

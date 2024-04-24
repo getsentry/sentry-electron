@@ -5,4 +5,6 @@ init({
   debug: true,
 });
 
+console.log('renderer logging');
+
 getCurrentScope().setUser({ id: 'abc-123' });

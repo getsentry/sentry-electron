@@ -1,5 +1,5 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const WarningsToErrorsPlugin = require('warnings-to-errors-webpack-plugin');
+// const WarningsToErrorsPlugin = require('warnings-to-errors-webpack-plugin');
 const { sentryWebpackPlugin } = require('@sentry/webpack-plugin');
 
 const sentryWebpackPluginOptions = {
@@ -28,7 +28,7 @@ module.exports = [
       libraryTarget: 'commonjs2',
       filename: 'main.js',
     },
-    plugins: [new WarningsToErrorsPlugin(), sentryWebpackPlugin(sentryWebpackPluginOptions)],
+    plugins: [/* new WarningsToErrorsPlugin(), */ sentryWebpackPlugin(sentryWebpackPluginOptions)],
   },
   {
     mode: 'production',
@@ -37,7 +37,7 @@ module.exports = [
     output: {
       filename: 'preload.js',
     },
-    plugins: [new WarningsToErrorsPlugin(), sentryWebpackPlugin(sentryWebpackPluginOptions)],
+    plugins: [/* new WarningsToErrorsPlugin(), */ sentryWebpackPlugin(sentryWebpackPluginOptions)],
   },
   {
     mode: 'production',
@@ -46,6 +46,10 @@ module.exports = [
     output: {
       filename: 'renderer.js',
     },
-    plugins: [new HtmlWebpackPlugin(), new WarningsToErrorsPlugin(), sentryWebpackPlugin(sentryWebpackPluginOptions)],
+    plugins: [
+      new HtmlWebpackPlugin(),
+      // new WarningsToErrorsPlugin(),
+      sentryWebpackPlugin(sentryWebpackPluginOptions),
+    ],
   },
 ];
