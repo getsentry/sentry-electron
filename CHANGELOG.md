@@ -4,8 +4,11 @@
 
 ## 5.0.0-beta.0
 
-This is a beta release of the next major version of the Electron SDK.
-For the key changes, be sure to check out the [migration docs](./MIGRATION.md).
+This release updates the underlying Sentry JavaScript SDKs to v8 which includes a number of breaking changes, including
+removal of APIs deprecated in the previous major version. The aim of these changes is to improve our performance
+monitoring APIs, integrations API, and ESM support.
+
+For the full list of changes, see the [migration guide](./MIGRATION.md).
 
 ## 4.24.0
 
