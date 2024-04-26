@@ -2,6 +2,31 @@
 
 ## Unreleased
 
+## 5.0.0-beta.0
+
+This release updates the underlying Sentry JavaScript SDKs to v8 which includes a number of breaking changes, including
+removal of APIs deprecated in the previous major version. The aim of these changes is to improve our performance
+monitoring APIs, integrations API, and ESM support.
+
+For the full list of changes, see the [migration guide](./MIGRATION.md).
+
+## 4.24.0
+
+- feat: Update from [v7.110.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.110.0) to
+  [v7.112.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.112.0) of JavaScript SDKs (#888)
+- fix: Missing Replay scope (#887)
+
+## 4.23.0
+
+- feat: Update from [v7.109.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.109.0) to
+  [v7.110.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.110.0) of JavaScript SDKs (#878)
+
+## 4.22.0
+
+- feat: Update from [v7.107.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.107.0) to
+  [v7.109.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.109.0) of JavaScript SDKs (#856, #867)
+- fix: Stop Anr worker when app suspends (#858)
+
 ## 4.21.0
 
 - feat: Update from [v7.105.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.105.0) to
