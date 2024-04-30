@@ -98,6 +98,14 @@ export class TestContext {
     childProcess.stdout.on('data', (data) => logLinesWithoutEmpty(data.toString()));
     childProcess.stderr.on('data', (data) => logLinesWithoutEmpty(data.toString()));
 
+    childProcess.on('exit', (code) => {
+      log(`App exited with code ${code}`);
+    });
+
+    childProcess.on('error', (err) => {
+      log(`App error: ${err}`);
+    });
+
     this.mainProcess = new ProcessStatus(childProcess);
 
     await this.waitForTrue(
