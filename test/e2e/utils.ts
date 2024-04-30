@@ -37,9 +37,11 @@ export function createLogger(name: string): (...args: any[]) => void {
 
 /** Gets the Electron versions to test */
 export function getElectronTestVersions(): string[] {
-  return process.env.ELECTRON_VERSION
+  /* process.env.ELECTRON_VERSION
     ? [process.env.ELECTRON_VERSION]
-    : JSON.parse(readFileSync(join(__dirname, 'versions.json'), { encoding: 'utf8' }).toString());
+    : */
+
+  return JSON.parse(readFileSync(join(__dirname, 'versions.json'), { encoding: 'utf8' }).toString());
 }
 
 export function* walkSync(dir: string): Generator<string> {
