@@ -17,7 +17,7 @@ function hookTestFailure() {
   }
 }
 
-describe('E2E Tests', () => {
+describe('E2E Tests', async () => {
   const testServer = new TestServer();
 
   beforeAll(() => {
@@ -29,12 +29,14 @@ describe('E2E Tests', () => {
   });
 
   for (const electronVersion of getElectronTestVersions()) {
+    console.log(`Downloading Electron v${electronVersion}...`);
+    const electronPath = await downloadElectron(electronVersion);
+    console.log('Downloading complete!');
+
     describe(`Electron v${electronVersion}`, () => {
       let testContext: TestContext | undefined;
-      const electronPath = downloadElectron(electronVersion);
 
       beforeEach(async () => {
-        await electronPath;
         testServer.clearEvents();
         clearTestLog();
       }, 60_000);
