@@ -98,8 +98,8 @@ export class TestContext {
     childProcess.stdout.on('data', (data) => logLinesWithoutEmpty(data.toString()));
     childProcess.stderr.on('data', (data) => logLinesWithoutEmpty(data.toString()));
 
-    childProcess.on('exit', (code) => {
-      log(`App exited with code ${code}`);
+    childProcess.on('exit', (code, signal) => {
+      log(`App exited with code ${code} and signal ${signal}`);
     });
 
     childProcess.on('error', (err) => {
