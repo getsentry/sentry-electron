@@ -29,6 +29,9 @@ describe('E2E Tests', async () => {
   });
 
   for (const electronVersion of getElectronTestVersions()) {
+    // Electron v20 exits immediately on macOS arch64 in GitHub Actions with SIGTRAP
+    const skipAll = process.platform === 'darwin' && process.env.CI && electronVersion.startsWith('20.');
+
     console.log(`Downloading Electron v${electronVersion}...`);
     const electronPath = await downloadElectron(electronVersion);
     console.log('Downloading complete!');
@@ -57,7 +60,7 @@ describe('E2E Tests', async () => {
               testFn(
                 recipe.description,
                 async (ctx) => {
-                  if (!recipe.shouldRun()) {
+                  if (skipAll || !recipe.shouldRun()) {
                     ctx.skip();
                   }
 
