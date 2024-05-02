@@ -84,7 +84,7 @@ describe('E2E Tests', async () => {
           testFn(
             recipe.description,
             async (ctx) => {
-              if (!recipe.shouldRun()) {
+              if (skipAll || !recipe.shouldRun()) {
                 ctx.skip();
               }
 
