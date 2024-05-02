@@ -3,7 +3,7 @@ const { readFileSync } = require('fs');
 let versions = JSON.parse(readFileSync('./test/e2e/versions.json', 'utf8'));
 
 // Electron v20 exits immediately on macOS arch64 in GitHub Actions with SIGTRAP
-if (process.env.CI && process.platform === 'darwin') {
+if (process.platform === 'darwin') {
   versions = versions.filter((version) => !version.startsWith('20.'));
 }
 
