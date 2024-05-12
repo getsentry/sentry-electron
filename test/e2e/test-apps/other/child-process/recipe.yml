@@ -1,2 +1,2 @@
 description: Child process breadcrumbs & events
-command: yarn
+command: npm install

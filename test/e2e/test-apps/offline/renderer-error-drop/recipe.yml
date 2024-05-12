@@ -1,5 +1,5 @@
 description: Drop on Error
 # Server will return 500 and error should not be queued or sent
 category: Offline
-command: yarn
+command: npm install
 runTwice: true

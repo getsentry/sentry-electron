@@ -1,4 +1,4 @@
 description: Electron Vite
-command: yarn && yarn build
+command: npm install && npm run build
 timeout: 120
 skipEsmAutoTransform: true

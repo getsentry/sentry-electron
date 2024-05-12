@@ -1,4 +1,4 @@
 description: Browser Tracing
-command: yarn
+command: npm install
 # Browser Tracing fails on Electron v24
 condition: version.major != 24

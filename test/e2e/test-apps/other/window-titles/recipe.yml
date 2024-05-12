@@ -1,2 +1,2 @@
 description: Window titles are empty when disabled
-command: yarn
+command: npm install

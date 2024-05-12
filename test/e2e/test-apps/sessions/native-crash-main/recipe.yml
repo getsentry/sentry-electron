@@ -1,4 +1,4 @@
 description: Session with Native Main Crash
 category: Sessions
-command: yarn
+command: npm install
 runTwice: true

@@ -3,4 +3,4 @@ category: Native (Sentry Uploader)
 # We will only get GPU crashes from Crashpad
 # and the chrome://gpucrash was only added in v13
 condition: usesCrashpad
-command: yarn
+command: npm install

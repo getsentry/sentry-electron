@@ -19,11 +19,11 @@ jobs:
         with:
           node-version-file: 'package.json'
       - name: Install
-        run: yarn install
+        run: npm install
       - name: Build
-        run: yarn build
+        run: npm run build
       - name: Pack
-        run: yarn pack
+        run: npm run pack
       - name: Archive Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -43,9 +43,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: 'package.json'
-      - run: yarn install
+      - run: npm run install
       - name: Run Linter
-        run: yarn lint
+        run: npm run lint
 
   test:
     name: Unit Tests
@@ -61,10 +61,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: 'package.json'
-      - run: yarn install
+      - run: npm install
       - name: Run Unit Tests
         timeout-minutes: 10
-        run: yarn test
+        run: npm run test
 
   e2e:
     name: E2E Tests
@@ -82,10 +82,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: 'package.json'
-      - run: yarn install
+      - run: npm install
       - name: Run E2E Tests
         timeout-minutes: 30
-        run: yarn e2e
+        run: npm run e2e
 
   required_jobs_passed:
     name: All required jobs passed or were skipped

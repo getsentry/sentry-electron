@@ -13,9 +13,9 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version-file: 'package.json'
-      - run: yarn install
+      - run: npm install
       - name: Update Versions
-        run: yarn update-electron-versions
+        run: npm run update-electron-versions
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:

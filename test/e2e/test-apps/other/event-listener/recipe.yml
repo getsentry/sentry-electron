@@ -1,4 +1,4 @@
 description: Event Listener Max
-command: yarn
+command: npm install
 condition: version.major >= 25
 expectedError: Listener count = 2

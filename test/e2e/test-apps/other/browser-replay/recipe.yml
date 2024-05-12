@@ -1,2 +1,2 @@
 description: Browser Replay
-command: yarn
+command: npm install

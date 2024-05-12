@@ -1,2 +1,2 @@
 description: Screenshots on Error
-command: yarn
+command: npm install

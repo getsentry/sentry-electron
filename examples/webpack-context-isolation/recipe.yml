@@ -1,5 +1,5 @@
 description: Webpack 5 app with contextIsolation and sandbox
-command: yarn && yarn build
+command: npm install && npm run build
 condition: supportsContextIsolation && supportsSandbox
 timeout: 120
 skipEsmAutoTransform: true

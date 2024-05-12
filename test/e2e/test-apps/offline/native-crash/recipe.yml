@@ -1,5 +1,5 @@
 description: Native Crash Send Failure
 category: Offline
-command: yarn
+command: npm install
 condition: "!(platform === 'win32' && version.major < 24)"
 runTwice: true

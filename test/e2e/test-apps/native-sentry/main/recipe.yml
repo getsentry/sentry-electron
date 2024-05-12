@@ -1,4 +1,4 @@
 description: Native Main Crash
 category: Native (Sentry Uploader)
-command: yarn
+command: npm install
 runTwice: true

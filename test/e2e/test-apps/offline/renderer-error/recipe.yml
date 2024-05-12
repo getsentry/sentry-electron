@@ -1,4 +1,4 @@
 description: JavaScript Error Send Failure
 category: Offline
-command: yarn
+command: npm install
 runTwice: true

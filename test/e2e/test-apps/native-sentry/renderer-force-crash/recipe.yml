@@ -1,4 +1,4 @@
 description: Native Renderer forcefullyCrashRenderer
 category: Native (Sentry Uploader)
-command: yarn
+command: npm install
 condition: usesCrashpad

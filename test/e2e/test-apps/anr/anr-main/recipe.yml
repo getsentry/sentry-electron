@@ -1,4 +1,4 @@
 description: ANR Main Event
 category: ANR
-command: yarn
+command: npm install
 condition: version.major >= 22

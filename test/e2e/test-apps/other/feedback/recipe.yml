@@ -1,2 +1,2 @@
 description: User Feedback
-command: yarn
+command: npm install

@@ -30,8 +30,8 @@ if (current !== latest) {
 
   writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
-  // Update yarn.lock
-  spawnSync('yarn', ['install'], { stdio: 'inherit' });
+  // Update lock file
+  spawnSync('npm', ['install'], { stdio: 'inherit' });
   // Update parameter that has the version in it
-  spawnSync('yarn', ['build'], { stdio: 'inherit' });
+  spawnSync('npm', ['run', 'build'], { stdio: 'inherit' });
 }

@@ -1,2 +1,2 @@
 description: Capture Console
-command: yarn
+command: npm install

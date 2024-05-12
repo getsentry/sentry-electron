@@ -1,4 +1,4 @@
 description: Electron Forge
-command: yarn
+command: npm install
 timeout: 120
 skipEsmAutoTransform: true

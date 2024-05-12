@@ -1,5 +1,5 @@
 description: Electron Forge Webpack with contextIsolation and sandbox
-command: yarn && yarn package
+command: npm install && npm run package
 condition: supportsContextIsolation && supportsSandbox
 timeout: 120
 skipEsmAutoTransform: true

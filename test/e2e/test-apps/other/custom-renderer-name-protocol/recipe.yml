@@ -1,2 +1,2 @@
 description: Custom Renderer Name via Protocol
-command: yarn
+command: npm install

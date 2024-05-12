@@ -1,5 +1,5 @@
 description: Session with Native Main Crash (Electron Uploader)
 category: Sessions
-command: yarn
+command: npm install
 condition: usesCrashpad
 runTwice: true

@@ -1,3 +1,3 @@
 description: Native Renderer Crash (Custom Release Name)
 category: Native (Electron Uploader)
-command: yarn
+command: npm install
