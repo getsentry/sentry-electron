@@ -37,23 +37,11 @@
     "access": "public"
   },
   "scripts": {
-    "prebuild": "yarn clean && node scripts/update-version.js",
-    "build": "rollup --config rollup.config.mjs",
-    "postbuild": "node scripts/check-exports.mjs",
-    "clean": "rimraf --glob coverage common esm main preload renderer index.* sentry-electron*.tgz .eslintcache",
-    "prelint": "node scripts/update-version.js",
-    "lint": "run-s lint:prettier lint:eslint",
-    "lint:prettier": "prettier --check \"{src,test}/**/*.ts\"",
-    "lint:eslint": "eslint . --cache --format stylish",
-    "fix": "run-s fix:eslint fix:prettier",
-    "fix:prettier": "prettier --write \"{src,test}/**/*.ts\"",
-    "fix:eslint": "eslint . --format stylish --fix",
-    "update-electron-versions": "electron-latest-versions --start 15 --beta > ./test/e2e/versions.json",
-    "update-sdk-versions": "node ./scripts/update-sdk-versions.mjs",
-    "pretest": "yarn build",
-    "test": "vitest run --root=./test/unit",
-    "pree2e": "rimraf --glob test/e2e/dist/**/node_modules/@sentry/** test/e2e/dist/**/yarn.lock test/e2e/dist/**/package-lock.json && node scripts/clean-cache.js && yarn build && npm pack",
-    "e2e": "xvfb-maybe vitest run --root=./test/e2e --silent=false --disable-console-intercept"
+    "start": "node scripts/start.mjs",
+    "build": "node scripts/start.mjs build",
+    "test": "node scripts/start.mjs test",
+    "lint": "node scripts/start.mjs lint",
+    "e2e": "node scripts/start.mjs e2e"
   },
   "dependencies": {
     "@sentry/browser": "8.0.0-beta.5",
