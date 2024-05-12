@@ -28,6 +28,7 @@ export {
   captureConsoleIntegration,
   captureEvent,
   captureException,
+  captureFeedback,
   captureMessage,
   captureSession,
   captureUserFeedback,
@@ -46,6 +47,7 @@ export {
   extraErrorDataIntegration,
   feedbackAsyncIntegration,
   feedbackIntegration,
+  feedbackSyncIntegration,
   forceLoad,
   functionToStringIntegration,
   getActiveSpan,
@@ -92,6 +94,7 @@ export {
   setTags,
   setUser,
   showReportDialog,
+  spanToBaggageHeader,
   spanToJSON,
   spanToTraceHeader,
   startBrowserTracingNavigationSpan,
@@ -103,6 +106,7 @@ export {
   withActiveSpan,
   withIsolationScope,
   withScope,
+  zodErrorsIntegration,
 } from '@sentry/browser';
 
 export type { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
