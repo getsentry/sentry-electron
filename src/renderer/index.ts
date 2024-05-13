@@ -31,7 +31,6 @@ export {
   captureFeedback,
   captureMessage,
   captureSession,
-  captureUserFeedback,
   chromeStackLineParser,
   contextLinesIntegration,
   continueTrace,

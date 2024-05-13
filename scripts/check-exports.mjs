@@ -31,6 +31,8 @@ const ignoredBrowser = [
   'makeFetchTransport',
   'makeMultiplexedTransport',
   'lazyLoadIntegration',
+  // deprecated
+  'captureUserFeedback',
 ];
 
 const ignoredNode = [
