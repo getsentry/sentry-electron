@@ -41,6 +41,7 @@ const ignoredNode = [
   'getSentryRelease',
   // We don't include these by default in the Electron SDK
   'getDefaultIntegrationsWithoutPerformance',
+  'initWithoutDefaultIntegrations',
 ];
 
 const missingRenderer = browserExports.filter((key) => !rendererExports.includes(key) && !ignoredBrowser.includes(key));

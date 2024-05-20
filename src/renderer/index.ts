@@ -67,6 +67,7 @@ export {
   inboundFiltersIntegration,
   instrumentOutgoingRequests,
   isInitialized,
+  lastEventId,
   linkedErrorsIntegration,
   moduleMetadataIntegration,
   onLoad,

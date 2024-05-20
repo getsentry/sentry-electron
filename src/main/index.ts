@@ -66,6 +66,7 @@ export {
   initOpenTelemetry,
   isInitialized,
   koaIntegration,
+  lastEventId,
   linkedErrorsIntegration,
   localVariablesIntegration,
   metrics,
