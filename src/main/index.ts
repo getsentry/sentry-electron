@@ -26,6 +26,7 @@ export {
   captureConsoleIntegration,
   captureEvent,
   captureException,
+  captureFeedback,
   captureMessage,
   captureSession,
   close,
@@ -65,6 +66,7 @@ export {
   initOpenTelemetry,
   isInitialized,
   koaIntegration,
+  lastEventId,
   linkedErrorsIntegration,
   localVariablesIntegration,
   metrics,
@@ -81,6 +83,7 @@ export {
   parameterize,
   postgresIntegration,
   prismaIntegration,
+  redisIntegration,
   requestDataIntegration,
   rewriteFramesIntegration,
   Scope,
@@ -105,6 +108,7 @@ export {
   setupKoaErrorHandler,
   setupNestErrorHandler,
   setUser,
+  spanToBaggageHeader,
   spanToJSON,
   spanToTraceHeader,
   spotlightIntegration,
@@ -117,6 +121,7 @@ export {
   withIsolationScope,
   withMonitor,
   withScope,
+  zodErrorsIntegration,
 } from '@sentry/node';
 
 export type { NodeOptions } from '@sentry/node';

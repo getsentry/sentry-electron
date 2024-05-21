@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 5.0.0-beta.0
+## 5.0.0
 
 This release updates the underlying Sentry JavaScript SDKs to v8 which includes a number of breaking changes, including
 removal of APIs deprecated in the previous major version. The aim of these changes is to improve our performance

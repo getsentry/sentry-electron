@@ -31,9 +31,18 @@ const ignoredBrowser = [
   'makeFetchTransport',
   'makeMultiplexedTransport',
   'lazyLoadIntegration',
+  // deprecated
+  'captureUserFeedback',
 ];
 
-const ignoredNode = ['SDK_VERSION', 'makeNodeTransport', 'getSentryRelease'];
+const ignoredNode = [
+  'SDK_VERSION',
+  'makeNodeTransport',
+  'getSentryRelease',
+  // We don't include these by default in the Electron SDK
+  'getDefaultIntegrationsWithoutPerformance',
+  'initWithoutDefaultIntegrations',
+];
 
 const missingRenderer = browserExports.filter((key) => !rendererExports.includes(key) && !ignoredBrowser.includes(key));
 const missingMain = nodeExports.filter((key) => !mainExports.includes(key) && !ignoredNode.includes(key));

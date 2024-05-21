@@ -28,9 +28,9 @@ export {
   captureConsoleIntegration,
   captureEvent,
   captureException,
+  captureFeedback,
   captureMessage,
   captureSession,
-  captureUserFeedback,
   chromeStackLineParser,
   contextLinesIntegration,
   continueTrace,
@@ -46,6 +46,7 @@ export {
   extraErrorDataIntegration,
   feedbackAsyncIntegration,
   feedbackIntegration,
+  feedbackSyncIntegration,
   forceLoad,
   functionToStringIntegration,
   getActiveSpan,
@@ -66,6 +67,7 @@ export {
   inboundFiltersIntegration,
   instrumentOutgoingRequests,
   isInitialized,
+  lastEventId,
   linkedErrorsIntegration,
   moduleMetadataIntegration,
   onLoad,
@@ -92,6 +94,7 @@ export {
   setTags,
   setUser,
   showReportDialog,
+  spanToBaggageHeader,
   spanToJSON,
   spanToTraceHeader,
   startBrowserTracingNavigationSpan,
@@ -103,6 +106,7 @@ export {
   withActiveSpan,
   withIsolationScope,
   withScope,
+  zodErrorsIntegration,
 } from '@sentry/browser';
 
 export type { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
