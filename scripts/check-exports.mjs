@@ -39,6 +39,8 @@ const ignoredNode = [
   'SDK_VERSION',
   'makeNodeTransport',
   'getSentryRelease',
+  // There's no way to use this in the main process
+  'preloadOpenTelemetry',
   // We don't include these by default in the Electron SDK
   'getDefaultIntegrationsWithoutPerformance',
   'initWithoutDefaultIntegrations',
