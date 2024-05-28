@@ -100,6 +100,7 @@ export {
   startBrowserTracingNavigationSpan,
   startBrowserTracingPageLoadSpan,
   startInactiveSpan,
+  startNewTrace,
   startSession,
   startSpan,
   startSpanManual,
