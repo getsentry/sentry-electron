@@ -48,6 +48,7 @@
       {
         "op": "http.client",
         "trace_id": "{{id}}",
+        "origin": "auto.http.electron.net",
         "parent_span_id": "{{id}}",
         "span_id": "{{id}}",
         "start_timestamp": 0,
