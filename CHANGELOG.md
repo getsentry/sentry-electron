@@ -5,7 +5,7 @@
 ## 5.1.0
 
 - feat: Update from [v8.0.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.0.0) to
-  [v8.8.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.8.0) of JavaScript SDKs
+  [v8.9.2](https://github.com/getsentry/sentry-javascript/releases/tag/8.9.2) of JavaScript SDKs
 - feat: Include trace origin in auto spans (#915)
 
 ## 5.0.0
