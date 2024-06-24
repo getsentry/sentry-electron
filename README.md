@@ -84,3 +84,11 @@ Sentry.captureEvent({
   ],
 });
 ```
+
+## Contributors
+
+Thanks to everyone who contributed to the Sentry Electron SDK!
+
+<a href="https://github.com/getsentry/sentry-electron/graphs/contributors">
+  <img src="https://contributors-img.web.app/image?repo=getsentry/sentry-electron" />
+</a>
