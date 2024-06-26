@@ -76,8 +76,8 @@ export function createElectronNetRequestExecutor(
 
           const req = net.request(getRequestOptions(url));
 
-          for (const header of Object.keys(headers)) {
-            req.setHeader(header, headers[header]);
+          for (const [header, value] of Object.entries(headers)) {
+            req.setHeader(header, value);
           }
 
           req.on('response', (res) => {
@@ -93,13 +93,15 @@ export function createElectronNetRequestExecutor(
 
             // "Key-value pairs of header names and values. Header names are lower-cased."
             // https://nodejs.org/api/http.html#http_message_headers
-            const retryAfterHeader = res.headers['retry-after'] ?? undefined;
-            const rateLimitsHeader = res.headers['x-sentry-rate-limits'] ?? undefined;
+            const retryAfterHeader = res.headers['retry-after'] ?? null;
+            const rateLimitsHeader = res.headers['x-sentry-rate-limits'] ?? null;
 
             resolve({
               headers: dropUndefinedKeys({
-                'retry-after': Array.isArray(retryAfterHeader) ? retryAfterHeader[0] : retryAfterHeader,
-                'x-sentry-rate-limits': Array.isArray(rateLimitsHeader) ? rateLimitsHeader[0] : rateLimitsHeader,
+                'retry-after': Array.isArray(retryAfterHeader) ? retryAfterHeader[0] || null : retryAfterHeader,
+                'x-sentry-rate-limits': Array.isArray(rateLimitsHeader)
+                  ? rateLimitsHeader[0] || null
+                  : rateLimitsHeader,
               }),
             });
           });

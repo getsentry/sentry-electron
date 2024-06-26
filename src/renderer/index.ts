@@ -104,6 +104,7 @@ export {
   startSession,
   startSpan,
   startSpanManual,
+  thirdPartyErrorFilterIntegration,
   withActiveSpan,
   withIsolationScope,
   withScope,
