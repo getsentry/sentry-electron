@@ -126,8 +126,8 @@ export const electronMinidumpIntegration = defineIntegration(() => {
 
         // Update the extra parameters in the main process
         const mainParams = getNativeUploaderExtraParams(event);
-        for (const key of Object.keys(mainParams)) {
-          crashReporter.addExtraParameter(key, mainParams[key]);
+        for (const [key, value] of Object.entries(mainParams)) {
+          crashReporter.addExtraParameter(key, value);
         }
       })
       .catch((error) => logger.error(error));
