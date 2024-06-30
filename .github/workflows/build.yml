@@ -18,6 +18,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: 'package.json'
+      - name: Enable Corepack
+        run: corepack enable
       - name: Install
         run: yarn install
       - name: Build
@@ -43,6 +45,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: 'package.json'
+      - name: Enable Corepack
+        run: corepack enable
       - run: yarn install
       - name: Run Linter
         run: yarn lint
@@ -61,6 +65,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: 'package.json'
+      - name: Enable Corepack
+        run: corepack enable
       - run: yarn install
       - name: Run Unit Tests
         timeout-minutes: 10
@@ -82,6 +88,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: 'package.json'
+      - name: Enable Corepack
+        run: corepack enable
       - run: yarn install
       - name: Run E2E Tests
         timeout-minutes: 30

@@ -187,6 +187,11 @@ export class RecipeRunner {
       writeFileSync(path, content);
     }
 
+    // Yarn v4 requires an empty yarn.lock file otherwise it complains that this is not part of the parent workspace
+    if (!this._recipe.files['yarn.lock']) {
+      writeFileSync(join(appPath, 'yarn.lock'), '');
+    }
+
     if (this._recipe.metadata.command) {
       log(`Running command '${this._recipe.metadata.command}'`);
 
@@ -194,6 +199,8 @@ export class RecipeRunner {
         shell: true,
         cwd: appPath,
         stdio: process.env.DEBUG ? 'inherit' : 'pipe',
+        // Yarn v4 fail to install in CI without lock files
+        env: { ...process.env, YARN_ENABLE_IMMUTABLE_INSTALLS: 'false' },
       });
 
       if (result.status) {
