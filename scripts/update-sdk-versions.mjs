@@ -32,8 +32,8 @@ export default async function () {
     writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
     // Update lock file
-    spawnSync('npm', ['install'], { stdio: 'inherit' });
+    spawnSync('yarn', ['install', '--no-immutable'], { stdio: 'inherit' });
     // Update parameter that has the version in it
-    spawnSync('npm', ['run', 'build'], { stdio: 'inherit' });
+    spawnSync('yarn', ['build'], { stdio: 'inherit' });
   }
 }
