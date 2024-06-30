@@ -199,6 +199,8 @@ export class RecipeRunner {
         shell: true,
         cwd: appPath,
         stdio: process.env.DEBUG ? 'inherit' : 'pipe',
+        // Yarn v4 fail to install in CI without lock files
+        env: { ...process.env, YARN_ENABLE_IMMUTABLE_INSTALLS: 'false' },
       });
 
       if (result.status) {
