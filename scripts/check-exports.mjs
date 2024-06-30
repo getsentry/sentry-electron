@@ -14,26 +14,37 @@ export default async function () {
   const nodeExports = Object.keys(node);
   const mainExports = Object.keys(main);
 
-  const ignoredBrowser = [
-    'SDK_VERSION',
-    'WINDOW',
-    'Integrations',
-    'close',
-    'flush',
-    'defaultStackLineParsers',
-    // These wont ever be used
-    'geckoStackLineParser',
-    'opera10StackLineParser',
-    'opera11StackLineParser',
-    'winjsStackLineParser',
-    // If you use the browser transports, just use the browser SDK
-    'makeBrowserOfflineTransport',
-    'makeFetchTransport',
-    'makeMultiplexedTransport',
-    'lazyLoadIntegration',
-  ];
+const ignoredBrowser = [
+  'SDK_VERSION',
+  'WINDOW',
+  'Integrations',
+  'close',
+  'flush',
+  'defaultStackLineParsers',
+  // These wont ever be used
+  'geckoStackLineParser',
+  'opera10StackLineParser',
+  'opera11StackLineParser',
+  'winjsStackLineParser',
+  // If you use the browser transports, just use the browser SDK
+  'makeBrowserOfflineTransport',
+  'makeFetchTransport',
+  'makeMultiplexedTransport',
+  'lazyLoadIntegration',
+  // deprecated
+  'captureUserFeedback',
+];
 
-  const ignoredNode = ['SDK_VERSION', 'makeNodeTransport', 'getSentryRelease'];
+const ignoredNode = [
+  'SDK_VERSION',
+  'makeNodeTransport',
+  'getSentryRelease',
+  // There's no way to use this in the main process
+  'preloadOpenTelemetry',
+  // We don't include these by default in the Electron SDK
+  'getDefaultIntegrationsWithoutPerformance',
+  'initWithoutDefaultIntegrations',
+];
 
   const missingRenderer = browserExports.filter(
     (key) => !rendererExports.includes(key) && !ignoredBrowser.includes(key),

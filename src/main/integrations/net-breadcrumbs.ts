@@ -6,6 +6,7 @@ import {
   getDynamicSamplingContextFromClient,
   getDynamicSamplingContextFromSpan,
   getIsolationScope,
+  SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN,
   SentryNonRecordingSpan,
   setHttpStatus,
   spanToTraceHeader,
@@ -177,6 +178,8 @@ function createWrappedRequestFactory(
             op: 'http.client',
           })
         : new SentryNonRecordingSpan();
+
+      span.setAttribute(SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN, 'auto.http.electron.net');
 
       if (shouldAttachTraceData(method, url)) {
         const { traceId, spanId, sampled, dsc } = {
