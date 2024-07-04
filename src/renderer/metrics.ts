@@ -1,6 +1,6 @@
 import type { MetricData } from '@sentry/core';
 import { metrics as metricsCore } from '@sentry/core';
-import { MeasurementUnit, MetricsAggregator, Primitive } from '@sentry/types';
+import { DurationUnit, MeasurementUnit, MetricsAggregator, Primitive } from '@sentry/types';
 
 import { IPCInterface } from '../common/ipc';
 import { getIPC } from './ipc';
@@ -79,9 +79,30 @@ function gauge(name: string, value: number, data?: MetricData): void {
   metricsCore.gauge(ElectronRendererMetricsAggregator, name, value, data);
 }
 
+/**
+ * Adds a timing metric.
+ * The metric is added as a distribution metric.
+ *
+ * You can either directly capture a numeric `value`, or wrap a callback function in `timing`.
+ * In the latter case, the duration of the callback execution will be captured as a span & a metric.
+ *
+ * @experimental This API is experimental and might have breaking changes in the future.
+ */
+function timing(name: string, value: number, unit?: DurationUnit, data?: Omit<MetricData, 'unit'>): void;
+function timing<T>(name: string, callback: () => T, unit?: DurationUnit, data?: Omit<MetricData, 'unit'>): T;
+function timing<T = void>(
+  name: string,
+  value: number | (() => T),
+  unit: DurationUnit = 'second',
+  data?: Omit<MetricData, 'unit'>,
+): T | void {
+  metricsCore.timing(ElectronRendererMetricsAggregator, name, value, unit, data);
+}
+
 export const metrics = {
   increment,
   distribution,
   set,
   gauge,
+  timing,
 };
