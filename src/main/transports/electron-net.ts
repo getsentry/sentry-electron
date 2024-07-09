@@ -97,6 +97,7 @@ export function createElectronNetRequestExecutor(
             const rateLimitsHeader = res.headers['x-sentry-rate-limits'] ?? null;
 
             resolve({
+              statusCode: res.statusCode,
               headers: dropUndefinedKeys({
                 'retry-after': Array.isArray(retryAfterHeader) ? retryAfterHeader[0] || null : retryAfterHeader,
                 'x-sentry-rate-limits': Array.isArray(rateLimitsHeader)
