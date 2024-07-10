@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 5.2.0
+
+- feat: Update from [v8.9.2](https://github.com/getsentry/sentry-javascript/releases/tag/8.9.2) to
+  [v8.16.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.16.0) of JavaScript SDKs
+- fix: Pass through status code in transport response (#943)
+
 ## 5.1.0
 
 - feat: Update from [v8.0.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.0.0) to
