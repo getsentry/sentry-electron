@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 5.4.0
+
+- feat: Update from [v8.20.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.20.0) to
+  [v8.26.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.26.0) of JavaScript SDKs
+- fix: No sub-module imports in type definitions (#958)
+- fix: Duplicate crashed sessions (#961)
+
 ## 5.3.0
 
 - feat: Update from [v8.16.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.16.0) to
