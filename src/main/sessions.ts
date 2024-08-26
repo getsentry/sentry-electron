@@ -158,11 +158,10 @@ export function sessionCrashed(): void {
     logger.log('Setting session as crashed');
     const errors = session.errors + 1;
     updateSession(session, { status: 'crashed', errors });
+    captureSession();
   } else {
     logger.log('Session already ended');
   }
-
-  captureSession();
 }
 
 /** Sets the current session as ANR */

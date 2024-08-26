@@ -6,6 +6,6 @@ export default defineConfig({
     retry: process.env.CI ? 3 : 0,
     disableConsoleIntercept: true,
     silent: false,
-    reporters: process.env.CI || process.env.DEBUG ? ['verbose', 'github-actions'] : ['verbose'],
+    reporters: process.env.DEBUG ? ['basic'] : process.env.CI ? ['verbose', 'github-actions'] : ['verbose'],
   },
 });
