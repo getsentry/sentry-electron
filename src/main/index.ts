@@ -87,6 +87,7 @@ export {
   parameterize,
   postgresIntegration,
   prismaIntegration,
+  profiler,
   redisIntegration,
   requestDataIntegration,
   rewriteFramesIntegration,
