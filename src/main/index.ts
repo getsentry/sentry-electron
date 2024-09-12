@@ -70,6 +70,7 @@ export {
   inboundFiltersIntegration,
   initOpenTelemetry,
   isInitialized,
+  kafkaIntegration,
   koaIntegration,
   lastEventId,
   linkedErrorsIntegration,
