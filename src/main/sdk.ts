@@ -36,6 +36,7 @@ import { sentryMinidumpIntegration } from './integrations/sentry-minidump';
 import { configureIPC } from './ipc';
 import { defaultStackParser } from './stack-parse';
 import { ElectronOfflineTransportOptions, makeElectronOfflineTransport } from './transports/electron-offline-net';
+import { configureUtilityProcessIPC } from './utility-processes';
 
 /** Get the default integrations for the main process SDK. */
 export function getDefaultIntegrations(options: ElectronMainOptions): Integration[] {
@@ -155,6 +156,7 @@ export function init(userOptions: ElectronMainOptions): void {
 
   removeRedundantIntegrations(options);
   configureIPC(options);
+  configureUtilityProcessIPC();
 
   setNodeAsyncContextStrategy();
 

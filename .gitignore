@@ -16,6 +16,7 @@ stats.json
 /renderer
 /main
 /common
+/utility
 /index.*
 /integrations.*
 /ipc.*

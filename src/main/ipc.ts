@@ -1,8 +1,9 @@
 import { captureEvent, getClient, getCurrentScope, metrics } from '@sentry/node';
-import { Attachment, AttachmentItem, Envelope, Event, EventItem, Profile, ScopeData } from '@sentry/types';
-import { forEachEnvelopeItem, logger, parseEnvelope, SentryError } from '@sentry/utils';
+import { Attachment, Event, ScopeData } from '@sentry/types';
+import { logger, parseEnvelope, SentryError } from '@sentry/utils';
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
 
+import { eventFromEnvelope } from '../common/envelope';
 import { IPCChannel, IPCMode, MetricIPCMessage, PROTOCOL_SCHEME, RendererStatus } from '../common/ipc';
 import { createRendererAnrStatusHandler } from './anr';
 import { registerProtocol } from './electron-normalize';
@@ -77,31 +78,6 @@ function handleEvent(options: ElectronMainOptionsInternal, jsonEvent: string, co
   }
 
   captureEventFromRenderer(options, event, [], contents);
-}
-
-function eventFromEnvelope(envelope: Envelope): [Event, Attachment[], Profile | undefined] | undefined {
-  let event: Event | undefined;
-  const attachments: Attachment[] = [];
-  let profile: Profile | undefined;
-
-  forEachEnvelopeItem(envelope, (item, type) => {
-    if (type === 'event' || type === 'transaction' || type === 'feedback') {
-      event = Array.isArray(item) ? (item as EventItem)[1] : undefined;
-    } else if (type === 'attachment') {
-      const [headers, data] = item as AttachmentItem;
-
-      attachments.push({
-        filename: headers.filename,
-        attachmentType: headers.attachment_type,
-        contentType: headers.content_type,
-        data,
-      });
-    } else if (type === 'profile') {
-      profile = item[1] as unknown as Profile;
-    }
-  });
-
-  return event ? [event, attachments, profile] : undefined;
 }
 
 function handleEnvelope(options: ElectronMainOptionsInternal, env: Uint8Array | string, contents?: WebContents): void {

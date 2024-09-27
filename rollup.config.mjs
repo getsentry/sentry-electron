@@ -71,8 +71,12 @@ function bundlePreload(format, input, output) {
 }
 
 export default [
-  transpileFiles('cjs', ['src/index.ts', 'src/main/index.ts', 'src/renderer/index.ts'], '.'),
-  transpileFiles('esm', ['src/index.ts', 'src/main/index.ts', 'src/renderer/index.ts'], './esm'),
+  transpileFiles('cjs', ['src/index.ts', 'src/main/index.ts', 'src/renderer/index.ts', 'src/utility/index.ts'], '.'),
+  transpileFiles(
+    'esm',
+    ['src/index.ts', 'src/main/index.ts', 'src/renderer/index.ts', 'src/utility/index.ts'],
+    './esm',
+  ),
   bundlePreload('cjs', 'src/preload/index.ts', './preload/index.js'),
   bundlePreload('esm', 'src/preload/index.ts', './esm/preload/index.js'),
 ];
