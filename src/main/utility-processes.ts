@@ -25,14 +25,16 @@ export function configureUtilityProcessIPC(): void {
       // Call the underlying function to get the child process
       const child: electron.UtilityProcess = target.apply(thisArg, args);
 
-      const [, , options] = args || {};
-      const childName = options?.serviceName || `pid:${child.pid}`;
+      function getProcessName(): string {
+        const [, , options] = args;
+        return options?.serviceName || `pid:${child.pid}`;
+      }
 
       // We don't send any messages unless we've heard from the child SDK. At that point we know it's ready to receive
       // and will also filter out any messages we send so users don't see them
       child.on('message', (msg: unknown) => {
         if (isMagicMessage(msg)) {
-          log(`SDK started in utility process '${childName}'`);
+          log(`SDK started in utility process '${getProcessName()}'`);
 
           const { port1, port2 } = new electron.MessageChannelMain();
 

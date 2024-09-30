@@ -1,24 +1,21 @@
 import { getIntegrationsToSetup } from '@sentry/core';
 import {
   consoleIntegration,
-  contextLinesIntegration,
   createGetModuleFromFilename,
   functionToStringIntegration,
   getCurrentScope,
   inboundFiltersIntegration,
   initOpenTelemetry,
   linkedErrorsIntegration,
-  localVariablesIntegration,
   nativeNodeFetchIntegration,
   NodeClient,
-  nodeContextIntegration,
   NodeOptions,
   onUncaughtExceptionIntegration,
   onUnhandledRejectionIntegration,
   setNodeAsyncContextStrategy,
 } from '@sentry/node';
 import { Integration, StackParser } from '@sentry/types';
-import { createStackParser, nodeStackLineParser, stackParserFromStackParserOptions } from '@sentry/utils';
+import { createStackParser, logger, nodeStackLineParser, stackParserFromStackParserOptions } from '@sentry/utils';
 
 import { makeUtilityProcessTransport } from './transport';
 
@@ -35,9 +32,6 @@ export function getDefaultIntegrations(): Integration[] {
     nativeNodeFetchIntegration(),
     onUncaughtExceptionIntegration(),
     onUnhandledRejectionIntegration(),
-    contextLinesIntegration(),
-    localVariablesIntegration(),
-    nodeContextIntegration({ cloudResource: false }),
   ];
 
   return integrations;
@@ -63,6 +57,10 @@ export function init(userOptions: NodeOptions = {}): void {
     ...optionsWithDefaults,
     integrations: getIntegrationsToSetup(optionsWithDefaults),
   };
+
+  if (options.debug) {
+    logger.enable();
+  }
 
   setNodeAsyncContextStrategy();
 

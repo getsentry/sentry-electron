@@ -17,12 +17,10 @@ export function makeUtilityProcessTransport(): (options: BaseTransportOptions) =
 
   // Receive the messageport from the main process
   process.parentPort.on('message', (msg) => {
-    // eslint-disable-next-line no-console
-    console.log('process.parentPort.on', JSON.stringify(msg));
-
     if (isMagicMessage(msg.data)) {
       const [port] = msg.ports;
       mainMessagePort = port;
+      mainMessagePort?.start();
     }
   });
 
