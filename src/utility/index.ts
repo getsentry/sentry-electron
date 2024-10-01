@@ -86,6 +86,7 @@ export {
   nestIntegration,
   NodeClient,
   nodeContextIntegration,
+  onUncaughtExceptionIntegration,
   onUnhandledRejectionIntegration,
   parameterize,
   postgresIntegration,
