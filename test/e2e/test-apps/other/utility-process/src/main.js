@@ -7,7 +7,6 @@ init({
   dsn: '__DSN__',
   debug: true,
   autoSessionTracking: false,
-  attachScreenshot: true,
   onFatalError: () => {},
 });
 

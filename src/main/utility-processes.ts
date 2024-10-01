@@ -43,6 +43,7 @@ export function configureUtilityProcessIPC(): void {
               handleEnvelopeFromUtility(msg.data);
             }
           });
+          port2.start();
 
           // Send one side of the message port to the child SDK
           child.postMessage(getMagicMessage(), [port1]);

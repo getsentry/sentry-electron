@@ -15,7 +15,7 @@
     },
     "contexts": {
       "app": {
-        "app_name": "javascript-screenshots",
+        "app_name": "utility-process",
         "app_version": "1.0.0",
         "app_start_time": "{{time}}"
       },
@@ -56,18 +56,18 @@
         "version": "{{version}}"
       }
     },
-    "release": "javascript-screenshots@1.0.0",
+    "release": "utility-process@1.0.0",
     "environment": "development",
     "exception": {
       "values": [
         {
           "type": "Error",
-          "value": "Some renderer error",
+          "value": "Some utility error",
           "stacktrace": {
             "frames": [
               {
                 "colno": 0,
-                "filename": "app:///src/index.html",
+                "filename": "app:///src/utility.js",
                 "function": "{{function}}",
                 "in_app": true,
                 "lineno": 0
@@ -76,29 +76,20 @@
           },
           "mechanism": {
             "handled": false,
-            "type": "instrument"
+            "type": "onuncaughtexception"
           }
         }
       ]
     },
-    "level": "error",
+    "level": "fatal",
     "event_id": "{{id}}",
-    "platform": "javascript",
+    "platform": "node",
     "timestamp": 0,
     "breadcrumbs": [],
-    "request": {
-      "url": "app:///src/index.html"
-    },
     "tags": {
       "event.environment": "javascript",
       "event.origin": "electron",
-      "event.process": "renderer"
+      "event.process": "utility"
     }
-  },
-  "attachments": [
-    {
-      "filename": "screenshot.png",
-      "content_type": "image/png"
-    }
-  ]
+  }
 }

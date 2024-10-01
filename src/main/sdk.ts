@@ -16,7 +16,7 @@ import {
   setNodeAsyncContextStrategy,
 } from '@sentry/node';
 import { Integration, Options } from '@sentry/types';
-import { stackParserFromStackParserOptions } from '@sentry/utils';
+import { logger, stackParserFromStackParserOptions } from '@sentry/utils';
 import { Session, session, WebContents } from 'electron';
 
 import { IPCMode } from '../common/ipc';
@@ -153,6 +153,10 @@ export function init(userOptions: ElectronMainOptions): void {
     ...optionsWithDefaults,
     integrations: getIntegrationsToSetup(optionsWithDefaults),
   };
+
+  if (options.debug) {
+    logger.enable();
+  }
 
   removeRedundantIntegrations(options);
   configureIPC(options);

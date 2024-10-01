@@ -9,5 +9,5 @@ process.parentPort.on('message', () => {
 });
 
 setTimeout(() => {
-  throw new Error('utility fail!');
+  throw new Error('Some utility error');
 }, 1000);
