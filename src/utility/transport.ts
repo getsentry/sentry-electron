@@ -10,9 +10,20 @@ export function makeUtilityProcessTransport(): (options: BaseTransportOptions) =
   let mainMessagePort: Electron.MessagePortMain | undefined;
 
   async function sendEnvelope(envelope: string | Uint8Array): Promise<void> {
-    if (mainMessagePort) {
-      mainMessagePort.postMessage(envelope);
+    let count = 0;
+
+    // mainMessagePort is undefined until the main process sends us the message port
+    while (mainMessagePort === undefined) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      count += 1;
+
+      // After 5 seconds, we give up waiting for the main process to send us the message port
+      if (count >= 50) {
+        throw new Error('Timeout waiting for message port to send event to main process');
+      }
     }
+
+    mainMessagePort.postMessage(envelope);
   }
 
   // Receive the messageport from the main process
