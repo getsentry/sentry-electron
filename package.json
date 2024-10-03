@@ -56,7 +56,7 @@
     "e2e": "xvfb-maybe vitest run --root=./test/e2e --silent=false --disable-console-intercept"
   },
   "dependencies": {
-    "@sentry/browser": "8.31.0",
+    "@sentry/browser": "8.33.0",
     "@sentry/core": "8.31.0",
     "@sentry/node": "8.31.0",
     "@sentry/types": "8.31.0",
