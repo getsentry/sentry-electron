@@ -24,6 +24,10 @@
     "./preload": {
       "require": "./preload/index.js",
       "import": "./esm/preload/index.js"
+    },
+    "./utility": {
+      "require": "./utility/index.js",
+      "import": "./esm/utility/index.js"
     }
   },
   "repository": "https://github.com/getsentry/sentry-electron.git",

@@ -6,5 +6,6 @@
 !/main/**/*
 !/renderer/**/*
 !/common/**/*
+!/utility/**/*
 !/index.*
 !/integrations.*

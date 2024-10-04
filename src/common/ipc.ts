@@ -78,6 +78,18 @@ export interface IPCInterface {
 
 export const RENDERER_ID_HEADER = 'sentry-electron-renderer-id';
 
+const UTILITY_PROCESS_MAGIC_MESSAGE_KEY = '__sentry_message_port_message__';
+
+/** Does the message look like the magic message */
+export function isMagicMessage(msg: unknown): boolean {
+  return !!(msg && typeof msg === 'object' && UTILITY_PROCESS_MAGIC_MESSAGE_KEY in msg);
+}
+
+/** Get the magic message to send to the utility process */
+export function getMagicMessage(): unknown {
+  return { [UTILITY_PROCESS_MAGIC_MESSAGE_KEY]: true };
+}
+
 /**
  * We store the IPC interface on window so it's the same for both regular and isolated contexts
  */

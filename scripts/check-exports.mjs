@@ -1,5 +1,6 @@
 import * as browser from '@sentry/browser';
 import * as renderer from '../esm/renderer/index.js';
+import * as utility from '../esm/utility/index.js';
 
 import * as node from '@sentry/node';
 
@@ -13,6 +14,7 @@ const browserExports = Object.keys(browser);
 const rendererExports = Object.keys(renderer);
 const nodeExports = Object.keys(node);
 const mainExports = Object.keys(main);
+const utilityExports = Object.keys(utility);
 
 const ignoredBrowser = [
   'SDK_VERSION',
@@ -46,16 +48,23 @@ const ignoredNode = [
   'initWithoutDefaultIntegrations',
 ];
 
+const ignoredUtility = [...ignoredNode, 'anrIntegration'];
+
 const missingRenderer = browserExports.filter((key) => !rendererExports.includes(key) && !ignoredBrowser.includes(key));
 const missingMain = nodeExports.filter((key) => !mainExports.includes(key) && !ignoredNode.includes(key));
+const missingUtility = nodeExports.filter((key) => !utilityExports.includes(key) && !ignoredUtility.includes(key));
 
-if (missingRenderer.length || missingMain.length) {
+if (missingRenderer.length || missingMain.length || missingUtility.length) {
   if (missingRenderer.length) {
     console.error('Missing renderer exports:', missingRenderer);
   }
 
   if (missingMain.length) {
     console.error('Missing main exports:', missingMain);
+  }
+
+  if (missingUtility.length) {
+    console.error('Missing utility exports:', missingUtility);
   }
 
   process.exit(1);
