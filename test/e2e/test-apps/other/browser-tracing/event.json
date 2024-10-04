@@ -58,8 +58,7 @@
     },
     "spans": [
       {
-        "description": "connect",
-        "op": "browser",
+        "op": "browser.connect",
         "parent_span_id": "{{id}}",
         "span_id": "{{id}}",
         "start_timestamp": 0,
@@ -67,8 +66,7 @@
         "trace_id": "{{id}}"
       },
       {
-        "description": "cache",
-        "op": "browser",
+        "op": "browser.cache",
         "parent_span_id": "{{id}}",
         "span_id": "{{id}}",
         "start_timestamp": 0,
@@ -76,8 +74,7 @@
         "trace_id": "{{id}}"
       },
       {
-        "description": "DNS",
-        "op": "browser",
+        "op": "browser.DNS",
         "parent_span_id": "{{id}}",
         "span_id": "{{id}}",
         "start_timestamp": 0,
@@ -85,8 +82,7 @@
         "trace_id": "{{id}}"
       },
       {
-        "description": "request",
-        "op": "browser",
+        "op": "browser.request",
         "parent_span_id": "{{id}}",
         "span_id": "{{id}}",
         "start_timestamp": 0,
@@ -94,8 +90,7 @@
         "trace_id": "{{id}}"
       },
       {
-        "description": "response",
-        "op": "browser",
+        "op": "browser.response",
         "parent_span_id": "{{id}}",
         "span_id": "{{id}}",
         "start_timestamp": 0,

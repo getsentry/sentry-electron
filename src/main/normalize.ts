@@ -39,6 +39,14 @@ export function normalizePaths(event: Event, basePath: string): Event {
     event.contexts.feedback.url = normalizeUrlToBase(event.contexts.feedback.url, basePath);
   }
 
+  if (event.spans) {
+    for (const span of event.spans) {
+      if (span.description?.startsWith('file://')) {
+        span.description = normalizeUrlToBase(span.description, basePath);
+      }
+    }
+  }
+
   return event;
 }
 
