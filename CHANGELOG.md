@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 5.6.0
+
+- feat: Update from [v8.31.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.31.0) to
+  [v8.33.1](https://github.com/getsentry/sentry-javascript/releases/tag/8.33.1) of JavaScript SDKs (#994)
+- feat: Support Electron utility process (#991)
+
 ## 5.5.0
 
 - feat: Update from [v8.26.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.26.0) to
