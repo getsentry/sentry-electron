@@ -129,6 +129,7 @@ export {
   startSession,
   startSpan,
   startSpanManual,
+  suppressTracing,
   trpcMiddleware,
   validateOpenTelemetrySetup,
   withActiveSpan,
