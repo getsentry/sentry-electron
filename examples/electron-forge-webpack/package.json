@@ -28,15 +28,15 @@
     }
   },
   "devDependencies": {
-    "@electron-forge/cli": "6.0.0-beta.63",
-    "@electron-forge/plugin-webpack": "6.0.0-beta.63",
-    "@sentry/webpack-plugin": "^2.2.0",
+    "@electron-forge/cli": "^7.5.0",
+    "@electron-forge/plugin-webpack": "^7.5.0",
+    "@sentry/webpack-plugin": "^2.22.6",
     "@vercel/webpack-asset-relocator-loader": "1.6.0",
-    "electron": "23.0.0",
+    "electron": "^33.0.2",
     "node-loader": "^2.0.0"
   },
   "dependencies": {
-    "@sentry/electron": "3.0.0",
+    "@sentry/electron": "5.6.0",
     "electron-squirrel-startup": "^1.0.0"
   }
 }

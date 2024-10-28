@@ -7,10 +7,10 @@
   },
   "dependencies": {
     "electron-squirrel-startup": "^1.0.0",
-    "@sentry/electron": "3.0.0"
+    "@sentry/electron": "5.6.0"
   },
   "devDependencies": {
-    "@electron-forge/cli": "6.0.0-beta.63",
-    "electron": "23.0.0"
+    "@electron-forge/cli": "7.5.0",
+    "electron": "^33.0.2"
   }
 }
