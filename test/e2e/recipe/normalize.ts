@@ -140,6 +140,18 @@ function normalizeEvent(event: Event & ReplayEvent): void {
     event.tags.replayId = '{{replay_id}}';
   }
 
+  if (event?.request?.url) {
+    // Strip Electron Forge arch from url
+    event.request.url = event.request.url.replace(/\.webpack([\\/]).*?[\\/](renderer|main)/, '.webpack$1$2');
+  }
+
+  if (event.debug_meta?.images) {
+    for (const image of event.debug_meta.images) {
+      // Strip Electron Forge arch from url
+      image.code_file = image.code_file?.replace(/\.webpack([\\/]).*?[\\/](renderer|main)/, '.webpack$1$2');
+    }
+  }
+
   if (event.replay_id) {
     event.replay_id = '{{id}}';
   }
@@ -156,14 +168,16 @@ function normalizeEvent(event: Event & ReplayEvent): void {
     event.start_timestamp = 0;
   }
 
-  if (event.exception?.values?.[0].stacktrace?.frames) {
+  if (event.exception?.values?.[0]?.stacktrace?.frames) {
     for (const frame of event.exception?.values?.[0].stacktrace?.frames || []) {
       frame.colno = 0;
       frame.lineno = 0;
       if (frame.function !== 'longWork') {
         frame.function = '{{function}}';
       }
-      frame.filename = frame.filename?.replace(/\.mjs$/, '.js');
+      frame.filename = frame.filename
+        ?.replace(/\.mjs$/, '.js')
+        .replace(/\.webpack([\\/]).*?[\\/](renderer|main)/, '.webpack$1$2');
     }
   }
 

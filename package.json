@@ -78,7 +78,7 @@
     "@types/koa-bodyparser": "^4.3.0",
     "@types/tmp": "^0.2.2",
     "busboy": "^0.3.1",
-    "electron": "25.3.0",
+    "electron": "^25.9.8",
     "electron-latest-versions": "^0.2.0",
     "eslint": "7.32.0",
     "extract-zip": "^2.0.1",

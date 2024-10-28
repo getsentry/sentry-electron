@@ -19,6 +19,7 @@ module.exports = {
     '/common/**',
     '/index.*',
     '/integrations.*',
+    '/utility/**',
     'rollup.config.mjs',
   ],
   overrides: [

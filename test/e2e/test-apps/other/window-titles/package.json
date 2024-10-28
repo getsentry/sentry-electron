@@ -4,6 +4,6 @@
   "main": "src/main.js",
   "homepage": "https://github.com/getsentry/sentry-electron/pull/551",
   "dependencies": {
-    "@sentry/electron": "3.0.0"
+    "@sentry/electron": "5.6.0"
   }
 }
