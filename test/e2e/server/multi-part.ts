@@ -17,7 +17,7 @@ export function parseMultipart(
   ctx: Koa.ParameterizedContext<any, Router.IRouterParamContext<any, any>, any>,
 ): Promise<MultipartResult> {
   return new Promise((resolve) => {
-    const busboy = new Busboy({ headers: ctx.headers });
+    const busboy = Busboy({ headers: ctx.headers });
     const output: MultipartResult = { fields: {}, files: {} };
 
     busboy.on('file', (fieldName, file) => {
@@ -32,7 +32,7 @@ export function parseMultipart(
     busboy.on('field', (fieldName, val) => {
       output.fields[fieldName] = val;
     });
-    busboy.on('finish', function () {
+    busboy.on('close', function () {
       resolve(output);
     });
 
