@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 5.7.0
+
+- feat: Update from
+  [v8.33.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.33.0)
+  to
+  [v8.35.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.35.0)
+  of JavaScript SDKs
+
 ## 5.6.0
 
 - feat: Update from [v8.31.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.31.0) to
