@@ -47,7 +47,6 @@ export function getDefaultIntegrations(options: ElectronMainOptions): Integratio
     electronNetIntegration(),
     electronContextIntegration(),
     childProcessIntegration(),
-    normalizePathsIntegration(),
     onUncaughtExceptionIntegration(),
     preloadInjectionIntegration(),
     additionalContextIntegration(),
@@ -63,6 +62,9 @@ export function getDefaultIntegrations(options: ElectronMainOptions): Integratio
     contextLinesIntegration(),
     localVariablesIntegration(),
     nodeContextIntegration({ cloudResource: false }),
+
+    // We want paths to be normailzed after we've captured context
+    normalizePathsIntegration(),
   ];
 
   if (options.autoSessionTracking !== false) {
