@@ -108,6 +108,7 @@ function handleMetric(metric: MetricIPCMessage): void {
     return;
   }
 
+  // eslint-disable-next-line deprecation/deprecation
   const metricsAggregator = metrics.getMetricsAggregatorForClient(client);
 
   metricsAggregator.add(metric.metricType, metric.name, metric.value, metric.unit, metric.tags, metric.timestamp);

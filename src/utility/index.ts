@@ -78,6 +78,7 @@ export {
   linkedErrorsIntegration,
   localVariablesIntegration,
   lruMemoizerIntegration,
+  // eslint-disable-next-line deprecation/deprecation
   metrics,
   modulesIntegration,
   mongoIntegration,
@@ -93,6 +94,7 @@ export {
   parameterize,
   postgresIntegration,
   prismaIntegration,
+  processThreadBreadcrumbIntegration,
   profiler,
   redisIntegration,
   requestDataIntegration,
