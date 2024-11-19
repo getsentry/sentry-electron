@@ -97,6 +97,7 @@ export {
   spanToBaggageHeader,
   spanToJSON,
   spanToTraceHeader,
+  spotlightBrowserIntegration,
   startBrowserTracingNavigationSpan,
   startBrowserTracingPageLoadSpan,
   startInactiveSpan,
