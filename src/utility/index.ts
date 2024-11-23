@@ -2,6 +2,7 @@ export type {
   Breadcrumb,
   BreadcrumbHint,
   PolymorphicRequest,
+  // eslint-disable-next-line deprecation/deprecation
   Request,
   SdkInfo,
   Event,
@@ -30,6 +31,7 @@ export {
   captureFeedback,
   captureMessage,
   captureSession,
+  childProcessIntegration,
   close,
   connectIntegration,
   consoleIntegration,
@@ -39,6 +41,7 @@ export {
   createTransport,
   cron,
   dataloaderIntegration,
+  // eslint-disable-next-line deprecation/deprecation
   debugIntegration,
   dedupeIntegration,
   DEFAULT_USER_INCLUDES,
@@ -87,6 +90,7 @@ export {
   mysql2Integration,
   mysqlIntegration,
   nativeNodeFetchIntegration,
+  // eslint-disable-next-line deprecation/deprecation
   nestIntegration,
   NodeClient,
   nodeContextIntegration,
@@ -95,6 +99,7 @@ export {
   parameterize,
   postgresIntegration,
   prismaIntegration,
+  // eslint-disable-next-line deprecation/deprecation
   processThreadBreadcrumbIntegration,
   profiler,
   redisIntegration,
@@ -106,6 +111,7 @@ export {
   SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN,
   SEMANTIC_ATTRIBUTE_SENTRY_SAMPLE_RATE,
   SEMANTIC_ATTRIBUTE_SENTRY_SOURCE,
+  // eslint-disable-next-line deprecation/deprecation
   sessionTimingIntegration,
   setContext,
   setCurrentClient,
@@ -121,6 +127,7 @@ export {
   setupFastifyErrorHandler,
   setupHapiErrorHandler,
   setupKoaErrorHandler,
+  // eslint-disable-next-line deprecation/deprecation
   setupNestErrorHandler,
   setUser,
   spanToBaggageHeader,
