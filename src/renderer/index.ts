@@ -1,6 +1,7 @@
 export type {
   Breadcrumb,
   BreadcrumbHint,
+  // eslint-disable-next-line deprecation/deprecation
   Request,
   SdkInfo,
   Event,
@@ -36,6 +37,7 @@ export {
   continueTrace,
   createTransport,
   createUserFeedbackEnvelope,
+  // eslint-disable-next-line deprecation/deprecation
   debugIntegration,
   dedupeIntegration,
   defaultRequestInstrumentationOptions,
@@ -83,6 +85,7 @@ export {
   SEMANTIC_ATTRIBUTE_SENTRY_SAMPLE_RATE,
   SEMANTIC_ATTRIBUTE_SENTRY_SOURCE,
   sendFeedback,
+  // eslint-disable-next-line deprecation/deprecation
   sessionTimingIntegration,
   setContext,
   setCurrentClient,
