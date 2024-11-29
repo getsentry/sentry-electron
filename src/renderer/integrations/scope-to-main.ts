@@ -1,5 +1,4 @@
-import { defineIntegration } from '@sentry/core';
-import { normalize } from '@sentry/utils';
+import { defineIntegration, normalize } from '@sentry/core';
 
 import { addScopeListener } from '../../common/scope';
 import { getIPC } from '../ipc';

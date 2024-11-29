@@ -1,4 +1,4 @@
-import { parseSemver } from '@sentry/utils';
+import { parseSemver } from '@sentry/core';
 import { ChildProcess, spawn, spawnSync } from 'child_process';
 import { rmSync } from 'fs';
 import { homedir } from 'os';

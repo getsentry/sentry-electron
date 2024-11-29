@@ -60,18 +60,17 @@
     "e2e": "xvfb-maybe vitest run --root=./test/e2e --silent=false --disable-console-intercept"
   },
   "dependencies": {
-    "@sentry/browser": "8.40.0",
-    "@sentry/core": "8.40.0",
-    "@sentry/node": "8.40.0",
-    "@sentry/types": "8.40.0",
-    "@sentry/utils": "8.40.0",
+    "@sentry/browser": "8.41.0",
+    "@sentry/core": "8.41.0",
+    "@sentry/node": "8.41.0",
+    "@sentry/types": "8.41.0",
     "deepmerge": "4.3.1"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^11.1.6",
-    "@sentry-internal/eslint-config-sdk": "8.40.0",
-    "@sentry-internal/typescript": "8.40.0",
+    "@sentry-internal/eslint-config-sdk": "8.41.0",
+    "@sentry-internal/typescript": "8.41.0",
     "@types/busboy": "^1.5.4",
     "@types/form-data": "^2.5.0",
     "@types/koa": "^2.0.52",

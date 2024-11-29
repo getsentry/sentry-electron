@@ -1,5 +1,5 @@
+import { forEachEnvelopeItem } from '@sentry/core';
 import { Attachment, AttachmentItem, Envelope, Event, EventItem, Profile } from '@sentry/types';
-import { forEachEnvelopeItem } from '@sentry/utils';
 
 /** Pulls an event and additional envelope items out of an envelope. Returns undefined if there was no event */
 export function eventFromEnvelope(envelope: Envelope): [Event, Attachment[], Profile | undefined] | undefined {

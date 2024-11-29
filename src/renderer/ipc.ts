@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 /* eslint-disable no-console */
-import { logger, uuid4 } from '@sentry/utils';
+import { logger, uuid4 } from '@sentry/core';
 
 import {
   IPCChannel,

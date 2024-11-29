@@ -1,4 +1,4 @@
-import { normalizeUrlToBase } from '@sentry/utils';
+import { normalizeUrlToBase } from '@sentry/core';
 import { app } from 'electron';
 
 interface Renderer {

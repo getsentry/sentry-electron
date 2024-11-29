@@ -1,26 +1,24 @@
 import {
   addBreadcrumb,
   defineIntegration,
+  dynamicSamplingContextToSentryBaggageHeader,
+  fill,
+  generateSentryTraceHeader,
   getClient,
   getCurrentScope,
   getDynamicSamplingContextFromClient,
   getDynamicSamplingContextFromSpan,
   getIsolationScope,
+  logger,
+  LRUMap,
   SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN,
   SentryNonRecordingSpan,
   setHttpStatus,
   spanToTraceHeader,
   startInactiveSpan,
+  stringMatchesSomePattern,
 } from '@sentry/core';
 import { DynamicSamplingContext, TracePropagationTargets } from '@sentry/types';
-import {
-  dynamicSamplingContextToSentryBaggageHeader,
-  fill,
-  generateSentryTraceHeader,
-  logger,
-  LRUMap,
-  stringMatchesSomePattern,
-} from '@sentry/utils';
 import { ClientRequest, ClientRequestConstructorOptions, IncomingMessage, net as electronNet } from 'electron';
 import * as urlModule from 'url';
 

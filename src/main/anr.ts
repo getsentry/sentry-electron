@@ -1,6 +1,6 @@
+import { callFrameToStackFrame, logger, stripSentryFramesAndReverse, watchdogTimer } from '@sentry/core';
 import { captureEvent, createGetModuleFromFilename, getClient, StackFrame } from '@sentry/node';
 import { Event } from '@sentry/types';
-import { callFrameToStackFrame, logger, stripSentryFramesAndReverse, watchdogTimer } from '@sentry/utils';
 import { app, WebContents } from 'electron';
 
 import { RendererStatus } from '../common/ipc';

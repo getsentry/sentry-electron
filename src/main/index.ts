@@ -22,6 +22,7 @@ export {
   addEventProcessor,
   addIntegration,
   addOpenTelemetryInstrumentation,
+  // eslint-disable-next-line deprecation/deprecation
   addRequestDataToEvent,
   amqplibIntegration,
   captureCheckIn,
@@ -47,6 +48,7 @@ export {
   endSession,
   expressErrorHandler,
   expressIntegration,
+  // eslint-disable-next-line deprecation/deprecation
   extractRequestData,
   extraErrorDataIntegration,
   fastifyIntegration,
