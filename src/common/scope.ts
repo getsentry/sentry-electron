@@ -1,4 +1,4 @@
-import { getCurrentScope, getGlobalScope,getIsolationScope, mergeScopeData } from '@sentry/core';
+import { getCurrentScope, getGlobalScope, getIsolationScope, mergeScopeData } from '@sentry/core';
 import { Scope, ScopeData } from '@sentry/types';
 
 /** Gets the merged scope data */
