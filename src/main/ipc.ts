@@ -1,6 +1,5 @@
-import { logger, parseEnvelope, SentryError } from '@sentry/core';
+import { Attachment, Event, logger, parseEnvelope, ScopeData, SentryError } from '@sentry/core';
 import { captureEvent, getClient, getCurrentScope, metrics } from '@sentry/node';
-import { Attachment, Event, ScopeData } from '@sentry/types';
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
 
 import { eventFromEnvelope } from '../common/envelope';

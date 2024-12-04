@@ -1,5 +1,4 @@
-import { makeOfflineTransport, OfflineTransportOptions } from '@sentry/core';
-import { BaseTransportOptions, Envelope, Transport } from '@sentry/types';
+import { BaseTransportOptions, Envelope, makeOfflineTransport, OfflineTransportOptions, Transport } from '@sentry/core';
 
 import { ElectronNetTransportOptions, makeElectronTransport } from './electron-net';
 import { createOfflineStore, OfflineStoreOptions } from './offline-store';

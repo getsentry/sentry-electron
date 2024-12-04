@@ -1,6 +1,5 @@
-import { addBreadcrumb, captureMessage, defineIntegration } from '@sentry/core';
+import { addBreadcrumb, captureMessage, defineIntegration, SeverityLevel } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
-import { SeverityLevel } from '@sentry/types';
 import { app } from 'electron';
 
 import { EXIT_REASONS, ExitReason } from '../electron-normalize';

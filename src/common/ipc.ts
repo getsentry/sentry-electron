@@ -1,4 +1,4 @@
-import { MeasurementUnit, Primitive } from '@sentry/types';
+import { MeasurementUnit, Primitive } from '@sentry/core';
 
 /** Ways to communicate between the renderer and main process  */
 export enum IPCMode {

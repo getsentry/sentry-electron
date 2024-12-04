@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
+import { Event, EventHint, SdkInfo } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
-import { Event, EventHint, SdkInfo } from '@sentry/types';
 import { app } from 'electron';
 
 import { SDK_VERSION } from './version';

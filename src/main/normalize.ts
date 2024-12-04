@@ -1,11 +1,14 @@
 import {
   addItemToEnvelope,
   createEnvelope,
+  Envelope,
+  Event,
   forEachEnvelopeItem,
   getCurrentScope,
   normalizeUrlToBase,
+  Profile,
+  ReplayEvent,
 } from '@sentry/core';
-import { Envelope, Event, Profile, ReplayEvent } from '@sentry/types';
 
 /**
  * Normalizes all URLs in an event. See {@link normalizeUrl} for more

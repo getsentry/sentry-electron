@@ -15,12 +15,13 @@ export type {
   Thread,
   User,
   Span,
-} from '@sentry/types';
+} from '@sentry/core';
 
 export {
   addBreadcrumb,
   addEventProcessor,
   addIntegration,
+  // eslint-disable-next-line deprecation/deprecation
   addOpenTelemetryInstrumentation,
   // eslint-disable-next-line deprecation/deprecation
   addRequestDataToEvent,

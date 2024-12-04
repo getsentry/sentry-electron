@@ -1,7 +1,13 @@
 import '../../scripts/electron-shim.mjs';
 
-import { createEventEnvelope, createTransport, OfflineTransportOptions } from '@sentry/core';
-import { Envelope, InternalBaseTransportOptions, TransportMakeRequestResponse } from '@sentry/types';
+import {
+  createEventEnvelope,
+  createTransport,
+  Envelope,
+  InternalBaseTransportOptions,
+  OfflineTransportOptions,
+  TransportMakeRequestResponse,
+} from '@sentry/core';
 import { describe, expect, test } from 'vitest';
 
 import { ElectronOfflineTransportOptions } from '../../src/main/transports/electron-offline-net';

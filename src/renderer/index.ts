@@ -13,7 +13,7 @@ export type {
   Thread,
   User,
   Session,
-} from '@sentry/types';
+} from '@sentry/core';
 
 export {
   addBreadcrumb,

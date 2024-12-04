@@ -1,6 +1,14 @@
-import { applyScopeDataToEvent, captureEvent, defineIntegration, logger, Scope, SentryError } from '@sentry/core';
+import {
+  applyScopeDataToEvent,
+  captureEvent,
+  defineIntegration,
+  Event,
+  logger,
+  Scope,
+  ScopeData,
+  SentryError,
+} from '@sentry/core';
 import { NodeClient } from '@sentry/node';
-import { Event, ScopeData } from '@sentry/types';
 import { app, crashReporter } from 'electron';
 
 import { addScopeListener, getScopeData } from '../../../common/scope';

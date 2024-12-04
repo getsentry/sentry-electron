@@ -1,5 +1,10 @@
-import { createTransport } from '@sentry/core';
-import { BaseTransportOptions, Transport, TransportMakeRequestResponse, TransportRequest } from '@sentry/types';
+import {
+  BaseTransportOptions,
+  createTransport,
+  Transport,
+  TransportMakeRequestResponse,
+  TransportRequest,
+} from '@sentry/core';
 
 import { getIPC } from './ipc';
 

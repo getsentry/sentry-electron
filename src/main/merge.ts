@@ -1,4 +1,4 @@
-import { Event } from '@sentry/types';
+import { Event } from '@sentry/core';
 import deepMerge from 'deepmerge';
 
 /** Removes private properties from event before merging */
