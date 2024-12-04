@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 5.8.0
+
+- feat: Update from
+  [v8.35.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.35.0)
+  to
+  [v8.42.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.42.0)
+  of JavaScript SDKs
+- fix: Sync global scope to main process (#1024)
+- fix: contextLinesIntegration should come before path normalization (#1008)
+
 ## 5.7.0
 
 - feat: Update from
