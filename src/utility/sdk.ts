@@ -1,4 +1,10 @@
-import { getIntegrationsToSetup } from '@sentry/core';
+import {
+  createStackParser,
+  getIntegrationsToSetup,
+  logger,
+  nodeStackLineParser,
+  stackParserFromStackParserOptions,
+} from '@sentry/core';
 import {
   consoleIntegration,
   createGetModuleFromFilename,
@@ -15,7 +21,6 @@ import {
   setNodeAsyncContextStrategy,
 } from '@sentry/node';
 import { Integration, StackParser } from '@sentry/types';
-import { createStackParser, logger, nodeStackLineParser, stackParserFromStackParserOptions } from '@sentry/utils';
 
 import { makeUtilityProcessTransport } from './transport';
 

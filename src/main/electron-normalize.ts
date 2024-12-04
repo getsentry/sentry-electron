@@ -1,4 +1,4 @@
-import { parseSemver } from '@sentry/utils';
+import { parseSemver } from '@sentry/core';
 import { app } from 'electron';
 import { join } from 'path';
 

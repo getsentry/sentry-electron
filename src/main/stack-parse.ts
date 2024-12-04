@@ -1,6 +1,6 @@
+import { createStackParser, nodeStackLineParser } from '@sentry/core';
 import { createGetModuleFromFilename } from '@sentry/node';
 import { StackParser } from '@sentry/types';
-import { createStackParser, nodeStackLineParser } from '@sentry/utils';
 import { app } from 'electron';
 
 // node.js stack parser but filename normalized before parsing the module

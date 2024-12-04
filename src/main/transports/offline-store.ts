@@ -1,6 +1,5 @@
-import { OfflineStore } from '@sentry/core';
+import { logger, OfflineStore, parseEnvelope, serializeEnvelope, uuid4 } from '@sentry/core';
 import { Envelope } from '@sentry/types';
-import { logger, parseEnvelope, serializeEnvelope, uuid4 } from '@sentry/utils';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 

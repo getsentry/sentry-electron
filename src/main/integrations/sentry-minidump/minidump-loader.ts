@@ -1,5 +1,5 @@
+import { basename, logger } from '@sentry/core';
 import { Attachment } from '@sentry/types';
-import { basename, logger } from '@sentry/utils';
 import { app } from 'electron';
 import { promises as fs } from 'fs';
 import { join } from 'path';

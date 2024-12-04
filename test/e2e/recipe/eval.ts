@@ -1,4 +1,4 @@
-import { parseSemver } from '@sentry/utils';
+import { parseSemver } from '@sentry/core';
 import { Context, createContext, runInContext } from 'vm';
 
 import { createLogger } from '../utils';

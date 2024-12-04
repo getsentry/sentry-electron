@@ -1,5 +1,5 @@
+import { parseSemver } from '@sentry/core';
 import { Event } from '@sentry/types';
-import { parseSemver } from '@sentry/utils';
 import { spawnSync } from 'child_process';
 import { mkdirSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';

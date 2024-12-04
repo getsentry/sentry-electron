@@ -1,5 +1,4 @@
-import { defineIntegration } from '@sentry/core';
-import { logger } from '@sentry/utils';
+import { defineIntegration, logger } from '@sentry/core';
 import { app } from 'electron';
 import { existsSync } from 'fs';
 import { isAbsolute, resolve } from 'path';

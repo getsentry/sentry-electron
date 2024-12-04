@@ -1,6 +1,6 @@
+import { logger, parseEnvelope } from '@sentry/core';
 import { captureEvent, getClient } from '@sentry/node';
 import { Attachment, Event } from '@sentry/types';
-import { logger, parseEnvelope } from '@sentry/utils';
 import * as electron from 'electron';
 
 import { eventFromEnvelope } from '../common/envelope';

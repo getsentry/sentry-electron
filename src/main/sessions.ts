@@ -3,13 +3,13 @@ import {
   endSession as endSessionCore,
   getClient,
   getCurrentScope,
+  logger,
   makeSession,
   startSession as startSessionCore,
   updateSession,
 } from '@sentry/core';
 import { flush, NodeClient } from '@sentry/node';
 import { SerializedSession, Session, SessionContext, SessionStatus } from '@sentry/types';
-import { logger } from '@sentry/utils';
 import { app } from 'electron';
 
 import { getSentryCachePath } from './electron-normalize';

@@ -1,4 +1,4 @@
-import { logger } from '@sentry/utils';
+import { logger } from '@sentry/core';
 import { promises as fs } from 'fs';
 import { dirname, join } from 'path';
 

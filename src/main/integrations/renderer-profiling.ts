@@ -1,6 +1,5 @@
-import { defineIntegration } from '@sentry/core';
+import { defineIntegration, forEachEnvelopeItem, LRUMap } from '@sentry/core';
 import { Event, Profile } from '@sentry/types';
-import { forEachEnvelopeItem, LRUMap } from '@sentry/utils';
 import { app } from 'electron';
 
 import { getDefaultEnvironment, getDefaultReleaseName } from '../context';
