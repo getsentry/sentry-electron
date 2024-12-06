@@ -1,7 +1,6 @@
 import '../../scripts/electron-shim.mjs';
 
-import { createEventEnvelope } from '@sentry/core';
-import { Envelope, Event } from '@sentry/types';
+import { createEventEnvelope, Envelope, Event } from '@sentry/core';
 import * as tmp from 'tmp';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 

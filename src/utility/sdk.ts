@@ -1,8 +1,10 @@
 import {
   createStackParser,
   getIntegrationsToSetup,
+  Integration,
   logger,
   nodeStackLineParser,
+  StackParser,
   stackParserFromStackParserOptions,
 } from '@sentry/core';
 import {
@@ -20,7 +22,6 @@ import {
   onUnhandledRejectionIntegration,
   setNodeAsyncContextStrategy,
 } from '@sentry/node';
-import { Integration, StackParser } from '@sentry/types';
 
 import { makeUtilityProcessTransport } from './transport';
 

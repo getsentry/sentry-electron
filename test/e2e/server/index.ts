@@ -1,5 +1,12 @@
-import { dropUndefinedKeys, forEachEnvelopeItem, parseEnvelope } from '@sentry/core';
-import { Event, Profile, ReplayEvent, Session } from '@sentry/types';
+import {
+  dropUndefinedKeys,
+  Event,
+  forEachEnvelopeItem,
+  parseEnvelope,
+  Profile,
+  ReplayEvent,
+  Session,
+} from '@sentry/core';
 import { Server } from 'http';
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';

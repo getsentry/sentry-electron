@@ -1,6 +1,5 @@
-import { addBreadcrumb, defineIntegration } from '@sentry/core';
+import { addBreadcrumb, Breadcrumb, defineIntegration } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
-import { Breadcrumb } from '@sentry/types';
 import { app, autoUpdater, BrowserWindow, powerMonitor, screen, WebContents } from 'electron';
 
 import { getRendererProperties, trackRendererProperties } from '../renderers';

@@ -1,6 +1,5 @@
-import { defineIntegration } from '@sentry/core';
+import { defineIntegration, Integration } from '@sentry/core';
 import { anrIntegration as nodeAnrIntegration } from '@sentry/node';
-import { Integration } from '@sentry/types';
 import { app, powerMonitor } from 'electron';
 
 import { ELECTRON_MAJOR_VERSION } from '../electron-normalize';

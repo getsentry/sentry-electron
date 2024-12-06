@@ -1,4 +1,4 @@
-import { getIntegrationsToSetup, logger, stackParserFromStackParserOptions } from '@sentry/core';
+import { getIntegrationsToSetup, Integration, logger, Options, stackParserFromStackParserOptions } from '@sentry/core';
 import {
   consoleIntegration,
   contextLinesIntegration,
@@ -15,7 +15,6 @@ import {
   onUnhandledRejectionIntegration,
   setNodeAsyncContextStrategy,
 } from '@sentry/node';
-import { Integration, Options } from '@sentry/types';
 import { Session, session, WebContents } from 'electron';
 
 import { IPCMode } from '../common/ipc';

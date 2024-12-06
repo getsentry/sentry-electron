@@ -1,6 +1,5 @@
 import type { MetricData } from '@sentry/core';
-import { metrics as metricsCore } from '@sentry/core';
-import { DurationUnit, MeasurementUnit, MetricsAggregator, Primitive } from '@sentry/types';
+import { DurationUnit, MeasurementUnit, metrics as metricsCore, MetricsAggregator, Primitive } from '@sentry/core';
 
 import { IPCInterface } from '../common/ipc';
 import { getIPC } from './ipc';

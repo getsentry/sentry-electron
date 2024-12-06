@@ -5,11 +5,14 @@ import {
   getCurrentScope,
   logger,
   makeSession,
+  SerializedSession,
+  Session,
+  SessionContext,
+  SessionStatus,
   startSession as startSessionCore,
   updateSession,
 } from '@sentry/core';
 import { flush, NodeClient } from '@sentry/node';
-import { SerializedSession, Session, SessionContext, SessionStatus } from '@sentry/types';
 import { app } from 'electron';
 
 import { getSentryCachePath } from './electron-normalize';

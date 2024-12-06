@@ -1,11 +1,12 @@
-import { createTransport, dropUndefinedKeys } from '@sentry/core';
 import {
   BaseTransportOptions,
+  createTransport,
+  dropUndefinedKeys,
   Transport,
   TransportMakeRequestResponse,
   TransportRequest,
   TransportRequestExecutor,
-} from '@sentry/types';
+} from '@sentry/core';
 import { app, net } from 'electron';
 import { Readable, Writable } from 'stream';
 import { URL } from 'url';

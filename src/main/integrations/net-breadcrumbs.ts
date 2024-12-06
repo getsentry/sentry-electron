@@ -1,6 +1,7 @@
 import {
   addBreadcrumb,
   defineIntegration,
+  DynamicSamplingContext,
   dynamicSamplingContextToSentryBaggageHeader,
   fill,
   generateSentryTraceHeader,
@@ -17,8 +18,8 @@ import {
   spanToTraceHeader,
   startInactiveSpan,
   stringMatchesSomePattern,
+  TracePropagationTargets,
 } from '@sentry/core';
-import { DynamicSamplingContext, TracePropagationTargets } from '@sentry/types';
 import { ClientRequest, ClientRequestConstructorOptions, IncomingMessage, net as electronNet } from 'electron';
 import * as urlModule from 'url';
 
@@ -180,6 +181,7 @@ function createWrappedRequestFactory(
       span.setAttribute(SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN, 'auto.http.electron.net');
 
       if (shouldAttachTraceData(method, url)) {
+        // eslint-disable-next-line deprecation/deprecation
         const { traceId, spanId, sampled, dsc } = {
           ...getIsolationScope().getPropagationContext(),
           ...getCurrentScope().getPropagationContext(),

@@ -1,5 +1,4 @@
-import { defineIntegration } from '@sentry/core';
-import { DeviceContext } from '@sentry/types';
+import { defineIntegration, DeviceContext } from '@sentry/core';
 import { app, screen as electronScreen } from 'electron';
 
 import { mergeEvents } from '../merge';

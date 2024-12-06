@@ -1,4 +1,4 @@
-import { Event, Session } from '@sentry/types';
+import { Event, Session } from '@sentry/core';
 import { readdirSync, readFileSync } from 'fs';
 import { dirname, join, sep } from 'path';
 import YAML from 'yaml';
