@@ -114,6 +114,12 @@ export {
   withIsolationScope,
   withScope,
   zodErrorsIntegration,
+  OpenFeatureIntegrationHook,
+  browserSessionIntegration,
+  buildLaunchDarklyFlagUsedHandler,
+  featureFlagsIntegration,
+  launchDarklyIntegration,
+  openFeatureIntegration,
 } from '@sentry/browser';
 
 export type { BrowserOptions, ReportDialogOptions } from '@sentry/browser';

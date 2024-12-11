@@ -46,6 +46,7 @@ export {
   debugIntegration,
   dedupeIntegration,
   DEFAULT_USER_INCLUDES,
+  disableAnrDetectionForCallback,
   endSession,
   expressErrorHandler,
   expressIntegration,
