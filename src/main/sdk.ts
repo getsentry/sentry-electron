@@ -65,6 +65,7 @@ export function getDefaultIntegrations(options: ElectronMainOptions): Integratio
     normalizePathsIntegration(),
   ];
 
+  // eslint-disable-next-line deprecation/deprecation
   if (options.autoSessionTracking !== false) {
     integrations.push(mainProcessSessionIntegration());
   }
