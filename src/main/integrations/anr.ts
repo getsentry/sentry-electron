@@ -29,7 +29,15 @@ export const anrIntegration: (options: Options) => Integration = defineIntegrati
     integration.stopWorker();
   });
 
+  powerMonitor.on('lock-screen', () => {
+    integration.stopWorker();
+  });
+
   powerMonitor.on('resume', () => {
+    integration.startWorker();
+  });
+
+  powerMonitor.on('unlock-screen', () => {
     integration.startWorker();
   });
 
