@@ -146,6 +146,7 @@ export {
   suppressTracing,
   tediousIntegration,
   trpcMiddleware,
+  updateSpanName,
   validateOpenTelemetrySetup,
   withActiveSpan,
   withIsolationScope,
