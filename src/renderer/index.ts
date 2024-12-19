@@ -110,6 +110,7 @@ export {
   startSpanManual,
   suppressTracing,
   thirdPartyErrorFilterIntegration,
+  updateSpanName,
   withActiveSpan,
   withIsolationScope,
   withScope,
