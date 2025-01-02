@@ -33,11 +33,11 @@ interface ElectronRendererOptions extends Omit<BrowserOptions, 'dsn' | 'environm
    */
   anrDetection?: Partial<RendererProcessAnrOptions> | boolean;
 
-  /** @deprecated dsn should only be passed in the main process */
+  /** @deprecated `dsn` should only be passed to the main process `Sentry.init` call */
   dsn?: string;
-  /** @deprecated release should only be passed in the main process */
+  /** @deprecated `release` should only be passed to the main process `Sentry.init` call */
   release?: string;
-  /** @deprecated environment should only be passed in the main process */
+  /** @deprecated `environment` should only be passed to the main process `Sentry.init` call */
   environment?: string;
 }
 
