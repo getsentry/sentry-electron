@@ -17,7 +17,7 @@ export function getDefaultIntegrations(options: ElectronRendererOptions): Integr
   return [...getDefaultBrowserIntegrations(options), scopeToMainIntegration()];
 }
 
-interface ElectronRendererOptions extends BrowserOptions {
+interface ElectronRendererOptions extends Omit<BrowserOptions, 'dsn' | 'environment' | 'release'> {
   /**
    * Enables ANR detection in this renderer process.
    *
@@ -32,6 +32,13 @@ interface ElectronRendererOptions extends BrowserOptions {
    * Defaults to 'false'.
    */
   anrDetection?: Partial<RendererProcessAnrOptions> | boolean;
+
+  /** @deprecated `dsn` should only be passed to the main process `Sentry.init` call */
+  dsn?: string;
+  /** @deprecated `release` should only be passed to the main process `Sentry.init` call */
+  release?: string;
+  /** @deprecated `environment` should only be passed to the main process `Sentry.init` call */
+  environment?: string;
 }
 
 /**
@@ -74,8 +81,10 @@ If init has been called in the preload and contextIsolation is disabled, is not 
     options.stackParser = electronRendererStackParser;
   }
 
+  // eslint-disable-next-line deprecation/deprecation
   if (options.dsn === undefined) {
     // Events are sent via the main process but browser SDK wont start without dsn
+    // eslint-disable-next-line deprecation/deprecation
     options.dsn = 'https://12345@dummy.dsn/12345';
   }
 
