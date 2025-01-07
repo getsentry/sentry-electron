@@ -80,6 +80,15 @@
       "event.environment": "javascript",
       "event.origin": "electron",
       "event.process": "browser"
+    },
+    "debug_meta": {
+      "images": [
+        {
+          "type": "sourcemap",
+          "code_file": "app:///src/main.mjs",
+          "debug_id": "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaa"
+        }
+      ]
     }
   }
 }
