@@ -74,13 +74,6 @@
         }
       ]
     },
-    "level": "error",
-    "platform": "node",
-    "tags": {
-      "event.environment": "javascript",
-      "event.origin": "electron",
-      "event.process": "browser"
-    },
     "debug_meta": {
       "images": [
         {
@@ -89,6 +82,13 @@
           "debug_id": "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaa"
         }
       ]
+    },
+    "level": "error",
+    "platform": "node",
+    "tags": {
+      "event.environment": "javascript",
+      "event.origin": "electron",
+      "event.process": "browser"
     }
   }
 }
