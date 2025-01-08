@@ -80,7 +80,10 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
     scopeChanged(getScopeData());
   }
 
-  async function sendNativeCrashes(client: NodeClient, eventIn: Event): Promise<boolean> {
+  async function sendNativeCrashes(
+    client: NodeClient,
+    getEvent: (minidumpProcess: string | undefined) => Event,
+  ): Promise<boolean> {
     // Whenever we are called, assume that the crashes we are going to load down
     // below have occurred recently. This means, we can use the same event data
     // for all minidumps that we load now. There are two conditions:
@@ -93,26 +96,6 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
     //     about it. Just use the breadcrumbs and context information we have
     //     right now and hope that the delay was not too long.
 
-    const event = eventIn;
-
-    // If this is a native main process crash, we need to apply the scope and context from the previous run
-    if (event.tags?.['event.process'] === 'browser') {
-      const previousRun = await scopeLastRun;
-      if (previousRun) {
-        if (previousRun.scope) {
-          applyScopeDataToEvent(event, previousRun.scope);
-        }
-
-        event.release = previousRun.event?.release || event.release;
-        event.environment = previousRun.event?.environment || event.environment;
-        event.contexts = previousRun.event?.contexts || event.contexts;
-      }
-    }
-
-    if (!event) {
-      return false;
-    }
-
     if (minidumpsRemaining <= 0) {
       logger.log('Not sending minidumps because the limit has been reached');
     }
@@ -121,8 +104,29 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
     const deleteAll = client.getOptions().enabled === false || minidumpsRemaining <= 0;
 
     let minidumpFound = false;
-    await minidumpLoader?.(deleteAll, (attachment) => {
+
+    await minidumpLoader?.(deleteAll, async (minidumpProcess, attachment) => {
       minidumpFound = true;
+
+      const event = getEvent(minidumpProcess);
+
+      // If this is a native main process crash, we need to apply the scope and context from the previous run
+      if (event.tags?.['event.process'] === 'browser') {
+        const previousRun = await scopeLastRun;
+        if (previousRun) {
+          if (previousRun.scope) {
+            applyScopeDataToEvent(event, previousRun.scope);
+          }
+
+          event.release = previousRun.event?.release || event.release;
+          event.environment = previousRun.event?.environment || event.environment;
+          event.contexts = previousRun.event?.contexts || event.contexts;
+        }
+      }
+
+      if (!event) {
+        return;
+      }
 
       if (minidumpsRemaining > 0) {
         minidumpsRemaining -= 1;
@@ -140,25 +144,29 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
     details: Partial<Electron.RenderProcessGoneDetails>,
   ): Promise<void> {
     const { getRendererName } = options;
-    const crashedProcess = getRendererName?.(contents) || 'renderer';
 
-    logger.log(`'${crashedProcess}' process '${details.reason}'`);
+    const found = await sendNativeCrashes(client, (minidumpProcess) => {
+      // We only call 'getRendererName' if this was in fact a renderer crash
+      const crashedProcess = (minidumpProcess === 'renderer' ? getRendererName?.(contents) : minidumpProcess) || 'renderer';
 
-    const found = await sendNativeCrashes(client, {
-      contexts: {
-        electron: {
-          crashed_url: getRendererProperties(contents.id)?.url || 'unknown',
-          details,
+      logger.log(`'${crashedProcess}' process '${details.reason}'`);
+
+      return {
+        contexts: {
+          electron: {
+            crashed_url: getRendererProperties(contents.id)?.url || 'unknown',
+            details,
+          },
         },
-      },
-      level: 'fatal',
-      // The default is javascript
-      platform: 'native',
-      tags: {
-        'event.environment': 'native',
-        'event.process': crashedProcess,
-        'exit.reason': details.reason,
-      },
+        level: 'fatal',
+        // The default is javascript
+        platform: 'native',
+        tags: {
+          'event.environment': 'native',
+          'event.process': crashedProcess,
+          'exit.reason': details.reason,
+        },
+      };
     });
 
     if (found) {
@@ -173,7 +181,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
   ): Promise<void> {
     logger.log(`${details.type} process has ${details.reason}`);
 
-    const found = await sendNativeCrashes(client, {
+    const found = await sendNativeCrashes(client, (minidumpProcess) => ({
       contexts: {
         electron: { details },
       },
@@ -182,11 +190,11 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
       platform: 'native',
       tags: {
         'event.environment': 'native',
-        'event.process': details.type,
+        'event.process': minidumpProcess || details.type,
         'exit.reason': details.reason,
         event_type: 'native',
       },
-    });
+    }));
 
     if (found) {
       sessionCrashed();
@@ -234,14 +242,14 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
 
       // Start to submit recent minidump crashes. This will load breadcrumbs and
       // context information that was cached on disk in the previous app run, prior to the crash.
-      sendNativeCrashes(client, {
+      sendNativeCrashes(client, (minidumpProcess) => ({
         level: 'fatal',
         platform: 'native',
         tags: {
           'event.environment': 'native',
-          'event.process': 'browser',
+          'event.process': minidumpProcess || 'browser',
         },
-      })
+      }))
         .then((minidumpsFound) =>
           // Check for previous uncompleted session. If a previous session exists
           // and no minidumps were found, its likely an abnormal exit
