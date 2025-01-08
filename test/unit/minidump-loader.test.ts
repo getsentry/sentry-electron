@@ -36,7 +36,7 @@ describe('createMinidumpLoader', () => {
 
       const loader = createMinidumpLoader(() => Promise.resolve([dumpPath]));
 
-      void loader(false, (attachment) => {
+      void loader(false, (_, attachment) => {
         expect(attachment).to.eql({
           data: VALID_LOOKING_MINIDUMP,
           filename: name,
@@ -151,7 +151,7 @@ describe('createMinidumpLoader', () => {
 
       const loader = createMinidumpLoader(() => Promise.resolve([missingPath, dumpPath]));
 
-      void loader(false, (attachment) => {
+      void loader(false, (_, attachment) => {
         expect(attachment.filename).to.eql(name);
 
         setTimeout(() => {
