@@ -3,6 +3,8 @@ const crypto = require('crypto');
 const { app } = require('electron');
 const { init, anrIntegration } = require('@sentry/electron/main');
 
+global._sentryDebugIds = { [new Error().stack]: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaa' };
+
 init({
   dsn: '__DSN__',
   debug: true,
