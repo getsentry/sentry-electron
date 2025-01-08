@@ -74,6 +74,15 @@
         }
       ]
     },
+    "debug_meta": {
+      "images": [
+        {
+          "type": "sourcemap",
+          "code_file": "app:///src/main.mjs",
+          "debug_id": "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaa"
+        }
+      ]
+    },
     "level": "error",
     "platform": "node",
     "tags": {
