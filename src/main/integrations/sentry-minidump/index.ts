@@ -40,7 +40,7 @@ interface Options {
    *
    * default: None
    */
-  ignoredProcesses?: Array<'browser' | 'renderer' | 'utility' | 'unknown' | string>;
+  ignoredProcesses?: Array<'browser' | 'renderer' | 'utility' | 'GPU' | 'node' | 'unknown' | string>;
 }
 
 /**
