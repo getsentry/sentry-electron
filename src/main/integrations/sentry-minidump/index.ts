@@ -148,7 +148,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
     const found = await sendNativeCrashes(client, (minidumpProcess) => {
       // We only call 'getRendererName' if this was in fact a renderer crash
       const crashedProcess =
-        (minidumpProcess === 'renderer' ? getRendererName?.(contents) : minidumpProcess) || 'renderer';
+        (minidumpProcess === 'renderer' ? getRendererName?.(contents) : minidumpProcess) || 'unknown';
 
       logger.log(`'${crashedProcess}' process '${details.reason}'`);
 
@@ -248,7 +248,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
         platform: 'native',
         tags: {
           'event.environment': 'native',
-          'event.process': minidumpProcess || 'browser',
+          'event.process': minidumpProcess || 'unknown',
         },
       }))
         .then((minidumpsFound) =>
