@@ -4,6 +4,8 @@ const { writeFileSync } = require('fs');
 const { app, BrowserWindow } = require('electron');
 const { init, getCurrentScope } = require('@sentry/electron/main');
 
+app.commandLine.appendSwitch('enable-crashpad');
+
 const VALID_LOOKING_MINIDUMP = Buffer.from(`MDMP${'X'.repeat(12000)}`);
 
 const minidumpPath = path.join(
