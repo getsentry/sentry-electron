@@ -40,7 +40,7 @@ interface Options {
    *
    * default: None
    */
-  ignoredProcesses?: Array<'browser' | 'renderer' | 'unknown' | string>;
+  ignoredProcesses?: Array<'browser' | 'renderer' | 'utility' | 'unknown' | string>;
 }
 
 /**
@@ -135,7 +135,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
 
       if (typeof eventProcess === 'string' && ignoredProcesses.includes(eventProcess)) {
         logger.log(`Dropping '${eventProcess}' minidump because they are ignored`);
-        return
+        return;
       }
 
       if (!event) {

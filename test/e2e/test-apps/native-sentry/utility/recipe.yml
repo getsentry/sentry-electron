@@ -1,0 +1,4 @@
+description: Native Utility Crash
+category: Native (Sentry Uploader)
+command: yarn
+condition: version.major >= 22
