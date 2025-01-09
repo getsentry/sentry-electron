@@ -26,7 +26,10 @@ function delay(ms: number): Promise<void> {
  * @param deleteAll Whether to just delete all minidumps
  * @param callback A callback to call with the attachment ready to send
  */
-export type MinidumpLoader = (deleteAll: boolean, callback: (attachment: Attachment) => void) => Promise<void>;
+export type MinidumpLoader = (
+  deleteAll: boolean,
+  callback: (processType: string | undefined, attachment: Attachment) => Promise<void>,
+) => Promise<void>;
 
 /**
  * Creates a minidump loader
@@ -75,9 +78,11 @@ export function createMinidumpLoader(
                 break;
               }
 
+              const minidumpProcess = getMinidumpProcessType(data);
+
               logger.log('Sending minidump');
 
-              callback({
+              await callback(minidumpProcess, {
                 attachmentType: 'event.minidump',
                 filename: basename(path),
                 data,
@@ -213,4 +218,53 @@ function breakpadMinidumpLoader(): MinidumpLoader {
  */
 export function getMinidumpLoader(): MinidumpLoader {
   return usesCrashpad() ? crashpadMinidumpLoader() : breakpadMinidumpLoader();
+}
+
+/**
+ * Crashpad includes it's own custom stream in the minidump file that can include metadata. Electron uses this to
+ * include details about the app and process that caused the crash.
+ *
+ * Rather than parse the minidump by reading the header and parsing through all the streams, we can just look for the
+ * 'process_type' key and then pick the string that comes after that.
+ */
+function getMinidumpProcessType(buffer: Buffer): string | undefined {
+  const index = buffer.indexOf('process_type');
+
+  if (index < 0) {
+    return;
+  }
+
+  // start after 'process_type'
+  let start = index + 12;
+
+  // Move start to the first ascii character
+  while ((buffer[start] || 0) < 32) {
+    start++;
+
+    // If we can't find the start in the first 20 bytes, we assume it's not there
+    if (start - index > 20) {
+      return;
+    }
+  }
+
+  let end = start;
+
+  // Move the end of the ascii
+  while ((buffer[end] || -1) >= 32) {
+    end++;
+
+    // If we can't find the end in the first 20 bytes, we assume it's not there
+    if (end - start > 20) {
+      return;
+    }
+  }
+
+  const processType = buffer.subarray(start, end).toString().replace('-process', '');
+
+  // For backwards compatibility
+  if (processType === 'gpu') {
+    return 'GPU';
+  }
+
+  return processType;
 }
