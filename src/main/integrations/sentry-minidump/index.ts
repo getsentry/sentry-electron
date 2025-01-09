@@ -33,12 +33,21 @@ interface Options {
    * default: 10
    */
   maxMinidumpsPerSession?: number;
+
+  /**
+   * Which processes to ignore minidumps for.
+   * Minidumps of the supplied types will be ignored and will not impact the apps crash free session rate
+   *
+   * default: None
+   */
+  ignoredProcesses?: Array<'browser' | 'renderer' | 'unknown' | string>;
 }
 
 /**
  * Sends minidumps via the Sentry uploader
  */
 export const sentryMinidumpIntegration = defineIntegration((options: Options = {}) => {
+  const ignoredProcesses = options.ignoredProcesses || [];
   // The remaining number of minidumps that can be sent in this session
   let minidumpsRemaining = options.maxMinidumpsPerSession || 10;
   // Store to persist context information beyond application crashes.
@@ -106,12 +115,12 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
     let minidumpFound = false;
 
     await minidumpLoader?.(deleteAll, async (minidumpProcess, attachment) => {
-      minidumpFound = true;
-
       const event = getEvent(minidumpProcess);
 
+      const eventProcess = event.tags?.['event.process'];
+
       // If this is a native main process crash, we need to apply the scope and context from the previous run
-      if (event.tags?.['event.process'] === 'browser') {
+      if (eventProcess === 'browser') {
         const previousRun = await scopeLastRun;
         if (previousRun) {
           if (previousRun.scope) {
@@ -124,9 +133,16 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
         }
       }
 
+      if (typeof eventProcess === 'string' && ignoredProcesses.includes(eventProcess)) {
+        logger.log(`Dropping '${eventProcess}' minidump because they are ignored`);
+        return
+      }
+
       if (!event) {
         return;
       }
+
+      minidumpFound = true;
 
       if (minidumpsRemaining > 0) {
         minidumpsRemaining -= 1;
