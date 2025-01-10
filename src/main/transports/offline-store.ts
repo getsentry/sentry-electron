@@ -28,9 +28,9 @@ export interface OfflineStoreOptions {
 
 const MILLISECONDS_PER_DAY = 86_400_000;
 
-function isOutdated(request: PersistedRequest, maxAgeDays: number): boolean {
+function isOutdated(request: Partial<PersistedRequest> | undefined, maxAgeDays: number): boolean {
   const cutOff = Date.now() - MILLISECONDS_PER_DAY * maxAgeDays;
-  return request.date.getTime() < cutOff;
+  return (request?.date?.getTime() || 0) < cutOff;
 }
 
 function getSentAtFromEnvelope(envelope: Envelope): Date | undefined {
@@ -63,7 +63,7 @@ export function createOfflineStore(userOptions: Partial<OfflineStoreOptions>): O
     });
   }
 
-  function removeStaleRequests(queue: PersistedRequest[]): void {
+  function removeStaleRequests(queue: Array<Partial<PersistedRequest> | undefined>): void {
     while (queue[0] && isOutdated(queue[0], options.maxAgeDays)) {
       const removed = queue.shift() as PersistedRequest;
       log('Removing stale envelope', removed);
