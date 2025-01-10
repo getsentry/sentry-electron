@@ -63,7 +63,7 @@ export function createOfflineStore(userOptions: Partial<OfflineStoreOptions>): O
     });
   }
 
-  function removeStaleRequests(queue: Array<Partial<PersistedRequest> | undefined>): void {
+  function removeStaleRequests(queue: Array<Partial<PersistedRequest>>): void {
     while (queue[0] && isOutdated(queue[0], options.maxAgeDays)) {
       const removed = queue.shift() as PersistedRequest;
       log('Removing stale envelope', removed);
