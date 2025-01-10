@@ -15,7 +15,7 @@
     },
     "contexts": {
       "app": {
-        "app_name": "native-sentry-child",
+        "app_name": "native-sentry-child-fork",
         "app_version": "1.0.0",
         "app_start_time": "{{time}}"
       },
@@ -56,7 +56,7 @@
         "version": "{{version}}"
       }
     },
-    "release": "native-sentry-child@1.0.0",
+    "release": "native-sentry-child-fork@1.0.0",
     "environment": "development",
     "event_id": "{{id}}",
     "timestamp": 0,

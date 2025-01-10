@@ -1,5 +1,5 @@
 {
-  "name": "native-sentry-child",
+  "name": "native-sentry-child-fork",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {
