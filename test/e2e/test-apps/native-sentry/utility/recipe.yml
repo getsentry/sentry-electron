@@ -1,4 +1,5 @@
 description: Native Utility Crash
 category: Native (Sentry Uploader)
 command: yarn
-condition: version.major >= 22
+# Not working on Linux with v29.4.6
+condition: version.major >= 22 && !(platform === 'linux' && version.major === 29)
