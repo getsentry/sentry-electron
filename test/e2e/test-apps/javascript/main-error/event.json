@@ -91,6 +91,7 @@
       "event.environment": "javascript",
       "event.origin": "electron",
       "event.process": "browser"
-    }
+    },
+    "user": { "ip_address": "{{auto}}" }
   }
 }
