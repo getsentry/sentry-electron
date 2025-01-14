@@ -7,6 +7,7 @@ init({
   dsn: '__DSN__',
   debug: true,
   autoSessionTracking: false,
+  sendDefaultPii: true,
   onFatalError: () => {},
 });
 

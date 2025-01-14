@@ -34,7 +34,7 @@ export const electronContextIntegration = defineIntegration(() => {
         sendDefaultPii,
       } = client.getOptions();
 
-      if (sendDefaultPii !== false && typeof event.user?.ip_address === 'undefined') {
+      if (sendDefaultPii === true && typeof event.user?.ip_address === 'undefined') {
         event.user = event.user || {};
         event.user.ip_address = event.user.ip_address || '{{auto}}';
       }
