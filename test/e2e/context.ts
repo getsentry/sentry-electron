@@ -1,4 +1,3 @@
-import { parseSemver } from '@sentry/core';
 import { ChildProcess, spawn, spawnSync } from 'child_process';
 import { rmSync } from 'fs';
 import { homedir } from 'os';
@@ -68,11 +67,9 @@ export class TestContext {
       this._clearAppUserData();
     }
 
-    const version = parseSemver(this._electronVersion);
-
     const args = [this._appPath];
-    // Older versions of Electron no longer work correctly on 'ubuntu-latest' with sandbox
-    if (process.platform === 'linux' && (version.major || 0) < 13) {
+    // Electron no longer work correctly on Github Actions 'ubuntu-latest' with sandbox
+    if (process.platform === 'linux') {
       args.push('--no-sandbox');
     }
 

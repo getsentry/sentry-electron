@@ -4,6 +4,6 @@
   "main": "main.js",
   "scripts": {
 
-    "start": "../../../node_modules/.bin/electron ."
+    "start": "../../../node_modules/.bin/electron . --no-sandbox"
   }
 }
