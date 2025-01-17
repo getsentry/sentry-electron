@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## 5.10.0
+
+- fix: Deprecate renderer init options which should only be used in main process
+  (#1044)
+- feat: Update from
+  [v8.46.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.46.0)
+  to
+  [v8.48.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.48.0)
+  of JavaScript SDKs (#1046)
+- feat: Determine Electron process from minidump metadata (#1049)
+- fix: Guard against invalid queue entries (#1053)
+
 ## 5.9.0
 
 - feat: Update from
