@@ -23,7 +23,7 @@ app.on('ready', () => {
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
 
   if (process.env.APP_FIRST_RUN) {
-    child_process.fork(path.join(__dirname, 'child.js'));
+    child_process.fork(path.join(__dirname, 'child.js'), {stdio: 'inherit'});
 
     setTimeout(() => {
       app.exit();
