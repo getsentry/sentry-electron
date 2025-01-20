@@ -1,0 +1,5 @@
+description: Native Child Crash
+category: Native (Sentry Uploader)
+command: yarn
+runTwice: true
+condition: platform !== 'linux'
