@@ -1,0 +1,9 @@
+{
+  "name": "native-sentry-child-fork",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "dependencies": {
+    "@sentry/electron": "5.6.0",
+    "sadness-generator": "0.0.2"
+  }
+}
