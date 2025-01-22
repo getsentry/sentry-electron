@@ -154,10 +154,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
     });
   }
 
-  async function sendChildProcessCrash(
-    client: NodeClient,
-    details: Omit<Electron.Details, 'exitCode'>,
-  ): Promise<void> {
+  async function sendChildProcessCrash(client: NodeClient, details: Omit<Electron.Details, 'exitCode'>): Promise<void> {
     logger.log(`${details.type} process has ${details.reason}`);
 
     await sendNativeCrashes(client, (minidumpProcess) => ({
@@ -217,12 +214,12 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
 
       // For minidumps found at startup, we don't want @sentry/core to automatically crash the session. Instead we set
       // the level to 'error' and change it back in this callback.
-      client.on('beforeSendEvent',  (event) => {
+      client.on('beforeSendEvent', (event) => {
         if (event.platform === 'native') {
           event.level = 'fatal';
         }
 
-        return event
+        return event;
       });
 
       // Start to submit recent minidump crashes. This will load breadcrumbs and
