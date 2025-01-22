@@ -234,10 +234,22 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
         }
       });
 
+      // For crashes found at startup, we set the level to 'error' because otherwise @sentry/core automatically marks
+      // the current session as crashed. We only want to show the previous session as crashed.
+      // Then in the hook below, we set the level back to 'fatal'.
+      client.on('beforeSendEvent', async (event) => {
+        if (event.platform === 'native') {
+          event.level = 'fatal';
+        }
+      });
+
       // Start to submit recent minidump crashes. This will load breadcrumbs and
       // context information that was cached on disk in the previous app run, prior to the crash.
       sendNativeCrashes(client, (minidumpProcess) => ({
-        level: 'fatal',
+        // We set this to 'error' so @sentry/core doesn't automatically update the session. We only want to show the
+        // previous session as crashed, not the current one.
+        // We use `beforeSendEvent` above to set the level back to 'fatal'!
+        level: 'error',
         platform: 'native',
         tags: {
           'event.environment': 'native',
