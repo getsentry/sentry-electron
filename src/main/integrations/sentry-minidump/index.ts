@@ -82,7 +82,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
 
   async function sendNativeCrashes(
     client: NodeClient,
-    getEvent: (minidumpProcess: string | undefined) => Event,
+    getEvent: (minidumpProcess: string | undefined) => Event | Promise<Event>,
   ): Promise<boolean> {
     // Whenever we are called, assume that the crashes we are going to load down
     // below have occurred recently. This means, we can use the same event data
@@ -108,29 +108,11 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
     await minidumpLoader?.(deleteAll, async (minidumpProcess, attachment) => {
       minidumpFound = true;
 
-      const event = getEvent(minidumpProcess);
-
-      // If this is a native main process crash, we need to apply the scope and context from the previous run
-      if (event.tags?.['event.process'] === 'browser') {
-        const previousRun = await scopeLastRun;
-        if (previousRun) {
-          if (previousRun.scope) {
-            applyScopeDataToEvent(event, previousRun.scope);
-          }
-
-          event.release = previousRun.event?.release || event.release;
-          event.environment = previousRun.event?.environment || event.environment;
-          event.contexts = previousRun.event?.contexts || event.contexts;
-        }
-      }
-
-      if (!event) {
-        return;
-      }
+      const event = await getEvent(minidumpProcess);
 
       if (minidumpsRemaining > 0) {
         minidumpsRemaining -= 1;
-        captureEvent(event as Event, { attachments: [attachment] });
+        captureEvent(event, { attachments: [attachment] });
       }
     });
 
@@ -174,7 +156,6 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
 
   async function sendChildProcessCrash(
     client: NodeClient,
-    options: ElectronMainOptions,
     details: Omit<Electron.Details, 'exitCode'>,
   ): Promise<void> {
     logger.log(`${details.type} process has ${details.reason}`);
@@ -230,32 +211,48 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
       });
       app.on('child-process-gone', async (_, details) => {
         if (EXIT_REASONS.includes(details.reason)) {
-          await sendChildProcessCrash(client, options, details);
+          await sendChildProcessCrash(client, details);
         }
       });
 
-      // For crashes found at startup, we set the level to 'error' because otherwise @sentry/core automatically marks
-      // the current session as crashed. We only want to show the previous session as crashed.
-      // Then in the hook below, we set the level back to 'fatal'.
-      client.on('beforeSendEvent', async (event) => {
+      // For minidumps found at startup, we don't want @sentry/core to automatically crash the session. Instead we set
+      // the level to 'error' and change it back in this callback.
+      client.on('beforeSendEvent',  (event) => {
         if (event.platform === 'native') {
           event.level = 'fatal';
         }
+
+        return event
       });
 
       // Start to submit recent minidump crashes. This will load breadcrumbs and
       // context information that was cached on disk in the previous app run, prior to the crash.
-      sendNativeCrashes(client, (minidumpProcess) => ({
-        // We set this to 'error' so @sentry/core doesn't automatically update the session. We only want to show the
-        // previous session as crashed, not the current one.
-        // We use `beforeSendEvent` above to set the level back to 'fatal'!
-        level: 'error',
-        platform: 'native',
-        tags: {
-          'event.environment': 'native',
-          'event.process': minidumpProcess || (usesCrashpad() ? 'unknown' : 'browser'),
-        },
-      }))
+      sendNativeCrashes(client, async (minidumpProcess) => {
+        const event: Event = {
+          // This should be set to 'fatal' but then the current session will be marked as crashed whereas we want to
+          // mark the previous session as crashed. The `beforeSendEvent` callback will change this back to 'fatal'.
+          level: 'error',
+          platform: 'native',
+          tags: {
+            'event.environment': 'native',
+            'event.process': minidumpProcess || (usesCrashpad() ? 'unknown' : 'browser'),
+          },
+        };
+
+        // This crash was found at startup, we need to apply the scope and context from the previous run
+        const previousRun = await scopeLastRun;
+        if (previousRun) {
+          if (previousRun.scope) {
+            applyScopeDataToEvent(event, previousRun.scope);
+          }
+
+          event.release = previousRun.event?.release;
+          event.environment = previousRun.event?.environment;
+          event.contexts = previousRun.event?.contexts;
+        }
+
+        return event;
+      })
         .then((minidumpsFound) =>
           // Check for previous uncompleted session. If a previous session exists
           // and no minidumps were found, its likely an abnormal exit
