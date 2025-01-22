@@ -16,7 +16,7 @@ import { getEventDefaults } from '../../context';
 import { EXIT_REASONS, getSentryCachePath, usesCrashpad } from '../../electron-normalize';
 import { getRendererProperties, trackRendererProperties } from '../../renderers';
 import { ElectronMainOptions } from '../../sdk';
-import { checkPreviousSession, sessionCrashed } from '../../sessions';
+import { checkPreviousSession } from '../../sessions';
 import { BufferedWriteStore } from '../../store';
 import { getMinidumpLoader, MinidumpLoader } from './minidump-loader';
 
@@ -145,7 +145,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
   ): Promise<void> {
     const { getRendererName } = options;
 
-    const found = await sendNativeCrashes(client, (minidumpProcess) => {
+    await sendNativeCrashes(client, (minidumpProcess) => {
       // We only call 'getRendererName' if this was in fact a renderer crash
       const crashedProcess =
         (minidumpProcess === 'renderer' && getRendererName ? getRendererName(contents) : minidumpProcess) ||
@@ -170,10 +170,6 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
         },
       };
     });
-
-    if (found) {
-      sessionCrashed();
-    }
   }
 
   async function sendChildProcessCrash(
@@ -183,7 +179,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
   ): Promise<void> {
     logger.log(`${details.type} process has ${details.reason}`);
 
-    const found = await sendNativeCrashes(client, (minidumpProcess) => ({
+    await sendNativeCrashes(client, (minidumpProcess) => ({
       contexts: {
         electron: { details },
       },
@@ -197,10 +193,6 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
         event_type: 'native',
       },
     }));
-
-    if (found) {
-      sessionCrashed();
-    }
   }
 
   return {
