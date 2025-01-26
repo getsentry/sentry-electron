@@ -28,10 +28,18 @@ let previousSession: Promise<Partial<Session> | undefined> | undefined;
 function getSessionStore(): Store<SessionContext | undefined> {
   if (!sessionStore) {
     sessionStore = new Store<SessionContext | undefined>(getSentryCachePath(), 'session', undefined);
-    previousSession = sessionStore.get();
+    previousSession = sessionStore.get().then(sesh => sesh ? makeSession(sesh) : sesh);
   }
 
   return sessionStore;
+}
+
+/** Copies a session and removes the toJSON function so it can be serialised without conversion */
+function makeSessionSafeToSerialize(session: Session): Session {
+  const copy = { ...session };
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  delete (copy as any).toJSON;
+  return copy;
 }
 
 let persistTimer: ReturnType<typeof setInterval> | undefined;
@@ -45,7 +53,7 @@ export function startSession(sendOnCreate: boolean): void {
   }
 
   getSessionStore()
-    .set(session)
+    .set(makeSessionSafeToSerialize(session))
     .catch(() => {
       // Does not throw
     });
@@ -55,7 +63,7 @@ export function startSession(sendOnCreate: boolean): void {
     const currentSession = getCurrentScope().getSession();
     // Only bother saving if it hasn't already ended
     if (currentSession && currentSession.status === 'ok') {
-      await getSessionStore().set(currentSession);
+      await getSessionStore().set(makeSessionSafeToSerialize(currentSession));
     }
   }, PERSIST_INTERVAL_MS);
 }
@@ -108,6 +116,59 @@ export async function unreportedDuringLastSession(crashDate: Date | undefined): 
 
   // If the crash occurred between the last persist and estimated end of session
   return crashTime > lastPersist && crashTime < prevSessionEnd;
+}
+
+/** Sets the previous session as the current session and returns any existing session */
+export async function setPreviousSessionAsCurrent(): Promise<Session | undefined> {
+  const previous = await previousSession;
+
+  const scope = getCurrentScope();
+  const currentSession = scope.getSession();
+
+  if (previous) {
+    previousSession = undefined;
+
+    if (previous.status === 'ok') {
+      scope.setSession(makeSession(previous));
+    }
+  }
+
+  return currentSession;
+}
+
+/** Restores a session */
+export function restorePreviousSession(session: Session): void {
+  getCurrentScope().setSession(session);
+}
+
+/** Report the previous session as abnormal */
+export async function previousSessionWasAbnormal(): Promise<void> {
+  const client = getClient<NodeClient>();
+
+  const previous = await previousSession;
+
+  if (previous && client) {
+    // Ignore if the previous session is already ended
+    if (previous.status !== 'ok') {
+      previousSession = undefined;
+      return;
+    }
+
+    logger.log(`Found previous abnormal session`);
+
+    const sesh = makeSession(previous);
+
+    updateSession(sesh, {
+      status: 'abnormal',
+      errors: (sesh.errors || 0) + 1,
+      release: (previous as unknown as SerializedSession).attrs?.release,
+      environment: (previous as unknown as SerializedSession).attrs?.environment,
+    });
+
+    await client.sendSession(sesh);
+
+    previousSession = undefined;
+  }
 }
 
 /** Checks if the previous session needs sending as crashed or abnormal  */

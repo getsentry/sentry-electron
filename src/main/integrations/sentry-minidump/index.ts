@@ -7,6 +7,7 @@ import {
   Scope,
   ScopeData,
   SentryError,
+  Session,
 } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { app, crashReporter } from 'electron';
@@ -16,7 +17,7 @@ import { getEventDefaults } from '../../context';
 import { EXIT_REASONS, getSentryCachePath, usesCrashpad } from '../../electron-normalize';
 import { getRendererProperties, trackRendererProperties } from '../../renderers';
 import { ElectronMainOptions } from '../../sdk';
-import { checkPreviousSession } from '../../sessions';
+import { previousSessionWasAbnormal, restorePreviousSession, setPreviousSessionAsCurrent } from '../../sessions';
 import { BufferedWriteStore } from '../../store';
 import { getMinidumpLoader, MinidumpLoader } from './minidump-loader';
 
@@ -212,23 +213,13 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
         }
       });
 
-      // For minidumps found at startup, we don't want @sentry/core to automatically crash the session. Instead we set
-      // the level to 'error' and change it back in this callback.
-      client.on('beforeSendEvent', (event) => {
-        if (event.platform === 'native') {
-          event.level = 'fatal';
-        }
-
-        return event;
-      });
+      let sessionToRestore: Session | undefined;
 
       // Start to submit recent minidump crashes. This will load breadcrumbs and
       // context information that was cached on disk in the previous app run, prior to the crash.
       sendNativeCrashes(client, async (minidumpProcess) => {
         const event: Event = {
-          // This should be set to 'fatal' but then the current session will be marked as crashed whereas we want to
-          // mark the previous session as crashed. The `beforeSendEvent` callback will change this back to 'fatal'.
-          level: 'error',
+          level: 'fatal',
           platform: 'native',
           tags: {
             'event.environment': 'native',
@@ -248,13 +239,17 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
           event.contexts = previousRun.event?.contexts;
         }
 
+        sessionToRestore = await setPreviousSessionAsCurrent();
+
         return event;
       })
-        .then((minidumpsFound) =>
-          // Check for previous uncompleted session. If a previous session exists
-          // and no minidumps were found, its likely an abnormal exit
-          checkPreviousSession(minidumpsFound),
-        )
+        .then(async (minidumpsFound) => {
+          if (!minidumpsFound) {
+            await previousSessionWasAbnormal();
+          } else if (sessionToRestore) {
+            restorePreviousSession(sessionToRestore);
+          }
+        })
         .catch((error) => logger.error(error));
     },
   };
