@@ -28,7 +28,7 @@ let previousSession: Promise<Partial<Session> | undefined> | undefined;
 function getSessionStore(): Store<SessionContext | undefined> {
   if (!sessionStore) {
     sessionStore = new Store<SessionContext | undefined>(getSentryCachePath(), 'session', undefined);
-    previousSession = sessionStore.get().then(sesh => sesh ? makeSession(sesh) : sesh);
+    previousSession = sessionStore.get().then((sesh) => (sesh ? makeSession(sesh) : sesh));
   }
 
   return sessionStore;
