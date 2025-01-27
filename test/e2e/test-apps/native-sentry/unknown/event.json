@@ -71,7 +71,7 @@
       "event.environment": "native",
       "event.origin": "electron",
       "event.process": "unknown",
-      "app-run": "second"
+      "app-run": "first"
     }
   },
   "attachments": [

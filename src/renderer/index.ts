@@ -121,6 +121,7 @@ export {
   featureFlagsIntegration,
   launchDarklyIntegration,
   openFeatureIntegration,
+  unleashIntegration,
 } from '@sentry/browser';
 
 export type { BrowserOptions, ReportDialogOptions } from '@sentry/browser';

@@ -7,6 +7,7 @@ import {
   Scope,
   ScopeData,
   SentryError,
+  Session,
 } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { app, crashReporter } from 'electron';
@@ -16,7 +17,7 @@ import { getEventDefaults } from '../../context';
 import { EXIT_REASONS, getSentryCachePath, usesCrashpad } from '../../electron-normalize';
 import { getRendererProperties, trackRendererProperties } from '../../renderers';
 import { ElectronMainOptions } from '../../sdk';
-import { checkPreviousSession, sessionCrashed } from '../../sessions';
+import { previousSessionWasAbnormal, restorePreviousSession, setPreviousSessionAsCurrent } from '../../sessions';
 import { BufferedWriteStore } from '../../store';
 import { getMinidumpLoader, MinidumpLoader } from './minidump-loader';
 
@@ -82,7 +83,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
 
   async function sendNativeCrashes(
     client: NodeClient,
-    getEvent: (minidumpProcess: string | undefined) => Event,
+    getEvent: (minidumpProcess: string | undefined) => Event | Promise<Event>,
   ): Promise<boolean> {
     // Whenever we are called, assume that the crashes we are going to load down
     // below have occurred recently. This means, we can use the same event data
@@ -108,29 +109,11 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
     await minidumpLoader?.(deleteAll, async (minidumpProcess, attachment) => {
       minidumpFound = true;
 
-      const event = getEvent(minidumpProcess);
-
-      // If this is a native main process crash, we need to apply the scope and context from the previous run
-      if (event.tags?.['event.process'] === 'browser') {
-        const previousRun = await scopeLastRun;
-        if (previousRun) {
-          if (previousRun.scope) {
-            applyScopeDataToEvent(event, previousRun.scope);
-          }
-
-          event.release = previousRun.event?.release || event.release;
-          event.environment = previousRun.event?.environment || event.environment;
-          event.contexts = previousRun.event?.contexts || event.contexts;
-        }
-      }
-
-      if (!event) {
-        return;
-      }
+      const event = await getEvent(minidumpProcess);
 
       if (minidumpsRemaining > 0) {
         minidumpsRemaining -= 1;
-        captureEvent(event as Event, { attachments: [attachment] });
+        captureEvent(event, { attachments: [attachment] });
       }
     });
 
@@ -145,7 +128,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
   ): Promise<void> {
     const { getRendererName } = options;
 
-    const found = await sendNativeCrashes(client, (minidumpProcess) => {
+    await sendNativeCrashes(client, (minidumpProcess) => {
       // We only call 'getRendererName' if this was in fact a renderer crash
       const crashedProcess =
         (minidumpProcess === 'renderer' && getRendererName ? getRendererName(contents) : minidumpProcess) ||
@@ -170,20 +153,12 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
         },
       };
     });
-
-    if (found) {
-      sessionCrashed();
-    }
   }
 
-  async function sendChildProcessCrash(
-    client: NodeClient,
-    options: ElectronMainOptions,
-    details: Omit<Electron.Details, 'exitCode'>,
-  ): Promise<void> {
+  async function sendChildProcessCrash(client: NodeClient, details: Omit<Electron.Details, 'exitCode'>): Promise<void> {
     logger.log(`${details.type} process has ${details.reason}`);
 
-    const found = await sendNativeCrashes(client, (minidumpProcess) => ({
+    await sendNativeCrashes(client, (minidumpProcess) => ({
       contexts: {
         electron: { details },
       },
@@ -197,10 +172,6 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
         event_type: 'native',
       },
     }));
-
-    if (found) {
-      sessionCrashed();
-    }
   }
 
   return {
@@ -238,25 +209,47 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
       });
       app.on('child-process-gone', async (_, details) => {
         if (EXIT_REASONS.includes(details.reason)) {
-          await sendChildProcessCrash(client, options, details);
+          await sendChildProcessCrash(client, details);
         }
       });
 
+      let sessionToRestore: Session | undefined;
+
       // Start to submit recent minidump crashes. This will load breadcrumbs and
       // context information that was cached on disk in the previous app run, prior to the crash.
-      sendNativeCrashes(client, (minidumpProcess) => ({
-        level: 'fatal',
-        platform: 'native',
-        tags: {
-          'event.environment': 'native',
-          'event.process': minidumpProcess || (usesCrashpad() ? 'unknown' : 'browser'),
-        },
-      }))
-        .then((minidumpsFound) =>
-          // Check for previous uncompleted session. If a previous session exists
-          // and no minidumps were found, its likely an abnormal exit
-          checkPreviousSession(minidumpsFound),
-        )
+      sendNativeCrashes(client, async (minidumpProcess) => {
+        const event: Event = {
+          level: 'fatal',
+          platform: 'native',
+          tags: {
+            'event.environment': 'native',
+            'event.process': minidumpProcess || (usesCrashpad() ? 'unknown' : 'browser'),
+          },
+        };
+
+        // This crash was found at startup, we need to apply the scope and context from the previous run
+        const previousRun = await scopeLastRun;
+        if (previousRun) {
+          if (previousRun.scope) {
+            applyScopeDataToEvent(event, previousRun.scope);
+          }
+
+          event.release = previousRun.event?.release;
+          event.environment = previousRun.event?.environment;
+          event.contexts = previousRun.event?.contexts;
+        }
+
+        sessionToRestore = await setPreviousSessionAsCurrent();
+
+        return event;
+      })
+        .then(async (minidumpsFound) => {
+          if (!minidumpsFound) {
+            await previousSessionWasAbnormal();
+          } else if (sessionToRestore) {
+            restorePreviousSession(sessionToRestore);
+          }
+        })
         .catch((error) => logger.error(error));
     },
   };
