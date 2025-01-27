@@ -5,6 +5,7 @@ import {
   dynamicSamplingContextToSentryBaggageHeader,
   fill,
   generateSentryTraceHeader,
+  getBreadcrumbLogLevelFromHttpStatusCode,
   getClient,
   getCurrentScope,
   getDynamicSamplingContextFromClient,
@@ -246,6 +247,7 @@ function addRequestBreadcrumb(
         method: method,
         status_code: res?.statusCode,
       },
+      level: getBreadcrumbLogLevelFromHttpStatusCode(res?.statusCode),
     },
     {
       event,

@@ -78,6 +78,7 @@
         "timestamp": 0,
         "type": "http",
         "category": "electron.net",
+        "level": "warning",
         "data": {
           "url": "http://localhost:8123/something",
           "method": "GET",
