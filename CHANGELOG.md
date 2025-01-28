@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## 5.11.0
+
+- feat: Update from
+  [v8.48.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.48.0)
+  to
+  [v8.51.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.51.0)
+  (#1066)
+- fix: Returing `null` in `beforeSend` for native crashes should not impact
+  release health (#1066)
+- feat: Set log level for `net` breadcrumbs based on status code (#1070)
+- test: Test more child process types (#1063)
+
 ## 5.10.0
 
 - fix: Deprecate renderer init options which should only be used in main process
