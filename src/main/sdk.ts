@@ -50,6 +50,9 @@ export function getDefaultIntegrations(options: ElectronMainOptions): Integratio
     additionalContextIntegration(),
     screenshotsIntegration(),
 
+    // Main process sessions
+    mainProcessSessionIntegration(),
+
     // Node integrations
     inboundFiltersIntegration(),
     functionToStringIntegration(),
@@ -64,11 +67,6 @@ export function getDefaultIntegrations(options: ElectronMainOptions): Integratio
     // We want paths to be normailzed after we've captured context
     normalizePathsIntegration(),
   ];
-
-  // eslint-disable-next-line deprecation/deprecation
-  if (options.autoSessionTracking !== false) {
-    integrations.push(mainProcessSessionIntegration());
-  }
 
   if (options.attachScreenshot) {
     integrations.push(screenshotsIntegration());

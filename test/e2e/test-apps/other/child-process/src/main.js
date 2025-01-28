@@ -6,8 +6,10 @@ const { init, childProcessIntegration } = require('@sentry/electron/main');
 init({
   dsn: '__DSN__',
   debug: true,
-  autoSessionTracking: false,
-  integrations: [childProcessIntegration({ events: ['killed'] })],
+  integrations: (integrations) => [
+    ...integrations.filter((i) => i.name !== 'MainProcessSession'),
+    childProcessIntegration({ events: ['killed'] }),
+  ],
   onFatalError: () => {},
 });
 

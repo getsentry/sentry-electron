@@ -8,7 +8,7 @@ app.commandLine.appendSwitch('enable-crashpad');
 init({
   dsn: '__DSN__',
   debug: true,
-  autoSessionTracking: false,
+  integrations: (integrations) => integrations.filter((i) => i.name !== 'MainProcessSession'),
   onFatalError: () => {},
 });
 

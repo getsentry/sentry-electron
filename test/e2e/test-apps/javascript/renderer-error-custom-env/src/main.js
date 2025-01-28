@@ -7,7 +7,7 @@ init({
   dsn: '__DSN__',
   debug: true,
   environment: 'custom-env',
-  autoSessionTracking: false,
+  integrations: (integrations) => integrations.filter((i) => i.name !== 'MainProcessSession'),
   onFatalError: () => {},
 });
 

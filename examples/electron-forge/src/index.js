@@ -6,8 +6,8 @@ const { init } = require('@sentry/electron/main');
 init({
   dsn: '__DSN__',
   debug: true,
-  autoSessionTracking: false,
-  onFatalError: () => {},
+  integrations: (integrations) => integrations.filter((i) => i.name !== 'MainProcessSession'),
+  onFatalError: () => { },
 });
 
 if (require('electron-squirrel-startup')) {

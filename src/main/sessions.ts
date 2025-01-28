@@ -2,7 +2,7 @@ import {
   captureSession,
   endSession as endSessionCore,
   getClient,
-  getCurrentScope,
+  getIsolationScope,
   logger,
   makeSession,
   SerializedSession,
@@ -60,7 +60,7 @@ export function startSession(sendOnCreate: boolean): void {
 
   // Every PERSIST_INTERVAL, write the session to disk
   persistTimer = setInterval(async () => {
-    const currentSession = getCurrentScope().getSession();
+    const currentSession = getIsolationScope().getSession();
     // Only bother saving if it hasn't already ended
     if (currentSession && currentSession.status === 'ok') {
       await getSessionStore().set(makeSessionSafeToSerialize(currentSession));
@@ -75,7 +75,7 @@ export async function endSession(): Promise<void> {
     clearInterval(persistTimer);
   }
 
-  const session = getCurrentScope().getSession();
+  const session = getIsolationScope().getSession();
 
   if (session) {
     if (session.status === 'ok') {
@@ -122,7 +122,7 @@ export async function unreportedDuringLastSession(crashDate: Date | undefined): 
 export async function setPreviousSessionAsCurrent(): Promise<Session | undefined> {
   const previous = await previousSession;
 
-  const scope = getCurrentScope();
+  const scope = getIsolationScope();
   const currentSession = scope.getSession();
 
   if (previous) {
@@ -138,7 +138,7 @@ export async function setPreviousSessionAsCurrent(): Promise<Session | undefined
 
 /** Restores a session */
 export function restorePreviousSession(session: Session): void {
-  getCurrentScope().setSession(session);
+  getIsolationScope().setSession(session);
 }
 
 /** Report the previous session as abnormal */
@@ -211,7 +211,7 @@ export function sessionCrashed(): void {
   }
 
   logger.log('Session Crashed');
-  const session = getCurrentScope().getSession();
+  const session = getIsolationScope().getSession();
 
   if (!session) {
     logger.log('No session to update');
@@ -235,7 +235,7 @@ export function sessionAnr(): void {
     clearInterval(persistTimer);
   }
 
-  const session = getCurrentScope().getSession();
+  const session = getIsolationScope().getSession();
 
   if (!session) {
     return;

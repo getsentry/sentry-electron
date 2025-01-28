@@ -182,8 +182,7 @@ function createWrappedRequestFactory(
       span.setAttribute(SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN, 'auto.http.electron.net');
 
       if (shouldAttachTraceData(method, url)) {
-        // eslint-disable-next-line deprecation/deprecation
-        const { traceId, spanId, sampled, dsc } = {
+        const { traceId, sampled, dsc, parentSpanId } = {
           ...getIsolationScope().getPropagationContext(),
           ...getCurrentScope().getPropagationContext(),
         };
@@ -194,7 +193,7 @@ function createWrappedRequestFactory(
 
           addHeadersToRequest(request, url, sentryTraceHeader, dynamicSamplingContext);
         } else {
-          const sentryTraceHeader = generateSentryTraceHeader(traceId, spanId, sampled);
+          const sentryTraceHeader = generateSentryTraceHeader(traceId, parentSpanId, sampled);
 
           const client = getClient();
           const dynamicSamplingContext =
