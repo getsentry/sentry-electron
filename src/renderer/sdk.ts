@@ -14,7 +14,10 @@ import { makeRendererTransport } from './transport';
 
 /** Get the default integrations for the renderer SDK. */
 export function getDefaultIntegrations(options: ElectronRendererOptions): Integration[] {
-  return [...getDefaultBrowserIntegrations(options).filter(i => i.name !== 'BrowserSession'), scopeToMainIntegration()];
+  return [
+    ...getDefaultBrowserIntegrations(options).filter((i) => i.name !== 'BrowserSession'),
+    scopeToMainIntegration(),
+  ];
 }
 
 interface ElectronRendererOptions extends Omit<BrowserOptions, 'dsn' | 'environment' | 'release'> {

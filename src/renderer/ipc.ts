@@ -2,13 +2,7 @@
 /* eslint-disable no-console */
 import { logger, uuid4 } from '@sentry/core';
 
-import {
-  IPCChannel,
-  IPCInterface,
-  PROTOCOL_SCHEME,
-  RENDERER_ID_HEADER,
-  RendererStatus,
-} from '../common/ipc';
+import { IPCChannel, IPCInterface, PROTOCOL_SCHEME, RENDERER_ID_HEADER, RendererStatus } from '../common/ipc';
 
 function buildUrl(channel: IPCChannel): string {
   // We include sentry_key in the URL so these don't end up in fetch breadcrumbs
