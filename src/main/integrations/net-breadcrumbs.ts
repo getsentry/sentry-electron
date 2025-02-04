@@ -1,22 +1,15 @@
 import {
   addBreadcrumb,
   defineIntegration,
-  DynamicSamplingContext,
-  dynamicSamplingContextToSentryBaggageHeader,
   fill,
-  generateSentryTraceHeader,
   getBreadcrumbLogLevelFromHttpStatusCode,
   getClient,
-  getCurrentScope,
-  getDynamicSamplingContextFromClient,
-  getDynamicSamplingContextFromSpan,
-  getIsolationScope,
+  getTraceData,
   logger,
   LRUMap,
   SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN,
   SentryNonRecordingSpan,
   setHttpStatus,
-  spanToTraceHeader,
   startInactiveSpan,
   stringMatchesSomePattern,
   TracePropagationTargets,
@@ -87,21 +80,6 @@ function parseOptions(optionsIn: ClientRequestConstructorOptions | string): { me
     method,
     url,
   };
-}
-
-function addHeadersToRequest(
-  request: Electron.ClientRequest,
-  url: string,
-  sentryTraceHeader: string,
-  dynamicSamplingContext?: Partial<DynamicSamplingContext>,
-): void {
-  logger.log(`[Tracing] Adding sentry-trace header ${sentryTraceHeader} to outgoing request to "${url}": `);
-  request.setHeader('sentry-trace', sentryTraceHeader);
-
-  const sentryBaggageHeader = dynamicSamplingContextToSentryBaggageHeader(dynamicSamplingContext);
-  if (sentryBaggageHeader) {
-    request.setHeader('baggage', sentryBaggageHeader);
-  }
 }
 
 type RequestOptions = string | ClientRequestConstructorOptions;
@@ -182,24 +160,9 @@ function createWrappedRequestFactory(
       span.setAttribute(SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN, 'auto.http.electron.net');
 
       if (shouldAttachTraceData(method, url)) {
-        const { traceId, sampled, dsc, parentSpanId } = {
-          ...getIsolationScope().getPropagationContext(),
-          ...getCurrentScope().getPropagationContext(),
-        };
-
-        if (span.isRecording()) {
-          const sentryTraceHeader = spanToTraceHeader(span);
-          const dynamicSamplingContext = dsc || getDynamicSamplingContextFromSpan(span);
-
-          addHeadersToRequest(request, url, sentryTraceHeader, dynamicSamplingContext);
-        } else {
-          const sentryTraceHeader = generateSentryTraceHeader(traceId, parentSpanId, sampled);
-
-          const client = getClient();
-          const dynamicSamplingContext =
-            dsc || (client ? getDynamicSamplingContextFromClient(traceId, client) : undefined);
-
-          addHeadersToRequest(request, url, sentryTraceHeader, dynamicSamplingContext);
+        for (const [key, value] of Object.entries(getTraceData({ span }))) {
+          logger.log(`[Tracing] Adding ${key} header ${value} to outgoing request to "${url}": `);
+          request.setHeader(key, value);
         }
       }
 
