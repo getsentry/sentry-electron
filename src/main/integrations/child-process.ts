@@ -1,15 +1,17 @@
 import { addBreadcrumb, captureMessage, defineIntegration, SeverityLevel } from '@sentry/core';
-import { NodeClient } from '@sentry/node';
+import { childProcessIntegration as nodeChildProcessIntegration, NodeClient } from '@sentry/node';
 import { app } from 'electron';
 
 import { EXIT_REASONS, ExitReason } from '../electron-normalize';
 import { ElectronMainOptions } from '../sdk';
 
+type NodeChildProcessOptions = NonNullable<Parameters<typeof nodeChildProcessIntegration>[0]>;
+
 type OrBool<T> = {
   [P in keyof T]: T[P] | boolean;
 };
 
-export interface ChildProcessOptions {
+export interface ChildProcessOptions extends NodeChildProcessOptions {
   /** Child process events that generate breadcrumbs */
   breadcrumbs: Readonly<ExitReason[]>;
   /** Child process events that generate Sentry events */
@@ -40,10 +42,15 @@ function getMessageAndSeverity(reason: ExitReason, proc?: string): { message: st
 }
 
 /**
- * Adds breadcrumbs for Electron child process events.
+ * Adds breadcrumbs for:
+ * - Electron child process events
+ * - Node `child_process` events
+ * - Node `worker_threads` events
  */
 export const childProcessIntegration = defineIntegration((userOptions: Partial<OrBool<ChildProcessOptions>> = {}) => {
   const { breadcrumbs, events } = userOptions;
+
+  const nodeIntegration = nodeChildProcessIntegration(userOptions);
 
   const options: ChildProcessOptions = {
     breadcrumbs: Array.isArray(breadcrumbs) ? breadcrumbs : breadcrumbs === false ? [] : DEFAULT_OPTIONS.breadcrumbs,
@@ -53,6 +60,8 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
   return {
     name: 'ChildProcess',
     setup(client: NodeClient) {
+      nodeIntegration.setup?.(client);
+
       const { breadcrumbs, events } = options;
       const allReasons = Array.from(new Set([...breadcrumbs, ...events]));
 

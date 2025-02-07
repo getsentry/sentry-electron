@@ -52,7 +52,7 @@
     "fix": "run-s fix:eslint fix:prettier",
     "fix:prettier": "prettier --write \"{src,test}/**/*.ts\"",
     "fix:eslint": "eslint . --format stylish --fix",
-    "update-electron-versions": "electron-latest-versions --start 15 --beta > ./test/e2e/versions.json",
+    "update-electron-versions": "electron-latest-versions --start 23 --beta > ./test/e2e/versions.json",
     "update-sdk-versions": "node ./scripts/update-sdk-versions.mjs",
     "pretest": "yarn build",
     "test": "vitest run --root=./test/unit",

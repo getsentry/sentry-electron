@@ -27,24 +27,6 @@ export function getSentryCachePath(): string {
 }
 
 /**
- * Uses Crashpad on Linux
- * https://github.com/electron/electron/issues/27859
- */
-function crashpadLinux(): boolean {
-  if (version.major >= 16) {
-    return true;
-  }
-
-  // Crashpad Linux for v15 is behind a switch
-  return app.commandLine.hasSwitch('enable-crashpad');
-}
-
-/** Is using Crashpad */
-export function usesCrashpad(): boolean {
-  return process.platform !== 'linux' || crashpadLinux();
-}
-
-/**
  * Electron >= 25 support `protocol.handle`
  */
 function supportsProtocolHandle(): boolean {

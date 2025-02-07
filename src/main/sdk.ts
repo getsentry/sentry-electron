@@ -135,6 +135,12 @@ export type ElectronMainOptions = Pick<Partial<ElectronMainOptionsInternal>, 'ge
  * Initialize Sentry in the Electron main process
  */
 export function init(userOptions: ElectronMainOptions): void {
+  const [major = 0] = process.versions.electron.split('.').map(Number);
+
+  if (major < 23) {
+    throw new Error('Sentry Electron SDK requires Electron 23 or higher');
+  }
+
   const optionsWithDefaults = {
     _metadata: { sdk: getSdkInfo() },
     ipcMode: IPCMode.Both,

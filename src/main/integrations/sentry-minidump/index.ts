@@ -14,7 +14,7 @@ import { app, crashReporter } from 'electron';
 
 import { addScopeListener, getScopeData } from '../../../common/scope';
 import { getEventDefaults } from '../../context';
-import { EXIT_REASONS, getSentryCachePath, usesCrashpad } from '../../electron-normalize';
+import { EXIT_REASONS, getSentryCachePath } from '../../electron-normalize';
 import { getRendererProperties, trackRendererProperties } from '../../renderers';
 import { ElectronMainOptions } from '../../sdk';
 import { previousSessionWasAbnormal, restorePreviousSession, setPreviousSessionAsCurrent } from '../../sessions';
@@ -131,8 +131,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
     await sendNativeCrashes(client, (minidumpProcess) => {
       // We only call 'getRendererName' if this was in fact a renderer crash
       const crashedProcess =
-        (minidumpProcess === 'renderer' && getRendererName ? getRendererName(contents) : minidumpProcess) ||
-        (usesCrashpad() ? 'unknown' : 'renderer');
+        (minidumpProcess === 'renderer' && getRendererName ? getRendererName(contents) : minidumpProcess) || 'unknown';
 
       logger.log(`'${crashedProcess}' process '${details.reason}'`);
 
@@ -223,7 +222,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
           platform: 'native',
           tags: {
             'event.environment': 'native',
-            'event.process': minidumpProcess || (usesCrashpad() ? 'unknown' : 'browser'),
+            'event.process': minidumpProcess || 'unknown',
           },
         };
 

@@ -13,7 +13,7 @@ import { app, crashReporter } from 'electron';
 
 import { addScopeListener, getScopeData } from '../../common/scope';
 import { getEventDefaults, getSdkInfo } from '../context';
-import { CRASH_REASONS, usesCrashpad } from '../electron-normalize';
+import { CRASH_REASONS } from '../electron-normalize';
 import { mergeEvents } from '../merge';
 import { normalizePaths } from '../normalize';
 import { checkPreviousSession, sessionCrashed, unreportedDuringLastSession } from '../sessions';
@@ -149,7 +149,7 @@ export const electronMinidumpIntegration = defineIntegration(() => {
 
     // We don't add globalExtra when Breakpad is in use because it doesn't support JSON like strings:
     // https://github.com/electron/electron/issues/29711
-    const globalExtra = usesCrashpad() ? { sentry___initialScope: JSON.stringify(getScope(options)) } : undefined;
+    const globalExtra = { sentry___initialScope: JSON.stringify(getScope(options)) };
 
     logger.log('Starting Electron crashReporter');
 
@@ -195,10 +195,8 @@ export const electronMinidumpIntegration = defineIntegration(() => {
         }
       });
 
-      // If we're using the Crashpad minidump uploader, we set extra parameters whenever the scope updates
-      if (usesCrashpad()) {
-        setupScopeListener(client);
-      }
+      // Set extra parameters whenever the scope updates
+      setupScopeListener(client);
 
       // Check if last crash report was likely to have been unreported in the last session
       unreportedDuringLastSession(crashReporter.getLastCrashReport()?.date).then((crashed) => {
