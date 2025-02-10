@@ -6,8 +6,8 @@ SDK.
 
 # Upgrading from 5.x to 6.x
 
-There aren't many breaking API changes in v6 but it's worth checking out the
-[JavaScript v9 migration docs](https://github.com/getsentry/sentry-javascript/blob/develop/MIGRATION.md#upgrading-from-8x-to-9x).
+Most users won't notice many breaking API changes in v6 but it's worth checking out the
+[JavaScript v9 migration guide](https://docs.sentry.io/platforms/javascript/migration/v8-to-v9/).
 
 ## Supported Electron Versions
 
@@ -30,8 +30,7 @@ Sentry.init({
 });
 ```
 
-In v6, session tracking can be disabled by removing the `MainProcessSession`
-integration: integration:
+In v6, session tracking can be disabled by removing the `MainProcessSession` integration: 
 
 ```javascript
 import * as Sentry from "@sentry/electron/main";
@@ -43,30 +42,53 @@ Sentry.init({
 });
 ```
 
+### `processThreadBreadcrumbIntegration` has been removed
+
+The `processThreadBreadcrumbIntegration` has been removed and it's functionality
+is now in the `childProcessIntegration`.
+
+
+### Include IP Addresses
+
+The SDK only includes the IP address of the user if `sendDefaultPii` is set to `true`:
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "__DSN__",
+  sendDefaultPii: true,
+});
+```
+
 # Upgrading from 4.x to 5.x
 
-Many breaking changes in v5 are due to changes in the underlying Sentry JavaScript SDKs so be sure to check the
-[JavaScript v8 migration
-docs](https://github.com/getsentry/sentry-javascript/blob/develop/MIGRATION.md#upgrading-from-7x-to-8x).
+Many breaking changes in v5 are due to changes in the underlying Sentry
+JavaScript SDKs so be sure to check the
+[JavaScript v8 migration docs](https://github.com/getsentry/sentry-javascript/blob/develop/MIGRATION.md#upgrading-from-7x-to-8x).
 
 ## Supported Electron Versions
 
-The Sentry Node SDK now requires Node >= 14.18.0 which means the Sentry Electron SDK now supports Electron >= 15.0.0.
+The Sentry Node SDK now requires Node >= 14.18.0 which means the Sentry Electron
+SDK now supports Electron >= 15.0.0.
 
 ## Initializing the SDK in v5
 
-From v5, the root export (`@sentry/electron`) is no longer used and will throw and error if it's imported.
+From v5, the root export (`@sentry/electron`) is no longer used and will throw
+and error if it's imported.
 
-In previous versions of the SDK, this export would attempt to detect the Electron process type and import the correct
-entry point. This was problematic for many bundlers, caused issues with tree shaking and obfuscated the fact that the
-there are distinct SDKs for each Electron process.
+In previous versions of the SDK, this export would attempt to detect the
+Electron process type and import the correct entry point. This was problematic
+for many bundlers, caused issues with tree shaking and obfuscated the fact that
+the there are distinct SDKs for each Electron process.
 
 In the Electron main process you should import from `@sentry/electron/main`:
+
 ```javascript
-import * as Sentry from '@sentry/electron/main';
+import * as Sentry from "@sentry/electron/main";
 
 Sentry.init({
-  dsn: '__DSN__',
+  dsn: "__DSN__",
   // ...more options
 });
 ```

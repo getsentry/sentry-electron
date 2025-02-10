@@ -1,4 +1,4 @@
-import { getIntegrationsToSetup, Integration, logger, Options, stackParserFromStackParserOptions } from '@sentry/core';
+import { addAutoIpAddressToSession, addAutoIpAddressToUser, getIntegrationsToSetup, Integration, logger, Options, stackParserFromStackParserOptions } from '@sentry/core';
 import {
   consoleIntegration,
   contextLinesIntegration,
@@ -174,9 +174,8 @@ export function init(userOptions: ElectronMainOptions): void {
 
   const client = new NodeClient(options);
 
-  // TODO (v6): Use these to add the IP address to the user and session
-  // client.on('postprocessEvent', addAutoIpAddressToUser);
-  // client.on('beforeSendSession', addAutoIpAddressToSession);
+  client.on('postprocessEvent', addAutoIpAddressToUser);
+  client.on('beforeSendSession', addAutoIpAddressToSession);
 
   scope.setClient(client);
   client.init();

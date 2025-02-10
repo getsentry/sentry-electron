@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 6.0.0
+
+This release updates the underlying Sentry JavaScript SDKs to v9 which includes some breaking changes. Check out the the [migration guide](./MIGRATION.md) for more details.
+
+
 ## 5.11.0
 
 - feat: Update from
