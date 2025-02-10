@@ -28,10 +28,7 @@ export const electronContextIntegration = defineIntegration(() => {
         delete event.request.headers['User-Agent'];
       }
 
-      const {
-        release = getDefaultReleaseName(),
-        environment = getDefaultEnvironment(),
-      } = client.getOptions();
+      const { release = getDefaultReleaseName(), environment = getDefaultEnvironment() } = client.getOptions();
 
       return mergeEvents(
         {

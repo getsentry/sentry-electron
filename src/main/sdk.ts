@@ -1,4 +1,12 @@
-import { addAutoIpAddressToSession, addAutoIpAddressToUser, getIntegrationsToSetup, Integration, logger, Options, stackParserFromStackParserOptions } from '@sentry/core';
+import {
+  addAutoIpAddressToSession,
+  addAutoIpAddressToUser,
+  getIntegrationsToSetup,
+  Integration,
+  logger,
+  Options,
+  stackParserFromStackParserOptions,
+} from '@sentry/core';
 import {
   consoleIntegration,
   contextLinesIntegration,
