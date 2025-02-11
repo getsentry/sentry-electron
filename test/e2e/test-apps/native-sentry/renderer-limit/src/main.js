@@ -6,9 +6,11 @@ const { init, sentryMinidumpIntegration } = require('@sentry/electron/main');
 init({
   dsn: '__DSN__',
   debug: true,
-  autoSessionTracking: false,
-  integrations: [sentryMinidumpIntegration({ maxMinidumpsPerSession: 1 })],
-  onFatalError: () => {},
+  integrations: (integrations) => [
+    ...integrations.filter((i) => i.name !== 'MainProcessSession'),
+    sentryMinidumpIntegration({ maxMinidumpsPerSession: 1 })
+  ],
+  onFatalError: () => { },
 });
 
 app.on('ready', () => {

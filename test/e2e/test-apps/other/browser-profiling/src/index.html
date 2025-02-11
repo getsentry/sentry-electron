@@ -7,13 +7,10 @@
     <script>
       const crypto = require('crypto');
       const {
-        addTracingExtensions,
         init,
         browserProfilingIntegration,
         startSpan,
       } = require('@sentry/electron/renderer');
-
-      addTracingExtensions();
 
       init({
         debug: true,

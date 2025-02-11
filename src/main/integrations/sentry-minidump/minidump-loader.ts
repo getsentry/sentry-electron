@@ -3,7 +3,6 @@ import { app } from 'electron';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 
-import { usesCrashpad } from '../../electron-normalize';
 import { Mutex } from '../../mutex';
 
 /** Maximum number of days to keep a minidump before deleting it. */
@@ -151,7 +150,10 @@ async function readDirsAsync(paths: string[]): Promise<string[]> {
   return found;
 }
 
-function crashpadMinidumpLoader(): MinidumpLoader {
+/**
+ * Gets the crashpad minidump loader
+ */
+export function getMinidumpLoader(): MinidumpLoader {
   const crashesDirectory: string = app.getPath('crashDumps');
   const crashpadSubDirectory = process.platform === 'win32' ? 'reports' : 'completed';
 
@@ -166,58 +168,6 @@ function crashpadMinidumpLoader(): MinidumpLoader {
     const files = await readDirsAsync(dumpDirectories);
     return files.filter((file) => file.endsWith('.dmp'));
   });
-}
-
-/** Crudely parses the minidump from the Breakpad multipart file */
-function minidumpFromBreakpadMultipart(file: Buffer): Buffer {
-  const binaryStart = file.lastIndexOf('Content-Type: application/octet-stream');
-  if (binaryStart > 0) {
-    const dumpStart = file.indexOf(MINIDUMP_HEADER, binaryStart);
-    const dumpEnd = file.lastIndexOf('----------------------------');
-
-    if (dumpStart > 0 && dumpEnd > 0 && dumpEnd > dumpStart) {
-      return file.subarray(dumpStart, dumpEnd);
-    }
-  }
-
-  return file;
-}
-
-function removeBreakpadMetadata(crashesDirectory: string, paths: string[]): void {
-  // Remove all metadata files and forget about them.
-  Promise.all(
-    paths
-      .filter((file) => file.endsWith('.txt') && !file.endsWith('log.txt'))
-      .map(async (file) => {
-        const path = join(crashesDirectory, file);
-        try {
-          await fs.unlink(path);
-        } catch (e) {
-          logger.warn('Could not delete', path);
-        }
-      }),
-  ).catch(() => {
-    // ignore since we catch each unlink individually
-  });
-}
-
-function breakpadMinidumpLoader(): MinidumpLoader {
-  const crashesDirectory: string = app.getPath('crashDumps');
-
-  return createMinidumpLoader(async () => {
-    // Breakpad stores all minidump files along with a metadata file directly in
-    // the crashes directory.
-    const files = await fs.readdir(crashesDirectory);
-    removeBreakpadMetadata(crashesDirectory, files);
-    return files.filter((file) => file.endsWith('.dmp')).map((file) => join(crashesDirectory, file));
-  }, minidumpFromBreakpadMultipart);
-}
-
-/**
- * Gets the minidump loader
- */
-export function getMinidumpLoader(): MinidumpLoader {
-  return usesCrashpad() ? crashpadMinidumpLoader() : breakpadMinidumpLoader();
 }
 
 /**

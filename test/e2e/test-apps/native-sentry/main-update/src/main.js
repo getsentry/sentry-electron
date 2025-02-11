@@ -7,7 +7,7 @@ init({
   dsn: '__DSN__',
   release: process.env.APP_FIRST_RUN ? 'native-sentry-main-update@1.0.0' : 'native-sentry-main-update@2.0.0',
   debug: true,
-  autoSessionTracking: false,
+  integrations: (integrations) => integrations.filter((i) => i.name !== 'MainProcessSession'),
   onFatalError: () => {},
 });
 

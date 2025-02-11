@@ -1,5 +1,4 @@
 description: Native Unknown Crash
 category: Native (Sentry Uploader)
 command: yarn
-condition: usesCrashpad
 runTwice: true

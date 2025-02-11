@@ -1,5 +1,3 @@
-import { MeasurementUnit, Primitive } from '@sentry/core';
-
 /** Ways to communicate between the renderer and main process  */
 export enum IPCMode {
   /** Configures Electron IPC to receive messages from renderers */
@@ -58,22 +56,12 @@ export interface RendererStatus {
   config: RendererProcessAnrOptions;
 }
 
-export interface MetricIPCMessage {
-  metricType: 'c' | 'g' | 's' | 'd';
-  name: string;
-  value: number | string;
-  unit?: MeasurementUnit;
-  tags?: Record<string, Primitive>;
-  timestamp?: number;
-}
-
 export interface IPCInterface {
   sendRendererStart: () => void;
   sendScope: (scope: string) => void;
   sendEvent: (event: string) => void;
   sendEnvelope: (evn: Uint8Array | string) => void;
   sendStatus: (state: RendererStatus) => void;
-  sendAddMetric: (metric: MetricIPCMessage) => void;
 }
 
 export const RENDERER_ID_HEADER = 'sentry-electron-renderer-id';

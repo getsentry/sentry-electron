@@ -29,9 +29,6 @@ describe('E2E Tests', async () => {
   });
 
   for (const electronVersion of getElectronTestVersions()) {
-    // Electron v20 exits immediately on macOS arch64 in GitHub Actions with SIGTRAP
-    const skipAll = process.platform === 'darwin' && process.env.CI && electronVersion.startsWith('20.');
-
     console.log(`Downloading Electron v${electronVersion}...`);
     const electronPath = await downloadElectron(electronVersion);
     console.log('Downloading complete!');
@@ -52,15 +49,15 @@ describe('E2E Tests', async () => {
       describe('Functional Test Recipes', () => {
         const categories = getCategorisedTestRecipes(electronVersion);
 
-        for (const category of Object.keys(categories)) {
+        for (const [category, recipes] of Object.entries(categories)) {
           describe(category, () => {
-            for (const recipe of categories[category]) {
+            for (const recipe of recipes) {
               const testFn = recipe.only ? test.only : test;
 
               testFn(
                 recipe.description,
                 async (ctx) => {
-                  if (skipAll || !recipe.shouldRun()) {
+                  if (!recipe.shouldRun()) {
                     ctx.skip();
                   }
 
@@ -84,7 +81,7 @@ describe('E2E Tests', async () => {
           testFn(
             recipe.description,
             async (ctx) => {
-              if (skipAll || !recipe.shouldRun()) {
+              if (!recipe.shouldRun()) {
                 ctx.skip();
               }
 

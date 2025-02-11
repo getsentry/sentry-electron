@@ -1,4 +1,12 @@
-import { getIntegrationsToSetup, Integration, logger, Options, stackParserFromStackParserOptions } from '@sentry/core';
+import {
+  addAutoIpAddressToSession,
+  addAutoIpAddressToUser,
+  getIntegrationsToSetup,
+  Integration,
+  logger,
+  Options,
+  stackParserFromStackParserOptions,
+} from '@sentry/core';
 import {
   consoleIntegration,
   contextLinesIntegration,
@@ -50,6 +58,9 @@ export function getDefaultIntegrations(options: ElectronMainOptions): Integratio
     additionalContextIntegration(),
     screenshotsIntegration(),
 
+    // Main process sessions
+    mainProcessSessionIntegration(),
+
     // Node integrations
     inboundFiltersIntegration(),
     functionToStringIntegration(),
@@ -64,11 +75,6 @@ export function getDefaultIntegrations(options: ElectronMainOptions): Integratio
     // We want paths to be normailzed after we've captured context
     normalizePathsIntegration(),
   ];
-
-  // eslint-disable-next-line deprecation/deprecation
-  if (options.autoSessionTracking !== false) {
-    integrations.push(mainProcessSessionIntegration());
-  }
 
   if (options.attachScreenshot) {
     integrations.push(screenshotsIntegration());
@@ -137,6 +143,12 @@ export type ElectronMainOptions = Pick<Partial<ElectronMainOptionsInternal>, 'ge
  * Initialize Sentry in the Electron main process
  */
 export function init(userOptions: ElectronMainOptions): void {
+  const [major = 0] = process.versions.electron.split('.').map(Number);
+
+  if (major < 23) {
+    throw new Error('Sentry Electron SDK requires Electron 23 or higher');
+  }
+
   const optionsWithDefaults = {
     _metadata: { sdk: getSdkInfo() },
     ipcMode: IPCMode.Both,
@@ -169,6 +181,10 @@ export function init(userOptions: ElectronMainOptions): void {
   scope.update(options.initialScope);
 
   const client = new NodeClient(options);
+
+  client.on('postprocessEvent', addAutoIpAddressToUser);
+  client.on('beforeSendSession', addAutoIpAddressToSession);
+
   scope.setClient(client);
   client.init();
 

@@ -46,6 +46,8 @@ const ignoredNode = [
   // We don't include these by default in the Electron SDK
   'getDefaultIntegrationsWithoutPerformance',
   'initWithoutDefaultIntegrations',
+  // We can't call these from Electron
+  'vercelAIIntegration',
 ];
 
 const ignoredUtility = [...ignoredNode, 'anrIntegration'];

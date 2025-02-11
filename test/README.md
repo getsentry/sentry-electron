@@ -65,15 +65,14 @@ platform and version of Electron. A number of variables are available to simplif
 namespace Global {
   const platform: 'win32' | 'darwin' | 'linux';
   const version: { major: number; minor: number; patch: number };
-  const usesCrashpad: boolean;
   const supportsContextIsolation: boolean;
 }
 ```
 
-If a test should only run for Electron >= v5 where Crashpad is used, the `condition` would be:
+If a test should only run for Electron >= v5, the `condition` would be:
 
 ```ts
-version.major >= 5 && usesCrashpad;
+version.major >= 5;
 ```
 
 #### `runTwice`

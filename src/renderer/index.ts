@@ -1,8 +1,6 @@
 export type {
   Breadcrumb,
   BreadcrumbHint,
-  // eslint-disable-next-line deprecation/deprecation
-  Request,
   SdkInfo,
   Event,
   EventHint,
@@ -19,8 +17,6 @@ export {
   addBreadcrumb,
   addEventProcessor,
   addIntegration,
-  // eslint-disable-next-line deprecation/deprecation
-  addTracingExtensions,
   breadcrumbsIntegration,
   browserApiErrorsIntegration,
   BrowserClient,
@@ -37,8 +33,6 @@ export {
   continueTrace,
   createTransport,
   createUserFeedbackEnvelope,
-  // eslint-disable-next-line deprecation/deprecation
-  debugIntegration,
   dedupeIntegration,
   defaultRequestInstrumentationOptions,
   endSession,
@@ -53,8 +47,6 @@ export {
   functionToStringIntegration,
   getActiveSpan,
   getClient,
-  // eslint-disable-next-line deprecation/deprecation
-  getCurrentHub,
   getCurrentScope,
   getFeedback,
   getGlobalScope,
@@ -85,8 +77,6 @@ export {
   SEMANTIC_ATTRIBUTE_SENTRY_SAMPLE_RATE,
   SEMANTIC_ATTRIBUTE_SENTRY_SOURCE,
   sendFeedback,
-  // eslint-disable-next-line deprecation/deprecation
-  sessionTimingIntegration,
   setContext,
   setCurrentClient,
   setExtra,
@@ -108,6 +98,7 @@ export {
   startSession,
   startSpan,
   startSpanManual,
+  statsigIntegration,
   suppressTracing,
   thirdPartyErrorFilterIntegration,
   updateSpanName,
@@ -130,4 +121,3 @@ export { scopeToMainIntegration } from './integrations/scope-to-main';
 export { makeRendererTransport } from './transport';
 export { init, getDefaultIntegrations } from './sdk';
 export { electronRendererStackParser as defaultStackParser } from './stack-parse';
-export * from './metrics';

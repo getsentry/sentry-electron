@@ -50,8 +50,6 @@ export function init(userOptions: NodeOptions = {}): void {
   const optionsWithDefaults = {
     defaultIntegrations: getDefaultIntegrations(),
     transport: makeUtilityProcessTransport(),
-    // We track sessions in the main process
-    autoSessionTracking: false,
     sendClientReports: false,
     ...userOptions,
     stackParser: stackParserFromStackParserOptions(userOptions.stackParser || defaultStackParser),

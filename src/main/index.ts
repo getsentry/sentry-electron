@@ -2,8 +2,6 @@ export type {
   Breadcrumb,
   BreadcrumbHint,
   PolymorphicRequest,
-  // eslint-disable-next-line deprecation/deprecation
-  Request,
   SdkInfo,
   Event,
   EventHint,
@@ -21,10 +19,6 @@ export {
   addBreadcrumb,
   addEventProcessor,
   addIntegration,
-  // eslint-disable-next-line deprecation/deprecation
-  addOpenTelemetryInstrumentation,
-  // eslint-disable-next-line deprecation/deprecation
-  addRequestDataToEvent,
   amqplibIntegration,
   captureCheckIn,
   captureConsoleIntegration,
@@ -42,16 +36,11 @@ export {
   createTransport,
   cron,
   dataloaderIntegration,
-  // eslint-disable-next-line deprecation/deprecation
-  debugIntegration,
   dedupeIntegration,
-  DEFAULT_USER_INCLUDES,
   disableAnrDetectionForCallback,
   endSession,
   expressErrorHandler,
   expressIntegration,
-  // eslint-disable-next-line deprecation/deprecation
-  extractRequestData,
   extraErrorDataIntegration,
   fastifyIntegration,
   flush,
@@ -62,8 +51,6 @@ export {
   getActiveSpan,
   getAutoPerformanceIntegrations,
   getClient,
-  // eslint-disable-next-line deprecation/deprecation
-  getCurrentHub,
   getCurrentScope,
   getGlobalScope,
   getIsolationScope,
@@ -85,24 +72,18 @@ export {
   linkedErrorsIntegration,
   localVariablesIntegration,
   lruMemoizerIntegration,
-  // eslint-disable-next-line deprecation/deprecation
-  metrics,
   modulesIntegration,
   mongoIntegration,
   mongooseIntegration,
   mysql2Integration,
   mysqlIntegration,
   nativeNodeFetchIntegration,
-  // eslint-disable-next-line deprecation/deprecation
-  nestIntegration,
   NodeClient,
   nodeContextIntegration,
   onUnhandledRejectionIntegration,
   parameterize,
   postgresIntegration,
   prismaIntegration,
-  // eslint-disable-next-line deprecation/deprecation
-  processThreadBreadcrumbIntegration,
   profiler,
   redisIntegration,
   requestDataIntegration,
@@ -113,8 +94,6 @@ export {
   SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN,
   SEMANTIC_ATTRIBUTE_SENTRY_SAMPLE_RATE,
   SEMANTIC_ATTRIBUTE_SENTRY_SOURCE,
-  // eslint-disable-next-line deprecation/deprecation
-  sessionTimingIntegration,
   setContext,
   setCurrentClient,
   setExtra,
@@ -129,8 +108,6 @@ export {
   setupFastifyErrorHandler,
   setupHapiErrorHandler,
   setupKoaErrorHandler,
-  // eslint-disable-next-line deprecation/deprecation
-  setupNestErrorHandler,
   setUser,
   spanToBaggageHeader,
   spanToJSON,

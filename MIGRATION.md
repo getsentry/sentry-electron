@@ -1,3 +1,66 @@
+This document details the changes between major versions of the Sentry Electron
+SDK.
+
+- [Upgrading from 5.x to 6.x](#upgrading-from-5x-to-6x)
+- [Upgrading from 4.x to 5.x](#upgrading-from-4x-to-5x)
+
+# Upgrading from 5.x to 6.x
+
+Most users won't notice many breaking API changes in v6 but it's worth checking out the
+[JavaScript v9 migration guide](https://docs.sentry.io/platforms/javascript/migration/v8-to-v9/).
+
+## Supported Electron Versions
+
+The Sentry Node SDK now requires Node >= 18.0.0 which means the Sentry Electron
+SDK now supports Electron >= 23.0.0.
+
+## Other notable changes
+
+### The `autoSessionTracking` option has been removed
+
+Whereas in v5, session tracking was disabled by setting `autoSessionTracking` to
+`false`:
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "__DSN__",
+  autoSessionTracking: false,
+});
+```
+
+In v6, session tracking can be disabled by removing the `MainProcessSession` integration: 
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "__DSN__",
+  integrations: (defaults) =>
+    defaults.filter((i) => i.name !== "MainProcessSession"),
+});
+```
+
+### `processThreadBreadcrumbIntegration` has been removed
+
+The `processThreadBreadcrumbIntegration` has been removed and it's functionality
+is now in the `childProcessIntegration`.
+
+
+### Include IP Addresses
+
+The SDK only includes the IP address of the user if `sendDefaultPii` is set to `true`:
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "__DSN__",
+  sendDefaultPii: true,
+});
+```
+
 # Upgrading from 4.x to 5.x
 
 Many breaking changes in v5 are due to changes in the underlying Sentry JavaScript SDKs so be sure to check the

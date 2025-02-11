@@ -14,7 +14,10 @@ import { makeRendererTransport } from './transport';
 
 /** Get the default integrations for the renderer SDK. */
 export function getDefaultIntegrations(options: ElectronRendererOptions): Integration[] {
-  return [...getDefaultBrowserIntegrations(options), scopeToMainIntegration()];
+  return [
+    ...getDefaultBrowserIntegrations(options).filter((i) => i.name !== 'BrowserSession'),
+    scopeToMainIntegration(),
+  ];
 }
 
 interface ElectronRendererOptions extends Omit<BrowserOptions, 'dsn' | 'environment' | 'release'> {
@@ -50,7 +53,7 @@ interface ElectronRendererOptions extends Omit<BrowserOptions, 'dsn' | 'environm
 export function init<O extends ElectronRendererOptions>(
   options: ElectronRendererOptions & O = {} as ElectronRendererOptions & O,
   // This parameter name ensures that TypeScript error messages contain a hint for fixing SDK version mismatches
-  originalInit: (if_you_get_a_typescript_error_ensure_sdks_use_version_v8_54_0: O) => void = browserInit,
+  originalInit: (if_you_get_a_typescript_error_ensure_sdks_use_version_v9_0_0: O) => void = browserInit,
 ): void {
   // Ensure the browser SDK is only init'ed once.
   if (window?.__SENTRY__RENDERER_INIT__) {
@@ -60,14 +63,6 @@ If init has been called in the preload and contextIsolation is disabled, is not 
   }
 
   window.__SENTRY__RENDERER_INIT__ = true;
-
-  // We don't want browser session tracking enabled by default because we already have Electron
-  // specific session tracking from the main process.
-  // eslint-disable-next-line deprecation/deprecation
-  if (options.autoSessionTracking === undefined) {
-    // eslint-disable-next-line deprecation/deprecation
-    options.autoSessionTracking = false;
-  }
 
   // Disable client reports for renderer as the sdk should only send
   // events using the main process.

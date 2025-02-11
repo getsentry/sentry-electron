@@ -28,16 +28,7 @@ export const electronContextIntegration = defineIntegration(() => {
         delete event.request.headers['User-Agent'];
       }
 
-      const {
-        release = getDefaultReleaseName(),
-        environment = getDefaultEnvironment(),
-        sendDefaultPii,
-      } = client.getOptions();
-
-      if (sendDefaultPii === true && typeof event.user?.ip_address === 'undefined') {
-        event.user = event.user || {};
-        event.user.ip_address = event.user.ip_address || '{{auto}}';
-      }
+      const { release = getDefaultReleaseName(), environment = getDefaultEnvironment() } = client.getOptions();
 
       return mergeEvents(
         {

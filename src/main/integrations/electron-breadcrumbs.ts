@@ -120,6 +120,7 @@ export const electronBreadcrumbsIntegration = defineIntegration(
       const emit = emitter.emit.bind(emitter) as (event: string, ...args: unknown[]) => boolean;
 
       emitter.emit = (event: string, ...args: unknown[]) => {
+        // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
         if (shouldCapture && shouldCapture(event)) {
           const breadcrumb: Breadcrumb = {
             category: 'electron',

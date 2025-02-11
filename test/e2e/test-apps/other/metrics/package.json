@@ -1,8 +1,0 @@
-{
-  "name": "metrics",
-  "version": "1.0.0",
-  "main": "src/main.js",
-  "dependencies": {
-    "@sentry/electron": "5.6.0"
-  }
-}

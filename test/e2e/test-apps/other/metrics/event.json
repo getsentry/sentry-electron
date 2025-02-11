@@ -1,6 +1,0 @@
-{
-  "method": "envelope",
-  "sentryKey": "37f8a2ee37c0409d8970bc7559c7c7e4",
-  "appId": "277345",
-  "metrics": "parallel_requests@none:2:2:2:2:1|g|#release:metrics@1.0.0,environment:development,type:a|T0000000000\nhits@none:4|c|T0000000000\n"
-}

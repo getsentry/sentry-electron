@@ -1,5 +1,4 @@
 description: Session with Native Main Crash (Electron Uploader)
 category: Sessions
 command: yarn
-condition: usesCrashpad
 runTwice: true
