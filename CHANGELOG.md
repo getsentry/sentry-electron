@@ -4,8 +4,28 @@
 
 ## 6.0.0
 
-This release updates the underlying Sentry JavaScript SDKs to v9 which includes some breaking changes. Check out the the [migration guide](./MIGRATION.md) for more details.
+This release updates the underlying Sentry JavaScript SDKs to v9 which includes some breaking changes. Check out the the
+[migration guide](./MIGRATION.md) for more details.
 
+### Supported Electron Versions
+
+The Sentry Node SDK now requires Node >= 18.0.0 which means the Sentry Electron
+SDK now supports Electron >= 23.0.0.
+
+### The `autoSessionTracking` option has been removed
+
+Whereas in v5, session tracking was disabled by setting `autoSessionTracking` to
+`false`, in v6 session tracking can be disabled by removing the `MainProcessSession` integration
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "__DSN__",
+  // autoSessionTracking: false,
+  integrations: (defaults) => defaults.filter((i) => i.name !== "MainProcessSession"),
+});
+```
 
 ## 5.11.0
 
