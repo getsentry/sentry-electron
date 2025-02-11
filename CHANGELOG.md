@@ -4,8 +4,11 @@
 
 ## 6.0.0
 
-This release updates the underlying Sentry JavaScript SDKs to v9 which includes some breaking changes. Check out the the
-[migration guide](./MIGRATION.md) for more details.
+This release updates the underlying Sentry JavaScript SDKs to v9 which includes
+some breaking changes. Check out the the [migration guide](./MIGRATION.md) for
+more details.
+
+- feat: Update JavaScript SDKs to v9.0.0 (#1072)
 
 ### Supported Electron Versions
 
