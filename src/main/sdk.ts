@@ -182,8 +182,10 @@ export function init(userOptions: ElectronMainOptions): void {
 
   const client = new NodeClient(options);
 
-  client.on('postprocessEvent', addAutoIpAddressToUser);
-  client.on('beforeSendSession', addAutoIpAddressToSession);
+  if (options.sendDefaultPii === true) {
+    client.on('postprocessEvent', addAutoIpAddressToUser);
+    client.on('beforeSendSession', addAutoIpAddressToSession);
+  }
 
   scope.setClient(client);
   client.init();
