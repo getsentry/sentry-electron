@@ -56,6 +56,7 @@ export {
   getSpanDescendants,
   getSpanStatusFromHttpCode,
   globalHandlersIntegration,
+  graphqlClientIntegration,
   httpClientIntegration,
   httpContextIntegration,
   inboundFiltersIntegration,
