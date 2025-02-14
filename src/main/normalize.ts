@@ -104,7 +104,6 @@ export function normaliseProfile(profile: Profile, basePath: string): void {
       frame.abs_path = normalizeUrlToBase(frame.abs_path, basePath);
     }
 
-
     // filename isn't in the types but its in the actual data
     if ('filename' in frame && typeof frame.filename === 'string') {
       frame.filename = normalizeUrlToBase(frame.filename, basePath);
