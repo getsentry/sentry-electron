@@ -124,9 +124,7 @@
       ],
       "frames": [
         {
-          "function": "startSpan",
-          "abs_path": "app:///node_modules/@sentry/core/build/esm/tracing/trace.js",
-          "module": "@sentry.core.build.esm.tracing:trace"
+          "function": "startSpan"
         },
         {
           "module": "main"
