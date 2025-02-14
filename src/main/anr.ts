@@ -1,6 +1,6 @@
 import { callFrameToStackFrame, Event, logger, stripSentryFramesAndReverse, watchdogTimer } from '@sentry/core';
 import { captureEvent, createGetModuleFromFilename, getClient, StackFrame } from '@sentry/node';
-import { app, WebContents } from 'electron';
+import { app, powerMonitor, WebContents } from 'electron';
 
 import { RendererStatus } from '../common/ipc';
 import { ElectronMainOptions } from './sdk';
@@ -133,6 +133,14 @@ export function createRendererAnrStatusHandler(): (status: RendererStatus, conte
 
     let watchdog = rendererWatchdogTimers.get(contents);
 
+    function disable(): void {
+      watchdog?.enabled(false);
+    }
+
+    function enable(): void {
+      watchdog?.enabled(true);
+    }
+
     if (watchdog === undefined) {
       log('Renderer sent first status message', message.config);
       let pauseAndCapture: (() => void) | undefined;
@@ -158,7 +166,19 @@ export function createRendererAnrStatusHandler(): (status: RendererStatus, conte
 
       contents.once('destroyed', () => {
         rendererWatchdogTimers?.delete(contents);
+
+        powerMonitor.off('suspend', disable);
+        powerMonitor.off('resume', enable);
+        powerMonitor.off('lock-screen', disable);
+        powerMonitor.off('unlock-screen', enable);
       });
+
+      contents.once('blur', disable);
+      contents.once('focus', enable);
+      powerMonitor.on('suspend', disable);
+      powerMonitor.on('resume', enable);
+      powerMonitor.on('lock-screen', disable);
+      powerMonitor.on('unlock-screen', enable);
 
       rendererWatchdogTimers.set(contents, watchdog);
     }

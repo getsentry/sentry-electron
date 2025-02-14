@@ -1,4 +1,3 @@
-/* eslint-disable no-restricted-globals */
 import { RendererProcessAnrOptions } from '../common/ipc';
 import { getIPC } from './ipc';
 
@@ -15,10 +14,7 @@ export function enableAnrRendererMessages(options: Partial<RendererProcessAnrOpt
 
   const ipc = getIPC();
 
-  document.addEventListener('visibilitychange', () => {
-    ipc.sendStatus({ status: document.visibilityState, config });
-  });
-
+  // eslint-disable-next-line no-restricted-globals
   ipc.sendStatus({ status: document.visibilityState, config });
 
   setInterval(() => {
