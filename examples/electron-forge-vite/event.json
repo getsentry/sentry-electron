@@ -61,7 +61,6 @@
     "debug_meta": {
       "images": [
         {
-          "code_file": "app:///.vite/renderer/main_window/assets/index-Cvxxr7dX.js",
           "type": "sourcemap"
         }
       ]
@@ -75,14 +74,12 @@
             "frames": [
               {
                 "colno": 0,
-                "filename": "app:///.vite/renderer/main_window/assets/index-Cvxxr7dX.js",
                 "function": "{{function}}",
                 "in_app": true,
                 "lineno": 0
               },
               {
                 "colno": 0,
-                "filename": "app:///.vite/renderer/main_window/assets/index-Cvxxr7dX.js",
                 "function": "{{function}}",
                 "in_app": true,
                 "lineno": 0
