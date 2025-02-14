@@ -122,10 +122,24 @@
           "thread_id": "0"
         }
       ],
-      "thread_metadata": { "0": { "name": "main" } }
+      "frames": [
+        {
+          "function": "startSpan",
+          "abs_path": "app:///node_modules/@sentry/core/build/esm/tracing/trace.js",
+          "module": "@sentry.core.build.esm.tracing:trace"
+        },
+        {
+          "module": "main"
+        }
+      ],
+      "thread_metadata": {
+        "0": {
+          "name": "main"
+        }
+      }
     },
     "transaction": {
-        "name": "Long work"
+      "name": "Long work"
     }
   }
 }

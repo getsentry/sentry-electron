@@ -9,6 +9,10 @@ import {
   Profile,
   ReplayEvent,
 } from '@sentry/core';
+import { createGetModuleFromFilename } from '@sentry/node';
+import { app } from 'electron';
+
+const getModuleFromFilename = createGetModuleFromFilename(app.getAppPath());
 
 /**
  * Normalizes all URLs in an event. See {@link normalizeUrl} for more
@@ -98,6 +102,16 @@ export function normaliseProfile(profile: Profile, basePath: string): void {
   for (const frame of profile.profile.frames) {
     if (frame.abs_path) {
       frame.abs_path = normalizeUrlToBase(frame.abs_path, basePath);
+    }
+
+
+    // filename isn't in the types but its in the actual data
+    if ('filename' in frame && typeof frame.filename === 'string') {
+      frame.filename = normalizeUrlToBase(frame.filename, basePath);
+    }
+
+    if (frame.module) {
+      frame.module = getModuleFromFilename(frame.abs_path);
     }
   }
 }
