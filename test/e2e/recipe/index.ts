@@ -171,6 +171,7 @@ export class RecipeRunner {
           // We replace the Sentry JavaScript dependency versions to match that of @sentry/core
           .replace(/"@sentry\/replay": ".*"/, `"@sentry/replay": "${JS_VERSION}"`)
           .replace(/"@sentry\/react": ".*"/, `"@sentry/react": "${JS_VERSION}"`)
+          .replace(/"@sentry\/profiling-node": ".*"/, `"@sentry/profiling-node": "${JS_VERSION}"`)
           .replace(/"@sentry\/integrations": ".*"/, `"@sentry/integrations": "${JS_VERSION}"`)
           .replace(/"@sentry\/vue": ".*"/, `"@sentry/vue": "${JS_VERSION}"`);
       }

@@ -1,0 +1,13 @@
+{
+  "name": "node-profiling",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "scripts": {
+    "install": "electron-rebuild"
+  },
+  "dependencies": {
+    "@electron/rebuild":"^3.7.1",
+    "@sentry/electron": "5.6.0",
+    "@sentry/profiling-node": "9.0.0"
+  }
+}
