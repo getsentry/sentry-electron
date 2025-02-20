@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 6.1.0
+
+- feat: Update from
+  [v9.0.1](https://github.com/getsentry/sentry-javascript/releases/tag/9.0.1) to
+  [v9.1.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.1.0)
+  (#1080)
+- feat: Support `@sentry/profiling-node` (#1084)
+- fix: Renderer ANR detection (#1083)
+
 ## 6.0.0
 
 This release updates the underlying Sentry JavaScript SDKs to v9 which includes
