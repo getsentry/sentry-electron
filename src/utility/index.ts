@@ -40,6 +40,7 @@ export {
   dedupeIntegration,
   disableAnrDetectionForCallback,
   endSession,
+  eventFiltersIntegration,
   expressErrorHandler,
   expressIntegration,
   extraErrorDataIntegration,
@@ -63,6 +64,7 @@ export {
   graphqlIntegration,
   hapiIntegration,
   httpIntegration,
+  // eslint-disable-next-line deprecation/deprecation
   inboundFiltersIntegration,
   initOpenTelemetry,
   isInitialized,

@@ -10,9 +10,9 @@ import {
 import {
   consoleIntegration,
   createGetModuleFromFilename,
+  eventFiltersIntegration,
   functionToStringIntegration,
   getCurrentScope,
-  inboundFiltersIntegration,
   initOpenTelemetry,
   linkedErrorsIntegration,
   nativeNodeFetchIntegration,
@@ -31,7 +31,7 @@ export const defaultStackParser: StackParser = createStackParser(nodeStackLinePa
 export function getDefaultIntegrations(): Integration[] {
   const integrations = [
     // Node integrations
-    inboundFiltersIntegration(),
+    eventFiltersIntegration(),
     functionToStringIntegration(),
     linkedErrorsIntegration(),
     consoleIntegration(),

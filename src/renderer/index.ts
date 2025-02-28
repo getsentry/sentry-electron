@@ -36,6 +36,7 @@ export {
   dedupeIntegration,
   defaultRequestInstrumentationOptions,
   endSession,
+  eventFiltersIntegration,
   eventFromException,
   eventFromMessage,
   exceptionFromError,
@@ -59,6 +60,7 @@ export {
   graphqlClientIntegration,
   httpClientIntegration,
   httpContextIntegration,
+  // eslint-disable-next-line deprecation/deprecation
   inboundFiltersIntegration,
   instrumentOutgoingRequests,
   isInitialized,
