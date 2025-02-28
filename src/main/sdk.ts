@@ -10,9 +10,9 @@ import {
 import {
   consoleIntegration,
   contextLinesIntegration,
+  eventFiltersIntegration,
   functionToStringIntegration,
   getCurrentScope,
-  inboundFiltersIntegration,
   initOpenTelemetry,
   linkedErrorsIntegration,
   localVariablesIntegration,
@@ -62,7 +62,7 @@ export function getDefaultIntegrations(options: ElectronMainOptions): Integratio
     mainProcessSessionIntegration(),
 
     // Node integrations
-    inboundFiltersIntegration(),
+    eventFiltersIntegration(),
     functionToStringIntegration(),
     linkedErrorsIntegration(),
     consoleIntegration(),
