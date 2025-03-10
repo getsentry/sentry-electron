@@ -216,7 +216,7 @@ export type MinidumpParseResult = {
   crashpadAnnotations?: CrashpadAnnotations;
 };
 
-function looksValid(header: MinidumpHeader, bufLen: number): boolean {
+function miniDumpLooksValid(header: MinidumpHeader, bufLen: number): boolean {
   return header.signature === MINIDUMP_MAGIC_SIGNATURE && header.version === MINIDUMP_VERSION && bufLen > 10_000;
 }
 
@@ -233,24 +233,28 @@ export function parseMinidump(buf: Buffer): MinidumpParseResult | undefined {
     return undefined;
   }
 
-  if (looksValid(header, buf.length)) {
+  if (!miniDumpLooksValid(header, buf.length)) {
     return undefined;
   }
 
-  for (let i = 0; i < header.streamCount; i++) {
-    const stream = readDirectoryStream(buf, header.streamDirectoryRva + i * 12);
+  try {
+    for (let i = 0; i < header.streamCount; i++) {
+      const stream = readDirectoryStream(buf, header.streamDirectoryRva + i * 12);
 
-    // Crashpad specific stream in Electron minidump files
-    // https://crashpad.chromium.org/doxygen/structcrashpad_1_1MinidumpCrashpadInfo.html
-    if (stream.streamType === 1_129_316_353) {
-      const crashpadInfo = readCrashpadInfoBuffer(buf, stream.location);
-      const crashpadAnnotations = parseCrashpadInfo(buf, crashpadInfo) as CrashpadAnnotations;
+      // Crashpad specific stream in Electron minidump files
+      // https://crashpad.chromium.org/doxygen/structcrashpad_1_1MinidumpCrashpadInfo.html
+      if (stream.streamType === 1_129_316_353) {
+        const crashpadInfo = readCrashpadInfoBuffer(buf, stream.location);
+        const crashpadAnnotations = parseCrashpadInfo(buf, crashpadInfo) as CrashpadAnnotations;
 
-      return {
-        header,
-        crashpadAnnotations,
-      };
+        return {
+          header,
+          crashpadAnnotations,
+        };
+      }
     }
+  } catch (_) {
+    //
   }
 
   return { header };

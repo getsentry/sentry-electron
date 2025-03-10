@@ -127,7 +127,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
             ...event.contexts?.electron,
             ...prependedAnnotations,
           },
-        }
+        };
       }
 
       if (minidumpsRemaining > 0) {

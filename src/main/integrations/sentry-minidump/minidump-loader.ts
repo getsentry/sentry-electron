@@ -75,14 +75,11 @@ export function createMinidumpLoader(getMinidumpPaths: () => Promise<string[]>):
 
               logger.log('Sending minidump');
 
-              await callback(
-                parsedMinidump,
-                 {
-                  attachmentType: 'event.minidump',
-                  filename: basename(path),
-                  data,
-                },
-              );
+              await callback(parsedMinidump, {
+                attachmentType: 'event.minidump',
+                filename: basename(path),
+                data,
+              });
 
               break;
             }
