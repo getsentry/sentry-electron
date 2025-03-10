@@ -1,4 +1,4 @@
-// This code takes a lot of inspiration and info from the rust-minidump crate at thins point:
+// This code takes a lot of inspiration and info from the rust-minidump crate at this point in time:
 // https://github.com/rust-minidump/rust-minidump/tree/760f84058b909ff0f980988bd09f3a0f0421d298
 //
 // rust-minidump has the following license:
