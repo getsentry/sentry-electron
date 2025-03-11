@@ -109,7 +109,13 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
     await minidumpLoader?.(deleteAll, async (minidumpResult, attachment) => {
       minidumpFound = true;
 
-      const minidumpProcess = minidumpResult.crashpadAnnotations?.process_type;
+      let minidumpProcess = minidumpResult.crashpadAnnotations?.process_type;
+
+      // For backwards compatibility, we need to map 'gpu-process' to 'GPU'
+      // TODO (v7): Remove this
+      if (minidumpProcess === 'gpu-process') {
+        minidumpProcess = 'GPU';
+      }
 
       const event = await getEvent(minidumpProcess);
 

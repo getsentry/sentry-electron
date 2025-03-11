@@ -26,7 +26,6 @@
 // SOFTWARE.
 
 export const MINIDUMP_MAGIC_SIGNATURE = 'MDMP';
-export const MINIDUMP_VERSION = 42899;
 
 // https://docs.microsoft.com/en-us/windows/win32/api/minidumpapiset/ns-minidumpapiset-minidump_header
 type MinidumpHeader = {
@@ -216,10 +215,6 @@ export type MinidumpParseResult = {
   crashpadAnnotations?: CrashpadAnnotations;
 };
 
-function miniDumpLooksValid(header: MinidumpHeader, bufLen: number): boolean {
-  return header.signature === MINIDUMP_MAGIC_SIGNATURE && header.version === MINIDUMP_VERSION && bufLen > 10_000;
-}
-
 /** Parses an Electron minidump and extracts the header and crashpad annotations */
 export function parseMinidump(buf: Buffer): MinidumpParseResult | undefined {
   if (buf.length < 32) {
@@ -233,7 +228,7 @@ export function parseMinidump(buf: Buffer): MinidumpParseResult | undefined {
     return undefined;
   }
 
-  if (!miniDumpLooksValid(header, buf.length)) {
+  if (header.signature !== MINIDUMP_MAGIC_SIGNATURE || buf.length < 10_000) {
     return undefined;
   }
 
