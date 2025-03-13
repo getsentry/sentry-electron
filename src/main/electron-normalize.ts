@@ -74,17 +74,17 @@ export function registerProtocol(
 }
 
 type PreloadScriptRegistration = {
-  // Context type where the preload script will be executed. Possible values include frame or service-worker.
+  // Context type where the preload script will be executed.
   type: 'frame' | 'service-worker';
   // Unique ID of preload script. Defaults to a random UUID.
   id?: string;
   // Path of the script file. Must be an absolute path.
-  filePath: string
-}
+  filePath: string;
+};
 
 type SessionMaybeSupportingRegisterPreloadScript = Session & {
   registerPreloadScript?: (script: PreloadScriptRegistration) => void;
-}
+};
 
 /**
  * Adds a preload script to the session.
