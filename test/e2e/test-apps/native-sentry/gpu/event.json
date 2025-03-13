@@ -21,6 +21,10 @@
       "browser": {
         "name": "Chrome"
       },
+      "gpu":{
+        "vendor_id": "0x0000",
+        "device_id": "0x0000"
+      },
       "chrome": {
         "name": "Chrome",
         "type": "runtime",

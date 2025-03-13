@@ -70,6 +70,19 @@ function normalizeEvent(event: Event & ReplayEvent): void {
     event.contexts.app.app_start_time = '{{time}}';
   }
 
+  // Windows e2e tests have two GPU contexts for some reason so we copy one over to the default
+  if (event.contexts?.gpu_1) {
+    event.contexts.gpu = event.contexts.gpu_1;
+  }
+
+  if (event.contexts?.gpu?.vendor_id) {
+    event.contexts.gpu.vendor_id = '0x0000';
+  }
+
+  if (event.contexts?.gpu?.device_id) {
+    event.contexts.gpu.device_id = '0x0000';
+  }
+
   if (event.contexts?.chrome?.version) {
     event.contexts.chrome.version = '{{version}}';
   }

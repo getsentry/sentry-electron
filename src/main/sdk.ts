@@ -31,6 +31,7 @@ import { additionalContextIntegration } from './integrations/additional-context'
 import { childProcessIntegration } from './integrations/child-process';
 import { electronBreadcrumbsIntegration } from './integrations/electron-breadcrumbs';
 import { electronContextIntegration } from './integrations/electron-context';
+import { gpuContextIntegration } from './integrations/gpu-context';
 import { mainProcessSessionIntegration } from './integrations/main-process-session';
 import { electronNetIntegration } from './integrations/net-breadcrumbs';
 import { normalizePathsIntegration } from './integrations/normalize-paths';
@@ -57,6 +58,7 @@ export function getDefaultIntegrations(options: ElectronMainOptions): Integratio
     preloadInjectionIntegration(),
     additionalContextIntegration(),
     screenshotsIntegration(),
+    gpuContextIntegration(),
 
     // Main process sessions
     mainProcessSessionIntegration(),
