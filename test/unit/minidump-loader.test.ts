@@ -36,7 +36,7 @@ describe('createMinidumpLoader', () => {
 
       const loader = createMinidumpLoader(() => Promise.resolve([dumpPath]));
 
-      void loader(false, (_, attachment) => {
+      void loader(false, async (_, attachment) => {
         expect(attachment).to.eql({
           data: VALID_LOOKING_MINIDUMP,
           filename: name,
@@ -60,7 +60,7 @@ describe('createMinidumpLoader', () => {
       const loader = createMinidumpLoader(() => Promise.resolve([missingHeaderDump, tooSmallDump]));
 
       let passedAttachment = false;
-      void loader(false, () => {
+      void loader(false, async () => {
         passedAttachment = true;
       });
 
@@ -82,7 +82,7 @@ describe('createMinidumpLoader', () => {
       const loader = createMinidumpLoader(() => Promise.resolve([dumpPath]));
 
       let passedAttachment = false;
-      void loader(false, () => {
+      void loader(false, async () => {
         passedAttachment = true;
       });
 
@@ -101,7 +101,7 @@ describe('createMinidumpLoader', () => {
       const loader = createMinidumpLoader(() => Promise.resolve([dumpPath]));
 
       let passedAttachment = false;
-      void loader(true, () => {
+      void loader(true, async () => {
         passedAttachment = true;
       });
 
@@ -134,7 +134,7 @@ describe('createMinidumpLoader', () => {
 
         const loader = createMinidumpLoader(() => Promise.resolve([dumpPath]));
 
-        void loader(false, (_) => {
+        void loader(false, async (_) => {
           expect(count).to.be.greaterThanOrEqual(3_000);
           done();
         });
@@ -151,7 +151,7 @@ describe('createMinidumpLoader', () => {
 
       const loader = createMinidumpLoader(() => Promise.resolve([missingPath, dumpPath]));
 
-      void loader(false, (_, attachment) => {
+      void loader(false, async (_, attachment) => {
         expect(attachment.filename).to.eql(name);
 
         setTimeout(() => {

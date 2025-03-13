@@ -56,7 +56,8 @@
         "version": "{{version}}"
       },
       "electron": {
-        "crashed_url": "app:///src/index.html"
+        "crashed_url": "app:///src/index.html",
+        "crashpad.process_type": "renderer"
       }
     },
     "release": "native-sentry-renderer@1.0.0",
