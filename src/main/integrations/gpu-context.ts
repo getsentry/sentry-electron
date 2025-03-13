@@ -2,6 +2,12 @@ import { defineIntegration, dropUndefinedKeys, Event } from '@sentry/core';
 import { app } from 'electron';
 
 interface Options {
+  /**
+   * How much GPU information to request from Electron `app.getGPUInfo` API.
+   * `complete` can take much longer to resolve so the default is `basic`.
+   * - 'basic': Usually only the `vendor_id` and `device_id` but some platforms supply more.
+   * - 'complete': More detailed information including full names and driver_version.
+   */
   infoLevel: 'basic' | 'complete';
 }
 
@@ -40,33 +46,27 @@ function gpuDeviceToGpuContext(device: GpuDevice): GpuContext {
 }
 
 /**
- * Adds additional Electron context to events
+ * Adds GPU context to events
  */
 export const gpuContextIntegration = defineIntegration((options: Options = { infoLevel: 'basic' }) => {
-  let gpuContextsPromise: Promise<GpuContext[]> | undefined;
+  let gpuContexts: GpuContext[] | undefined;
 
   return {
     name: 'GpuContext',
-    setup() {
-      app.on('gpu-info-update', async () => {
-        gpuContextsPromise = (app.getGPUInfo(options.infoLevel) as Promise<GpuInfoResult>).then((result) =>
-          result.gpuDevice.map(gpuDeviceToGpuContext),
-        );
-      });
-    },
     processEvent: async (event): Promise<Event> => {
-      if (gpuContextsPromise) {
-        const gpuContexts = await gpuContextsPromise;
+      if (gpuContexts === undefined) {
+        const result = (await app.getGPUInfo(options.infoLevel)) as GpuInfoResult;
+        gpuContexts = result.gpuDevice.map(gpuDeviceToGpuContext);
+      }
 
-        if (gpuContexts.length === 1) {
-          event.contexts = { ...event.contexts, gpu: gpuContexts[0] };
-        } else if (gpuContexts.length > 1) {
-          event.contexts = { ...event.contexts };
-          for (let i = 0; i < gpuContexts.length; i++) {
-            const gpuContext = gpuContexts[i] as GpuContext;
-            gpuContext.type = 'gpu';
-            event.contexts[`gpu_${i + 1}`] = gpuContext;
-          }
+      if (gpuContexts.length === 1) {
+        event.contexts = { ...event.contexts, gpu: gpuContexts[0] };
+      } else if (gpuContexts.length > 1) {
+        event.contexts = { ...event.contexts };
+        for (let i = 0; i < gpuContexts.length; i++) {
+          const gpuContext = gpuContexts[i] as GpuContext;
+          gpuContext.type = 'gpu';
+          event.contexts[`gpu_${i + 1}`] = gpuContext;
         }
       }
 
