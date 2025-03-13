@@ -5,6 +5,7 @@ import { isAbsolute, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 import { IPCMode } from '../../common/ipc';
+import { setPreload } from '../electron-normalize';
 import { ElectronMainOptionsInternal } from '../sdk';
 
 // After bundling with webpack, require.resolve can return number so we include that in the types
@@ -48,9 +49,7 @@ export const preloadInjectionIntegration = defineIntegration(() => {
 
         if (path && typeof path === 'string' && isAbsolute(path) && existsSync(path)) {
           for (const sesh of options.getSessions()) {
-            // Fetch any existing preloads so we don't overwrite them
-            const existing = sesh.getPreloads();
-            sesh.setPreloads([path, ...existing]);
+            setPreload(sesh, path);
           }
         } else {
           logger.log(
