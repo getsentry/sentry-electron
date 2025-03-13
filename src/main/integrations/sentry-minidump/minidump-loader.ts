@@ -66,20 +66,21 @@ export function createMinidumpLoader(getMinidumpPaths: () => Promise<string[]>):
 
             if (stats.mtimeMs < twoSecondsAgo) {
               const data = await fs.readFile(path);
-              const parsedMinidump = parseMinidump(data);
+              try {
+                const parsedMinidump = parseMinidump(data);
 
-              if (parsedMinidump === undefined) {
-                logger.warn('Dropping minidump as it appears invalid.');
+                logger.log('Sending minidump');
+
+                await callback(parsedMinidump, {
+                  attachmentType: 'event.minidump',
+                  filename: basename(path),
+                  data,
+                });
+              } catch (e) {
+                const message = e instanceof Error ? e.message : 'Unknown error';
+                logger.warn(`Dropping minidump: ${message}`);
                 break;
               }
-
-              logger.log('Sending minidump');
-
-              await callback(parsedMinidump, {
-                attachmentType: 'event.minidump',
-                filename: basename(path),
-                data,
-              });
 
               break;
             }

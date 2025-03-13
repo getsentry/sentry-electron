@@ -29,9 +29,17 @@ export const MINIDUMP_MAGIC_SIGNATURE = 'MDMP';
 
 // https://docs.microsoft.com/en-us/windows/win32/api/minidumpapiset/ns-minidumpapiset-minidump_header
 type MinidumpHeader = {
+  /** This should be MDMP */
   signature: string;
+  /** This should be 42899 */
   version: number;
+  /** The number of streams contained in the stream directory. */
   streamCount: number;
+  /**
+   * The offset to the stream directory within the minidump.
+   * This usually points to immediately after the header.
+   * The stream directory is an array containing `stream_count`
+   */
   streamDirectoryRva: number;
   checksum: number;
   timeDateStamp: Date;
@@ -40,79 +48,77 @@ type MinidumpHeader = {
 
 function readHeader(buf: Buffer): MinidumpHeader {
   // pub struct MINIDUMP_HEADER {
-  //   pub signature: u32,
-  //   pub version: u32,
-  //   pub stream_count: u32,
-  //   pub stream_directory_rva: RVA,
-  //   pub checksum: u32,
-  //   pub time_date_stamp: u32,
-  //   pub flags: u64,
-  // }
-
   return {
+    //   pub signature: u32,
     signature: buf.subarray(0, 4).toString(),
+    //   pub version: u32,
     version: buf.readUInt32LE(4),
+    //   pub stream_count: u32,
     streamCount: buf.readUInt32LE(8),
+    //   pub stream_directory_rva: u32,
     streamDirectoryRva: buf.readUInt32LE(12),
+    //   pub checksum: u32,
     checksum: buf.readUInt32LE(16),
+    //   pub time_date_stamp: u32,
     timeDateStamp: new Date(buf.readUInt32LE(20) * 1000),
+    //   pub flags: u64,
     flags: buf.readBigUInt64LE(24),
   };
+  // }
 }
 
-type Location = {
+type MinidumpLocation = {
+  /** The size of this data. */
   dataSize: number;
+  /** The offset to this data within the minidump file. */
   rva: number;
 };
 
 // https://docs.microsoft.com/en-us/windows/win32/api/minidumpapiset/ns-minidumpapiset-minidump_location_descriptor
-function readLocationDescriptor(buf: Buffer, base: number): Location {
+function readLocationDescriptor(buf: Buffer, base: number): MinidumpLocation {
   // pub struct MINIDUMP_LOCATION_DESCRIPTOR {
-  //   pub data_size: u32,
-  //   pub rva: RVA,
-  // }
-
   return {
+    //   pub data_size: u32,
     dataSize: buf.readUInt32LE(base),
+    //   pub rva: u32,
     rva: buf.readUInt32LE(base + 4),
   };
+  // }
 }
 
 type MinidumpStream = {
+  /** This is usually one of the values for known stream types,
+   * but user streams can have arbitrary values. */
   streamType: number;
-  location: Location;
+  /** The location of the stream contents within the dump */
+  location: MinidumpLocation;
 };
 
 // https://docs.microsoft.com/en-us/windows/win32/api/minidumpapiset/ns-minidumpapiset-minidump_directory
 function readDirectoryStream(buf: Buffer, rva: number): MinidumpStream {
   // pub struct MINIDUMP_DIRECTORY {
-  //   pub stream_type: u32,
-  //   pub location: MINIDUMP_LOCATION_DESCRIPTOR,
-  // }
-
   return {
+    //   pub stream_type: u32,
     streamType: buf.readUInt32LE(rva),
+    //   pub location: [u32, u32],
     location: readLocationDescriptor(buf, rva + 4),
   };
+  // }
 }
 
-function readCrashpadInfoBuffer(buf: Buffer, location: Location): Buffer {
+function readCrashpadInfoBuffer(buf: Buffer, location: MinidumpLocation): Buffer {
   return buf.subarray(location.rva, location.rva + location.dataSize);
 }
 
 // https://crashpad.chromium.org/doxygen/structcrashpad_1_1MinidumpModuleCrashpadInfo.html
-function readCrashpadModuleInfoAnnotationObjectsLocation(buf: Buffer, base: number): Location {
+function readCrashpadModuleInfoAnnotationObjectsLocation(buf: Buffer, base: number): MinidumpLocation {
   // pub struct MINIDUMP_MODULE_CRASHPAD_INFO {
   //   pub version: u32,
-  //   pub list_annotations: MINIDUMP_LOCATION_DESCRIPTOR,
-  //   pub simple_annotations: MINIDUMP_LOCATION_DESCRIPTOR,
-  //   pub annotation_objects: MINIDUMP_LOCATION_DESCRIPTOR,
-  // }
-
-  // const version = buf.readUInt32LE(base)
-  // const list_annotations = readLocationDescriptor(buf, base + 4)
-  // const simple_annotations = readLocationDescriptor(buf, base + 12)
+  //   pub list_annotations: [u32, u32],
+  //   pub simple_annotations: [u32, u32],
+  //   pub annotation_objects: [u32, u32],
   const annotation_objects = readLocationDescriptor(buf, base + 20);
+  // }
 
   return annotation_objects;
 }
@@ -122,27 +128,33 @@ function readStringUtf8Unterminated(buf: Buffer, rva: number): string {
   return buf.toString('utf8', rva + 4, rva + 4 + length);
 }
 
-function readAnnotationObject(buf: Buffer, all: Buffer, offset: number): [string, string] | undefined {
+type AnnotationObject = {
+  /** MinidumpUTF8String containing the name of the annotation. */
+  name: string;
+  /** `MinidumpByteArray` to the data for the annotation. */
+  value: string;
+}
+
+function readAnnotationObject(buf: Buffer, all: Buffer, offset: number): AnnotationObject | undefined {
   // pub struct MINIDUMP_ANNOTATION {
   //   pub name: u32,
+  const name = buf.readUInt32LE(offset);
   //   pub ty: u16,
+  const ty = buf.readUInt16LE(offset + 4);
   //   pub _reserved: u16,
   //   pub value: u32,
+  const value = buf.readUInt32LE(offset + 8);
   // }
 
-  const name = buf.readUInt32LE(offset);
-  const ty = buf.readUInt16LE(offset + 4);
-  // const _reserved = buf.readUInt16LE(offset + 6)
-  const value = buf.readUInt32LE(offset + 8);
-
+  // Only consider string annotations
   if (ty === 1) {
-    return [readStringUtf8Unterminated(all, name), readStringUtf8Unterminated(all, value)];
+    return { name: readStringUtf8Unterminated(all, name), value: readStringUtf8Unterminated(all, value) };
   }
 
   return undefined;
 }
 
-function readAnnotationObjects(buf: Buffer, location: Location): Record<string, string> {
+function readAnnotationObjects(buf: Buffer, location: MinidumpLocation): Record<string, string> {
   const data = buf.subarray(location.rva, location.rva + location.dataSize);
   if (data.length === 0) {
     return {};
@@ -161,16 +173,16 @@ function readAnnotationObjects(buf: Buffer, location: Location): Record<string, 
   for (let i = 0; i < count; i++) {
     const annotation = readAnnotationObject(annotationObjectsData, buf, offset);
     if (annotation) {
-      const [key, value] = annotation;
-      annotationObjects[key] = value;
+      const { name, value } = annotation;
+      annotationObjects[name] = value;
     }
-    offset += 12;
+    offset += 12; // Each MINIDUMP_ANNOTATION is 12 bytes
   }
 
   return annotationObjects;
 }
 
-function readCrashpadModuleLinks(buf: Buffer, location: Location): Record<string, string> {
+function readCrashpadModuleLinks(buf: Buffer, location: MinidumpLocation): Record<string, string> {
   const data = buf.subarray(location.rva, location.rva + location.dataSize);
 
   if (data.length === 0) {
@@ -192,16 +204,14 @@ function readCrashpadModuleLinks(buf: Buffer, location: Location): Record<string
 
 // https://crashpad.chromium.org/doxygen/structcrashpad_1_1MinidumpCrashpadInfo.html
 function parseCrashpadInfo(buf: Buffer, info: Buffer): Record<string, string> {
-  // This stream is of the following format:
   // pub struct MINIDUMP_CRASHPAD_INFO {
   //   pub version: u32,
-  //   pub report_id: GUID,
-  //   pub client_id: GUID,
-  //   pub simple_annotations: MINIDUMP_LOCATION_DESCRIPTOR,
-  //   pub module_list: MINIDUMP_LOCATION_DESCRIPTOR,
-  // }
-
+  //   pub report_id: GUID (16 bytes),
+  //   pub client_id: GUID (16 bytes),
+  //   pub simple_annotations: [u32, u32],
+  //   pub module_list: [u32, u32],
   const module_list = readLocationDescriptor(info, 44);
+  // }
 
   return readCrashpadModuleLinks(buf, module_list);
 }
@@ -215,21 +225,25 @@ export type MinidumpParseResult = {
   crashpadAnnotations?: CrashpadAnnotations;
 };
 
-/** Parses an Electron minidump and extracts the header and crashpad annotations */
-export function parseMinidump(buf: Buffer): MinidumpParseResult | undefined {
-  if (buf.length < 32) {
-    return undefined;
+/**
+ * Parses an Electron minidump and extracts the header and crashpad annotations
+ */
+export function parseMinidump(buf: Buffer): MinidumpParseResult {
+  // Don't even bother trying to parse minidumps that are less than 10KB because they cannot be valid Electron minidumps
+  // https://github.com/getsentry/sentry-electron/pull/748
+  if (buf.length < 10_000) {
+    throw new Error('Minidump was less than 10KB so likely incomplete.');
   }
 
   let header: MinidumpHeader | undefined;
   try {
     header = readHeader(buf);
   } catch (_) {
-    return undefined;
+    throw new Error('Failed to parse minidump header');
   }
 
-  if (header.signature !== MINIDUMP_MAGIC_SIGNATURE || buf.length < 10_000) {
-    return undefined;
+  if (header.signature !== MINIDUMP_MAGIC_SIGNATURE) {
+    throw new Error(`Minidump signature was not '${MINIDUMP_MAGIC_SIGNATURE}'`);
   }
 
   try {
@@ -240,7 +254,7 @@ export function parseMinidump(buf: Buffer): MinidumpParseResult | undefined {
       // https://crashpad.chromium.org/doxygen/structcrashpad_1_1MinidumpCrashpadInfo.html
       if (stream.streamType === 1_129_316_353) {
         const crashpadInfo = readCrashpadInfoBuffer(buf, stream.location);
-        const crashpadAnnotations = parseCrashpadInfo(buf, crashpadInfo) as CrashpadAnnotations;
+        const crashpadAnnotations = parseCrashpadInfo(buf, crashpadInfo);
 
         return {
           header,
