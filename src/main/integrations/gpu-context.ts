@@ -32,9 +32,9 @@ function gpuDeviceToGpuContext(device: GpuDevice): GpuContext {
   return dropUndefinedKeys({
     name: device.deviceString || 'GPU',
     active: device.active,
-    vendor_id: `0x${device.vendorId.toString(16)}`,
+    vendor_id: `0x${device.vendorId.toString(16).padStart(4, '0')}`,
     vendor_name: device.vendorString,
-    device_id: `0x${device.deviceId.toString(16)}`,
+    device_id: `0x${device.deviceId.toString(16).padStart(4, '0')}`,
     driver_version: device.driverVersion,
   });
 }

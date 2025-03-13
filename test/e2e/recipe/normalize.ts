@@ -70,6 +70,14 @@ function normalizeEvent(event: Event & ReplayEvent): void {
     event.contexts.app.app_start_time = '{{time}}';
   }
 
+  if (event.contexts?.gpu?.vendor_id) {
+    event.contexts.gpu.vendor_id = '0x0000';
+  }
+
+  if (event.contexts?.gpu?.device_id) {
+    event.contexts.gpu.device_id = '0x0000';
+  }
+
   if (event.contexts?.chrome?.version) {
     event.contexts.chrome.version = '{{version}}';
   }
