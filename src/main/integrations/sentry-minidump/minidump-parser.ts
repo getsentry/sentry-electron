@@ -133,7 +133,7 @@ type AnnotationObject = {
   name: string;
   /** `MinidumpByteArray` to the data for the annotation. */
   value: string;
-}
+};
 
 function readAnnotationObject(buf: Buffer, all: Buffer, offset: number): AnnotationObject | undefined {
   // pub struct MINIDUMP_ANNOTATION {
