@@ -1,5 +1,5 @@
 import { parseSemver } from '@sentry/core';
-import { app } from 'electron';
+import { app, Session } from 'electron';
 import { join } from 'path';
 
 import { RENDERER_ID_HEADER } from '../common/ipc';
@@ -70,5 +70,32 @@ export function registerProtocol(
 
       complete('');
     });
+  }
+}
+
+type PreloadScriptRegistration = {
+  // Context type where the preload script will be executed. Possible values include frame or service-worker.
+  type: 'frame' | 'service-worker';
+  // Unique ID of preload script. Defaults to a random UUID.
+  id?: string;
+  // Path of the script file. Must be an absolute path.
+  filePath: string
+}
+
+type SessionMaybeSupportingRegisterPreloadScript = Session & {
+  registerPreloadScript?: (script: PreloadScriptRegistration) => void;
+}
+
+/**
+ * Adds a preload script to the session.
+ *
+ * Electron >= v35 supports new `registerPreloadScript` method and `getPreloads` and `setPreloads` are deprecated.
+ */
+export function setPreload(sesh: SessionMaybeSupportingRegisterPreloadScript, path: string): void {
+  if (sesh.registerPreloadScript) {
+    sesh.registerPreloadScript({ type: 'frame', filePath: path });
+  } else {
+    const existing = sesh.getPreloads();
+    sesh.setPreloads([path, ...existing]);
   }
 }
