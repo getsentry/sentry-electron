@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 6.2.0
+
+- feat: Update from
+  [v9.1.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.1.0) to
+  [v9.6.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.6.0)
+- feat: Use new `registerPreloadScript` API in Electron >= v35 (#1098)
+- feat: Add `gpuContextIntegration` (#1097)
+- feat: Parse crashpad metadata from minidumps and include in electron context
+  (#1095)
+
 ## 6.1.0
 
 - feat: Update from
