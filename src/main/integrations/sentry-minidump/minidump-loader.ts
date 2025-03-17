@@ -77,8 +77,8 @@ export function createMinidumpLoader(getMinidumpPaths: () => Promise<string[]>):
                   data,
                 });
               } catch (e) {
-                const message = e instanceof Error ? e.message : 'Unknown error';
-                logger.warn(`Dropping minidump: ${message}`);
+                const message = e instanceof Error ? e.toString() : 'Unknown error';
+                logger.warn(`Dropping minidump:\n${message}`);
                 break;
               }
 
