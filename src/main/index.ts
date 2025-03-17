@@ -148,6 +148,7 @@ export { screenshotsIntegration } from './integrations/screenshots';
 export { rendererProfileFromIpc } from './integrations/renderer-profiling';
 export { normalizePathsIntegration } from './integrations/normalize-paths';
 export { electronContextIntegration } from './integrations/electron-context';
+export { gpuContextIntegration } from './integrations/gpu-context';
 export { anrIntegration } from './integrations/anr';
 
 export { makeElectronTransport } from './transports/electron-net';
