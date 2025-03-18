@@ -1,9 +1,10 @@
-import { Attachment, basename, logger } from '@sentry/core';
+import { Attachment, logger } from '@sentry/core';
 import { app } from 'electron';
 import { promises as fs } from 'fs';
-import { join } from 'path';
+import { basename, join } from 'path';
 
 import { Mutex } from '../../mutex';
+import { MinidumpParseResult, parseMinidump } from './minidump-parser';
 
 /** Maximum number of days to keep a minidump before deleting it. */
 const MAX_AGE_DAYS = 30;
@@ -13,8 +14,6 @@ const NOT_MODIFIED_MS = 1_000;
 const MAX_RETRY_MS = 5_000;
 const RETRY_DELAY_MS = 500;
 const MAX_RETRIES = MAX_RETRY_MS / RETRY_DELAY_MS;
-
-const MINIDUMP_HEADER = 'MDMP';
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -27,7 +26,7 @@ function delay(ms: number): Promise<void> {
  */
 export type MinidumpLoader = (
   deleteAll: boolean,
-  callback: (processType: string | undefined, attachment: Attachment) => Promise<void>,
+  callback: (minidump: MinidumpParseResult, attachment: Attachment) => Promise<void>,
 ) => Promise<void>;
 
 /**
@@ -36,10 +35,7 @@ export type MinidumpLoader = (
  * @param preProcessFile A function that pre-processes the minidump file
  * @returns A function to fetch minidumps
  */
-export function createMinidumpLoader(
-  getMinidumpPaths: () => Promise<string[]>,
-  preProcessFile: (file: Buffer) => Buffer = (file) => file,
-): MinidumpLoader {
+export function createMinidumpLoader(getMinidumpPaths: () => Promise<string[]>): MinidumpLoader {
   // The mutex protects against a whole host of reentrancy issues and race conditions.
   const mutex = new Mutex();
 
@@ -69,23 +65,22 @@ export function createMinidumpLoader(
             const twoSecondsAgo = new Date().getTime() - NOT_MODIFIED_MS;
 
             if (stats.mtimeMs < twoSecondsAgo) {
-              const file = await fs.readFile(path);
-              const data = preProcessFile(file);
+              const data = await fs.readFile(path);
+              try {
+                const parsedMinidump = parseMinidump(data);
 
-              if (data.length < 10_000 || data.subarray(0, 4).toString() !== MINIDUMP_HEADER) {
-                logger.warn('Dropping minidump as it appears invalid.');
+                logger.log('Sending minidump');
+
+                await callback(parsedMinidump, {
+                  attachmentType: 'event.minidump',
+                  filename: basename(path),
+                  data,
+                });
+              } catch (e) {
+                const message = e instanceof Error ? e.toString() : 'Unknown error';
+                logger.warn(`Dropping minidump:\n${message}`);
                 break;
               }
-
-              const minidumpProcess = getMinidumpProcessType(data);
-
-              logger.log('Sending minidump');
-
-              await callback(minidumpProcess, {
-                attachmentType: 'event.minidump',
-                filename: basename(path),
-                data,
-              });
 
               break;
             }
@@ -168,53 +163,4 @@ export function getMinidumpLoader(): MinidumpLoader {
     const files = await readDirsAsync(dumpDirectories);
     return files.filter((file) => file.endsWith('.dmp'));
   });
-}
-
-/**
- * Crashpad includes it's own custom stream in the minidump file that can include metadata. Electron uses this to
- * include details about the app and process that caused the crash.
- *
- * Rather than parse the minidump by reading the header and parsing through all the streams, we can just look for the
- * 'process_type' key and then pick the string that comes after that.
- */
-function getMinidumpProcessType(buffer: Buffer): string | undefined {
-  const index = buffer.indexOf('process_type');
-
-  if (index < 0) {
-    return;
-  }
-
-  // start after 'process_type'
-  let start = index + 12;
-
-  // Move start to the first ascii character
-  while ((buffer[start] || 0) < 32) {
-    start++;
-
-    // If we can't find the start in the first 20 bytes, we assume it's not there
-    if (start - index > 20) {
-      return;
-    }
-  }
-
-  let end = start;
-
-  // Move the end of the ascii
-  while ((buffer[end] || -1) >= 32) {
-    end++;
-
-    // If we can't find the end in the first 20 bytes, we assume it's not there
-    if (end - start > 20) {
-      return;
-    }
-  }
-
-  const processType = buffer.subarray(start, end).toString().replace('-process', '');
-
-  // For backwards compatibility
-  if (processType === 'gpu') {
-    return 'GPU';
-  }
-
-  return processType;
 }

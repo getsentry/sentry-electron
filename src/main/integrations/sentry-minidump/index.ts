@@ -106,10 +106,35 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
 
     let minidumpFound = false;
 
-    await minidumpLoader?.(deleteAll, async (minidumpProcess, attachment) => {
+    await minidumpLoader?.(deleteAll, async (minidumpResult, attachment) => {
       minidumpFound = true;
 
+      let minidumpProcess = minidumpResult.crashpadAnnotations?.process_type;
+
+      // For backwards compatibility, we need to map 'gpu-process' to 'GPU'
+      // TODO (v7): Remove this
+      if (minidumpProcess === 'gpu-process') {
+        minidumpProcess = 'GPU';
+      }
+
       const event = await getEvent(minidumpProcess);
+
+      if (minidumpResult.crashpadAnnotations) {
+        // If we have crashpad annotations, we need to prepend their keys with 'crashpad.'
+        // and add them to the Electron context
+        const prependedAnnotations = Object.entries(minidumpResult.crashpadAnnotations).reduce(
+          (acc, [key, val]) => ((acc[`crashpad.${key}`] = val), acc),
+          {} as Record<string, string>,
+        );
+
+        event.contexts = {
+          ...event.contexts,
+          electron: {
+            ...event.contexts?.electron,
+            ...prependedAnnotations,
+          },
+        };
+      }
 
       if (minidumpsRemaining > 0) {
         minidumpsRemaining -= 1;
