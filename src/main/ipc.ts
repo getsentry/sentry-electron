@@ -157,7 +157,7 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
     },
   });
 
-  const rendererStatusChanged = createRendererAnrStatusHandler();
+  const rendererStatusChanged = createRendererAnrStatusHandler(options);
 
   app
     .whenReady()
@@ -217,7 +217,7 @@ function configureClassic(options: ElectronMainOptionsInternal): void {
   ipcMain.on(IPCChannel.SCOPE, (_, jsonScope: string) => handleScope(options, jsonScope));
   ipcMain.on(IPCChannel.ENVELOPE, ({ sender }, env: Uint8Array | string) => handleEnvelope(options, env, sender));
 
-  const rendererStatusChanged = createRendererAnrStatusHandler();
+  const rendererStatusChanged = createRendererAnrStatusHandler(options);
   ipcMain.on(IPCChannel.STATUS, ({ sender }, status: RendererStatus) => rendererStatusChanged(status, sender));
 }
 

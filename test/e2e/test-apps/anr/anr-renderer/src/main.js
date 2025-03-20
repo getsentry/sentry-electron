@@ -6,6 +6,7 @@ const { init } = require('@sentry/electron/main');
 init({
   dsn: '__DSN__',
   debug: true,
+  enableRendererStackCapture: true,
   onFatalError: () => {},
 });
 

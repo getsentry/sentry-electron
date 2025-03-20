@@ -26,6 +26,7 @@ import {
 import { Session, session, WebContents } from 'electron';
 
 import { IPCMode } from '../common/ipc';
+import { configureRendererAnr } from './anr';
 import { getDefaultEnvironment, getDefaultReleaseName, getSdkInfo } from './context';
 import { additionalContextIntegration } from './integrations/additional-context';
 import { childProcessIntegration } from './integrations/child-process';
@@ -134,6 +135,12 @@ export interface ElectronMainOptionsInternal
    * Enables injection of 'js-profiling' document policy headers and ensure profiles are forwarded with transactions
    */
   enableRendererProfiling?: boolean;
+
+  /**
+   * Enables injection of 'include-js-call-stacks-in-crash-reports' document policy headers so that renderer call stacks
+   * can be captured from the main process
+   */
+  enableRendererStackCapture?: boolean;
 }
 
 // getSessions and ipcMode properties are optional because they have defaults
@@ -176,6 +183,7 @@ export function init(userOptions: ElectronMainOptions): void {
   removeRedundantIntegrations(options);
   configureIPC(options);
   configureUtilityProcessIPC();
+  configureRendererAnr(options);
 
   setNodeAsyncContextStrategy();
 

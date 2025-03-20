@@ -64,10 +64,8 @@
             "frames": [
               {
                 "colno": 0,
-                "function": "{{function}}",
-                "in_app": false,
-                "lineno": 0,
-                "module": "pbkdf2"
+                "function": "longWork",
+                "lineno": 0
               }
             ]
           }
