@@ -1,4 +1,4 @@
-import { createStackParser, nodeStackLineParser, StackFrame, StackParser } from '@sentry/core';
+import { createStackParser, logger, nodeStackLineParser, StackFrame, StackParser } from '@sentry/core';
 import { createGetModuleFromFilename } from '@sentry/node';
 import { app, WebContents, WebFrameMain } from 'electron';
 
@@ -31,6 +31,13 @@ export async function captureRendererStackFrames(webContents: WebContents): Prom
 
   const stack = await frame.collectJavaScriptCallStack();
   if (!stack) {
+    return [];
+  }
+
+  if (stack.includes('Website owner has not opted in')) {
+    logger.warn(
+      "Could not collect renderer stack frames.\nA 'Document-Policy' header of 'include-js-call-stacks-in-crash-reports' must be set",
+    );
     return [];
   }
 
