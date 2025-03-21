@@ -3,8 +3,15 @@ import { captureEvent, createGetModuleFromFilename, getClient, StackFrame } from
 import { app, powerMonitor, WebContents } from 'electron';
 
 import { RendererStatus } from '../common/ipc';
-import { ElectronMainOptions } from './sdk';
+import { ELECTRON_MAJOR_VERSION } from './electron-normalize';
+import { addHeaderToSession } from './header-injection';
+import { ElectronMainOptions, ElectronMainOptionsInternal } from './sdk';
 import { sessionAnr } from './sessions';
+import { captureRendererStackFrames } from './stack-parse';
+
+function log(message: string, ...args: unknown[]): void {
+  logger.log(`[Renderer ANR] ${message}`, ...args);
+}
 
 function getRendererName(contents: WebContents): string | undefined {
   const options = getClient()?.getOptions() as ElectronMainOptions | undefined;
@@ -61,7 +68,24 @@ interface PausedEventDataType {
   reason: string;
 }
 
-function rendererDebugger(contents: WebContents, pausedStack: (frames: StackFrame[]) => void): () => void {
+/**
+ * Captures stack frames via the native frame.collectJavaScriptCallStack() API
+ */
+function nativeStackTraceCapture(contents: WebContents, pausedStack: (frames: StackFrame[]) => void): () => void {
+  return () => {
+    captureRendererStackFrames(contents)
+      .then(pausedStack)
+      .catch(() => {
+        // ignore
+      });
+  };
+}
+
+/**
+ * Captures stack frames via the debugger
+ */
+function debuggerStackTraceCapture(contents: WebContents, pausedStack: (frames: StackFrame[]) => void): () => void {
+  log('Connecting to debugger');
   contents.debugger.attach('1.3');
 
   // Collect scriptId -> url map so we can look up the filenames later
@@ -102,6 +126,7 @@ function rendererDebugger(contents: WebContents, pausedStack: (frames: StackFram
   });
 
   return () => {
+    log('Pausing debugger to capture stack trace');
     return contents.debugger.sendCommand('Debugger.pause');
   };
 }
@@ -122,12 +147,27 @@ function createHrTimer(): { getTimeMs: () => number; reset: () => void } {
   };
 }
 
-/** Creates a renderer ANR status hook */
-export function createRendererAnrStatusHandler(): (status: RendererStatus, contents: WebContents) => void {
-  function log(message: string, ...args: unknown[]): void {
-    logger.log(`[Renderer ANR] ${message}`, ...args);
+/**
+ * Enables renderer ANR
+ */
+export function configureRendererAnr(options: ElectronMainOptionsInternal): void {
+  if (!options.enableRendererStackCapture || ELECTRON_MAJOR_VERSION < 34) {
+    return;
   }
 
+  app.commandLine.appendSwitch('enable-features', 'DocumentPolicyIncludeJSCallStacksInCrashReports');
+
+  app.on('ready', () => {
+    options
+      .getSessions()
+      .forEach((sesh) => addHeaderToSession(sesh, 'Document-Policy', 'include-js-call-stacks-in-crash-reports'));
+  });
+}
+
+/** Creates a renderer ANR status hook */
+export function createRendererAnrStatusHandler(
+  options: ElectronMainOptionsInternal,
+): (status: RendererStatus, contents: WebContents) => void {
   return (message: RendererStatus, contents: WebContents): void => {
     rendererWatchdogTimers = rendererWatchdogTimers || new Map();
 
@@ -146,8 +186,12 @@ export function createRendererAnrStatusHandler(): (status: RendererStatus, conte
       let pauseAndCapture: (() => void) | undefined;
 
       if (message.config.captureStackTrace) {
-        log('Connecting to debugger');
-        pauseAndCapture = rendererDebugger(contents, (frames) => {
+        const stackCaptureImpl =
+          options.enableRendererStackCapture && ELECTRON_MAJOR_VERSION >= 34
+            ? nativeStackTraceCapture
+            : debuggerStackTraceCapture;
+
+        pauseAndCapture = stackCaptureImpl(contents, (frames) => {
           log('Event captured with stack frames');
           sendRendererAnrEvent(contents, message.config.anrThreshold, frames);
         });
@@ -156,7 +200,6 @@ export function createRendererAnrStatusHandler(): (status: RendererStatus, conte
       watchdog = watchdogTimer(createHrTimer, 100, message.config.anrThreshold, async () => {
         log('Watchdog timeout');
         if (pauseAndCapture) {
-          log('Pausing debugger to capture stack trace');
           pauseAndCapture();
         } else {
           log('Capturing event');
@@ -186,7 +229,7 @@ export function createRendererAnrStatusHandler(): (status: RendererStatus, conte
     watchdog.poll();
 
     if (message.status !== 'alive') {
-      log('Renderer visibility changed', message.status);
+      log(`Renderer visibility changed '${message.status}'`);
       watchdog.enabled(message.status === 'visible');
     }
   };

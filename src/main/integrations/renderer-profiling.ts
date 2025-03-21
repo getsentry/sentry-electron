@@ -2,11 +2,9 @@ import { defineIntegration, Event, forEachEnvelopeItem, LRUMap, Profile } from '
 import { app } from 'electron';
 
 import { getDefaultEnvironment, getDefaultReleaseName } from '../context';
+import { addHeaderToSession } from '../header-injection';
 import { normaliseProfile } from '../normalize';
 import { ElectronMainOptionsInternal } from '../sdk';
-
-const DOCUMENT_POLICY_HEADER = 'Document-Policy';
-const JS_PROFILING_HEADER = 'js-profiling';
 
 // A cache of renderer profiles which need attaching to events
 let RENDERER_PROFILES: LRUMap<string, Profile> | undefined;
@@ -33,24 +31,6 @@ export function rendererProfileFromIpc(event: Event, profile: Profile): void {
   }
 }
 
-function addJsProfilingHeader(
-  responseHeaders: Record<string, string | string[]> = {},
-): Electron.HeadersReceivedResponse {
-  if (responseHeaders[DOCUMENT_POLICY_HEADER]) {
-    const docPolicy = responseHeaders[DOCUMENT_POLICY_HEADER];
-
-    if (Array.isArray(docPolicy)) {
-      docPolicy.push(JS_PROFILING_HEADER);
-    } else {
-      responseHeaders[DOCUMENT_POLICY_HEADER] = [docPolicy, JS_PROFILING_HEADER];
-    }
-  } else {
-    responseHeaders[DOCUMENT_POLICY_HEADER] = JS_PROFILING_HEADER;
-  }
-
-  return { responseHeaders };
-}
-
 /**
  * Injects 'js-profiling' document policy headers and ensures that profiles get forwarded with transactions
  */
@@ -67,11 +47,7 @@ export const rendererProfilingIntegration = defineIntegration(() => {
 
       app.on('ready', () => {
         // Ensure the correct headers are set to enable the browser profiler
-        for (const sesh of options.getSessions()) {
-          sesh.webRequest.onHeadersReceived((details, callback) => {
-            callback(addJsProfilingHeader(details.responseHeaders));
-          });
-        }
+        options.getSessions().forEach((sesh) => addHeaderToSession(sesh, 'Document-Policy', 'js-profiling'));
       });
 
       // Copy the profiles back into the event envelopes
