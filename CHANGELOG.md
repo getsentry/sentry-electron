@@ -2,11 +2,14 @@
 
 ## Unreleased
 
+## 6.3.0
+
+- feat: Update JavaScript SDKs from [v9.6.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.6.0) to [v9.8.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.8.0)
+- fix: Electron app.getPath('crashDumps') API can throw (#1106)
+
 ## 6.2.0
 
-- feat: Update from
-  [v9.1.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.1.0) to
-  [v9.6.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.6.0)
+- feat: Update JavaScript SDKs from [v9.1.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.1.0) to [v9.6.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.6.0)
 - feat: Use new `registerPreloadScript` API in Electron >= v35 (#1098)
 - feat: Add `gpuContextIntegration` (#1097)
 - feat: Parse crashpad metadata from minidumps and include in electron context
@@ -14,10 +17,7 @@
 
 ## 6.1.0
 
-- feat: Update from
-  [v9.0.1](https://github.com/getsentry/sentry-javascript/releases/tag/9.0.1) to
-  [v9.1.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.1.0)
-  (#1080)
+- feat: Update JavaScript SDKs from [v9.0.1](https://github.com/getsentry/sentry-javascript/releases/tag/9.0.1) to [v9.1.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.1.0) (#1080)
 - feat: Support `@sentry/profiling-node` (#1084)
 - fix: Renderer ANR detection (#1083)
 
