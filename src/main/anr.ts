@@ -74,7 +74,11 @@ interface PausedEventDataType {
 function nativeStackTraceCapture(contents: WebContents, pausedStack: (frames: StackFrame[]) => void): () => void {
   return () => {
     captureRendererStackFrames(contents)
-      .then(pausedStack)
+      .then((frames) => {
+        if (frames) {
+          pausedStack(frames);
+        }
+      })
       .catch(() => {
         // ignore
       });

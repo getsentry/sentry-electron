@@ -22,7 +22,7 @@ type ElectronV34Frame = WebFrameMain & {
  * @param webContents The WebContents to capture stack frames from
  * @returns A promise that resolves to an array of Sentry StackFrames
  */
-export async function captureRendererStackFrames(webContents: WebContents): Promise<StackFrame[]> {
+export async function captureRendererStackFrames(webContents: WebContents): Promise<StackFrame[] | undefined> {
   if (ELECTRON_MAJOR_VERSION < 34) {
     throw new Error('Electron >= 34 required to capture stack frames via `frame.collectJavaScriptCallStack()`');
   }
@@ -31,14 +31,14 @@ export async function captureRendererStackFrames(webContents: WebContents): Prom
 
   const stack = await frame.collectJavaScriptCallStack();
   if (!stack) {
-    return [];
+    return undefined;
   }
 
   if (stack.includes('Website owner has not opted in')) {
     logger.warn(
       "Could not collect renderer stack frames.\nA 'Document-Policy' header of 'include-js-call-stacks-in-crash-reports' must be set",
     );
-    return [];
+    return undefined;
   }
 
   return electronRendererStackParser(stack);
