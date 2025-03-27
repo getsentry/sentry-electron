@@ -65,6 +65,7 @@ export {
   instrumentOutgoingRequests,
   isInitialized,
   lastEventId,
+  logger,
   linkedErrorsIntegration,
   moduleMetadataIntegration,
   onLoad,
