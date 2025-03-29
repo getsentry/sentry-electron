@@ -214,7 +214,14 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
         scope: new Scope().getScopeData(),
       });
       scopeLastRun = scopeStore.get();
-      minidumpLoader = getMinidumpLoader();
+
+      try {
+        minidumpLoader = getMinidumpLoader();
+      } catch (error) {
+        // This is rare but we've seen reports:
+        // https://github.com/getsentry/sentry-electron/issues/1102
+        logger.error('Failed to create minidump loader', error);
+      }
 
       const options = client.getOptions();
 

@@ -1,7 +1,7 @@
 {
   "name": "@sentry/electron",
   "description": "Official Sentry SDK for Electron",
-  "version": "6.2.0",
+  "version": "6.3.0",
   "main": "./index.js",
   "module": "./esm/main/index.js",
   "browser": "./esm/renderer/index.js",
@@ -60,16 +60,16 @@
     "e2e": "xvfb-maybe vitest run --root=./test/e2e --silent=false --disable-console-intercept"
   },
   "dependencies": {
-    "@sentry/browser": "9.6.1",
-    "@sentry/core": "9.6.1",
-    "@sentry/node": "9.6.1",
+    "@sentry/browser": "9.9.0",
+    "@sentry/core": "9.9.0",
+    "@sentry/node": "9.9.0",
     "deepmerge": "4.3.1"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^11.1.6",
-    "@sentry-internal/eslint-config-sdk": "9.6.1",
-    "@sentry-internal/typescript": "9.6.1",
+    "@sentry-internal/eslint-config-sdk": "9.9.0",
+    "@sentry-internal/typescript": "9.9.0",
     "@types/busboy": "^1.5.4",
     "@types/form-data": "^2.5.0",
     "@types/koa": "^2.0.52",
