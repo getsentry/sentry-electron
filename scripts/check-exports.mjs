@@ -35,6 +35,8 @@ const ignoredBrowser = [
   'lazyLoadIntegration',
   // deprecated
   'captureUserFeedback',
+  // Electron sends via main process
+  'diagnoseSdkConnectivity'
 ];
 
 const ignoredNode = [

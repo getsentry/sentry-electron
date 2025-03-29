@@ -73,6 +73,7 @@ export {
   lastEventId,
   linkedErrorsIntegration,
   localVariablesIntegration,
+  logger,
   lruMemoizerIntegration,
   modulesIntegration,
   mongoIntegration,
