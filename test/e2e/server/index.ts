@@ -1,12 +1,4 @@
-import {
-  dropUndefinedKeys,
-  Event,
-  forEachEnvelopeItem,
-  parseEnvelope,
-  Profile,
-  ReplayEvent,
-  Session,
-} from '@sentry/core';
+import { Event, forEachEnvelopeItem, parseEnvelope, Profile, ReplayEvent, Session } from '@sentry/core';
 import { Server } from 'http';
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
@@ -167,17 +159,15 @@ export class TestServer {
       });
 
       if (data || metrics) {
-        this._addEvent(
-          dropUndefinedKeys({
-            data: data || {},
-            attachments,
-            profile,
-            metrics,
-            appId: ctx.params.id,
-            sentryKey: keyMatch[1],
-            method: 'envelope',
-          }),
-        );
+        this._addEvent({
+          data: data || {},
+          attachments,
+          profile,
+          metrics,
+          appId: ctx.params.id || '',
+          sentryKey: keyMatch[1] || '',
+          method: 'envelope',
+        });
 
         ctx.status = 200;
         ctx.body = 'Success';
@@ -207,8 +197,8 @@ export class TestServer {
           data: event,
           namespacedData,
           attachments,
-          appId: ctx.params.id,
-          sentryKey: keyMatch[1],
+          appId: ctx.params.id || '',
+          sentryKey: keyMatch[1] || '',
           method: 'minidump',
         });
 
@@ -232,8 +222,8 @@ export class TestServer {
 
       this._addEvent({
         data: event,
-        appId: ctx.params.id,
-        sentryKey: keyMatch[1],
+        appId: ctx.params.id || '',
+        sentryKey: keyMatch[1] || '',
         method: 'store',
       });
 

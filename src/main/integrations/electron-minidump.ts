@@ -1,13 +1,4 @@
-import {
-  applyScopeDataToEvent,
-  defineIntegration,
-  Event,
-  logger,
-  makeDsn,
-  ScopeData,
-  SentryError,
-  uuid4,
-} from '@sentry/core';
+import { applyScopeDataToEvent, defineIntegration, Event, logger, makeDsn, ScopeData, uuid4 } from '@sentry/core';
 import { NodeClient, NodeOptions } from '@sentry/node';
 import { app, crashReporter } from 'electron';
 
@@ -183,7 +174,7 @@ export const electronMinidumpIntegration = defineIntegration(() => {
       const clientOptions = client.getOptions();
 
       if (!clientOptions?.dsn) {
-        throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
+        throw new Error('Attempted to enable Electron native crash reporter but no DSN was supplied');
       }
 
       startCrashReporter(clientOptions);

@@ -1,4 +1,4 @@
-import { defineIntegration, dropUndefinedKeys, Event } from '@sentry/core';
+import { defineIntegration, Event } from '@sentry/core';
 import { app } from 'electron';
 
 interface Options {
@@ -35,14 +35,14 @@ interface GpuInfoResult {
 }
 
 function gpuDeviceToGpuContext(device: GpuDevice): GpuContext {
-  return dropUndefinedKeys({
+  return {
     name: device.deviceString || 'GPU',
     active: device.active,
     vendor_id: `0x${device.vendorId.toString(16).padStart(4, '0')}`,
     vendor_name: device.vendorString,
     device_id: `0x${device.deviceId.toString(16).padStart(4, '0')}`,
     driver_version: device.driverVersion,
-  });
+  };
 }
 
 /**
