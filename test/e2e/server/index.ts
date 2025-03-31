@@ -1,5 +1,6 @@
 import {
   dropUndefinedKeys,
+  DynamicSamplingContext,
   Event,
   forEachEnvelopeItem,
   parseEnvelope,
@@ -51,6 +52,8 @@ export interface TestServerEvent<T = unknown> {
   metrics?: string;
   /** API method used for submission */
   method: 'envelope' | 'minidump' | 'store';
+  /** The dynamic sampling context from the envelope header */
+  dynamicSamplingContext?: Partial<DynamicSamplingContext>;
 }
 
 function stream2buffer(stream: Readable): Promise<Buffer> {
@@ -135,6 +138,10 @@ export class TestServer {
       let profile: Profile | undefined;
       let metrics: string | undefined;
 
+      const [envelopeHeader] = envelope;
+
+      const dynamicSamplingContext = envelopeHeader.trace as Partial<DynamicSamplingContext> | undefined;
+
       forEachEnvelopeItem(envelope, ([headers, item]) => {
         if (
           headers.type === 'event' ||
@@ -173,9 +180,10 @@ export class TestServer {
             attachments,
             profile,
             metrics,
-            appId: ctx.params.id,
-            sentryKey: keyMatch[1],
+            appId: ctx.params.id || '',
+            sentryKey: keyMatch[1] || '',
             method: 'envelope',
+            dynamicSamplingContext,
           }),
         );
 
@@ -207,8 +215,8 @@ export class TestServer {
           data: event,
           namespacedData,
           attachments,
-          appId: ctx.params.id,
-          sentryKey: keyMatch[1],
+          appId: ctx.params.id || '',
+          sentryKey: keyMatch[1] || '',
           method: 'minidump',
         });
 
@@ -232,8 +240,8 @@ export class TestServer {
 
       this._addEvent({
         data: event,
-        appId: ctx.params.id,
-        sentryKey: keyMatch[1],
+        appId: ctx.params.id || '',
+        sentryKey: keyMatch[1] || '',
         method: 'store',
       });
 
