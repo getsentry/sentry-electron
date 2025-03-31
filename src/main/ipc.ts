@@ -1,4 +1,4 @@
-import { Attachment, Event, logger, parseEnvelope, ScopeData, SentryError } from '@sentry/core';
+import { Attachment, Event, logger, parseEnvelope, ScopeData } from '@sentry/core';
 import { captureEvent, getClient, getCurrentScope } from '@sentry/node';
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
 
@@ -132,7 +132,7 @@ function handleScope(options: ElectronMainOptionsInternal, jsonScope: string): v
 /** Enables Electron protocol handling */
 function configureProtocol(options: ElectronMainOptionsInternal): void {
   if (app.isReady()) {
-    throw new SentryError("Sentry SDK should be initialized before the Electron app 'ready' event is fired");
+    throw new Error("Sentry SDK should be initialized before the Electron app 'ready' event is fired");
   }
 
   protocol.registerSchemesAsPrivileged([SENTRY_CUSTOM_SCHEME]);

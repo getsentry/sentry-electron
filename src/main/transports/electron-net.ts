@@ -1,7 +1,6 @@
 import {
   BaseTransportOptions,
   createTransport,
-  dropUndefinedKeys,
   Transport,
   TransportMakeRequestResponse,
   TransportRequest,
@@ -98,12 +97,12 @@ export function createElectronNetRequestExecutor(
 
             resolve({
               statusCode: res.statusCode,
-              headers: dropUndefinedKeys({
+              headers: {
                 'retry-after': Array.isArray(retryAfterHeader) ? retryAfterHeader[0] || null : retryAfterHeader,
                 'x-sentry-rate-limits': Array.isArray(rateLimitsHeader)
                   ? rateLimitsHeader[0] || null
                   : rateLimitsHeader,
-              }),
+              },
             });
           });
 
