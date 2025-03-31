@@ -37,11 +37,6 @@ function getImplementation(): IPCInterface {
           // ignore
         });
       },
-      sendEvent: (body: string) => {
-        fetch(buildUrl(IPCChannel.EVENT), { method: 'POST', body, headers }).catch(() => {
-          // ignore
-        });
-      },
       sendEnvelope: (body: string | Uint8Array) => {
         fetch(buildUrl(IPCChannel.ENVELOPE), { method: 'POST', body, headers }).catch(() => {
           // ignore
