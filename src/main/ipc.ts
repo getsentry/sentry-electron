@@ -172,8 +172,6 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
           const data = request.body;
           if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.RENDERER_START}`)) {
             newProtocolRenderer();
-          } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.EVENT}`) && data) {
-            handleEvent(options, data.toString(), getWebContents());
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.SCOPE}`) && data) {
             handleScope(options, data.toString());
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.ENVELOPE}`) && data) {
@@ -213,7 +211,6 @@ function configureClassic(options: ElectronMainOptionsInternal): void {
       });
     }
   });
-  ipcMain.on(IPCChannel.EVENT, ({ sender }, jsonEvent: string) => handleEvent(options, jsonEvent, sender));
   ipcMain.on(IPCChannel.SCOPE, (_, jsonScope: string) => handleScope(options, jsonScope));
   ipcMain.on(IPCChannel.ENVELOPE, ({ sender }, env: Uint8Array | string) => handleEnvelope(options, env, sender));
 
