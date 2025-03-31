@@ -67,18 +67,6 @@ function captureEventFromRenderer(
   captureEvent(mergeEvents(event, { tags: { 'event.process': process } }), { attachments });
 }
 
-function handleEvent(options: ElectronMainOptionsInternal, jsonEvent: string, contents?: WebContents): void {
-  let event: Event;
-  try {
-    event = JSON.parse(jsonEvent) as Event;
-  } catch {
-    logger.warn('sentry-electron received an invalid event message');
-    return;
-  }
-
-  captureEventFromRenderer(options, event, [], contents);
-}
-
 function handleEnvelope(options: ElectronMainOptionsInternal, env: Uint8Array | string, contents?: WebContents): void {
   const envelope = parseEnvelope(env);
 
