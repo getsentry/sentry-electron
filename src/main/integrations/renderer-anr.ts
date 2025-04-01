@@ -134,7 +134,7 @@ const INTEGRATION_NAME = 'RendererAnr';
 type Options = {
   /**
    * Enables injection of 'include-js-call-stacks-in-crash-reports' document policy headers so that renderer call stacks
-   * can be captured from the main process
+   * can be captured from the main process without using the debugger API.
    */
   injectDocumentPolicy?: boolean;
 };
