@@ -151,6 +151,7 @@ export { normalizePathsIntegration } from './integrations/normalize-paths';
 export { electronContextIntegration } from './integrations/electron-context';
 export { gpuContextIntegration } from './integrations/gpu-context';
 export { anrIntegration } from './integrations/anr';
+export { rendererAnrIntegration } from './integrations/renderer-anr';
 
 export { makeElectronTransport } from './transports/electron-net';
 export { makeElectronOfflineTransport } from './transports/electron-offline-net';
