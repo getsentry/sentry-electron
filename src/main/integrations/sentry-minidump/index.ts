@@ -6,7 +6,6 @@ import {
   logger,
   Scope,
   ScopeData,
-  SentryError,
   Session,
 } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
@@ -228,7 +227,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
       setupScopeListener(client);
 
       if (!options?.dsn) {
-        throw new SentryError('Attempted to enable Electron native crash reporter but no DSN was supplied');
+        throw new Error('Attempted to enable Electron native crash reporter but no DSN was supplied');
       }
 
       trackRendererProperties();

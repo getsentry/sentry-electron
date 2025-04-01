@@ -1,4 +1,4 @@
-import { Attachment, Client, Event, logger, parseEnvelope, ScopeData, SentryError } from '@sentry/core';
+import { Attachment, Client, Event, logger, parseEnvelope, ScopeData } from '@sentry/core';
 import { captureEvent, getClient, getCurrentScope } from '@sentry/node';
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
 
@@ -67,18 +67,6 @@ function captureEventFromRenderer(
   captureEvent(mergeEvents(event, { tags: { 'event.process': process } }), { attachments });
 }
 
-function handleEvent(options: ElectronMainOptionsInternal, jsonEvent: string, contents?: WebContents): void {
-  let event: Event;
-  try {
-    event = JSON.parse(jsonEvent) as Event;
-  } catch {
-    logger.warn('sentry-electron received an invalid event message');
-    return;
-  }
-
-  captureEventFromRenderer(options, event, [], contents);
-}
-
 function handleEnvelope(options: ElectronMainOptionsInternal, env: Uint8Array | string, contents?: WebContents): void {
   const envelope = parseEnvelope(env);
 
@@ -144,7 +132,7 @@ function handleScope(options: ElectronMainOptionsInternal, jsonScope: string): v
 /** Enables Electron protocol handling */
 function configureProtocol(client: Client, options: ElectronMainOptionsInternal): void {
   if (app.isReady()) {
-    throw new SentryError("Sentry SDK should be initialized before the Electron app 'ready' event is fired");
+    throw new Error("Sentry SDK should be initialized before the Electron app 'ready' event is fired");
   }
 
   protocol.registerSchemesAsPrivileged([SENTRY_CUSTOM_SCHEME]);
@@ -172,8 +160,6 @@ function configureProtocol(client: Client, options: ElectronMainOptionsInternal)
           const data = request.body;
           if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.RENDERER_START}`)) {
             newProtocolRenderer();
-          } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.EVENT}`) && data) {
-            handleEvent(options, data.toString(), getWebContents());
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.SCOPE}`) && data) {
             handleScope(options, data.toString());
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.ENVELOPE}`) && data) {
@@ -217,7 +203,6 @@ function configureClassic(client: Client, options: ElectronMainOptionsInternal):
       });
     }
   });
-  ipcMain.on(IPCChannel.EVENT, ({ sender }, jsonEvent: string) => handleEvent(options, jsonEvent, sender));
   ipcMain.on(IPCChannel.SCOPE, (_, jsonScope: string) => handleScope(options, jsonScope));
   ipcMain.on(IPCChannel.ENVELOPE, ({ sender }, env: Uint8Array | string) => handleEnvelope(options, env, sender));
 

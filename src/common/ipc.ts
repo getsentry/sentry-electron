@@ -18,8 +18,6 @@ export const PROTOCOL_SCHEME = 'sentry-ipc';
 export enum IPCChannel {
   /** IPC to check main process is listening */
   RENDERER_START = 'sentry-electron.renderer-start',
-  /** IPC to send a captured event to Sentry. */
-  EVENT = 'sentry-electron.event',
   /** IPC to pass scope changes to main process. */
   SCOPE = 'sentry-electron.scope',
   /** IPC to pass envelopes to the main process. */
@@ -59,7 +57,6 @@ export interface RendererStatus {
 export interface IPCInterface {
   sendRendererStart: () => void;
   sendScope: (scope: string) => void;
-  sendEvent: (event: string) => void;
   sendEnvelope: (evn: Uint8Array | string) => void;
   sendStatus: (state: RendererStatus) => void;
 }
