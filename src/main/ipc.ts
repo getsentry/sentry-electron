@@ -1,11 +1,11 @@
-import { Attachment, Event, logger, parseEnvelope, ScopeData } from '@sentry/core';
+import { Attachment, Client, Event, logger, parseEnvelope, ScopeData } from '@sentry/core';
 import { captureEvent, getClient, getCurrentScope } from '@sentry/node';
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
 
 import { eventFromEnvelope } from '../common/envelope';
 import { IPCChannel, IPCMode, PROTOCOL_SCHEME, RendererStatus } from '../common/ipc';
-import { createRendererAnrStatusHandler } from './anr';
 import { registerProtocol } from './electron-normalize';
+import { createRendererAnrStatusHandler } from './integrations/renderer-anr';
 import { rendererProfileFromIpc } from './integrations/renderer-profiling';
 import { mergeEvents } from './merge';
 import { normalizeUrlsInReplayEnvelope } from './normalize';
@@ -130,7 +130,7 @@ function handleScope(options: ElectronMainOptionsInternal, jsonScope: string): v
 }
 
 /** Enables Electron protocol handling */
-function configureProtocol(options: ElectronMainOptionsInternal): void {
+function configureProtocol(client: Client, options: ElectronMainOptionsInternal): void {
   if (app.isReady()) {
     throw new Error("Sentry SDK should be initialized before the Electron app 'ready' event is fired");
   }
@@ -145,7 +145,7 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
     },
   });
 
-  const rendererStatusChanged = createRendererAnrStatusHandler();
+  const rendererStatusChanged = createRendererAnrStatusHandler(client);
 
   app
     .whenReady()
@@ -164,7 +164,11 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
             handleScope(options, data.toString());
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.ENVELOPE}`) && data) {
             handleEnvelope(options, data, getWebContents());
-          } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.STATUS}`) && data) {
+          } else if (
+            rendererStatusChanged &&
+            request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.STATUS}`) &&
+            data
+          ) {
             const contents = getWebContents();
             if (contents) {
               const status = (JSON.parse(data.toString()) as { status: RendererStatus }).status;
@@ -180,7 +184,7 @@ function configureProtocol(options: ElectronMainOptionsInternal): void {
 /**
  * Hooks IPC for communication with the renderer processes
  */
-function configureClassic(options: ElectronMainOptionsInternal): void {
+function configureClassic(client: Client, options: ElectronMainOptionsInternal): void {
   ipcMain.on(IPCChannel.RENDERER_START, ({ sender }) => {
     const id = sender.id;
     // Keep track of renderers that are using IPC
@@ -202,19 +206,21 @@ function configureClassic(options: ElectronMainOptionsInternal): void {
   ipcMain.on(IPCChannel.SCOPE, (_, jsonScope: string) => handleScope(options, jsonScope));
   ipcMain.on(IPCChannel.ENVELOPE, ({ sender }, env: Uint8Array | string) => handleEnvelope(options, env, sender));
 
-  const rendererStatusChanged = createRendererAnrStatusHandler();
-  ipcMain.on(IPCChannel.STATUS, ({ sender }, status: RendererStatus) => rendererStatusChanged(status, sender));
+  const rendererStatusChanged = createRendererAnrStatusHandler(client);
+  if (rendererStatusChanged) {
+    ipcMain.on(IPCChannel.STATUS, ({ sender }, status: RendererStatus) => rendererStatusChanged(status, sender));
+  }
 }
 
 /** Sets up communication channels with the renderer */
-export function configureIPC(options: ElectronMainOptionsInternal): void {
+export function configureIPC(client: Client, options: ElectronMainOptionsInternal): void {
   // eslint-disable-next-line no-bitwise
   if ((options.ipcMode & IPCMode.Protocol) > 0) {
-    configureProtocol(options);
+    configureProtocol(client, options);
   }
 
   // eslint-disable-next-line no-bitwise
   if ((options.ipcMode & IPCMode.Classic) > 0) {
-    configureClassic(options);
+    configureClassic(client, options);
   }
 }

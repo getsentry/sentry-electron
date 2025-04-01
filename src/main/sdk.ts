@@ -37,6 +37,7 @@ import { electronNetIntegration } from './integrations/net-breadcrumbs';
 import { normalizePathsIntegration } from './integrations/normalize-paths';
 import { onUncaughtExceptionIntegration } from './integrations/onuncaughtexception';
 import { preloadInjectionIntegration } from './integrations/preload-injection';
+import { rendererAnrIntegration } from './integrations/renderer-anr';
 import { rendererProfilingIntegration } from './integrations/renderer-profiling';
 import { screenshotsIntegration } from './integrations/screenshots';
 import { sentryMinidumpIntegration } from './integrations/sentry-minidump';
@@ -59,6 +60,7 @@ export function getDefaultIntegrations(options: ElectronMainOptions): Integratio
     additionalContextIntegration(),
     screenshotsIntegration(),
     gpuContextIntegration(),
+    rendererAnrIntegration(),
 
     // Main process sessions
     mainProcessSessionIntegration(),
@@ -174,7 +176,6 @@ export function init(userOptions: ElectronMainOptions): void {
   }
 
   removeRedundantIntegrations(options);
-  configureIPC(options);
   configureUtilityProcessIPC();
 
   setNodeAsyncContextStrategy();
@@ -191,6 +192,8 @@ export function init(userOptions: ElectronMainOptions): void {
 
   scope.setClient(client);
   client.init();
+
+  configureIPC(client, options);
 
   // If users opt-out of this, they _have_ to set up OpenTelemetry themselves
   // There is no way to use this SDK without OpenTelemetry!

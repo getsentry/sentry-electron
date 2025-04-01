@@ -1,11 +1,12 @@
 const path = require('path');
 
 const { app, BrowserWindow } = require('electron');
-const { init } = require('@sentry/electron/main');
+const { init, rendererAnrIntegration } = require('@sentry/electron/main');
 
 init({
   dsn: '__DSN__',
   debug: true,
+  integrations: [rendererAnrIntegration({ injectDocumentPolicy: true })],
   onFatalError: () => {},
 });
 
