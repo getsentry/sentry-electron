@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 6.4.0
+
+- feat: Update JavaScript SDKs from [v9.8.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.8.0) to [v9.10.1](https://github.com/getsentry/sentry-javascript/releases/tag/9.10.1)
+- fix: Missing Dynamic Sampling Context in envelope header for renderer tracing (#1117)
+- feat: Use `frame.collectJavaScriptCallStack()` for renderer ANR in Electron >= v34 (#1105)
+
 ## 6.3.0
 
 - feat: Update JavaScript SDKs from [v9.6.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.6.0) to [v9.8.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.8.0)
