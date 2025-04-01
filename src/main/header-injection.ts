@@ -11,7 +11,7 @@ function addHeader(
     if (Array.isArray(existing)) {
       existing.push(value);
     } else {
-      responseHeaders[name] = existing ? [existing, value] : value;
+      responseHeaders[name] = [existing, value];
     }
   } else {
     responseHeaders[name] = value;

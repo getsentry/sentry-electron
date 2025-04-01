@@ -135,8 +135,12 @@ type Options = {
   /**
    * Enables injection of 'include-js-call-stacks-in-crash-reports' document policy headers so that renderer call stacks
    * can be captured from the main process without using the debugger API.
+   *
+   * Requires Electron >= v34
+   *
+   * @default false
    */
-  injectDocumentPolicy?: boolean;
+  captureNativeStacktrace?: boolean;
 };
 
 type RendererStatusHandler = (status: RendererStatus, contents: WebContents) => void;
@@ -193,7 +197,7 @@ export const rendererAnrIntegration: (options?: Options) => RendererAnrIntegrati
         if (ELECTRON_MAJOR_VERSION >= 34) {
           app.commandLine.appendSwitch('enable-features', 'DocumentPolicyIncludeJSCallStacksInCrashReports');
 
-          if (options.injectDocumentPolicy) {
+          if (options.captureNativeStacktrace) {
             app.on('ready', () => {
               clientOptions
                 ?.getSessions()
@@ -224,7 +228,7 @@ export const rendererAnrIntegration: (options?: Options) => RendererAnrIntegrati
 
             if (message.config.captureStackTrace) {
               const stackCaptureImpl =
-                options.injectDocumentPolicy && ELECTRON_MAJOR_VERSION >= 34
+                options.captureNativeStacktrace && ELECTRON_MAJOR_VERSION >= 34
                   ? nativeStackTraceCapture
                   : debuggerStackTraceCapture;
 
