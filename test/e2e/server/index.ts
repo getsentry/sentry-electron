@@ -175,6 +175,7 @@ export class TestServer {
 
       if (data || metrics) {
         this._addEvent(
+          // eslint-disable-next-line deprecation/deprecation
           dropUndefinedKeys({
             data: data || {},
             attachments,
