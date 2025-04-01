@@ -1,4 +1,13 @@
-import { Event, forEachEnvelopeItem, parseEnvelope, Profile, ReplayEvent, Session } from '@sentry/core';
+import {
+  dropUndefinedKeys,
+  DynamicSamplingContext,
+  Event,
+  forEachEnvelopeItem,
+  parseEnvelope,
+  Profile,
+  ReplayEvent,
+  Session,
+} from '@sentry/core';
 import { Server } from 'http';
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
@@ -43,6 +52,8 @@ export interface TestServerEvent<T = unknown> {
   metrics?: string;
   /** API method used for submission */
   method: 'envelope' | 'minidump' | 'store';
+  /** The dynamic sampling context from the envelope header */
+  dynamicSamplingContext?: Partial<DynamicSamplingContext>;
 }
 
 function stream2buffer(stream: Readable): Promise<Buffer> {
@@ -127,6 +138,10 @@ export class TestServer {
       let profile: Profile | undefined;
       let metrics: string | undefined;
 
+      const [envelopeHeader] = envelope;
+
+      const dynamicSamplingContext = envelopeHeader.trace as Partial<DynamicSamplingContext> | undefined;
+
       forEachEnvelopeItem(envelope, ([headers, item]) => {
         if (
           headers.type === 'event' ||
@@ -159,15 +174,19 @@ export class TestServer {
       });
 
       if (data || metrics) {
-        this._addEvent({
-          data: data || {},
-          attachments,
-          profile,
-          metrics,
-          appId: ctx.params.id || '',
-          sentryKey: keyMatch[1] || '',
-          method: 'envelope',
-        });
+        this._addEvent(
+          // eslint-disable-next-line deprecation/deprecation
+          dropUndefinedKeys({
+            data: data || {},
+            attachments,
+            profile,
+            metrics,
+            appId: ctx.params.id || '',
+            sentryKey: keyMatch[1] || '',
+            method: 'envelope',
+            dynamicSamplingContext,
+          }),
+        );
 
         ctx.status = 200;
         ctx.body = 'Success';

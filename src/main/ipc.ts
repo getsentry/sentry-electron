@@ -1,4 +1,4 @@
-import { Attachment, Client, Event, logger, parseEnvelope, ScopeData } from '@sentry/core';
+import { Attachment, Client, DynamicSamplingContext, Event, logger, parseEnvelope, ScopeData } from '@sentry/core';
 import { captureEvent, getClient, getCurrentScope } from '@sentry/node';
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
 
@@ -48,6 +48,7 @@ function newProtocolRenderer(): void {
 function captureEventFromRenderer(
   options: ElectronMainOptionsInternal,
   event: Event,
+  dynamicSamplingContext: Partial<DynamicSamplingContext> | undefined,
   attachments: Attachment[],
   contents?: WebContents,
 ): void {
@@ -64,11 +65,18 @@ function captureEventFromRenderer(
   delete event.sdk?.version;
   delete event.sdk?.packages;
 
+  if (dynamicSamplingContext) {
+    event.sdkProcessingMetadata = { ...event.sdkProcessingMetadata, dynamicSamplingContext };
+  }
+
   captureEvent(mergeEvents(event, { tags: { 'event.process': process } }), { attachments });
 }
 
 function handleEnvelope(options: ElectronMainOptionsInternal, env: Uint8Array | string, contents?: WebContents): void {
   const envelope = parseEnvelope(env);
+
+  const [envelopeHeader] = envelope;
+  const dynamicSamplingContext = envelopeHeader.trace as DynamicSamplingContext | undefined;
 
   const eventAndAttachments = eventFromEnvelope(envelope);
   if (eventAndAttachments) {
@@ -80,7 +88,7 @@ function handleEnvelope(options: ElectronMainOptionsInternal, env: Uint8Array | 
       rendererProfileFromIpc(event, profile);
     }
 
-    captureEventFromRenderer(options, event, attachments, contents);
+    captureEventFromRenderer(options, event, dynamicSamplingContext, attachments, contents);
   } else {
     const normalizedEnvelope = normalizeUrlsInReplayEnvelope(envelope, app.getAppPath());
     // Pass other types of envelope straight to the transport
