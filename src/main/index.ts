@@ -146,6 +146,7 @@ export {
   trpcMiddleware,
   updateSpanName,
   validateOpenTelemetrySetup,
+  vercelAIIntegration,
   withActiveSpan,
   withIsolationScope,
   withMonitor,

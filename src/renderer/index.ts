@@ -108,6 +108,7 @@ export {
   startSession,
   startSpan,
   startSpanManual,
+  statsigIntegration,
   suppressTracing,
   thirdPartyErrorFilterIntegration,
   updateSpanName,
