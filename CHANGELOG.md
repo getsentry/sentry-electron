@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 5.12.0
+
+- feat: Update from [v8.51.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.51.0) to [v8.55.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.55.0) (#1123)
+- fix: Missing DSC envelope header for renderer tracing (#1120)
+
 ## 5.11.0
 
 - feat: Update from
