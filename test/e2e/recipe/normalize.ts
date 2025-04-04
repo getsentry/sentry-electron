@@ -79,8 +79,8 @@ function normalizeEvent(event: Event & ReplayEvent): void {
     event.contexts.gpu.vendor_id = '0x0000';
   }
 
-  if (event.contexts?.gpu?.device_id) {
-    event.contexts.gpu.device_id = '0x0000';
+  if (event.contexts?.gpu?.id) {
+    event.contexts.gpu.id = '0x0000';
   }
 
   if (event.contexts?.chrome?.version) {

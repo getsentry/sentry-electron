@@ -5,7 +5,7 @@ interface Options {
   /**
    * How much GPU information to request from Electron `app.getGPUInfo` API.
    * `complete` can take much longer to resolve so the default is `basic`.
-   * - 'basic': Usually only the `vendor_id` and `device_id` but some platforms supply more.
+   * - 'basic': Usually only the `vendor_id` and `id` but some platforms supply more.
    * - 'complete': More detailed information including full names and driver_version.
    */
   infoLevel: 'basic' | 'complete';
@@ -16,7 +16,7 @@ interface GpuContext extends Record<string, unknown> {
   active?: boolean;
   vendor_id?: string;
   vendor_name?: string;
-  device_id?: string;
+  id?: string;
   driver_version?: string;
 }
 
@@ -38,9 +38,9 @@ function gpuDeviceToGpuContext(device: GpuDevice): GpuContext {
   return {
     name: device.deviceString || 'GPU',
     active: device.active,
+    id: `0x${device.deviceId.toString(16).padStart(4, '0')}`,
     vendor_id: `0x${device.vendorId.toString(16).padStart(4, '0')}`,
     vendor_name: device.vendorString,
-    device_id: `0x${device.deviceId.toString(16).padStart(4, '0')}`,
     driver_version: device.driverVersion,
   };
 }
