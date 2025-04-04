@@ -5,7 +5,7 @@ interface Options {
   /**
    * How much GPU information to request from Electron `app.getGPUInfo` API.
    * `complete` can take much longer to resolve so the default is `basic`.
-   * - 'basic': Usually only the `vendor_id` and `device_id` but some platforms supply more.
+   * - 'basic': Usually only the `vendor_id` and `id` but some platforms supply more.
    * - 'complete': More detailed information including full names and driver_version.
    */
   infoLevel: 'basic' | 'complete';

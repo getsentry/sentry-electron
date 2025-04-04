@@ -22,8 +22,8 @@
         "name": "Chrome"
       },
       "gpu":{
-        "vendor_id": "0x0000",
-        "device_id": "0x0000"
+        "id": "0x0000",
+        "vendor_id": "0x0000"
       },
       "chrome": {
         "name": "Chrome",
