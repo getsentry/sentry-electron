@@ -29,6 +29,7 @@ export {
   captureMessage,
   captureSession,
   chromeStackLineParser,
+  consoleLoggingIntegration,
   contextLinesIntegration,
   continueTrace,
   createTransport,

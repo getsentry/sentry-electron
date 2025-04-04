@@ -30,6 +30,7 @@ export {
   close,
   connectIntegration,
   consoleIntegration,
+  consoleLoggingIntegration,
   contextLinesIntegration,
   continueTrace,
   createGetModuleFromFilename,
