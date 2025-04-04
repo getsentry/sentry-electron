@@ -12,7 +12,7 @@ export interface AdditionalContextOptions {
   screen: boolean;
   /**
    * Capture device model and manufacturer.
-   * Only supported in Windows.
+   * No supported on Linux.
    * @default false
    */
   deviceModelManufacturer: boolean;
@@ -48,8 +48,9 @@ function getWindowsDeviceModelManufacturer(): Promise<DeviceContext> {
               return;
             }
           } catch (_) {
-            resolve({});
+            //
           }
+          resolve({});
         },
       );
     } catch (_) {
@@ -58,12 +59,57 @@ function getWindowsDeviceModelManufacturer(): Promise<DeviceContext> {
   });
 }
 
+type MacOSHwType = {
+  machine_model?: string;
+};
+
+type MacOSJson = {
+  SPHardwareDataType?: MacOSHwType[];
+};
+
+function getMacOSDeviceModelManufacturer(): Promise<DeviceContext> {
+  return new Promise((resolve) => {
+    try {
+      exec('system_profiler SPHardwareDataType -json', (error, stdout) => {
+        if (error) {
+          resolve({});
+        }
+        try {
+          const details = JSON.parse(stdout.trim()) as MacOSJson;
+          if (details.SPHardwareDataType?.[0]?.machine_model) {
+            resolve({
+              manufacturer: 'Apple',
+              model: details.SPHardwareDataType[0].machine_model,
+            });
+            return;
+          }
+        } catch (_) {
+          //
+        }
+        resolve({});
+      });
+    } catch (_) {
+      resolve({});
+    }
+  });
+}
+
+function getDeviceModelManufacturer(): Promise<DeviceContext> {
+  if (process.platform === 'win32') {
+    return getWindowsDeviceModelManufacturer();
+  } else if (process.platform === 'darwin') {
+    return getMacOSDeviceModelManufacturer();
+  }
+
+  return Promise.resolve({});
+}
+
 /**
  * Adds additional Electron context to events
  */
 export const additionalContextIntegration = defineIntegration((userOptions: Partial<AdditionalContextOptions> = {}) => {
   const _lazyDeviceContext: DeviceContext = {};
-  let shouldCaptureDeviceModelManufacturer = userOptions.deviceModelManufacturer;
+  let captureDeviceModelManufacturer = userOptions.deviceModelManufacturer;
 
   const options = {
     ...DEFAULT_OPTIONS,
@@ -76,6 +122,15 @@ export const additionalContextIntegration = defineIntegration((userOptions: Part
     const height = Math.floor(display.size.height * display.scaleFactor);
     _lazyDeviceContext.screen_density = display.scaleFactor;
     _lazyDeviceContext.screen_resolution = `${width}x${height}`;
+  }
+
+  async function setDeviceModelManufacturer(): Promise<void> {
+    const { manufacturer, model } = await getDeviceModelManufacturer();
+
+    if (manufacturer || model) {
+      _lazyDeviceContext.manufacturer = manufacturer;
+      _lazyDeviceContext.model = model;
+    }
   }
 
   return {
@@ -99,16 +154,11 @@ export const additionalContextIntegration = defineIntegration((userOptions: Part
       );
     },
     processEvent: async (event) => {
-      if (process.platform === 'win32' && shouldCaptureDeviceModelManufacturer) {
+      if (captureDeviceModelManufacturer) {
         // Ensure we only fetch this once per session
-        shouldCaptureDeviceModelManufacturer = false;
+        captureDeviceModelManufacturer = false;
 
-        const { manufacturer, model } = await getWindowsDeviceModelManufacturer();
-
-        if (manufacturer || model) {
-          _lazyDeviceContext.manufacturer = manufacturer;
-          _lazyDeviceContext.model = model;
-        }
+        await setDeviceModelManufacturer();
       }
 
       return mergeEvents(event, { contexts: { device: _lazyDeviceContext } });
