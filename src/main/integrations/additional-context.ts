@@ -11,7 +11,8 @@ export interface AdditionalContextOptions {
    */
   screen: boolean;
   /**
-   * Capture device model and manufacturer on Windows
+   * Capture device model and manufacturer.
+   * Only supported in Windows.
    * @default false
    */
   deviceModelManufacturer: boolean;
