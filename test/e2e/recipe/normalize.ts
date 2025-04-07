@@ -111,6 +111,14 @@ function normalizeEvent(event: Event & ReplayEvent): void {
     event.contexts.device.processor_count = 0;
   }
 
+  if (event.contexts?.device?.manufacturer) {
+    event.contexts.device.manufacturer = '{{manufacturer}}';
+  }
+
+  if (event.contexts?.device?.model) {
+    event.contexts.device.model = '{{model}}';
+  }
+
   if (event.contexts?.device?.processor_frequency) {
     event.contexts.device.processor_frequency = 0;
   }
