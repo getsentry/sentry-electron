@@ -36,6 +36,9 @@
     "electron": "^33.0.2",
     "node-loader": "^2.0.0"
   },
+  "resolutions": {
+    "webpack": "5.98.0"
+  },
   "dependencies": {
     "@sentry/electron": "5.6.0",
     "electron-squirrel-startup": "^1.0.0"
