@@ -6,6 +6,7 @@
 
 - feat: Update JavaScript SDKs from [v9.10.1](https://github.com/getsentry/sentry-javascript/releases/tag/9.10.1) to [v9.11.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.11.0)
 - fix: GPU context should use id rather than device_id (#1126)
+- feat: Optionally capture manufacturer and model device context (#1125)
 
 ## 6.4.0
 
