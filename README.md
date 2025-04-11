@@ -21,7 +21,7 @@ Test](https://github.com/getsentry/sentry-electron/actions/workflows/build.yml/b
   [`@sentry/browser`](https://github.com/getsentry/sentry-javascript/tree/master/packages/browser))
 - Captures **native crashes** (Minidump crash reports) from renderers and the main process
 - Collects **breadcrumbs and context** information along with events across renderers and the main process
-- Supports `electron >= v15`
+- Supports `electron >= v23`
 
 ## Usage
 
