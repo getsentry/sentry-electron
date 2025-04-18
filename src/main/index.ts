@@ -35,6 +35,7 @@ export {
   continueTrace,
   createGetModuleFromFilename,
   createTransport,
+  createSentryWinstonTransport,
   cron,
   dataloaderIntegration,
   dedupeIntegration,
