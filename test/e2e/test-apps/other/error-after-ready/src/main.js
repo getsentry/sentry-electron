@@ -8,8 +8,7 @@ app.on('ready', () => {
   init({
     dsn: '__DSN__',
     debug: true,
-    integrations: (integrations) => integrations.filter((i) => i.name !== 'MainProcessSession'),
-    onFatalError: () => { },
+    onFatalError: () => {},
     // we don't want to send any events
     beforeSend: () => null,
   });

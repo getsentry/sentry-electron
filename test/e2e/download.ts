@@ -1,6 +1,6 @@
 import { downloadArtifact as electronDownload } from '@electron/get';
-import electronExtract = require('extract-zip');
 import { spawnSync } from 'child_process';
+import { default as electronExtract } from 'extract-zip';
 import { existsSync } from 'fs';
 import { join } from 'path';
 

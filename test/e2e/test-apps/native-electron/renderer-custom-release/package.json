@@ -1,5 +1,6 @@
 {
   "name": "native-electron-renderer-custom-release",
+  "description": "Native Renderer Custom Release (Electron Uploader)",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

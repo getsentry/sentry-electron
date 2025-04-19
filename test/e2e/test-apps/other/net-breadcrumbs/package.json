@@ -1,5 +1,6 @@
 {
   "name": "net-breadcrumbs",
+  "description": "Electron net Breadcrumbs",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

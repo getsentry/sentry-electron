@@ -1,5 +1,6 @@
 {
   "name": "javascript-renderer-custom-release",
+  "description": "JavaScript Renderer Error (Custom Release Name)",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

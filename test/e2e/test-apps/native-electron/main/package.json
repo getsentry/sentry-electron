@@ -1,5 +1,6 @@
 {
   "name": "native-electron-main",
+  "description": "Native Main Crash (Electron Uploader)",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

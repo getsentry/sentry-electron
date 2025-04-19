@@ -1,5 +1,6 @@
 {
   "name": "error-session",
+  "description": "Session with JavaScript Error",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

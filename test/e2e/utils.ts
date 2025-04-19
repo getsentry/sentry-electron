@@ -1,45 +1,56 @@
-import { readdirSync, readFileSync } from 'fs';
+import {
+  AttachmentItem,
+  Contexts,
+  Envelope,
+  Event,
+  FeedbackEvent,
+  parseSemver,
+  ProfileItem,
+  SdkInfo,
+  SerializedSession,
+  TransactionEvent,
+} from '@sentry/core';
+import { readdirSync } from 'fs';
 import { join } from 'path';
 import { inspect } from 'util';
+import { expect } from 'vitest';
 
-// When DEBUG is not enabled, we collect a log to output if a test fails
-let TEST_LOG: any[][] = [];
+import { SDK_VERSION } from '../../src/main/version';
 
-export function clearTestLog(): void {
-  TEST_LOG = [];
+export interface TestLogger {
+  createLogger(name: string): (...args: any[]) => void;
+  getLogOutput(): string[];
+  outputTestLog(): void;
 }
 
-export function getTestLog(): string[] {
-  const output = [];
+export function createTestLogger(): TestLogger {
+  const TEST_LOG: any[][] = [];
 
-  for (const args of TEST_LOG) {
-    output.push(args.map((a) => (typeof a === 'string' ? a : inspect(a, false, null, true))).join(' '));
-  }
+  return {
+    createLogger(name: string): (...args: any[]) => void {
+      return (...args: any[]) => {
+        TEST_LOG.push([`[${name}]`, ...args]);
 
-  return output;
-}
+        if (process.env.DEBUG) {
+          console.log(`[${name}]`, ...args);
+        }
+      };
+    },
+    getLogOutput(): string[] {
+      const output = [];
 
-export function outputTestLog(): void {
-  for (const args of TEST_LOG) {
-    console.log(...args);
-  }
-}
+      for (const args of TEST_LOG) {
+        output.push(args.map((a) => (typeof a === 'string' ? a : inspect(a, false, null, true))).join(' '));
+      }
 
-export function createLogger(name: string): (...args: any[]) => void {
-  return (...args: any[]) => {
-    TEST_LOG.push([`[${name}]`, ...args]);
-
-    if (process.env.DEBUG) {
-      console.log(`[${name}]`, ...args);
-    }
+      return output;
+    },
+    outputTestLog(): void {
+      for (const args of TEST_LOG) {
+        console.log(...args);
+      }
+    },
   };
-}
-
-/** Gets the Electron versions to test */
-export function getElectronTestVersions(): string[] {
-  return process.env.ELECTRON_VERSION
-    ? [process.env.ELECTRON_VERSION]
-    : JSON.parse(readFileSync(join(__dirname, 'versions.json'), { encoding: 'utf8' }).toString());
 }
 
 export function* walkSync(dir: string): Generator<string> {
@@ -51,4 +62,305 @@ export function* walkSync(dir: string): Generator<string> {
       yield join(dir, file.name);
     }
   }
+}
+
+export function getCurrentElectronVersion() {
+  if (!process.env.ELECTRON_VERSION) {
+    throw new Error('ELECTRON_VERSION is not set');
+  }
+  const version = parseSemver(process.env.ELECTRON_VERSION);
+  return {
+    major: version.major || 0,
+    minor: version.minor || 0,
+    patch: version.patch || 0,
+    string: process.env.ELECTRON_VERSION,
+  };
+}
+
+export const UUID_MATCHER = expect.stringMatching(/^[0-9a-f]{32}$/);
+export const UUID_V4_MATCHER = expect.stringMatching(
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+);
+export const SHORT_UUID_MATCHER = expect.stringMatching(/^[0-9a-f]{16}$/);
+export const ISO_DATE_MATCHER = expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+
+function dropUndefinedKeys<T extends Record<string, any>>(obj: T): T {
+  for (const [key, value] of Object.entries(obj)) {
+    if (value === undefined) {
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+      delete obj[key];
+    }
+  }
+  return obj;
+}
+
+function getSdk(): SdkInfo {
+  return {
+    integrations: expect.any(Array),
+    name: 'sentry.javascript.electron',
+    packages: [
+      {
+        name: 'npm:@sentry/electron',
+        version: SDK_VERSION,
+      },
+    ],
+    version: SDK_VERSION,
+  };
+}
+
+function defaultContexts(eventContexts: Contexts = {}): Contexts {
+  return expect.objectContaining(
+    dropUndefinedKeys({
+      trace: {
+        trace_id: UUID_MATCHER,
+        span_id: SHORT_UUID_MATCHER,
+      },
+      app: expect.objectContaining({
+        app_start_time: ISO_DATE_MATCHER,
+        app_memory: expect.any(Number),
+        app_name: expect.any(String),
+        app_version: expect.any(String),
+        app_arch: expect.any(String),
+      }),
+      browser: { name: 'Chrome' },
+      chrome: {
+        name: 'Chrome',
+        type: 'runtime',
+        version: expect.any(String),
+      },
+      device: {
+        boot_time: ISO_DATE_MATCHER,
+        arch: expect.any(String),
+        memory_size: expect.any(Number),
+        free_memory: expect.any(Number),
+        processor_count: expect.any(Number),
+        cpu_description: expect.any(String),
+        processor_frequency: expect.any(Number),
+        family: 'Desktop',
+        screen_density: expect.any(Number),
+        screen_resolution: expect.any(String),
+      },
+      node: {
+        name: 'Node',
+        type: 'runtime',
+        version: expect.any(String),
+      },
+      runtime: {
+        name: 'Electron',
+        version: expect.any(String),
+      },
+      os: expect.objectContaining({
+        name: expect.any(String),
+        version: expect.any(String),
+      }),
+      culture: {
+        locale: expect.any(String),
+        timezone: expect.any(String),
+      },
+      ...eventContexts,
+    }),
+  );
+}
+
+function defaultContextsNoLive(eventContexts: Contexts = {}): Contexts {
+  return expect.objectContaining({
+    trace: {
+      trace_id: UUID_MATCHER,
+      span_id: SHORT_UUID_MATCHER,
+    },
+    app: expect.objectContaining({
+      app_start_time: ISO_DATE_MATCHER,
+      app_name: expect.any(String),
+      app_version: expect.any(String),
+      app_arch: expect.any(String),
+    }),
+    browser: { name: 'Chrome' },
+    chrome: {
+      name: 'Chrome',
+      type: 'runtime',
+      version: expect.any(String),
+    },
+    device: {
+      boot_time: ISO_DATE_MATCHER,
+      arch: expect.any(String),
+      memory_size: expect.any(Number),
+      processor_count: expect.any(Number),
+      cpu_description: expect.any(String),
+      processor_frequency: expect.any(Number),
+      family: 'Desktop',
+    },
+    node: {
+      name: 'Node',
+      type: 'runtime',
+      version: expect.any(String),
+    },
+    runtime: {
+      name: 'Electron',
+      version: expect.any(String),
+    },
+    os: expect.objectContaining({
+      name: expect.any(String),
+      version: expect.any(String),
+    }),
+    culture: {
+      locale: expect.any(String),
+      timezone: expect.any(String),
+    },
+    ...eventContexts,
+  });
+}
+
+type Additions = AttachmentItem | ProfileItem;
+
+export function expectedEvent(event: Event): Event {
+  return dropUndefinedKeys({
+    event_id: UUID_MATCHER,
+    timestamp: expect.any(Number),
+    environment: 'development',
+    release: expect.any(String),
+    breadcrumbs: expect.any(Array),
+    sdk: getSdk(),
+    ...event,
+    contexts: defaultContexts(event.contexts),
+  });
+}
+
+export function expectedEventNoLiveContext(event: Event): Event {
+  return dropUndefinedKeys({
+    event_id: UUID_MATCHER,
+    environment: 'development',
+    release: expect.any(String),
+    breadcrumbs: expect.any(Array),
+    sdk: getSdk(),
+    ...event,
+    contexts: defaultContextsNoLive(event.contexts),
+  });
+}
+
+export function eventEnvelope(event: Event, ...otherEnvelopeItems: Additions[]): Envelope {
+  return [
+    {
+      event_id: UUID_MATCHER,
+      sent_at: ISO_DATE_MATCHER,
+      sdk: { name: 'sentry.javascript.electron', version: SDK_VERSION },
+      trace: {
+        environment: event.environment || 'development',
+        release: event.release || expect.any(String),
+        public_key: UUID_MATCHER,
+        trace_id: UUID_MATCHER,
+      },
+    },
+    [[{ type: 'event' }, expectedEvent(event)], ...otherEnvelopeItems],
+  ];
+}
+
+export function eventEnvelopeNoLiveContext(event: Event, ...otherEnvelopeItems: Additions[]): Envelope {
+  return [
+    {
+      event_id: UUID_MATCHER,
+      sent_at: ISO_DATE_MATCHER,
+      sdk: { name: 'sentry.javascript.electron', version: SDK_VERSION },
+    },
+    [[{ type: 'event' }, expectedEventNoLiveContext(event)], ...otherEnvelopeItems],
+  ];
+}
+
+export function feedbackEnvelope(event: Partial<FeedbackEvent>, ...otherEnvelopeItems: Additions[]): Envelope {
+  return [
+    {
+      event_id: UUID_MATCHER,
+      sent_at: ISO_DATE_MATCHER,
+      sdk: { name: 'sentry.javascript.electron', version: SDK_VERSION },
+      trace: {
+        environment: event.environment || 'development',
+        release: event.release || expect.any(String),
+        public_key: UUID_MATCHER,
+        trace_id: UUID_MATCHER,
+      },
+    },
+    [
+      [
+        { type: 'feedback' },
+        {
+          event_id: UUID_MATCHER,
+          timestamp: expect.any(Number),
+          environment: 'development',
+          release: expect.any(String),
+          breadcrumbs: expect.any(Array),
+          sdk: getSdk(),
+          ...event,
+          contexts: defaultContexts(event.contexts),
+        },
+      ],
+      ...otherEnvelopeItems,
+    ],
+  ];
+}
+
+export function transactionEnvelope(event: TransactionEvent, ...otherEnvelopeItems: Additions[]): Envelope {
+  return [
+    {
+      event_id: UUID_MATCHER,
+      sent_at: ISO_DATE_MATCHER,
+      sdk: { name: 'sentry.javascript.electron', version: SDK_VERSION },
+      trace: expect.objectContaining({
+        environment: event.environment || 'development',
+        release: event.release || expect.any(String),
+        public_key: UUID_MATCHER,
+        trace_id: UUID_MATCHER,
+        sample_rand: expect.any(String),
+        sample_rate: expect.any(String),
+        sampled: expect.any(String),
+      }),
+    },
+    [
+      [
+        { type: 'transaction' },
+        {
+          event_id: UUID_MATCHER,
+          timestamp: expect.any(Number),
+          environment: 'development',
+          release: expect.any(String),
+          start_timestamp: expect.any(Number),
+          breadcrumbs: expect.any(Array),
+          sdk: getSdk(),
+          ...event,
+          contexts: defaultContexts(event.contexts),
+        },
+      ],
+      ...otherEnvelopeItems,
+    ],
+  ];
+}
+
+export function sessionEnvelope(session: SerializedSession): Envelope {
+  return [
+    {
+      sent_at: ISO_DATE_MATCHER,
+      sdk: { name: 'sentry.javascript.electron', version: SDK_VERSION },
+    },
+    [
+      [
+        { type: 'session' },
+        {
+          attrs: expect.any(Object),
+          ...session,
+        },
+      ],
+    ],
+  ];
+}
+
+export function getEventFromEnvelope(envelope: Envelope): Event | undefined {
+  const event = envelope[1]?.[0]?.[1] as Event | undefined;
+  return event;
+}
+
+export function getSessionFromEnvelope(envelope: Envelope): SerializedSession | undefined {
+  const session = envelope[1]?.[0]?.[1] as SerializedSession | undefined;
+  return session;
+}
+
+export function isSessionEnvelope(envelope: Envelope): boolean {
+  return envelope[1][0][0].type === 'session';
 }

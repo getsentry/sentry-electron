@@ -9,9 +9,9 @@ init({
   dsn: '__DSN__',
   debug: true,
   release: 'custom-name',
-  integrations: (integrations) => [...integrations.filter((i) => i.name !== 'MainProcessSession'), electronMinidumpIntegration()],
+  integrations: [electronMinidumpIntegration()],
   initialScope: { user: { username: 'some_user' } },
-  onFatalError: () => { },
+  onFatalError: () => {},
 });
 
 app.on('ready', () => {

@@ -1,5 +1,6 @@
 {
   "name": "electron-react-boilerplate",
+  "description": "Electron React Boilerplate example",
   "scripts": {
     "build": "concurrently \"npm run build:main\" \"npm run build:renderer\"",
     "build:main": "cross-env NODE_ENV=production TS_NODE_PROJECT=tsconfig.json TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.main.prod.ts",

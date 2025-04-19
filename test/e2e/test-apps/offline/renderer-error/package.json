@@ -1,5 +1,6 @@
 {
   "name": "offline-javascript-renderer",
+  "description": "JavaScript Error Send Failure",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

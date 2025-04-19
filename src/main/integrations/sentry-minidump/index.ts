@@ -267,6 +267,15 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
           event.release = previousRun.event?.release;
           event.environment = previousRun.event?.environment;
           event.contexts = previousRun.event?.contexts;
+
+          event.sdkProcessingMetadata = {
+            dynamicSamplingContext: {
+              trace_id: previousRun.scope.propagationContext.traceId,
+              release: previousRun.event?.release,
+              environment: previousRun.event?.environment,
+              public_key: client.getDsn()?.publicKey,
+            },
+          };
         }
 
         sessionToRestore = await setPreviousSessionAsCurrent();

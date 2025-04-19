@@ -7,7 +7,6 @@ init({
   dsn: '__DSN__',
   debug: true,
   ipcMode: IPCMode.Protocol,
-  integrations: (integrations) => integrations.filter((i) => i.name !== 'MainProcessSession'),
   onFatalError: () => {},
 });
 

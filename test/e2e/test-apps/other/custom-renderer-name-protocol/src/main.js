@@ -6,7 +6,6 @@ const { init, IPCMode } = require('@sentry/electron/main');
 init({
   dsn: '__DSN__',
   debug: true,
-  integrations: (integrations) => integrations.filter((i) => i.name !== 'MainProcessSession'),
   ipcMode: IPCMode.Protocol,
   onFatalError: () => {},
   getRendererName(_) {

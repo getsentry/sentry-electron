@@ -6,7 +6,6 @@ const Sentry = require('@sentry/electron/main');
 Sentry.init({
   dsn: '__DSN__',
   debug: true,
-  integrations: (integrations) => integrations.filter((i) => i.name !== 'MainProcessSession'),
   tracesSampleRate: 1.0,
   onFatalError: () => {},
 });

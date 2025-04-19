@@ -1,5 +1,6 @@
 {
   "name": "native-sentry-renderer-force-crash",
+  "description": "Native Renderer forcefullyCrashRenderer",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

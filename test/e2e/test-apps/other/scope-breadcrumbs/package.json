@@ -1,5 +1,6 @@
 {
   "name": "scope-breadcrumbs",
+  "description": "Scope and Breadcrumbs",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

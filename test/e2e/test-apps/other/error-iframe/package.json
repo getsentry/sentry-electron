@@ -1,5 +1,6 @@
 {
   "name": "error-iframe",
+  "description": "JavaScript Error from <iframe>",
   "version": "1.0.0",
   "scripts": {
     "start": "electron .",

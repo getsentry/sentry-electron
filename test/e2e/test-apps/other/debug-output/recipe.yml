@@ -1,3 +1,0 @@
-description: Has Debug Output
-command: yarn
-expectedError: "Initializing Sentry: process"

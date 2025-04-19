@@ -1,5 +1,6 @@
 {
   "name": "javascript-preload-protocol",
+  "description": "JavaScript Preload Error via Protocol",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

@@ -1,5 +1,6 @@
 {
   "name": "window-titles",
+  "description": "Window titles are empty when disabled",
   "version": "1.0.0",
   "main": "src/main.js",
   "homepage": "https://github.com/getsentry/sentry-electron/pull/551",
