@@ -69,6 +69,7 @@ export {
   // eslint-disable-next-line deprecation/deprecation
   inboundFiltersIntegration,
   initOpenTelemetry,
+  instrumentSupabaseClient,
   isInitialized,
   kafkaIntegration,
   koaIntegration,
@@ -125,6 +126,7 @@ export {
   startSession,
   startSpan,
   startSpanManual,
+  supabaseIntegration,
   suppressTracing,
   tediousIntegration,
   trpcMiddleware,

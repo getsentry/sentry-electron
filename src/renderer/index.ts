@@ -64,6 +64,7 @@ export {
   // eslint-disable-next-line deprecation/deprecation
   inboundFiltersIntegration,
   instrumentOutgoingRequests,
+  instrumentSupabaseClient,
   isInitialized,
   lastEventId,
   logger,
@@ -104,6 +105,7 @@ export {
   startSpan,
   startSpanManual,
   statsigIntegration,
+  supabaseIntegration,
   suppressTracing,
   thirdPartyErrorFilterIntegration,
   updateSpanName,
