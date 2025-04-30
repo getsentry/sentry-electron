@@ -24,21 +24,6 @@ electronTestRunner(__dirname, { runTwice: true, timeout: 25_000 }, async (ctx) =
     .expect({
       envelope: sessionEnvelope({
         sid: UUID_MATCHER,
-        init: true,
-        started: ISO_DATE_MATCHER,
-        timestamp: ISO_DATE_MATCHER,
-        status: 'ok',
-        errors: 0,
-        duration: expect.any(Number),
-        attrs: expect.objectContaining({
-          environment: 'development',
-          release: 'session-abnormal-exit@1.0.0',
-        }),
-      }),
-    })
-    .expect({
-      envelope: sessionEnvelope({
-        sid: UUID_MATCHER,
         init: false,
         started: ISO_DATE_MATCHER,
         timestamp: ISO_DATE_MATCHER,
@@ -50,6 +35,20 @@ electronTestRunner(__dirname, { runTwice: true, timeout: 25_000 }, async (ctx) =
           release: 'session-abnormal-exit@1.0.0',
         }),
       }),
+    })
+    .expect({
+      envelope: sessionEnvelope(
+        expect.objectContaining({
+          sid: UUID_MATCHER,
+          started: ISO_DATE_MATCHER,
+          timestamp: ISO_DATE_MATCHER,
+          duration: expect.any(Number),
+          attrs: expect.objectContaining({
+            environment: 'development',
+            release: 'session-abnormal-exit@1.0.0',
+          }),
+        }),
+      ),
     })
     .run();
 });

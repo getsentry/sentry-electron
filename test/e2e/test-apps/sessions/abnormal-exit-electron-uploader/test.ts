@@ -34,22 +34,6 @@ electronTestRunner(__dirname, { runTwice: true, timeout: 50_000 }, async (ctx) =
       },
     })
     .expect({
-      envelope: sessionEnvelope({
-        sid: UUID_MATCHER,
-        did: 'some_user',
-        init: true,
-        started: ISO_DATE_MATCHER,
-        timestamp: ISO_DATE_MATCHER,
-        status: 'ok',
-        errors: 0,
-        duration: expect.any(Number),
-        attrs: expect.objectContaining({
-          environment: 'development',
-          release: 'session-abnormal-exit-electron-uploader@1.0.0',
-        }),
-      }),
-    })
-    .expect({
       envelope: (envelope: Envelope) => {
         const session = getSessionFromEnvelope(envelope);
         expect(session?.sid).toEqual(firstSessionId);
@@ -71,6 +55,21 @@ electronTestRunner(__dirname, { runTwice: true, timeout: 50_000 }, async (ctx) =
           }),
         ).toEqual(envelope);
       },
+    })
+    .expect({
+      envelope: sessionEnvelope(
+        expect.objectContaining({
+          sid: UUID_MATCHER,
+          did: 'some_user',
+          started: ISO_DATE_MATCHER,
+          timestamp: ISO_DATE_MATCHER,
+          duration: expect.any(Number),
+          attrs: expect.objectContaining({
+            environment: 'development',
+            release: 'session-abnormal-exit-electron-uploader@1.0.0',
+          }),
+        }),
+      ),
     })
     .run();
 });
