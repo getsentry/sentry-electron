@@ -1,5 +1,4 @@
 import '../../scripts/electron-shim.mjs';
-
 import {
   createEventEnvelope,
   createTransport,
@@ -9,7 +8,6 @@ import {
   TransportMakeRequestResponse,
 } from '@sentry/core';
 import { describe, expect, test } from 'vitest';
-
 import { ElectronOfflineTransportOptions } from '../../src/main/transports/electron-offline-net';
 
 const { makeElectronOfflineTransport } = await import('../../src/main/transports/electron-offline-net');

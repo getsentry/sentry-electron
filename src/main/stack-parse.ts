@@ -1,7 +1,6 @@
 import { createStackParser, logger, nodeStackLineParser, StackFrame, StackParser } from '@sentry/core';
 import { createGetModuleFromFilename } from '@sentry/node';
 import { app, WebContents, WebFrameMain } from 'electron';
-
 import { electronRendererStackParser } from '../renderer/stack-parse';
 import { ELECTRON_MAJOR_VERSION } from './electron-normalize';
 

@@ -24,7 +24,6 @@ import {
   setNodeAsyncContextStrategy,
 } from '@sentry/node';
 import { Session, session, WebContents } from 'electron';
-
 import { IPCMode } from '../common/ipc';
 import { getDefaultEnvironment, getDefaultReleaseName, getSdkInfo } from './context';
 import { additionalContextIntegration } from './integrations/additional-context';

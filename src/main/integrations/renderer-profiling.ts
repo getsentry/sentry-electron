@@ -1,6 +1,5 @@
 import { defineIntegration, Event, forEachEnvelopeItem, LRUMap, Profile } from '@sentry/core';
 import { app } from 'electron';
-
 import { getDefaultEnvironment, getDefaultReleaseName } from '../context';
 import { addHeaderToSession } from '../header-injection';
 import { normaliseProfile } from '../normalize';

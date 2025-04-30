@@ -10,7 +10,6 @@ import {
 } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { app, crashReporter } from 'electron';
-
 import { addScopeListener, getScopeData } from '../../../common/scope';
 import { getEventDefaults } from '../../context';
 import { EXIT_REASONS, getSentryCachePath } from '../../electron-normalize';

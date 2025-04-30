@@ -3,7 +3,6 @@ import Busboy from 'busboy';
 import Koa from 'koa';
 import Router from 'koa-tree-router';
 import { createGunzip } from 'zlib';
-
 import { createLogger } from '../utils';
 
 const log = createLogger('Test Server Parser');

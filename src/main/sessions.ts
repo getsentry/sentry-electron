@@ -14,7 +14,6 @@ import {
 } from '@sentry/core';
 import { flush, NodeClient } from '@sentry/node';
 import { app } from 'electron';
-
 import { getSentryCachePath } from './electron-normalize';
 import { Store } from './store';
 
@@ -154,7 +153,7 @@ export async function previousSessionWasAbnormal(): Promise<void> {
       return;
     }
 
-    logger.log(`Found previous abnormal session`);
+    logger.log('Found previous abnormal session');
 
     const sesh = makeSession(previous);
 

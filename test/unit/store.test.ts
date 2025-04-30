@@ -2,7 +2,6 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 import * as tmp from 'tmp';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
-
 import { BufferedWriteStore, Store } from '../../src/main/store';
 import { delay, expectFilesInDirectory } from '../helpers';
 

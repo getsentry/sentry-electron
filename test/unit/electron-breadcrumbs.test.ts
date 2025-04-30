@@ -1,5 +1,4 @@
 import { describe, expect, test } from 'vitest';
-
 import { normalizeOptions } from '../../src/main/integrations/electron-breadcrumbs';
 
 describe('Electron Breadcrumbs', () => {

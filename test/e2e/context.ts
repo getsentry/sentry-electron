@@ -2,7 +2,6 @@ import { ChildProcess, spawn, spawnSync } from 'child_process';
 import { rmSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
-
 import { delay } from '../helpers';
 import { TestServer } from './server';
 import { createLogger } from './utils';

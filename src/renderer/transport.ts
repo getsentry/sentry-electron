@@ -5,7 +5,6 @@ import {
   TransportMakeRequestResponse,
   TransportRequest,
 } from '@sentry/core';
-
 import { getIPC } from './ipc';
 
 /**

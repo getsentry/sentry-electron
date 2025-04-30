@@ -1,7 +1,6 @@
 import { Attachment, Client, DynamicSamplingContext, Event, logger, parseEnvelope, ScopeData } from '@sentry/core';
 import { captureEvent, getClient, getCurrentScope } from '@sentry/node';
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
-
 import { eventFromEnvelope } from '../common/envelope';
 import { IPCChannel, IPCMode, PROTOCOL_SCHEME, RendererStatus } from '../common/ipc';
 import { registerProtocol } from './electron-normalize';
