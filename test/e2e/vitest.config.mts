@@ -5,7 +5,7 @@ export default defineConfig({
     include: ['./**/*test.ts', '../../examples/**/*test.ts'],
     minWorkers: 1,
     maxWorkers: 1,
-    // retry: process.env.CI ? 3 : 0,
+    retry: process.env.CI ? 3 : 0,
     disableConsoleIntercept: true,
     silent: false,
     pool: 'threads',
