@@ -15,7 +15,6 @@ import Router from 'koa-tree-router';
 import { Readable } from 'stream';
 import { inspect } from 'util';
 import { gunzipSync } from 'zlib';
-
 import { delay } from '../../helpers';
 import { eventIsSession } from '../recipe';
 import { createLogger } from '../utils';

@@ -3,7 +3,6 @@ import { spawnSync } from 'child_process';
 import { mkdirSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { expect } from 'vitest';
-
 import { SDK_VERSION } from '../../../src/main/version';
 import { delay } from '../../helpers';
 import { TestContext } from '../context';

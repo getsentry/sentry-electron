@@ -1,9 +1,8 @@
-import * as path from 'path';
-import * as url from 'url';
-
-import { app, BrowserWindow } from 'electron';
 // eslint-disable-next-line import/no-unresolved
 import { init } from '@sentry/electron/main';
+import { app, BrowserWindow } from 'electron';
+import * as path from 'path';
+import * as url from 'url';
 
 init({
   dsn: '__DSN__',

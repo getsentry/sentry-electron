@@ -1,7 +1,6 @@
 import { Attachment, Event, logger, parseEnvelope } from '@sentry/core';
 import { captureEvent, getClient } from '@sentry/node';
 import * as electron from 'electron';
-
 import { eventFromEnvelope } from '../common/envelope';
 import { getMagicMessage, isMagicMessage } from '../common/ipc';
 import { mergeEvents } from './merge';

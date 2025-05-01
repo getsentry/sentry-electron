@@ -1,6 +1,5 @@
 /* eslint-disable complexity */
 import { Event, Profile, ReplayEvent, Session } from '@sentry/core';
-
 import { TestServerEvent } from '../server';
 
 type EventOrSession = Event | Session;

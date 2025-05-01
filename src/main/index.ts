@@ -134,6 +134,7 @@ export {
   withIsolationScope,
   withMonitor,
   withScope,
+  wrapMcpServerWithSentry,
   zodErrorsIntegration,
 } from '@sentry/node';
 

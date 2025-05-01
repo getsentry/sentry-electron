@@ -1,6 +1,5 @@
 import { defineIntegration } from '@sentry/core';
 import { app } from 'electron';
-
 import { getDefaultEnvironment, getDefaultReleaseName } from '../context';
 import { mergeEvents } from '../merge';
 

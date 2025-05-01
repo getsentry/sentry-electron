@@ -2,7 +2,6 @@ import { Event, Session } from '@sentry/core';
 import { readdirSync, readFileSync } from 'fs';
 import { dirname, join, sep } from 'path';
 import YAML from 'yaml';
-
 import { TestServerEvent } from '../server';
 import { walkSync } from '../utils';
 

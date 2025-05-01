@@ -1,7 +1,6 @@
 import { defineIntegration, Integration } from '@sentry/core';
 import { anrIntegration as nodeAnrIntegration } from '@sentry/node';
 import { app, powerMonitor } from 'electron';
-
 import { ELECTRON_MAJOR_VERSION } from '../electron-normalize';
 
 type Options = Parameters<typeof nodeAnrIntegration>[0];

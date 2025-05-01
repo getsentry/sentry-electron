@@ -1,5 +1,4 @@
 import { defineIntegration } from '@sentry/core';
-
 import { endSessionOnExit, startSession } from '../sessions';
 
 export interface Options {

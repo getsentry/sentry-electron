@@ -1,5 +1,4 @@
 import { describe, expect, test } from 'vitest';
-
 import { electronRendererStackParser } from '../../src/renderer/stack-parse';
 
 describe('Parse mixed renderer stack traces', () => {

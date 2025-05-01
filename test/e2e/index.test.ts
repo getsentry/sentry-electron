@@ -1,6 +1,5 @@
 import { join } from 'path';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, onTestFailed, test } from 'vitest';
-
 import { TestContext } from './context';
 import { downloadElectron } from './download';
 import { getCategorisedTestRecipes, getExampleRecipes } from './recipe';

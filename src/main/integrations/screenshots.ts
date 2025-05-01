@@ -1,6 +1,5 @@
 import { defineIntegration, logger } from '@sentry/core';
 import { BrowserWindow } from 'electron';
-
 import { ElectronMainOptions } from '../sdk';
 
 /**
