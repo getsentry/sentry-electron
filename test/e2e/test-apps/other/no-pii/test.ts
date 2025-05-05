@@ -1,5 +1,4 @@
 import { expect } from 'vitest';
-
 import { electronTestRunner, getEventFromEnvelope } from '../../..';
 
 electronTestRunner(__dirname, { skipEsmAutoTransform: true }, async (ctx) => {

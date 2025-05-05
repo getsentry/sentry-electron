@@ -1,5 +1,4 @@
 import { expect } from 'vitest';
-
 import { electronTestRunner, ISO_DATE_MATCHER, SHORT_UUID_MATCHER, transactionEnvelope, UUID_MATCHER } from '../../..';
 
 electronTestRunner(__dirname, async (ctx) => {

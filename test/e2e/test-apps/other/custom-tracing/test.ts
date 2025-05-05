@@ -1,5 +1,4 @@
 import { expect } from 'vitest';
-
 import { electronTestRunner, SHORT_UUID_MATCHER, transactionEnvelope, UUID_MATCHER } from '../../..';
 
 electronTestRunner(

@@ -14,7 +14,6 @@ import { readdirSync } from 'fs';
 import { join } from 'path';
 import { inspect } from 'util';
 import { expect } from 'vitest';
-
 import { SDK_VERSION } from '../../src/main/version';
 
 export interface TestLogger {

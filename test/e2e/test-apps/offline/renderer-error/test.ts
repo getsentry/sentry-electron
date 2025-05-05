@@ -1,5 +1,4 @@
 import { expect } from 'vitest';
-
 import { electronTestRunner, eventEnvelope } from '../../..';
 
 electronTestRunner(__dirname, { runTwice: true, timeout: 25_000 }, async (ctx) => {

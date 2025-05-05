@@ -1,5 +1,4 @@
 import { expect } from 'vitest';
-
 import { electronTestRunner, ISO_DATE_MATCHER, sessionEnvelope, UUID_MATCHER } from '../../..';
 
 electronTestRunner(

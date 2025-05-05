@@ -1,6 +1,5 @@
 import { SDK_VERSION as JS_SDK_VERSION } from '@sentry/core';
 import { expect } from 'vitest';
-
 import { electronTestRunner, eventEnvelope, ISO_DATE_MATCHER, UUID_MATCHER } from '../../..';
 
 electronTestRunner(__dirname, async (ctx) => {

@@ -1,6 +1,5 @@
 import { Envelope } from '@sentry/core';
 import { expect } from 'vitest';
-
 import {
   electronTestRunner,
   expectedEvent,

@@ -1,10 +1,9 @@
-import { SDK_VERSION as JS_SDK_VERSION } from '@sentry/core';
 import * as child_process from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { promisify } from 'node:util';
+import { SDK_VERSION as JS_SDK_VERSION } from '@sentry/core';
 import { dirname, join, sep } from 'path';
-
 import { SDK_VERSION } from '../../src/main/version';
 import { ERROR_ID, HANG_ID, RATE_LIMIT_ID } from './server';
 import { TestLogger, walkSync } from './utils';

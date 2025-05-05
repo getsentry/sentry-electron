@@ -1,9 +1,8 @@
+import { join } from 'node:path';
 import { Envelope } from '@sentry/core';
 import { readFileSync } from 'fs';
-import { join } from 'node:path';
 import { inspect } from 'util';
 import { afterEach, beforeEach, expect, onTestFailed, test } from 'vitest';
-
 import { delay } from '../helpers';
 import { TestContext } from './context';
 import { downloadElectron } from './download';

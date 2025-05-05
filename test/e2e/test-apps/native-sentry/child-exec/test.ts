@@ -1,5 +1,4 @@
 import { expect } from 'vitest';
-
 import { electronTestRunner, eventEnvelope } from '../../..';
 
 electronTestRunner(__dirname, { runTwice: true, skip: () => process.platform !== 'darwin' }, async (ctx) => {

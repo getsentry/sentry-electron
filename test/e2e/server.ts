@@ -5,7 +5,6 @@ import bodyParser from 'koa-bodyparser';
 import Router from 'koa-tree-router';
 import { Readable } from 'stream';
 import { createGunzip, gunzipSync } from 'zlib';
-
 import { delay } from '../helpers';
 import { TestLogger } from './utils';
 

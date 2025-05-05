@@ -1,5 +1,4 @@
 import { expect } from 'vitest';
-
 import { electronTestRunner } from '../../..';
 
 electronTestRunner(__dirname, async (ctx) => {
