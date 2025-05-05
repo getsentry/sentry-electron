@@ -1,7 +1,6 @@
 import { Envelope, logger, OfflineStore, parseEnvelope, serializeEnvelope, uuid4 } from '@sentry/core';
 import { promises as fs } from 'fs';
 import { join } from 'path';
-
 import { getSentryCachePath } from '../electron-normalize';
 import { Store } from '../store';
 
@@ -46,7 +45,7 @@ function getSentAtFromEnvelope(envelope: Envelope): Date | undefined {
  */
 export function createOfflineStore(userOptions: Partial<OfflineStoreOptions>): OfflineStore {
   function log(...args: unknown[]): void {
-    logger.log(`[Offline Store]:`, ...args);
+    logger.log('[Offline Store]:', ...args);
   }
 
   const options: OfflineStoreOptions = {

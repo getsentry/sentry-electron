@@ -1,5 +1,4 @@
 import { expect } from 'chai';
-
 import { walkSync } from './e2e/utils';
 
 export function delay(ms: number): Promise<void> {

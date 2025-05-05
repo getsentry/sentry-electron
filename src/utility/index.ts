@@ -36,6 +36,7 @@ export {
   continueTrace,
   createGetModuleFromFilename,
   createTransport,
+  createSentryWinstonTransport,
   cron,
   dataloaderIntegration,
   dedupeIntegration,
@@ -68,6 +69,7 @@ export {
   // eslint-disable-next-line deprecation/deprecation
   inboundFiltersIntegration,
   initOpenTelemetry,
+  instrumentSupabaseClient,
   isInitialized,
   kafkaIntegration,
   koaIntegration,
@@ -124,6 +126,7 @@ export {
   startSession,
   startSpan,
   startSpanManual,
+  supabaseIntegration,
   suppressTracing,
   tediousIntegration,
   trpcMiddleware,
@@ -133,6 +136,7 @@ export {
   withIsolationScope,
   withMonitor,
   withScope,
+  wrapMcpServerWithSentry,
   zodErrorsIntegration,
 } from '@sentry/node';
 

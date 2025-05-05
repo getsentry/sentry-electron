@@ -2,7 +2,6 @@ import { Attachment, logger } from '@sentry/core';
 import { app } from 'electron';
 import { promises as fs } from 'fs';
 import { basename, join } from 'path';
-
 import { Mutex } from '../../mutex';
 import { MinidumpParseResult, parseMinidump } from './minidump-parser';
 

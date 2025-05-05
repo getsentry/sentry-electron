@@ -1,5 +1,4 @@
 import '../../scripts/electron-shim.mjs';
-
 import { uuid4 } from '@sentry/core';
 import { closeSync, existsSync, openSync, utimesSync, writeFileSync, writeSync } from 'fs';
 import { join } from 'path';

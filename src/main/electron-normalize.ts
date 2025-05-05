@@ -1,7 +1,6 @@
 import { parseSemver } from '@sentry/core';
 import { app, Session } from 'electron';
 import { join } from 'path';
-
 import { RENDERER_ID_HEADER } from '../common/ipc';
 
 const parsed = parseSemver(process.versions.electron);

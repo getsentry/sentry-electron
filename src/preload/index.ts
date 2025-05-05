@@ -3,7 +3,6 @@
  */
 
 import { contextBridge, ipcRenderer } from 'electron';
-
 import { IPCChannel, RendererStatus } from '../common/ipc';
 
 // eslint-disable-next-line no-restricted-globals

@@ -12,7 +12,6 @@ import {
 } from '@sentry/core';
 import { createGetModuleFromFilename } from '@sentry/node';
 import { app, powerMonitor, WebContents } from 'electron';
-
 import { RendererStatus } from '../../common/ipc';
 import { ELECTRON_MAJOR_VERSION } from '../electron-normalize';
 import { addHeaderToSession } from '../header-injection';
