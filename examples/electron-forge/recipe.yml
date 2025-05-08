@@ -1,4 +1,0 @@
-description: Electron Forge
-command: yarn
-timeout: 120
-skipEsmAutoTransform: true

@@ -3,8 +3,7 @@ import { rmSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
 import { delay } from '../helpers';
-import { TestServer } from './server';
-import { createLogger } from './utils';
+import { TestLogger } from './utils';
 
 function getDeleteDirectories(appName: string): string[] {
   switch (process.platform) {
@@ -22,14 +21,6 @@ function getDeleteDirectories(appName: string): string[] {
   throw new Error('Unknown platform');
 }
 
-const log = createLogger('Test Context');
-const appLog = createLogger('App');
-
-if (!process.env.DEBUG && !process.env.GITHUB_ACTIONS) {
-  // tslint:disable-next-line
-  console.log('You can enable DEBUG=true to get verbose output from the tests.');
-}
-
 /** A class to start and stop Electron apps for E2E tests. */
 export class TestContext {
   /** Can check if the main process is running and kill it */
@@ -45,14 +36,17 @@ export class TestContext {
    * @param testServer A test server instance.
    */
   public constructor(
+    private readonly _logger: TestLogger,
     private readonly _electronPath: string,
-    private readonly _electronVersion: string,
     private readonly _appPath: string,
     private readonly _appName: string,
   ) {}
 
   /** Starts the app. */
   public async start(options: { secondRun?: boolean } = {}): Promise<void> {
+    const log = this._logger.createLogger('Test Context');
+    const appLog = this._logger.createLogger('App');
+
     log('Starting test app');
 
     const env: Record<string, any | undefined> = {
@@ -108,13 +102,10 @@ export class TestContext {
 
   /** Stops the app and cleans up. */
   public async stop(options: { retainData?: boolean } = {}): Promise<void> {
+    const log = this._logger.createLogger('Test Context');
     log('Stopping test app');
 
-    if (!this.mainProcess || !this.isStarted) {
-      throw new Error('Invariant violation: Call start() first');
-    }
-
-    await this.mainProcess.kill();
+    await this.mainProcess?.kill();
 
     if (!options.retainData) {
       this._clearAppUserData();
@@ -146,30 +137,14 @@ export class TestContext {
       remaining -= 100;
       if (remaining < 0) {
         const msg = message();
-        log(msg);
         throw new Error(msg);
       }
     }
   }
 
-  /**
-   * Promise only returns when the test server has at least the
-   * requested number of events
-   *
-   * @param count Number of events to wait for
-   */
-  public async waitForEvents(testServer: TestServer, count: number, timeout: number = 15_000): Promise<void> {
-    log(`Waiting for ${count} events`);
-    await this.waitForTrue(
-      () => testServer.events.length >= count,
-      () => `Timeout: Waiting ${timeout}ms for ${count} events. Only ${testServer.events.length} events received`,
-      timeout,
-    );
-    log(`${count} events received`);
-  }
-
   /** Waits for app to close */
   public async waitForAppClose(): Promise<void> {
+    const log = this._logger.createLogger('Test Context');
     await this.waitForTrue(
       async () => (this.mainProcess ? !(await this.mainProcess.isRunning()) : false),
       () => 'Timeout: Waiting for app to die',
@@ -177,6 +152,7 @@ export class TestContext {
 
     // Ensure everything has closed
     await delay(1_000);
+    log('App process has closed');
   }
 
   public get isStarted(): boolean {

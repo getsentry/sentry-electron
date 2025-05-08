@@ -1,3 +1,0 @@
-description: Utility Process
-command: yarn
-condition: version.major >= 22

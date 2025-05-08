@@ -1,5 +1,6 @@
 {
   "name": "browser-tracing",
+  "description": "Browser Tracing",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

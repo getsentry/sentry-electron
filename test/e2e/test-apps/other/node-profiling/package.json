@@ -1,9 +1,10 @@
 {
   "name": "node-profiling",
+  "description": "Node Profiling",
   "version": "1.0.0",
   "main": "src/main.js",
   "scripts": {
-    "install": "electron-rebuild"
+    "build": "electron-rebuild"
   },
   "dependencies": {
     "@electron/rebuild":"^3.7.1",

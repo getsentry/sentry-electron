@@ -7,7 +7,6 @@ import * as url from 'url';
 init({
   dsn: '__DSN__',
   debug: true,
-  integrations: (integrations) => integrations.filter((i) => i.name !== 'MainProcessSession'),
   onFatalError: () => {},
 });
 

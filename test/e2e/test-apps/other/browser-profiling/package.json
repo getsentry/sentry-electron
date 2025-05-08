@@ -1,5 +1,6 @@
 {
   "name": "browser-profiling",
+  "description": "Browser Profiling",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

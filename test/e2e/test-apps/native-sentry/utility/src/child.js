@@ -1,4 +1,4 @@
-const { raiseSegfault } = require('sadness-generator')
+const { raiseSegfault } = require('sadness-generator');
 
 setTimeout(() => {
   raiseSegfault();

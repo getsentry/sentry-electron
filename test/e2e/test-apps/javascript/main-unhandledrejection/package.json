@@ -1,5 +1,6 @@
 {
   "name": "javascript-main-unhandledrejection",
+  "description": "JavaScript Main UnhandledRejection",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

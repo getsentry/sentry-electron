@@ -2,9 +2,10 @@
   "name": "electron-forge-vite",
   "productName": "electron-forge-vite",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "Electron Forge Vite example",
   "main": ".vite/build/main.js",
   "scripts": {
+    "build": "yarn package",
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",

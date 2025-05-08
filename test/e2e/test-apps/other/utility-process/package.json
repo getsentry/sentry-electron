@@ -1,5 +1,6 @@
 {
   "name": "utility-process",
+  "description": "Utility process error",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

@@ -6,7 +6,6 @@ init({
   dsn: '__DSN__',
   debug: true,
   tracesSampleRate: 1,
-  integrations: (integrations) => integrations.filter((i) => i.name !== 'MainProcessSession'),
   onFatalError: () => {},
 });
 

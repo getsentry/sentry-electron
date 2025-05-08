@@ -1,5 +1,6 @@
 {
   "name": "custom-renderer-name",
+  "description": "Custom Renderer Name",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

@@ -1,5 +1,6 @@
 {
   "name": "javascript-renderer-custom-env",
+  "description": "JavaScript Renderer Error with custom environment",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

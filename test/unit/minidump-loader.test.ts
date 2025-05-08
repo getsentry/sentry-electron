@@ -113,6 +113,7 @@ describe('createMinidumpLoader', () => {
 
   test(
     'waits for minidump to stop being modified',
+    { timeout: 10_000, repeats: 2 },
     () =>
       new Promise<void>((done) => {
         const dumpPath = join(tempDir.name, dumpFileName());
@@ -138,7 +139,6 @@ describe('createMinidumpLoader', () => {
           done();
         });
       }),
-    10_000,
   );
 
   test('sending continues after loading failures', () =>

@@ -8,7 +8,6 @@ init({
   debug: true,
   release: 'custom-name',
   environment: 'custom-env',
-  integrations: (integrations) => integrations.filter((i) => i.name !== 'MainProcessSession'),
   onFatalError: () => {},
 });
 

@@ -1,5 +1,0 @@
-description: Native Crash Limits
-category: Native (Sentry Uploader)
-command: yarn
-waitAfterExpectedEvents: 10000
-condition: version.major >= 20

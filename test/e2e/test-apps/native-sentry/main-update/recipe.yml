@@ -1,4 +1,0 @@
-description: Native Main Crash (after update)
-category: Native (Sentry Uploader)
-command: yarn
-runTwice: true

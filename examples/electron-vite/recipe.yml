@@ -1,4 +1,0 @@
-description: Electron Vite
-command: yarn && yarn build
-timeout: 120
-skipEsmAutoTransform: true

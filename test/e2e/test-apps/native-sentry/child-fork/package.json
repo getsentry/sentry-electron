@@ -1,5 +1,6 @@
 {
   "name": "native-sentry-child-fork",
+  "description": "Native Child Crash",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

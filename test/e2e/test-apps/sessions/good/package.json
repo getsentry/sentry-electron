@@ -1,5 +1,6 @@
 {
   "name": "good-session",
+  "description": "Good Session",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

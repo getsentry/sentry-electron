@@ -1,5 +1,6 @@
 {
   "name": "javascript-main-custom-release",
+  "description": "JavaScript Main Error (Custom Release Name)",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

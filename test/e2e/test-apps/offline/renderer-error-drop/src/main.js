@@ -6,7 +6,6 @@ const { init } = require('@sentry/electron/main');
 init({
   dsn: process.env.APP_FIRST_RUN ? '__ERROR_DSN__' : '__DSN__',
   debug: true,
-  integrations: (integrations) => integrations.filter((i) => i.name !== 'MainProcessSession'),
   onFatalError: () => {},
 });
 

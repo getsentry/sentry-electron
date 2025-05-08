@@ -8,10 +8,7 @@ app.commandLine.appendSwitch('enable-crashpad');
 init({
   dsn: '__DSN__',
   debug: true,
-  integrations: (integrations) => [
-    ...integrations.filter((i) => i.name !== 'MainProcessSession'),
-    electronMinidumpIntegration(),
-  ],
+  integrations: [electronMinidumpIntegration()],
   initialScope: { user: { username: 'some_user' } },
   onFatalError: () => {},
 });

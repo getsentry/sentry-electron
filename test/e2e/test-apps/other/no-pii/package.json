@@ -1,5 +1,6 @@
 {
   "name": "javascript-no-pii",
+  "description": "No PII",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

@@ -7,7 +7,7 @@ import { registerProtocol } from './electron-normalize';
 import { createRendererAnrStatusHandler } from './integrations/renderer-anr';
 import { rendererProfileFromIpc } from './integrations/renderer-profiling';
 import { mergeEvents } from './merge';
-import { normalizeUrlsInReplayEnvelope } from './normalize';
+import { normalizeReplayEnvelope } from './normalize';
 import { ElectronMainOptionsInternal } from './sdk';
 
 let KNOWN_RENDERERS: Set<number> | undefined;
@@ -71,11 +71,29 @@ function captureEventFromRenderer(
   captureEvent(mergeEvents(event, { tags: { 'event.process': process } }), { attachments });
 }
 
-function handleEnvelope(options: ElectronMainOptionsInternal, env: Uint8Array | string, contents?: WebContents): void {
+let cached_public_key: string | undefined;
+
+function handleEnvelope(
+  client: Client,
+  options: ElectronMainOptionsInternal,
+  env: Uint8Array | string,
+  contents?: WebContents,
+): void {
   const envelope = parseEnvelope(env);
 
   const [envelopeHeader] = envelope;
   const dynamicSamplingContext = envelopeHeader.trace as DynamicSamplingContext | undefined;
+
+  if (dynamicSamplingContext) {
+    if (!cached_public_key) {
+      const dsn = client.getDsn();
+      cached_public_key = dsn?.publicKey;
+    }
+
+    dynamicSamplingContext.release = options.release;
+    dynamicSamplingContext.environment = options.environment;
+    dynamicSamplingContext.public_key = cached_public_key;
+  }
 
   const eventAndAttachments = eventFromEnvelope(envelope);
   if (eventAndAttachments) {
@@ -89,7 +107,7 @@ function handleEnvelope(options: ElectronMainOptionsInternal, env: Uint8Array | 
 
     captureEventFromRenderer(options, event, dynamicSamplingContext, attachments, contents);
   } else {
-    const normalizedEnvelope = normalizeUrlsInReplayEnvelope(envelope, app.getAppPath());
+    const normalizedEnvelope = normalizeReplayEnvelope(options, envelope, app.getAppPath());
     // Pass other types of envelope straight to the transport
     void getClient()?.getTransport()?.send(normalizedEnvelope);
   }
@@ -170,7 +188,7 @@ function configureProtocol(client: Client, options: ElectronMainOptionsInternal)
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.SCOPE}`) && data) {
             handleScope(options, data.toString());
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.ENVELOPE}`) && data) {
-            handleEnvelope(options, data, getWebContents());
+            handleEnvelope(client, options, data, getWebContents());
           } else if (
             rendererStatusChanged &&
             request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.STATUS}`) &&
@@ -211,7 +229,9 @@ function configureClassic(client: Client, options: ElectronMainOptionsInternal):
     }
   });
   ipcMain.on(IPCChannel.SCOPE, (_, jsonScope: string) => handleScope(options, jsonScope));
-  ipcMain.on(IPCChannel.ENVELOPE, ({ sender }, env: Uint8Array | string) => handleEnvelope(options, env, sender));
+  ipcMain.on(IPCChannel.ENVELOPE, ({ sender }, env: Uint8Array | string) =>
+    handleEnvelope(client, options, env, sender),
+  );
 
   const rendererStatusChanged = createRendererAnrStatusHandler(client);
   if (rendererStatusChanged) {

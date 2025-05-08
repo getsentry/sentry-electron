@@ -24,10 +24,13 @@ app.on('ready', () => {
 
 // We only crash on the first run
 // The second run is where the crash is uploaded
-setTimeout(() => {
-  if (process.env.APP_FIRST_RUN) {
+
+if (process.env.APP_FIRST_RUN) {
+  setTimeout(() => {
     process.crash();
-  } else {
+  }, 1000);
+} else {
+  setTimeout(() => {
     app.quit();
-  }
-}, 4000);
+  }, 4000);
+}
