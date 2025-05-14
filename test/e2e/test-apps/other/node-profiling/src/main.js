@@ -5,15 +5,14 @@ const { app, BrowserWindow } = require('electron');
 const { init, startSpan } = require('@sentry/electron/main');
 const { nodeProfilingIntegration } = require('@sentry/profiling-node');
 
-
 init({
   dsn: '__DSN__',
   debug: true,
   release: 'some-release',
-  integrations: (integrations) => [...integrations.filter((i) => i.name !== 'MainProcessSession'), nodeProfilingIntegration()],
+  integrations: [nodeProfilingIntegration()],
   tracesSampleRate: 1,
   profilesSampleRate: 1,
-  onFatalError: () => { },
+  onFatalError: () => {},
 });
 
 function pbkdf2() {

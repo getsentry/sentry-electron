@@ -1,5 +1,6 @@
 {
   "name": "flush-on-exit-timeout",
+  "description": "App close flush timeout",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

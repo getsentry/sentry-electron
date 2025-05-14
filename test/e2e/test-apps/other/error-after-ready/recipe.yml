@@ -1,3 +1,0 @@
-description: Error thrown if init after app ready
-command: yarn
-expectedError: should be initialized before the Electron app 'ready'

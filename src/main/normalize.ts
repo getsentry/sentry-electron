@@ -11,6 +11,7 @@ import {
 } from '@sentry/core';
 import { createGetModuleFromFilename } from '@sentry/node';
 import { app } from 'electron';
+import { ElectronMainOptionsInternal } from './sdk';
 
 const getModuleFromFilename = createGetModuleFromFilename(app.getAppPath());
 
@@ -63,7 +64,11 @@ export function normalizePaths(event: Event, basePath: string): Event {
 }
 
 /** Normalizes URLs in any replay_event items found in an envelope */
-export function normalizeUrlsInReplayEnvelope(envelope: Envelope, basePath: string): Envelope {
+export function normalizeReplayEnvelope(
+  options: ElectronMainOptionsInternal,
+  envelope: Envelope,
+  basePath: string,
+): Envelope {
   let modifiedEnvelope = createEnvelope(envelope[0]);
 
   let isReplay = false;
@@ -77,6 +82,7 @@ export function normalizeUrlsInReplayEnvelope(envelope: Envelope, basePath: stri
       event.breadcrumbs = currentScope.breadcrumbs;
       event.tags = currentScope.tags;
       event.user = currentScope.user;
+      event.environment = options.environment;
 
       if (Array.isArray(event.urls)) {
         event.urls = event.urls.map((url) => normalizeUrlToBase(url, basePath));

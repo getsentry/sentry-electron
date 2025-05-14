@@ -1,5 +1,6 @@
 {
   "name": "session-abnormal-exit",
+  "description": "Session with Abnormal Exit",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

@@ -1,5 +1,6 @@
 {
   "name": "webpack-context-isolation-preload",
+  "description": "Webpack app with context isolation and preload script",
   "version": "1.0.0",
   "scripts": {
     "start": "electron .",

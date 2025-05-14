@@ -1,5 +1,6 @@
 {
   "name": "native-sentry-renderer",
+  "description": "Native Renderer Crash",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

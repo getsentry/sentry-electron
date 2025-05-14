@@ -11,13 +11,12 @@ const VALID_LOOKING_MINIDUMP = Buffer.from(`MDMP${'X'.repeat(12000)}`);
 const minidumpPath = path.join(
   app.getPath('crashDumps'),
   process.platform === 'win32' ? 'reports' : 'completed',
-  '0dc9e285-df8d-47b7-8147-85308b54065a.dmp'
+  '0dc9e285-df8d-47b7-8147-85308b54065a.dmp',
 );
 
 init({
   dsn: '__DSN__',
   debug: true,
-  integrations: (integrations) => integrations.filter((i) => i.name !== 'MainProcessSession'),
   onFatalError: () => {},
 });
 
@@ -42,7 +41,7 @@ app.on('ready', () => {
 
       setTimeout(() => {
         process.exit();
-       });
+      });
     }, 2000);
   } else {
     console.log('main process breadcrumb from second run');

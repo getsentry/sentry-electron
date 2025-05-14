@@ -1,5 +1,6 @@
 {
   "name": "session-native-crash-renderer",
+  "description": "Session with Native Renderer Crash",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

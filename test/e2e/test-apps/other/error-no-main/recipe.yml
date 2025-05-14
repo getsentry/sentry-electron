@@ -1,3 +1,0 @@
-description: Error logged with no SDK in main process
-command: yarn
-expectedError: failed to establish connection with the Electron main process

@@ -1,5 +1,6 @@
 {
   "name": "net-breadcrumbs-tracing",
+  "description": "Electron net Tracing",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

@@ -1,5 +1,0 @@
-description: Electron Forge Vite with contextIsolation and sandbox
-command: yarn && yarn package
-condition: supportsContextIsolation && supportsSandbox
-timeout: 120
-skipEsmAutoTransform: true

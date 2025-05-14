@@ -1,4 +1,0 @@
-description: Event Listener Max
-command: yarn
-condition: version.major >= 33
-expectedError: Listener count = 3

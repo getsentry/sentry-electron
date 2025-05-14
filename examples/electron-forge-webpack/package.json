@@ -1,8 +1,10 @@
 {
   "name": "electron-forge-webpack",
+  "description": "Electron Forge Webpack example",
   "version": "1.0.0",
   "main": ".webpack/main",
   "scripts": {
+    "build": "yarn package && yarn patch-package-json",
     "package": "electron-forge package",
     "patch-package-json": "node ./patch-package-json.js"
   },

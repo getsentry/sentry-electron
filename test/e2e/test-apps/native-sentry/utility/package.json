@@ -1,5 +1,6 @@
 {
   "name": "native-sentry-utility",
+  "description": "Native Utility Crash",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {

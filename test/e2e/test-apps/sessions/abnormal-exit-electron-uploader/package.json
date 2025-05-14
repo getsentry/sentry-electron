@@ -1,5 +1,6 @@
 {
   "name": "session-abnormal-exit-electron-uploader",
+  "description": "Session with Abnormal Exit (Electron Uploader)",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {
