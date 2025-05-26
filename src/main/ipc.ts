@@ -1,4 +1,14 @@
-import { Attachment, Client, DynamicSamplingContext, Event, logger, parseEnvelope, ScopeData } from '@sentry/core';
+import {
+  _INTERNAL_captureSerializedLog,
+  Attachment,
+  Client,
+  DynamicSamplingContext,
+  Event,
+  logger,
+  parseEnvelope,
+  ScopeData,
+  SerializedLog,
+} from '@sentry/core';
 import { captureEvent, getClient, getCurrentScope } from '@sentry/node';
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
 import { eventFromEnvelope } from '../common/envelope';
@@ -189,6 +199,8 @@ function configureProtocol(client: Client, options: ElectronMainOptionsInternal)
             handleScope(options, data.toString());
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.ENVELOPE}`) && data) {
             handleEnvelope(client, options, data, getWebContents());
+          } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.STRUCTURED_LOG}`) && data) {
+            _INTERNAL_captureSerializedLog(client, JSON.parse(data.toString()) as SerializedLog);
           } else if (
             rendererStatusChanged &&
             request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.STATUS}`) &&
@@ -232,6 +244,7 @@ function configureClassic(client: Client, options: ElectronMainOptionsInternal):
   ipcMain.on(IPCChannel.ENVELOPE, ({ sender }, env: Uint8Array | string) =>
     handleEnvelope(client, options, env, sender),
   );
+  ipcMain.on(IPCChannel.STRUCTURED_LOG, (_, log: SerializedLog) => _INTERNAL_captureSerializedLog(client, log));
 
   const rendererStatusChanged = createRendererAnrStatusHandler(client);
   if (rendererStatusChanged) {

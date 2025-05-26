@@ -2,6 +2,7 @@
  * This preload script may be used with sandbox mode enabled which means regular require is not available.
  */
 
+import { SerializedLog } from '@sentry/core';
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPCChannel, RendererStatus } from '../common/ipc';
 
@@ -15,6 +16,7 @@ if (window.__SENTRY_IPC__) {
     sendScope: (scopeJson: string) => ipcRenderer.send(IPCChannel.SCOPE, scopeJson),
     sendEnvelope: (envelope: Uint8Array | string) => ipcRenderer.send(IPCChannel.ENVELOPE, envelope),
     sendStatus: (status: RendererStatus) => ipcRenderer.send(IPCChannel.STATUS, status),
+    sendStructuredLog: (log: SerializedLog) => ipcRenderer.send(IPCChannel.STRUCTURED_LOG, log),
   };
 
   // eslint-disable-next-line no-restricted-globals
