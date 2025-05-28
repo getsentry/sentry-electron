@@ -69,6 +69,7 @@ export {
   inboundFiltersIntegration,
   instrumentOutgoingRequests,
   instrumentSupabaseClient,
+  isEnabled,
   isInitialized,
   lastEventId,
   linkedErrorsIntegration,
