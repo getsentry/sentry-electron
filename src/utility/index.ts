@@ -70,6 +70,7 @@ export {
   inboundFiltersIntegration,
   initOpenTelemetry,
   instrumentSupabaseClient,
+  isEnabled,
   isInitialized,
   kafkaIntegration,
   koaIntegration,
