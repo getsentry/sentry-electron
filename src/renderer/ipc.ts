@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 /* eslint-disable no-console */
-import { logger, uuid4 } from '@sentry/core';
+import { logger, SerializedLog, uuid4 } from '@sentry/core';
 import { IPCChannel, IPCInterface, PROTOCOL_SCHEME, RENDERER_ID_HEADER, RendererStatus } from '../common/ipc';
 
 function buildUrl(channel: IPCChannel): string {
@@ -43,6 +43,15 @@ function getImplementation(): IPCInterface {
       },
       sendStatus: (status: RendererStatus) => {
         fetch(buildUrl(IPCChannel.STATUS), { method: 'POST', body: JSON.stringify({ status }), headers }).catch(() => {
+          // ignore
+        });
+      },
+      sendStructuredLog: (log: SerializedLog) => {
+        fetch(buildUrl(IPCChannel.STRUCTURED_LOG), {
+          method: 'POST',
+          body: JSON.stringify(log),
+          headers,
+        }).catch(() => {
           // ignore
         });
       },

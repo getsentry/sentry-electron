@@ -1,3 +1,7 @@
+import * as logger from './log';
+
+export { logger };
+
 export type {
   Breadcrumb,
   BreadcrumbHint,
@@ -68,7 +72,6 @@ export {
   isEnabled,
   isInitialized,
   lastEventId,
-  logger,
   linkedErrorsIntegration,
   moduleMetadataIntegration,
   onLoad,

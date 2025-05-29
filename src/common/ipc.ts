@@ -1,3 +1,5 @@
+import { SerializedLog } from '@sentry/core';
+
 /** Ways to communicate between the renderer and main process  */
 export enum IPCMode {
   /** Configures Electron IPC to receive messages from renderers */
@@ -24,8 +26,8 @@ export enum IPCChannel {
   ENVELOPE = 'sentry-electron.envelope',
   /** IPC to pass renderer status updates */
   STATUS = 'sentry-electron.status',
-  /** IPC to pass renderer metric additions to the main process */
-  ADD_METRIC = 'sentry-electron.add-metric',
+  /** IPC to pass structured log messages */
+  STRUCTURED_LOG = 'sentry-electron.structured-log',
 }
 
 export interface RendererProcessAnrOptions {
@@ -59,6 +61,7 @@ export interface IPCInterface {
   sendScope: (scope: string) => void;
   sendEnvelope: (evn: Uint8Array | string) => void;
   sendStatus: (state: RendererStatus) => void;
+  sendStructuredLog: (log: SerializedLog) => void;
 }
 
 export const RENDERER_ID_HEADER = 'sentry-electron-renderer-id';
