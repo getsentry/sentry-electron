@@ -19,6 +19,7 @@ import { rendererProfileFromIpc } from './integrations/renderer-profiling';
 import { mergeEvents } from './merge';
 import { normalizeReplayEnvelope } from './normalize';
 import { ElectronMainOptionsInternal } from './sdk';
+import { SDK_VERSION } from './version';
 
 let KNOWN_RENDERERS: Set<number> | undefined;
 let WINDOW_ID_TO_WEB_CONTENTS: Map<string, number> | undefined;
@@ -164,6 +165,23 @@ function handleScope(options: ElectronMainOptionsInternal, jsonScope: string): v
   }
 }
 
+function handleLogFromRenderer(client: Client, options: ElectronMainOptionsInternal, log: SerializedLog): void {
+  log.attributes = log.attributes || {};
+
+  if (options.release) {
+    log.attributes['sentry.release'] = { value: options.release, type: 'string' };
+  }
+
+  if (options.environment) {
+    log.attributes['sentry.environment'] = { value: options.environment, type: 'string' };
+  }
+
+  log.attributes['sentry.sdk.name'] = { value: 'sentry.javascript.electron', type: 'string' };
+  log.attributes['sentry.sdk.version'] = { value: SDK_VERSION, type: 'string' };
+
+  _INTERNAL_captureSerializedLog(client, log);
+}
+
 /** Enables Electron protocol handling */
 function configureProtocol(client: Client, options: ElectronMainOptionsInternal): void {
   if (app.isReady()) {
@@ -200,7 +218,7 @@ function configureProtocol(client: Client, options: ElectronMainOptionsInternal)
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.ENVELOPE}`) && data) {
             handleEnvelope(client, options, data, getWebContents());
           } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.STRUCTURED_LOG}`) && data) {
-            _INTERNAL_captureSerializedLog(client, JSON.parse(data.toString()) as SerializedLog);
+            handleLogFromRenderer(client, options, JSON.parse(data.toString()));
           } else if (
             rendererStatusChanged &&
             request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.STATUS}`) &&
@@ -244,7 +262,7 @@ function configureClassic(client: Client, options: ElectronMainOptionsInternal):
   ipcMain.on(IPCChannel.ENVELOPE, ({ sender }, env: Uint8Array | string) =>
     handleEnvelope(client, options, env, sender),
   );
-  ipcMain.on(IPCChannel.STRUCTURED_LOG, (_, log: SerializedLog) => _INTERNAL_captureSerializedLog(client, log));
+  ipcMain.on(IPCChannel.STRUCTURED_LOG, (_, log: SerializedLog) => handleLogFromRenderer(client, options, log));
 
   const rendererStatusChanged = createRendererAnrStatusHandler(client);
   if (rendererStatusChanged) {
