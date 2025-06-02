@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <script>
+      const { init, logger } = require('@sentry/electron/renderer');
+
+      init({
+        debug: true,
+        _experiments: { enableLogs: true },
+      });
+
+        logger.trace('User clicked submit button', {
+          buttonId: 'submit-form',
+          formId: 'user-profile',
+          timestamp: Date.now()
+        });
+
+      // setTimeout(() => {
+      //   throw new Error('Some renderer error');
+      // }, 500);
+    </script>
+  </body>
+</html>
