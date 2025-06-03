@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 6.7.0
+
+- feat: Update JavaScript SDKs from [v9.18.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.18.0) to [v9.25.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.25.0)
+- feat: Add structured logging support (#1159)
+
 ## 6.6.0
 
 - feat: Update JavaScript SDKs from [v9.11.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.11.0) to [v9.18.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.18.0)
