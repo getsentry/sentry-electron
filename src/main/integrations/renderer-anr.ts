@@ -109,6 +109,10 @@ function debuggerStackTraceCapture(contents: WebContents, pausedStack: StackFram
   });
 
   return () => {
+    if (contents.isDestroyed()) {
+      return;
+    }
+
     log('Pausing debugger to capture stack trace');
     return contents.debugger.sendCommand('Debugger.pause');
   };
