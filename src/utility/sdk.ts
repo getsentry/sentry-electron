@@ -54,6 +54,7 @@ export function init(userOptions: NodeOptions = {}): void {
     stackParser: stackParserFromStackParserOptions(userOptions.stackParser || defaultStackParser),
     // Events are sent via the main process but the Node SDK wont start without dsn
     dsn: 'https://12345@dummy.dsn/12345',
+    includeServerName: false,
   };
 
   const options = {

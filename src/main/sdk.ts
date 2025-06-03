@@ -163,6 +163,7 @@ export function init(userOptions: ElectronMainOptions): void {
     getSessions: () => [session.defaultSession],
     ...userOptions,
     stackParser: stackParserFromStackParserOptions(userOptions.stackParser || defaultStackParser),
+    includeServerName: false,
   };
 
   const options = {
@@ -183,15 +184,6 @@ export function init(userOptions: ElectronMainOptions): void {
   scope.update(options.initialScope);
 
   const client = new NodeClient(options);
-
-  if (options._experiments?.enableLogs) {
-    // In Electron we don't want to capture the hostname in log attributes
-    client.on('beforeCaptureLog', (log) => {
-      if (log.attributes?.['server.address']) {
-        delete log.attributes['server.address'];
-      }
-    });
-  }
 
   if (options.sendDefaultPii === true) {
     client.on('postprocessEvent', addAutoIpAddressToUser);
