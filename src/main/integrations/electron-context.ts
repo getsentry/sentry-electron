@@ -11,9 +11,6 @@ export const electronContextIntegration = defineIntegration(() => {
   return {
     name: 'ElectronContext',
     processEvent(event, _, client) {
-      // We don't want to send the server_name as it includes the machine name which is potentially PII
-      delete event.server_name;
-      delete event.tags?.server_name;
       // We delete the Node runtime context so our Electron runtime context is used instead
       delete event.contexts?.runtime;
 

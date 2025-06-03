@@ -61,6 +61,7 @@ export {
   getRootSpan,
   getSpanDescendants,
   getSpanStatusFromHttpCode,
+  getTraceData,
   globalHandlersIntegration,
   graphqlClientIntegration,
   httpClientIntegration,
