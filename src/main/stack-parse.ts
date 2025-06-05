@@ -26,6 +26,10 @@ export async function captureRendererStackFrames(webContents: WebContents): Prom
     throw new Error('Electron >= 34 required to capture stack frames via `frame.collectJavaScriptCallStack()`');
   }
 
+  if (webContents.isDestroyed()) {
+    return undefined;
+  }
+
   const frame = webContents.mainFrame as ElectronV34Frame;
 
   const stack = await frame.collectJavaScriptCallStack();
