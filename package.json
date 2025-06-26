@@ -88,7 +88,7 @@
     "rimraf": "^6.0.1",
     "tmp": "^0.2.1",
     "rollup": "^4.44.1",
-    "typescript": "^5.8.3",
+    "typescript": "~5.0.0",
     "vitest": "^3.2.4",
     "xvfb-maybe": "^0.2.1",
     "yaml": "^2.2.1"
