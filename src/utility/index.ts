@@ -47,6 +47,7 @@ export {
   expressIntegration,
   extraErrorDataIntegration,
   fastifyIntegration,
+  featureFlagsIntegration,
   flush,
   fsIntegration,
   functionToStringIntegration,
