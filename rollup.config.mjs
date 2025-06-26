@@ -7,7 +7,7 @@ import typescript from '@rollup/plugin-typescript';
 const pkgJson = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json')));
 
 const dependencies = Object.keys(pkgJson.dependencies || {});
-const external = [...builtinModules, 'electron', ...dependencies];
+const external = [...builtinModules, /^node:/, 'electron', ...dependencies];
 
 const outputOptions = {
   sourcemap: true,

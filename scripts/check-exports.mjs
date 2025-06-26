@@ -40,6 +40,7 @@ const ignoredBrowser = [
 ];
 
 const ignoredNode = [
+  'NODE_VERSION',
   'SDK_VERSION',
   'makeNodeTransport',
   'getSentryRelease',
