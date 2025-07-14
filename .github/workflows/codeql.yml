@@ -90,3 +90,12 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{matrix.language}}"
+  results:
+    if: ${{ alwayse() }}
+    runs-on: ubuntu-latest
+    name: CodeQL Final Results
+    needs: [analyze]
+    steps:
+      - run: exit 1
+        if: >-
+          ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
