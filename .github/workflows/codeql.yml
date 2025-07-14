@@ -91,7 +91,7 @@ jobs:
         with:
           category: "/language:${{matrix.language}}"
   results:
-    if: ${{ alwayse() }}
+    if: ${{ always() }}
     runs-on: ubuntu-latest
     name: CodeQL Final Results
     needs: [analyze]
