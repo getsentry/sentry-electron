@@ -3,6 +3,7 @@ import { anrIntegration as nodeAnrIntegration } from '@sentry/node';
 import { app, powerMonitor } from 'electron';
 import { ELECTRON_MAJOR_VERSION } from '../electron-normalize';
 
+// eslint-disable-next-line deprecation/deprecation
 type Options = Parameters<typeof nodeAnrIntegration>[0];
 
 /**
@@ -13,6 +14,7 @@ export const anrIntegration: (options: Options) => Integration = defineIntegrati
     throw new Error('Main process ANR detection requires Electron v22+');
   }
 
+  // eslint-disable-next-line deprecation/deprecation
   const integration = nodeAnrIntegration({
     ...options,
     staticTags: {
