@@ -17,6 +17,9 @@ on:
     branches: ["master"]
   schedule:
     - cron: '17 15 * * 6'
+permissions:
+  contents: read
+  security-events: write
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
@@ -90,3 +93,12 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{matrix.language}}"
+  results:
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    name: CodeQL Final Results
+    needs: [analyze]
+    steps:
+      - run: exit 1
+        if: >-
+          ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
