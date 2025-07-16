@@ -164,6 +164,7 @@ export { rendererProfileFromIpc } from './integrations/renderer-profiling';
 export { normalizePathsIntegration } from './integrations/normalize-paths';
 export { electronContextIntegration } from './integrations/electron-context';
 export { gpuContextIntegration } from './integrations/gpu-context';
+// eslint-disable-next-line deprecation/deprecation
 export { anrIntegration } from './integrations/anr';
 export { rendererAnrIntegration } from './integrations/renderer-anr';
 
