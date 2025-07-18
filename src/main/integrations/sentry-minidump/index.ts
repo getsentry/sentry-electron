@@ -1,9 +1,9 @@
 import {
   applyScopeDataToEvent,
   captureEvent,
+  debug,
   defineIntegration,
   Event,
-  logger,
   Scope,
   ScopeData,
   Session,
@@ -47,7 +47,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
   let minidumpLoader: MinidumpLoader | undefined;
 
   function startCrashReporter(): void {
-    logger.log('Starting Electron crashReporter');
+    debug.log('Starting Electron crashReporter');
 
     crashReporter.start({
       companyName: '',
@@ -96,7 +96,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
     //     right now and hope that the delay was not too long.
 
     if (minidumpsRemaining <= 0) {
-      logger.log('Not sending minidumps because the limit has been reached');
+      debug.log('Not sending minidumps because the limit has been reached');
     }
 
     // If the SDK is not enabled, or we've already reached the minidump limit, tell the loader to delete all minidumps
@@ -156,7 +156,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
       const crashedProcess =
         (minidumpProcess === 'renderer' && getRendererName ? getRendererName(contents) : minidumpProcess) || 'unknown';
 
-      logger.log(`'${crashedProcess}' process '${details.reason}'`);
+      debug.log(`'${crashedProcess}' process '${details.reason}'`);
 
       return {
         contexts: {
@@ -178,7 +178,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
   }
 
   async function sendChildProcessCrash(client: NodeClient, details: Omit<Electron.Details, 'exitCode'>): Promise<void> {
-    logger.log(`${details.type} process has ${details.reason}`);
+    debug.log(`${details.type} process has ${details.reason}`);
 
     await sendNativeCrashes(client, (minidumpProcess) => ({
       contexts: {
@@ -218,7 +218,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
       } catch (error) {
         // This is rare but we've seen reports:
         // https://github.com/getsentry/sentry-electron/issues/1102
-        logger.error('Failed to create minidump loader', error);
+        debug.error('Failed to create minidump loader', error);
       }
 
       const options = client.getOptions();
@@ -288,7 +288,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
             restorePreviousSession(sessionToRestore);
           }
         })
-        .catch((error) => logger.error(error));
+        .catch((error) => debug.error(error));
     },
   };
 });

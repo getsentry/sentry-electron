@@ -1,4 +1,4 @@
-import { defineIntegration, logger } from '@sentry/core';
+import { debug, defineIntegration } from '@sentry/core';
 import { app } from 'electron';
 import { existsSync } from 'fs';
 import { isAbsolute, resolve } from 'path';
@@ -51,7 +51,7 @@ export const preloadInjectionIntegration = defineIntegration(() => {
             setPreload(sesh, path);
           }
         } else {
-          logger.log(
+          debug.log(
             'The preload script could not be injected automatically. This is most likely caused by bundling of the main process',
           );
         }

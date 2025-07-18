@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 /* eslint-disable no-console */
-import { logger, SerializedLog, uuid4 } from '@sentry/core';
+import { debug, SerializedLog, uuid4 } from '@sentry/core';
 import { IPCChannel, IPCInterface, PROTOCOL_SCHEME, RENDERER_ID_HEADER, RendererStatus } from '../common/ipc';
 
 function buildUrl(channel: IPCChannel): string {
@@ -15,7 +15,7 @@ function getImplementation(): IPCInterface {
   if (window.__SENTRY_IPC__) {
     return window.__SENTRY_IPC__;
   } else {
-    logger.log('IPC was not configured in preload script, falling back to custom protocol and fetch');
+    debug.log('IPC was not configured in preload script, falling back to custom protocol and fetch');
 
     // A unique ID used to identify this renderer and is send in the headers of every request
     // Because it added as a global, this can be fetched from the main process via executeJavaScript
