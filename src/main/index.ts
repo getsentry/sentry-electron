@@ -91,6 +91,7 @@ export {
   NodeClient,
   nodeContextIntegration,
   onUnhandledRejectionIntegration,
+  openAIIntegration,
   OpenFeatureIntegrationHook,
   openFeatureIntegration,
   parameterize,

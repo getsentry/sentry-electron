@@ -1,4 +1,4 @@
-import { Attachment, Event, logger, parseEnvelope } from '@sentry/core';
+import { Attachment, debug, Event, parseEnvelope } from '@sentry/core';
 import { captureEvent, getClient } from '@sentry/node';
 import * as electron from 'electron';
 import { eventFromEnvelope } from '../common/envelope';
@@ -6,7 +6,7 @@ import { getMagicMessage, isMagicMessage } from '../common/ipc';
 import { mergeEvents } from './merge';
 
 function log(message: string): void {
-  logger.log(`[Utility Process] ${message}`);
+  debug.log(`[Utility Process] ${message}`);
 }
 
 /**

@@ -1,11 +1,11 @@
 import {
   addBreadcrumb,
+  debug,
   defineIntegration,
   fill,
   getBreadcrumbLogLevelFromHttpStatusCode,
   getClient,
   getTraceData,
-  logger,
   LRUMap,
   SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN,
   SentryNonRecordingSpan,
@@ -161,7 +161,7 @@ function createWrappedRequestFactory(
 
       if (shouldAttachTraceData(method, url)) {
         for (const [key, value] of Object.entries(getTraceData({ span }))) {
-          logger.log(`[Tracing] Adding ${key} header ${value} to outgoing request to "${url}": `);
+          debug.log(`[Tracing] Adding ${key} header ${value} to outgoing request to "${url}": `);
           request.setHeader(key, value);
         }
       }

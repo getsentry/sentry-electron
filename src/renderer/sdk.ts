@@ -4,7 +4,7 @@ import {
   getDefaultIntegrations as getDefaultBrowserIntegrations,
   init as browserInit,
 } from '@sentry/browser';
-import { Integration, logger } from '@sentry/core';
+import { debug, Integration } from '@sentry/core';
 import { RendererProcessAnrOptions } from '../common/ipc';
 import { enableAnrRendererMessages } from './anr';
 import { scopeToMainIntegration } from './integrations/scope-to-main';
@@ -52,11 +52,11 @@ interface ElectronRendererOptions extends Omit<BrowserOptions, 'dsn' | 'environm
 export function init<O extends ElectronRendererOptions>(
   options: ElectronRendererOptions & O = {} as ElectronRendererOptions & O,
   // This parameter name ensures that TypeScript error messages contain a hint for fixing SDK version mismatches
-  originalInit: (if_you_get_a_typescript_error_ensure_sdks_use_version_v9_39_0: O) => void = browserInit,
+  originalInit: (if_you_get_a_typescript_error_ensure_sdks_use_version_v9_40_0: O) => void = browserInit,
 ): void {
   // Ensure the browser SDK is only init'ed once.
   if (window?.__SENTRY__RENDERER_INIT__) {
-    logger.warn(`The browser SDK has already been initialized.
+    debug.warn(`The browser SDK has already been initialized.
 If init has been called in the preload and contextIsolation is disabled, is not required to call init in the renderer`);
     return;
   }

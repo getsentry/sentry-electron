@@ -5,16 +5,16 @@ export { logger };
 export type {
   Breadcrumb,
   BreadcrumbHint,
-  SdkInfo,
   Event,
   EventHint,
   Exception,
+  SdkInfo,
+  Session,
   SeverityLevel,
   StackFrame,
   Stacktrace,
   Thread,
   User,
-  Session,
 } from '@sentry/core';
 
 export {
@@ -25,7 +25,9 @@ export {
   browserApiErrorsIntegration,
   BrowserClient,
   browserProfilingIntegration,
+  browserSessionIntegration,
   browserTracingIntegration,
+  buildLaunchDarklyFlagUsedHandler,
   captureConsoleIntegration,
   captureEvent,
   captureException,
@@ -46,6 +48,7 @@ export {
   eventFromMessage,
   exceptionFromError,
   extraErrorDataIntegration,
+  featureFlagsIntegration,
   feedbackAsyncIntegration,
   feedbackIntegration,
   feedbackSyncIntegration,
@@ -73,11 +76,15 @@ export {
   isEnabled,
   isInitialized,
   lastEventId,
+  launchDarklyIntegration,
   linkedErrorsIntegration,
   moduleMetadataIntegration,
   onLoad,
+  openFeatureIntegration,
+  OpenFeatureIntegrationHook,
   parameterize,
   registerSpanErrorInstrumentation,
+  registerWebWorker,
   replayCanvasIntegration,
   replayIntegration,
   reportingObserverIntegration,
@@ -113,23 +120,18 @@ export {
   supabaseIntegration,
   suppressTracing,
   thirdPartyErrorFilterIntegration,
+  unleashIntegration,
   updateSpanName,
+  webWorkerIntegration,
   withActiveSpan,
   withIsolationScope,
   withScope,
   zodErrorsIntegration,
-  OpenFeatureIntegrationHook,
-  browserSessionIntegration,
-  buildLaunchDarklyFlagUsedHandler,
-  featureFlagsIntegration,
-  launchDarklyIntegration,
-  openFeatureIntegration,
-  unleashIntegration,
 } from '@sentry/browser';
 
 export type { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
 
 export { scopeToMainIntegration } from './integrations/scope-to-main';
 export { makeRendererTransport } from './transport';
-export { init, getDefaultIntegrations } from './sdk';
 export { electronRendererStackParser as defaultStackParser } from './stack-parse';
+export { init, getDefaultIntegrations } from './sdk';
