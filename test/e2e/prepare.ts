@@ -71,6 +71,7 @@ export async function prepareTestFiles(
   logger: TestLogger,
   testBasePath: string,
   executionBasePath: string,
+  electronVersion: string,
   port: number,
   convertFilesToEsm: boolean,
 ): Promise<void> {
@@ -100,9 +101,11 @@ export async function prepareTestFiles(
         // We replace the Sentry JavaScript dependency versions to match that of @sentry/core
         .replace(/"@sentry\/replay": ".*"/, `"@sentry/replay": "${JS_SDK_VERSION}"`)
         .replace(/"@sentry\/react": ".*"/, `"@sentry/react": "${JS_SDK_VERSION}"`)
+        .replace(/"@sentry\/node-native": ".*"/, `"@sentry/node-native": "${JS_SDK_VERSION}"`)
         .replace(/"@sentry\/profiling-node": ".*"/, `"@sentry/profiling-node": "${JS_SDK_VERSION}"`)
         .replace(/"@sentry\/integrations": ".*"/, `"@sentry/integrations": "${JS_SDK_VERSION}"`)
-        .replace(/"@sentry\/vue": ".*"/, `"@sentry/vue": "${JS_SDK_VERSION}"`);
+        .replace(/"@sentry\/vue": ".*"/, `"@sentry/vue": "${JS_SDK_VERSION}"`)
+        .replace(/"electron": ".*"/, `"electron": "${electronVersion}"`);
     }
 
     if (convertFilesToEsm) {

@@ -17,6 +17,7 @@ stats.json
 /main
 /common
 /utility
+/native
 /index.*
 /integrations.*
 /ipc.*

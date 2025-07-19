@@ -22,6 +22,12 @@ if (current !== latest) {
     }
   }
 
+  for (const dep of Object.keys(packageJson.peerDependencies)) {
+    if (dep.match(re)) {
+      packageJson.peerDependencies[dep] = latest;
+    }
+  }
+
   for (const dep of Object.keys(packageJson.devDependencies)) {
     if (dep.match(re)) {
       packageJson.devDependencies[dep] = latest;

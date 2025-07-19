@@ -17,6 +17,7 @@ module.exports = {
     '/renderer/**',
     '/examples/**',
     '/common/**',
+    '/native/**',
     '/index.*',
     '/integrations.*',
     '/utility/**',

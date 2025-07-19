@@ -162,51 +162,53 @@ function defaultContexts(eventContexts: Contexts = {}): Contexts {
 }
 
 function defaultContextsNoLive(eventContexts: Contexts = {}): Contexts {
-  return expect.objectContaining({
-    trace: {
-      trace_id: UUID_MATCHER,
-      span_id: SHORT_UUID_MATCHER,
-    },
-    app: expect.objectContaining({
-      app_start_time: ISO_DATE_MATCHER,
-      app_name: expect.any(String),
-      app_version: expect.any(String),
-      app_arch: expect.any(String),
+  return expect.objectContaining(
+    dropUndefinedKeys({
+      trace: {
+        trace_id: UUID_MATCHER,
+        span_id: SHORT_UUID_MATCHER,
+      },
+      app: expect.objectContaining({
+        app_start_time: ISO_DATE_MATCHER,
+        app_name: expect.any(String),
+        app_version: expect.any(String),
+        app_arch: expect.any(String),
+      }),
+      browser: { name: 'Chrome' },
+      chrome: {
+        name: 'Chrome',
+        type: 'runtime',
+        version: expect.any(String),
+      },
+      device: {
+        boot_time: ISO_DATE_MATCHER,
+        arch: expect.any(String),
+        memory_size: expect.any(Number),
+        processor_count: expect.any(Number),
+        cpu_description: expect.any(String),
+        processor_frequency: expect.any(Number),
+        family: 'Desktop',
+      },
+      node: {
+        name: 'Node',
+        type: 'runtime',
+        version: expect.any(String),
+      },
+      runtime: {
+        name: 'Electron',
+        version: expect.any(String),
+      },
+      os: expect.objectContaining({
+        name: expect.any(String),
+        version: expect.any(String),
+      }),
+      culture: {
+        locale: expect.any(String),
+        timezone: expect.any(String),
+      },
+      ...eventContexts,
     }),
-    browser: { name: 'Chrome' },
-    chrome: {
-      name: 'Chrome',
-      type: 'runtime',
-      version: expect.any(String),
-    },
-    device: {
-      boot_time: ISO_DATE_MATCHER,
-      arch: expect.any(String),
-      memory_size: expect.any(Number),
-      processor_count: expect.any(Number),
-      cpu_description: expect.any(String),
-      processor_frequency: expect.any(Number),
-      family: 'Desktop',
-    },
-    node: {
-      name: 'Node',
-      type: 'runtime',
-      version: expect.any(String),
-    },
-    runtime: {
-      name: 'Electron',
-      version: expect.any(String),
-    },
-    os: expect.objectContaining({
-      name: expect.any(String),
-      version: expect.any(String),
-    }),
-    culture: {
-      locale: expect.any(String),
-      timezone: expect.any(String),
-    },
-    ...eventContexts,
-  });
+  );
 }
 
 type Additions = AttachmentItem | ProfileItem;
