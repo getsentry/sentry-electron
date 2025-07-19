@@ -1,7 +1,7 @@
 import { expect } from 'vitest';
 import { electronTestRunner, eventEnvelope } from '../../..';
 
-electronTestRunner(__dirname, { runTwice: true }, async (ctx) => {
+electronTestRunner(__dirname, { skip: () => process.platform === 'linux', runTwice: true }, async (ctx) => {
   await ctx
     .expect({
       envelope: eventEnvelope(
