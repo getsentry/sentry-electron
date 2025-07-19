@@ -2,10 +2,10 @@ import {
   callFrameToStackFrame,
   captureEvent,
   Client,
+  debug,
   defineIntegration,
   Event,
   Integration,
-  logger,
   StackFrame,
   stripSentryFramesAndReverse,
   watchdogTimer,
@@ -20,7 +20,7 @@ import { sessionAnr } from '../sessions';
 import { captureRendererStackFrames } from '../stack-parse';
 
 function log(message: string, ...args: unknown[]): void {
-  logger.log(`[Renderer ANR] ${message}`, ...args);
+  debug.log(`[Renderer ANR] ${message}`, ...args);
 }
 
 interface ScriptParsedEventDataType {

@@ -93,6 +93,7 @@ export {
   nodeContextIntegration,
   onUncaughtExceptionIntegration,
   onUnhandledRejectionIntegration,
+  openAIIntegration,
   OpenFeatureIntegrationHook,
   openFeatureIntegration,
   parameterize,

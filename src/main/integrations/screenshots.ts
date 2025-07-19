@@ -1,4 +1,4 @@
-import { defineIntegration, logger } from '@sentry/core';
+import { debug, defineIntegration } from '@sentry/core';
 import { BrowserWindow } from 'electron';
 import { ElectronMainOptions } from '../sdk';
 
@@ -35,7 +35,7 @@ export const screenshotsIntegration = defineIntegration(() => {
             }
           } catch (e) {
             // Catch all errors so we don't break event submission if something goes wrong
-            logger.error('Error capturing screenshot', e);
+            debug.error('Error capturing screenshot', e);
           }
         }
       }

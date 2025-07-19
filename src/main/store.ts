@@ -1,4 +1,4 @@
-import { logger } from '@sentry/core';
+import { debug } from '@sentry/core';
 import { promises as fs } from 'fs';
 import { dirname, join } from 'path';
 import { Mutex } from './mutex';
@@ -61,7 +61,7 @@ export class Store<T> {
           await fs.writeFile(this._path, JSON.stringify(data));
         }
       } catch (e) {
-        logger.warn('Failed to write to store', e);
+        debug.warn('Failed to write to store', e);
         // This usually fails due to anti virus scanners, issues in the file
         // system, or problems with network drives. We cannot fix or handle this
         // issue and must resume gracefully. Thus, we have to ignore this error.
