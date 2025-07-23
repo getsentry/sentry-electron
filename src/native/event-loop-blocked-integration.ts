@@ -39,7 +39,9 @@ type Options = Parameters<typeof nodeEventLoopBlockIntegration>[0];
 export const eventLoopBlockIntegration: (options: Options) => Integration = defineIntegration(
   (options: Options = {}) => {
     if (process.type === 'renderer') {
-      throw new Error('`eventLoopBlockIntegration` is for use in the Electron main process.');
+      throw new Error(
+        'Detected `eventLoopBlockIntegration` in renderer process. This integration should only be used in the Electron main process.',
+      );
     }
 
     const integration = nodeEventLoopBlockIntegration({
