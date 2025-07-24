@@ -5,9 +5,9 @@ import { readFileSync } from 'node:fs';
 import typescript from '@rollup/plugin-typescript';
 
 const pkgJson = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json')));
-
 const dependencies = Object.keys(pkgJson.dependencies || {});
-const external = [...builtinModules, /^node:/, 'electron', ...dependencies];
+const peerDependencies = Object.keys(pkgJson.peerDependencies || {});
+const external = [...builtinModules, /^node:/, 'electron', ...dependencies, ...peerDependencies];
 
 const outputOptions = {
   sourcemap: true,
@@ -70,13 +70,17 @@ function bundlePreload(format, input, output) {
   };
 }
 
+const entryPoints = [
+  'src/index.ts',
+  'src/main/index.ts',
+  'src/renderer/index.ts',
+  'src/utility/index.ts',
+  'src/native/index.ts',
+];
+
 export default [
-  transpileFiles('cjs', ['src/index.ts', 'src/main/index.ts', 'src/renderer/index.ts', 'src/utility/index.ts'], '.'),
-  transpileFiles(
-    'esm',
-    ['src/index.ts', 'src/main/index.ts', 'src/renderer/index.ts', 'src/utility/index.ts'],
-    './esm',
-  ),
+  transpileFiles('cjs', entryPoints, '.'),
+  transpileFiles('esm', entryPoints, './esm'),
   bundlePreload('cjs', 'src/preload/index.ts', './preload/index.js'),
   bundlePreload('esm', 'src/preload/index.ts', './esm/preload/index.js'),
 ];

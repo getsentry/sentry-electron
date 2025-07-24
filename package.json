@@ -14,20 +14,54 @@
       "default": "./esm/renderer/index.js"
     },
     "./main": {
-      "require": "./main/index.js",
-      "import": "./esm/main/index.js"
+      "require": {
+        "types": "./main/index.d.ts",
+        "default": "./main/index.js"
+      },
+      "import": {
+        "types": "./esm/main/index.d.ts",
+        "default": "./esm/main/index.js"
+      }
     },
     "./renderer": {
-      "require": "./renderer/index.js",
-      "import": "./esm/renderer/index.js"
+      "require": {
+        "types": "./renderer/index.d.ts",
+        "default": "./renderer/index.js"
+      },
+      "import": {
+        "types": "./esm/renderer/index.d.ts",
+        "default": "./esm/renderer/index.js"
+      }
     },
     "./preload": {
-      "require": "./preload/index.js",
-      "import": "./esm/preload/index.js"
+      "require": {
+        "types": "./preload/index.d.ts",
+        "default": "./preload/index.js"
+      },
+      "import": {
+        "types": "./esm/preload/index.d.ts",
+        "default": "./esm/preload/index.js"
+      }
     },
     "./utility": {
-      "require": "./utility/index.js",
-      "import": "./esm/utility/index.js"
+      "require": {
+        "types": "./utility/index.d.ts",
+        "default": "./utility/index.js"
+      },
+      "import": {
+        "types": "./esm/utility/index.d.ts",
+        "default": "./esm/utility/index.js"
+      }
+    },
+    "./native": {
+      "require": {
+        "types": "./native/index.d.ts",
+        "default": "./native/index.js"
+      },
+      "import": {
+        "types": "./esm/native/index.d.ts",
+        "default": "./esm/native/index.js"
+      }
     }
   },
   "repository": "https://github.com/getsentry/sentry-electron.git",
@@ -65,9 +99,18 @@
     "@sentry/node": "9.40.0",
     "deepmerge": "4.3.1"
   },
+  "peerDependencies": {
+    "@sentry/node-native": "9.39.0"
+  },
+  "peerDependenciesMeta": {
+    "@sentry/node-native": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^11.1.6",
+    "@sentry/node-native": "9.40.0",
     "@sentry-internal/eslint-config-sdk": "9.40.0",
     "@sentry-internal/typescript": "9.40.0",
     "@types/busboy": "^1.5.4",
