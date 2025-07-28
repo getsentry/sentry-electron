@@ -6,7 +6,7 @@
   <body>
     <script>
       const crypto = require('crypto');
-      const { init } = require('@sentry/electron/renderer');
+      const { init, eventLoopBlockIntegration } = require('@sentry/electron/renderer');
 
       function longWork() {
         for (let i = 0; i < 100; i++) {
@@ -18,7 +18,7 @@
 
       init({
         debug: true,
-        anrDetection: { pollInterval: 200, anrThreshold: 1000, captureStackTrace: true },
+        integrations: [eventLoopBlockIntegration({threshold: 1000})],
       });
 
       setTimeout(() => {
