@@ -123,7 +123,7 @@
     "electron-latest-versions": "^0.2.0",
     "eslint": "7.32.0",
     "extract-zip": "^2.0.1",
-    "koa": "^2.14.1",
+    "koa": "^3.0.1",
     "koa-bodyparser": "^4.3.0",
     "koa-tree-router": "^0.12.1",
     "latest-version": "^7.0.0",
