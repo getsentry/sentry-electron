@@ -87,7 +87,7 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
 
           // Capture message first
           if (events.includes(reason)) {
-            captureMessage(messageFmt, { level, tags: { 'event.process': details.type } });
+            captureMessage(message, { level, tags: { 'event.process': details.type } });
           }
 
           // And then add breadcrumbs for subsequent events
@@ -115,7 +115,7 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
 
           // Capture message first
           if (events.includes(reason)) {
-            captureMessage(messageFmt, level);
+            captureMessage(message, level);
           }
 
           // And then add breadcrumbs for subsequent events
