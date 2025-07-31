@@ -29,7 +29,7 @@ electronTestRunner(__dirname, async (ctx) => {
                     'sentry.sdk.version': { value: SDK_VERSION, type: 'string' },
                     'sentry.message.template': { value: 'electron.%s.%s', type: 'string' },
                     'sentry.message.parameter.0': { value: 'app', type: 'string' },
-                    'sentry.message.parameter.1': { value: 'ready', type: 'string' }
+                    'sentry.message.parameter.1': { value: 'ready', type: 'string' },
                   },
                 },
                 {
