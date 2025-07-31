@@ -132,6 +132,7 @@ export {
 export type { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
 
 export { scopeToMainIntegration } from './integrations/scope-to-main';
+export { eventLoopBlockIntegration } from './integrations/event-loop-block';
 export { makeRendererTransport } from './transport';
 export { electronRendererStackParser as defaultStackParser } from './stack-parse';
 export { init, getDefaultIntegrations } from './sdk';
