@@ -1,4 +1,3 @@
-/* eslint-disable deprecation/deprecation */
 /* eslint-disable no-restricted-globals */
 import {
   BrowserOptions,
@@ -7,7 +6,7 @@ import {
 } from '@sentry/browser';
 import { debug, Integration } from '@sentry/core';
 import { RendererProcessAnrOptions } from '../common/ipc';
-import { eventLoopBlockIntegration } from './integrations/event-loop-block';
+import { enableAnrRendererMessages } from './anr';
 import { scopeToMainIntegration } from './integrations/scope-to-main';
 import { electronRendererStackParser } from './stack-parse';
 import { makeRendererTransport } from './transport';
@@ -88,29 +87,10 @@ If init has been called in the preload and contextIsolation is disabled, is not 
   }
 
   // TODO: Next major version, remove the deprecated anrDetection option
+  // eslint-disable-next-line deprecation/deprecation
   if (options.anrDetection) {
-    const integrationOptions =
-      options.anrDetection === true
-        ? {
-            threshold: 5_000,
-            pollInterval: 1_000,
-            captureStackTrace: false,
-          }
-        : {
-            threshold: options.anrDetection.anrThreshold || 5_000,
-            pollInterval: options.anrDetection.pollInterval || 1_000,
-            captureStackTrace: options.anrDetection.captureStackTrace || false,
-          };
-
-    const integration = eventLoopBlockIntegration(integrationOptions);
-
-    if (typeof options.integrations === 'function') {
-      const originalFn = options.integrations;
-      options.integrations = (integrations) => [...originalFn(integrations), integration];
-    } else {
-      options.integrations = options.integrations || [];
-      options.integrations.push(integration);
-    }
+    // eslint-disable-next-line deprecation/deprecation
+    enableAnrRendererMessages(options.anrDetection === true ? {} : options.anrDetection);
   }
 
   // We only handle initialScope in the main process otherwise it can cause race conditions over IPC
