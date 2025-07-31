@@ -7,7 +7,10 @@ electronTestRunner(__dirname, async (ctx) => {
       envelope: eventEnvelope({
         level: 'warning',
         platform: 'node',
-        message: "'GPU' process exited with 'killed'",
+        logentry: {
+          message: "'%s' process exited with '%s'",
+          params: ['GPU', 'killed'],
+        },
         tags: {
           'event.environment': 'javascript',
           'event.origin': 'electron',

@@ -35,20 +35,21 @@ type LogFn = (msg: ParameterizedString, attributes: Log['attributes']) => void;
 function getMessageAndSeverity(
   reason: ExitReason,
   process: string,
-): { message: string, level: SeverityLevel; log: LogFn } {
+): { message: string; messageFmt: ParameterizedString; level: SeverityLevel; log: LogFn } {
   const message = `'${process}' process exited with '${reason}'`;
+  const messageFmt = logger.fmt`'${process}' process exited with '${reason}'`;
 
   switch (reason) {
     case 'abnormal-exit':
     case 'killed':
-      return { message, level: 'warning', log: logger.warn };
+      return { message, level: 'warning', log: logger.warn, messageFmt };
     case 'crashed':
     case 'oom':
     case 'launch-failed':
     case 'integrity-failure':
-      return { message, level: 'fatal', log: logger.error };
+      return { message, level: 'fatal', log: logger.error, messageFmt };
     default:
-      return { message, level: 'debug', log: logger.info };
+      return { message, level: 'debug', log: logger.info, messageFmt };
   }
 }
 
@@ -82,12 +83,11 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
 
         app.on('child-process-gone', (_, details) => {
           const { reason } = details;
-
-          const { message, level, log } = getMessageAndSeverity(details.reason, details.type);
+          const { message, level, log, messageFmt } = getMessageAndSeverity(details.reason, details.type);
 
           // Capture message first
           if (events.includes(reason)) {
-            captureMessage(message, { level, tags: { 'event.process': details.type } });
+            captureMessage(messageFmt, { level, tags: { 'event.process': details.type } });
           }
 
           // And then add breadcrumbs for subsequent events
@@ -100,7 +100,7 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
               data: details,
             });
 
-            log(logger.fmt`'${process}' process exited with '${reason}'`, {
+            log(messageFmt, {
               exitCode: details.exitCode,
               name: details.name,
               serviceName: details.serviceName,
@@ -110,12 +110,12 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
 
         app.on('render-process-gone', (_, contents, details) => {
           const { reason } = details;
-          const processName = clientOptions?.getRendererName?.(contents) || 'renderer';
-          const { message, level, log } = getMessageAndSeverity(details.reason, processName);
+          const name = clientOptions?.getRendererName?.(contents) || 'renderer';
+          const { message, level, log, messageFmt } = getMessageAndSeverity(details.reason, name);
 
           // Capture message first
           if (events.includes(reason)) {
-            captureMessage(message, level);
+            captureMessage(messageFmt, level);
           }
 
           // And then add breadcrumbs for subsequent events
@@ -123,11 +123,12 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
             addBreadcrumb({
               type: 'process',
               category: 'child-process',
-              ...getMessageAndSeverity(details.reason, processName),
+              message,
+              level,
               data: details,
             });
 
-            log(logger.fmt`'${processName}' process exited with '${reason}'`, {
+            log(messageFmt, {
               exitCode: details.exitCode,
             });
           }
