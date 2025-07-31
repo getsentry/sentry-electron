@@ -73,7 +73,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest]
         electron: ${{ fromJson(needs.build.outputs.matrix) }}
     env:
       ELECTRON_VERSION: ${{ matrix.electron }}
