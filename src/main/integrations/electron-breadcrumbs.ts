@@ -1,5 +1,5 @@
 import { addBreadcrumb, Breadcrumb, defineIntegration } from '@sentry/core';
-import { NodeClient } from '@sentry/node';
+import { logger, NodeClient } from '@sentry/node';
 import { app, autoUpdater, BrowserWindow, powerMonitor, screen, WebContents } from 'electron';
 import { getRendererProperties, trackRendererProperties } from '../renderers';
 import { ElectronMainOptions } from '../sdk';
@@ -137,6 +137,18 @@ export const electronBreadcrumbsIntegration = defineIntegration(
           }
 
           addBreadcrumb(breadcrumb);
+
+          const attributes: Record<string, unknown> = {};
+
+          if (breadcrumb.data?.id) {
+            attributes.id = breadcrumb.data.id;
+          }
+
+          if (breadcrumb.data?.url) {
+            attributes.url = breadcrumb.data.url;
+          }
+
+          logger.info(logger.fmt`electron.${category}.${event}`, attributes);
         }
 
         return emit(event, ...args);

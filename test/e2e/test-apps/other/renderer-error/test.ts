@@ -11,11 +11,27 @@ electronTestRunner(__dirname, async (ctx) => {
           [
             {
               type: 'log',
-              item_count: 2,
+              item_count: expect.any(Number),
               content_type: 'application/vnd.sentry.items.log+json',
             },
             {
-              items: [
+              items: expect.arrayContaining([
+                {
+                  timestamp: expect.any(Number),
+                  level: 'info',
+                  body: 'electron.app.ready',
+                  trace_id: UUID_MATCHER,
+                  severity_number: 9,
+                  attributes: {
+                    'sentry.release': { value: 'javascript-logs@1.0.0', type: 'string' },
+                    'sentry.environment': { value: 'development', type: 'string' },
+                    'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
+                    'sentry.sdk.version': { value: SDK_VERSION, type: 'string' },
+                    'sentry.message.template': { value: 'electron.%s.%s', type: 'string' },
+                    'sentry.message.parameter.0': { value: 'app', type: 'string' },
+                    'sentry.message.parameter.1': { value: 'ready', type: 'string' },
+                  },
+                },
                 {
                   timestamp: expect.any(Number),
                   level: 'info',
@@ -47,7 +63,7 @@ electronTestRunner(__dirname, async (ctx) => {
                     'sentry.sdk.version': { value: SDK_VERSION, type: 'string' },
                   },
                 },
-              ],
+              ]),
             },
           ],
         ],
