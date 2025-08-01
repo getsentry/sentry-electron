@@ -1,8 +1,8 @@
 import {
   createStackParser,
+  debug,
   getIntegrationsToSetup,
   Integration,
-  logger,
   nodeStackLineParser,
   StackParser,
   stackParserFromStackParserOptions,
@@ -63,7 +63,7 @@ export function init(userOptions: NodeOptions = {}): void {
   };
 
   if (options.debug) {
-    logger.enable();
+    debug.enable();
   }
 
   setNodeAsyncContextStrategy();

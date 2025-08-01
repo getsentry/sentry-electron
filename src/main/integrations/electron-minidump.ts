@@ -1,4 +1,4 @@
-import { applyScopeDataToEvent, defineIntegration, Event, logger, makeDsn, ScopeData, uuid4 } from '@sentry/core';
+import { applyScopeDataToEvent, debug, defineIntegration, Event, makeDsn, ScopeData, uuid4 } from '@sentry/core';
 import { NodeClient, NodeOptions } from '@sentry/node';
 import { app, crashReporter } from 'electron';
 import { addScopeListener, getScopeData } from '../../common/scope';
@@ -127,13 +127,13 @@ export const electronMinidumpIntegration = defineIntegration(() => {
           crashReporter.addExtraParameter(key, value);
         }
       })
-      .catch((error) => logger.error(error));
+      .catch((error) => debug.error(error));
   }
 
   function startCrashReporter(options: NodeOptions): void {
     const submitURL = minidumpUrlFromDsn(options.dsn || '');
     if (!submitURL) {
-      logger.log('Invalid DSN. Cannot start Electron crashReporter');
+      debug.log('Invalid DSN. Cannot start Electron crashReporter');
       return;
     }
 
@@ -141,7 +141,7 @@ export const electronMinidumpIntegration = defineIntegration(() => {
     // https://github.com/electron/electron/issues/29711
     const globalExtra = { sentry___initialScope: JSON.stringify(getScope(options)) };
 
-    logger.log('Starting Electron crashReporter');
+    debug.log('Starting Electron crashReporter');
 
     crashReporter.start({
       companyName: '',
@@ -192,7 +192,7 @@ export const electronMinidumpIntegration = defineIntegration(() => {
       unreportedDuringLastSession(crashReporter.getLastCrashReport()?.date).then((crashed) => {
         // Check if a previous session was not closed
         return checkPreviousSession(crashed);
-      }, logger.error);
+      }, debug.error);
     },
   };
 });

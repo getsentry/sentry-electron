@@ -2,9 +2,9 @@ import {
   _INTERNAL_captureSerializedLog,
   Attachment,
   Client,
+  debug,
   DynamicSamplingContext,
   Event,
-  logger,
   parseEnvelope,
   ScopeData,
   SerializedLog,
@@ -50,7 +50,7 @@ function newProtocolRenderer(): void {
             WINDOW_ID_TO_WEB_CONTENTS?.delete(windowId);
           });
         }
-      }, logger.error);
+      }, debug.error);
     }
   }
 }
@@ -137,7 +137,7 @@ function handleScope(options: ElectronMainOptionsInternal, jsonScope: string): v
   try {
     sentScope = JSON.parse(jsonScope) as ScopeData;
   } catch {
-    logger.warn('sentry-electron received an invalid scope message');
+    debug.warn('sentry-electron received an invalid scope message');
     return;
   }
 
@@ -233,7 +233,7 @@ function configureProtocol(client: Client, options: ElectronMainOptionsInternal)
         });
       }
     })
-    .catch((error) => logger.error(error));
+    .catch((error) => debug.error(error));
 }
 
 /**

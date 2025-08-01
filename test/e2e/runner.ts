@@ -185,7 +185,7 @@ export function electronTestRunner(
     electronPath = await downloadElectron(electronVersion.string);
     server = createSentryTestServer(logger, ignoreOrder ? onNewServerEventIgnoreOrder : onNewServerEvent);
 
-    await prepareTestFiles(logger, testPath, testExecutionRoot, server.port, convertToEsm);
+    await prepareTestFiles(logger, testPath, testExecutionRoot, electronVersion.string, server.port, convertToEsm);
     await installDepsAndBuild(logger, options.packageManager || 'yarn', testExecutionRoot, hasBuildScript);
 
     const executionPath = options.appExecutionPath

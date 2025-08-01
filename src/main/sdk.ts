@@ -1,9 +1,9 @@
 import {
   addAutoIpAddressToSession,
   addAutoIpAddressToUser,
+  debug,
   getIntegrationsToSetup,
   Integration,
-  logger,
   Options,
   stackParserFromStackParserOptions,
 } from '@sentry/core';
@@ -172,7 +172,7 @@ export function init(userOptions: ElectronMainOptions): void {
   };
 
   if (options.debug) {
-    logger.enable();
+    debug.enable();
   }
 
   removeRedundantIntegrations(options);

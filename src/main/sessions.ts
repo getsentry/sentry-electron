@@ -1,9 +1,9 @@
 import {
   captureSession,
+  debug,
   endSession as endSessionCore,
   getClient,
   getIsolationScope,
-  logger,
   makeSession,
   SerializedSession,
   Session,
@@ -78,13 +78,13 @@ export async function endSession(): Promise<void> {
 
   if (session) {
     if (session.status === 'ok') {
-      logger.log('Ending session');
+      debug.log('Ending session');
       endSessionCore();
     } else {
-      logger.log('Session was already ended');
+      debug.log('Session was already ended');
     }
   } else {
-    logger.log('No session');
+    debug.log('No session');
   }
 
   await getSessionStore().clear();
@@ -153,7 +153,7 @@ export async function previousSessionWasAbnormal(): Promise<void> {
       return;
     }
 
-    logger.log('Found previous abnormal session');
+    debug.log('Found previous abnormal session');
 
     const sesh = makeSession(previous);
 
@@ -185,7 +185,7 @@ export async function checkPreviousSession(crashed: boolean): Promise<void> {
 
     const status: SessionStatus = crashed ? 'crashed' : 'abnormal';
 
-    logger.log(`Found previous ${status} session`);
+    debug.log(`Found previous ${status} session`);
 
     const sesh = makeSession(previous);
 
@@ -209,21 +209,21 @@ export function sessionCrashed(): void {
     clearInterval(persistTimer);
   }
 
-  logger.log('Session Crashed');
+  debug.log('Session Crashed');
   const session = getIsolationScope().getSession();
 
   if (!session) {
-    logger.log('No session to update');
+    debug.log('No session to update');
     return;
   }
 
   if (session.status === 'ok') {
-    logger.log('Setting session as crashed');
+    debug.log('Setting session as crashed');
     const errors = session.errors + 1;
     updateSession(session, { status: 'crashed', errors });
     captureSession();
   } else {
-    logger.log('Session already ended');
+    debug.log('Session already ended');
   }
 }
 
@@ -241,7 +241,7 @@ export function sessionAnr(): void {
   }
 
   if (session.status === 'ok') {
-    logger.log('Setting session as abnormal ANR');
+    debug.log('Setting session as abnormal ANR');
     updateSession(session, { status: 'abnormal', abnormal_mechanism: 'anr_foreground' });
     captureSession();
   }
@@ -269,7 +269,7 @@ const exitHandler: (event: Electron.Event) => Promise<void> = async (event: Elec
     return;
   }
 
-  logger.log('[Session] Exit Handler');
+  debug.log('[Session] Exit Handler');
 
   // Stop the exit so we have time to send the session
   event.preventDefault();
@@ -279,7 +279,7 @@ const exitHandler: (event: Electron.Event) => Promise<void> = async (event: Elec
     await endSession();
   } catch (e) {
     // Ignore and log any errors which would prevent app exit
-    logger.warn('[Session] Error ending session:', e);
+    debug.warn('[Session] Error ending session:', e);
   }
 
   app.exit();

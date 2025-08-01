@@ -1,4 +1,4 @@
-import { Attachment, logger } from '@sentry/core';
+import { Attachment, debug } from '@sentry/core';
 import { app } from 'electron';
 import { promises as fs } from 'fs';
 import { basename, join } from 'path';
@@ -47,14 +47,14 @@ export function createMinidumpLoader(getMinidumpPaths: () => Promise<string[]>):
             continue;
           }
 
-          logger.log('Found minidump', path);
+          debug.log('Found minidump', path);
 
           let stats = await fs.stat(path);
 
           const thirtyDaysAgo = new Date().getTime() - MAX_AGE_DAYS * MS_PER_DAY;
 
           if (stats.mtimeMs < thirtyDaysAgo) {
-            logger.log(`Ignoring minidump as it is over ${MAX_AGE_DAYS} days old`);
+            debug.log(`Ignoring minidump as it is over ${MAX_AGE_DAYS} days old`);
             continue;
           }
 
@@ -68,7 +68,7 @@ export function createMinidumpLoader(getMinidumpPaths: () => Promise<string[]>):
               try {
                 const parsedMinidump = parseMinidump(data);
 
-                logger.log('Sending minidump');
+                debug.log('Sending minidump');
 
                 await callback(parsedMinidump, {
                   attachmentType: 'event.minidump',
@@ -77,14 +77,14 @@ export function createMinidumpLoader(getMinidumpPaths: () => Promise<string[]>):
                 });
               } catch (e) {
                 const message = e instanceof Error ? e.toString() : 'Unknown error';
-                logger.warn(`Dropping minidump:\n${message}`);
+                debug.warn(`Dropping minidump:\n${message}`);
                 break;
               }
 
               break;
             }
 
-            logger.log(`Waiting. Minidump has been modified in the last ${NOT_MODIFIED_MS} milliseconds.`);
+            debug.log(`Waiting. Minidump has been modified in the last ${NOT_MODIFIED_MS} milliseconds.`);
             retries += 1;
             await delay(RETRY_DELAY_MS);
             // update the stats
@@ -92,16 +92,16 @@ export function createMinidumpLoader(getMinidumpPaths: () => Promise<string[]>):
           }
 
           if (retries >= MAX_RETRIES) {
-            logger.warn('Timed out waiting for minidump to stop being modified');
+            debug.warn('Timed out waiting for minidump to stop being modified');
           }
         } catch (e) {
-          logger.error('Failed to load minidump', e);
+          debug.error('Failed to load minidump', e);
         } finally {
           // We always attempt to delete the minidump
           try {
             await fs.unlink(path);
           } catch (e) {
-            logger.warn('Could not delete minidump', path);
+            debug.warn('Could not delete minidump', path);
           }
         }
       }
@@ -118,7 +118,7 @@ async function deleteCrashpadMetadataFile(crashesDirectory: string, waitMs: numb
   const metadataPath = join(crashesDirectory, 'metadata');
   try {
     await fs.unlink(metadataPath);
-    logger.log('Deleted Crashpad metadata file', metadataPath);
+    debug.log('Deleted Crashpad metadata file', metadataPath);
   } catch (e: any) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (e.code && e.code == 'EBUSY') {
@@ -158,7 +158,7 @@ export function getMinidumpLoader(): MinidumpLoader {
   }
 
   return createMinidumpLoader(async () => {
-    await deleteCrashpadMetadataFile(crashesDirectory).catch((error) => logger.error(error));
+    await deleteCrashpadMetadataFile(crashesDirectory).catch((error) => debug.error(error));
     const files = await readDirsAsync(dumpDirectories);
     return files.filter((file) => file.endsWith('.dmp'));
   });
