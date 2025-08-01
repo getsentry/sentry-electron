@@ -1,7 +1,7 @@
 import { defineIntegration } from '@sentry/core';
 import { app } from 'electron';
-import { getDefaultEnvironment, getDefaultReleaseName } from '../context';
-import { mergeEvents } from '../merge';
+import { getDefaultEnvironment, getDefaultReleaseName } from '../context.js';
+import { mergeEvents } from '../merge.js';
 
 function getAppMemory(): number {
   return app.getAppMetrics().reduce((acc, metric) => acc + metric.memory.workingSetSize * 1024, 0);

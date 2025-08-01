@@ -1,8 +1,8 @@
 import { addBreadcrumb, Breadcrumb, defineIntegration } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { app, autoUpdater, BrowserWindow, powerMonitor, screen, WebContents } from 'electron';
-import { getRendererProperties, trackRendererProperties } from '../renderers';
-import { ElectronMainOptions } from '../sdk';
+import { getRendererProperties, trackRendererProperties } from '../renderers.js';
+import { ElectronMainOptions } from '../sdk.js';
 
 /** A function that returns true if the named event should create breadcrumbs */
 type EventFunction = (name: string) => boolean;

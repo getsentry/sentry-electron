@@ -1,9 +1,9 @@
 import { defineIntegration, Event, forEachEnvelopeItem, LRUMap, Profile } from '@sentry/core';
 import { app } from 'electron';
-import { getDefaultEnvironment, getDefaultReleaseName } from '../context';
-import { addHeaderToSession } from '../header-injection';
-import { normaliseProfile } from '../normalize';
-import { ElectronMainOptionsInternal } from '../sdk';
+import { getDefaultEnvironment, getDefaultReleaseName } from '../context.js';
+import { addHeaderToSession } from '../header-injection.js';
+import { normaliseProfile } from '../normalize.js';
+import { ElectronMainOptionsInternal } from '../sdk.js';
 
 // A cache of renderer profiles which need attaching to events
 let RENDERER_PROFILES: LRUMap<string, Profile> | undefined;

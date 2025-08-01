@@ -1,7 +1,7 @@
 import { exec } from 'node:child_process';
 import { defineIntegration, DeviceContext } from '@sentry/core';
 import { app, screen as electronScreen } from 'electron';
-import { mergeEvents } from '../merge';
+import { mergeEvents } from '../merge.js';
 
 export interface AdditionalContextOptions {
   /**

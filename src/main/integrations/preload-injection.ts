@@ -3,9 +3,9 @@ import { app } from 'electron';
 import { existsSync } from 'fs';
 import { isAbsolute, resolve } from 'path';
 import { fileURLToPath } from 'url';
-import { IPCMode } from '../../common/ipc';
-import { setPreload } from '../electron-normalize';
-import { ElectronMainOptionsInternal } from '../sdk';
+import { IPCMode } from '../../common/ipc.js';
+import { setPreload } from '../electron-normalize.js';
+import { ElectronMainOptionsInternal } from '../sdk.js';
 
 // After bundling with webpack, require.resolve can return number so we include that in the types
 // to ensure we check for that!

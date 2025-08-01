@@ -6,11 +6,11 @@ import {
   init as browserInit,
 } from '@sentry/browser';
 import { debug, Integration } from '@sentry/core';
-import { RendererProcessAnrOptions } from '../common/ipc';
-import { eventLoopBlockIntegration } from './integrations/event-loop-block';
-import { scopeToMainIntegration } from './integrations/scope-to-main';
-import { electronRendererStackParser } from './stack-parse';
-import { makeRendererTransport } from './transport';
+import { RendererProcessAnrOptions } from '../common/ipc.js';
+import { eventLoopBlockIntegration } from './integrations/event-loop-block.js';
+import { scopeToMainIntegration } from './integrations/scope-to-main.js';
+import { electronRendererStackParser } from './stack-parse.js';
+import { makeRendererTransport } from './transport.js';
 
 /** Get the default integrations for the renderer SDK. */
 export function getDefaultIntegrations(options: ElectronRendererOptions): Integration[] {

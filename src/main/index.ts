@@ -150,30 +150,30 @@ export {
 
 export type { NodeOptions } from '@sentry/node';
 
-export { electronBreadcrumbsIntegration } from './integrations/electron-breadcrumbs';
-export { onUncaughtExceptionIntegration } from './integrations/onuncaughtexception';
-export { sentryMinidumpIntegration } from './integrations/sentry-minidump';
-export { electronMinidumpIntegration } from './integrations/electron-minidump';
-export { preloadInjectionIntegration } from './integrations/preload-injection';
-export { mainProcessSessionIntegration } from './integrations/main-process-session';
-export { browserWindowSessionIntegration } from './integrations/browser-window-session';
-export { additionalContextIntegration } from './integrations/additional-context';
-export { electronNetIntegration } from './integrations/net-breadcrumbs';
-export { childProcessIntegration } from './integrations/child-process';
-export { screenshotsIntegration } from './integrations/screenshots';
-export { rendererProfileFromIpc } from './integrations/renderer-profiling';
-export { normalizePathsIntegration } from './integrations/normalize-paths';
-export { electronContextIntegration } from './integrations/electron-context';
-export { gpuContextIntegration } from './integrations/gpu-context';
+export { electronBreadcrumbsIntegration } from './integrations/electron-breadcrumbs.js';
+export { onUncaughtExceptionIntegration } from './integrations/onuncaughtexception.js';
+export { sentryMinidumpIntegration } from './integrations/sentry-minidump/index.js';
+export { electronMinidumpIntegration } from './integrations/electron-minidump.js';
+export { preloadInjectionIntegration } from './integrations/preload-injection.js';
+export { mainProcessSessionIntegration } from './integrations/main-process-session.js';
+export { browserWindowSessionIntegration } from './integrations/browser-window-session.js';
+export { additionalContextIntegration } from './integrations/additional-context.js';
+export { electronNetIntegration } from './integrations/net-breadcrumbs.js';
+export { childProcessIntegration } from './integrations/child-process.js';
+export { screenshotsIntegration } from './integrations/screenshots.js';
+export { rendererProfileFromIpc } from './integrations/renderer-profiling.js';
+export { normalizePathsIntegration } from './integrations/normalize-paths.js';
+export { electronContextIntegration } from './integrations/electron-context.js';
+export { gpuContextIntegration } from './integrations/gpu-context.js';
 // eslint-disable-next-line deprecation/deprecation
-export { anrIntegration } from './integrations/anr';
-export { rendererAnrIntegration } from './integrations/renderer-anr';
+export { anrIntegration } from './integrations/anr.js';
+export { rendererAnrIntegration } from './integrations/renderer-anr.js';
 
-export { makeElectronTransport } from './transports/electron-net';
-export { makeElectronOfflineTransport } from './transports/electron-offline-net';
+export { makeElectronTransport } from './transports/electron-net.js';
+export { makeElectronOfflineTransport } from './transports/electron-offline-net.js';
 
-export type { ElectronMainOptions } from './sdk';
-export { init, getDefaultIntegrations } from './sdk';
-export { defaultStackParser } from './stack-parse';
+export type { ElectronMainOptions } from './sdk.js';
+export { init, getDefaultIntegrations } from './sdk.js';
+export { defaultStackParser } from './stack-parse.js';
 
-export { IPCMode } from '../common/ipc';
+export { IPCMode } from '../common/ipc.js';

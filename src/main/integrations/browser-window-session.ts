@@ -1,6 +1,6 @@
 import { defineIntegration } from '@sentry/core';
 import { app, BrowserWindow } from 'electron';
-import { endSession, endSessionOnExit, startSession } from '../sessions';
+import { endSession, endSessionOnExit, startSession } from '../sessions.js';
 
 function focusedWindow(): boolean {
   for (const window of BrowserWindow.getAllWindows()) {

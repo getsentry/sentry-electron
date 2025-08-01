@@ -1,8 +1,8 @@
 import { createStackParser, debug, nodeStackLineParser, StackFrame, StackParser } from '@sentry/core';
 import { createGetModuleFromFilename } from '@sentry/node';
 import { app, WebContents, WebFrameMain } from 'electron';
-import { electronRendererStackParser } from '../renderer/stack-parse';
-import { ELECTRON_MAJOR_VERSION } from './electron-normalize';
+import { electronRendererStackParser } from '../renderer/stack-parse.js';
+import { ELECTRON_MAJOR_VERSION } from './electron-normalize.js';
 
 // node.js stack parser but filename normalized before parsing the module
 export const defaultStackParser: StackParser = createStackParser(

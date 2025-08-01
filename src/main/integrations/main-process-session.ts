@@ -1,5 +1,5 @@
 import { defineIntegration } from '@sentry/core';
-import { endSessionOnExit, startSession } from '../sessions';
+import { endSessionOnExit, startSession } from '../sessions.js';
 
 export interface Options {
   /**
