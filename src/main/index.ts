@@ -48,6 +48,7 @@ export {
   extraErrorDataIntegration,
   fastifyIntegration,
   featureFlagsIntegration,
+  firebaseIntegration,
   flush,
   fsIntegration,
   functionToStringIntegration,
