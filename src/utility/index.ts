@@ -152,6 +152,6 @@ export {
 
 export type { NodeOptions } from '@sentry/node';
 
-export { makeUtilityProcessTransport } from './transport';
+export { makeUtilityProcessTransport } from './transport.js';
 
-export { init, getDefaultIntegrations, defaultStackParser } from './sdk';
+export { init, getDefaultIntegrations, defaultStackParser } from './sdk.js';

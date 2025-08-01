@@ -1,6 +1,6 @@
 import { debug, defineIntegration } from '@sentry/core';
 import { BrowserWindow } from 'electron';
-import { ElectronMainOptions } from '../sdk';
+import { ElectronMainOptions } from '../sdk.js';
 
 /**
  * Captures and attaches screenshots to events
