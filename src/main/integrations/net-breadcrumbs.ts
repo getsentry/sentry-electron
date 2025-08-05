@@ -14,6 +14,7 @@ import {
   stringMatchesSomePattern,
   TracePropagationTargets,
 } from '@sentry/core';
+import { logger } from '@sentry/node';
 import { ClientRequest, ClientRequestConstructorOptions, IncomingMessage, net as electronNet } from 'electron';
 import * as urlModule from 'url';
 
@@ -200,6 +201,7 @@ function addRequestBreadcrumb(
   req: ClientRequest,
   res?: IncomingMessage,
 ): void {
+  const level = getBreadcrumbLogLevelFromHttpStatusCode(res?.statusCode);
   addBreadcrumb(
     {
       type: 'http',
@@ -209,7 +211,7 @@ function addRequestBreadcrumb(
         method: method,
         status_code: res?.statusCode,
       },
-      level: getBreadcrumbLogLevelFromHttpStatusCode(res?.statusCode),
+      level,
     },
     {
       event,
@@ -217,6 +219,19 @@ function addRequestBreadcrumb(
       response: res,
     },
   );
+
+  const attributes = { statusCode: res?.statusCode };
+
+  switch (level) {
+    case 'error':
+      logger.error(logger.fmt`Electron.net request failed: ${method} ${url}`, attributes);
+      break;
+    case 'warning':
+      logger.warn(logger.fmt`Electron.net request warning: ${method} ${url}`, attributes);
+      break;
+    default:
+      logger.info(logger.fmt`Electron.net request succeeded: ${method} ${url}`, attributes);
+  }
 }
 
 /**
