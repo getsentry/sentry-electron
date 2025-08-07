@@ -7,7 +7,7 @@ import {
   ParameterizedString,
   SerializedLog,
 } from '@sentry/core';
-import { getIPC } from './ipc';
+import { getIPC } from './ipc.js';
 
 function captureLog(
   level: LogSeverityLevel,

@@ -10,14 +10,14 @@ import {
 } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { app, crashReporter } from 'electron';
-import { addScopeListener, getScopeData } from '../../../common/scope';
-import { getEventDefaults } from '../../context';
-import { EXIT_REASONS, getSentryCachePath } from '../../electron-normalize';
-import { getRendererProperties, trackRendererProperties } from '../../renderers';
-import { ElectronMainOptions } from '../../sdk';
-import { previousSessionWasAbnormal, restorePreviousSession, setPreviousSessionAsCurrent } from '../../sessions';
-import { BufferedWriteStore } from '../../store';
-import { getMinidumpLoader, MinidumpLoader } from './minidump-loader';
+import { addScopeListener, getScopeData } from '../../../common/scope.js';
+import { getEventDefaults } from '../../context.js';
+import { EXIT_REASONS, getSentryCachePath } from '../../electron-normalize.js';
+import { getRendererProperties, trackRendererProperties } from '../../renderers.js';
+import { ElectronMainOptions } from '../../sdk.js';
+import { previousSessionWasAbnormal, restorePreviousSession, setPreviousSessionAsCurrent } from '../../sessions.js';
+import { BufferedWriteStore } from '../../store.js';
+import { getMinidumpLoader, MinidumpLoader } from './minidump-loader.js';
 
 interface PreviousRun {
   scope: ScopeData;

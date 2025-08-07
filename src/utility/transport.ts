@@ -5,7 +5,7 @@ import {
   TransportMakeRequestResponse,
   TransportRequest,
 } from '@sentry/core';
-import { getMagicMessage, isMagicMessage } from '../common/ipc';
+import { getMagicMessage, isMagicMessage } from '../common/ipc.js';
 
 /**
  * Creates a Transport that passes envelopes to the Electron main process.

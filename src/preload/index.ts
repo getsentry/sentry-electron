@@ -4,7 +4,7 @@
 
 import { SerializedLog } from '@sentry/core';
 import { contextBridge, ipcRenderer } from 'electron';
-import { IPCChannel, RendererStatus } from '../common/ipc';
+import { IPCChannel, RendererStatus } from '../common/ipc.js';
 
 // eslint-disable-next-line no-restricted-globals
 if (window.__SENTRY_IPC__) {

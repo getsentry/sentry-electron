@@ -1,4 +1,4 @@
-import * as logger from './log';
+import * as logger from './log.js';
 
 export { logger };
 
@@ -131,8 +131,8 @@ export {
 
 export type { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
 
-export { scopeToMainIntegration } from './integrations/scope-to-main';
-export { eventLoopBlockIntegration } from './integrations/event-loop-block';
-export { makeRendererTransport } from './transport';
-export { electronRendererStackParser as defaultStackParser } from './stack-parse';
-export { init, getDefaultIntegrations } from './sdk';
+export { scopeToMainIntegration } from './integrations/scope-to-main.js';
+export { eventLoopBlockIntegration } from './integrations/event-loop-block.js';
+export { makeRendererTransport } from './transport.js';
+export { electronRendererStackParser as defaultStackParser } from './stack-parse.js';
+export { init, getDefaultIntegrations } from './sdk.js';

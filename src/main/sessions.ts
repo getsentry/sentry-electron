@@ -14,8 +14,8 @@ import {
 } from '@sentry/core';
 import { flush, NodeClient } from '@sentry/node';
 import { app } from 'electron';
-import { getSentryCachePath } from './electron-normalize';
-import { Store } from './store';
+import { getSentryCachePath } from './electron-normalize.js';
+import { Store } from './store.js';
 
 const PERSIST_INTERVAL_MS = 60_000;
 

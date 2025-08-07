@@ -2,7 +2,7 @@
 import { Event, EventHint, SdkInfo } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { app } from 'electron';
-import { SDK_VERSION } from './version';
+import { SDK_VERSION } from './version.js';
 
 export const SDK_NAME = 'sentry.javascript.electron';
 
