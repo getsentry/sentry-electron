@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 6.10.0
+
+- feat: Update JavaScript SDKs from [v9.43.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.43.0) to [v9.45.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.45.0)
+- fix: Don't use `deepmerge` to merge events to remove circular ref. issues (#1210)
+- fix: Support `node16` for TypeScript `moduleResolution` (#1203)
+
 ## 6.9.0
 
 - feat: Update JavaScript SDKs from
