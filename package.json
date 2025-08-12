@@ -96,8 +96,7 @@
   "dependencies": {
     "@sentry/browser": "9.45.0",
     "@sentry/core": "9.45.0",
-    "@sentry/node": "9.45.0",
-    "deepmerge": "4.3.1"
+    "@sentry/node": "9.45.0"
   },
   "peerDependencies": {
     "@sentry/node-native": "9.45.0"
