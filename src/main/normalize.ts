@@ -11,7 +11,7 @@ import {
 } from '@sentry/core';
 import { createGetModuleFromFilename } from '@sentry/node';
 import { app } from 'electron';
-import { ElectronMainOptionsInternal } from './sdk';
+import { ElectronMainOptionsInternal } from './sdk.js';
 
 const getModuleFromFilename = createGetModuleFromFilename(app.getAppPath());
 

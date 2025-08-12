@@ -1,8 +1,8 @@
 import { debug, Envelope, OfflineStore, parseEnvelope, serializeEnvelope, uuid4 } from '@sentry/core';
 import { promises as fs } from 'fs';
 import { join } from 'path';
-import { getSentryCachePath } from '../electron-normalize';
-import { Store } from '../store';
+import { getSentryCachePath } from '../electron-normalize.js';
+import { Store } from '../store.js';
 
 /** Internal type used to expose the envelope date without having to read it into memory */
 interface PersistedRequest {

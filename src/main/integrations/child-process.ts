@@ -8,8 +8,8 @@ import {
 } from '@sentry/core';
 import { childProcessIntegration as nodeChildProcessIntegration, logger, NodeClient } from '@sentry/node';
 import { app } from 'electron';
-import { EXIT_REASONS, ExitReason } from '../electron-normalize';
-import { ElectronMainOptions } from '../sdk';
+import { EXIT_REASONS, ExitReason } from '../electron-normalize.js';
+import { ElectronMainOptions } from '../sdk.js';
 
 type NodeChildProcessOptions = NonNullable<Parameters<typeof nodeChildProcessIntegration>[0]>;
 

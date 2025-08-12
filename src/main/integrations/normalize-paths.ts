@@ -1,6 +1,6 @@
 import { defineIntegration, forEachEnvelopeItem, Profile } from '@sentry/core';
 import { app } from 'electron';
-import { normaliseProfile, normalizePaths } from '../normalize';
+import { normaliseProfile, normalizePaths } from '../normalize.js';
 
 export const normalizePathsIntegration = defineIntegration(() => {
   return {

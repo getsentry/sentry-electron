@@ -7,7 +7,7 @@ module.exports = {
     sourceType: 'module',
     ecmaVersion: 2018,
   },
-  extends: ['@sentry-internal/sdk'],
+  extends: ['@sentry-internal/sdk', 'plugin:require-extensions/recommended'],
   ignorePatterns: [
     '**/dist/**',
     '/esm/**',
@@ -23,6 +23,9 @@ module.exports = {
     '/utility/**',
     'rollup.config.mjs',
   ],
+  plugins: [
+    'require-extensions',
+  ],
   overrides: [
     {
       files: ['*.ts', '*.tsx', '*.d.ts'],
@@ -36,6 +39,8 @@ module.exports = {
         'no-console': 'off',
         '@typescript-eslint/no-unsafe-member-access': 'off',
         '@typescript-eslint/member-ordering': 'off',
+        'require-extensions/require-extensions': 'off',
+        'require-extensions/require-index': 'off',
       },
     },
   ],

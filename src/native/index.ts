@@ -3,4 +3,4 @@ export {
   eventLoopBlockIntegration,
   pauseEventLoopBlockDetection,
   restartEventLoopBlockDetection,
-} from './event-loop-blocked-integration';
+} from './event-loop-blocked-integration.js';
