@@ -8,7 +8,7 @@ electronTestRunner(__dirname, async (ctx) => {
         platform: 'node',
         logger: 'console',
         message: '[object Object]',
-        extra: { arguments: [{ data: 1, self: '[Circular ~]' }] },
+        extra: { arguments: [{ data: 1, self: '[Object]' }] },
         tags: {
           'event.environment': 'javascript',
           'event.origin': 'electron',
