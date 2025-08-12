@@ -1,4 +1,4 @@
-import { Event } from '@sentry/core';
+import { Event, normalize } from '@sentry/core';
 import deepMerge from 'deepmerge';
 
 /** Removes private properties from event before merging */
@@ -17,7 +17,7 @@ function removePrivateProperties(event: Event): void {
 export function mergeEvents(defaults: Event, event: Event): Event {
   removePrivateProperties(event);
 
-  const newEvent: Event = deepMerge(defaults, event);
+  const newEvent: Event = deepMerge(normalize(defaults), normalize(event));
 
   // We need to copy spans across manually
   //
