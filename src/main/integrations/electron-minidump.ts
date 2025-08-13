@@ -1,12 +1,12 @@
 import { applyScopeDataToEvent, debug, defineIntegration, Event, makeDsn, ScopeData, uuid4 } from '@sentry/core';
 import { NodeClient, NodeOptions } from '@sentry/node';
 import { app, crashReporter } from 'electron';
-import { addScopeListener, getScopeData } from '../../common/scope';
-import { getEventDefaults, getSdkInfo } from '../context';
-import { CRASH_REASONS } from '../electron-normalize';
-import { mergeEvents } from '../merge';
-import { normalizePaths } from '../normalize';
-import { checkPreviousSession, sessionCrashed, unreportedDuringLastSession } from '../sessions';
+import { addScopeListener, getScopeData } from '../../common/scope.js';
+import { getEventDefaults, getSdkInfo } from '../context.js';
+import { CRASH_REASONS } from '../electron-normalize.js';
+import { mergeEvents } from '../merge.js';
+import { normalizePaths } from '../normalize.js';
+import { checkPreviousSession, sessionCrashed, unreportedDuringLastSession } from '../sessions.js';
 
 /** Is object defined and has keys */
 function hasKeys(obj: object | undefined): boolean {

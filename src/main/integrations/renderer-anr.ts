@@ -12,12 +12,12 @@ import {
 } from '@sentry/core';
 import { createGetModuleFromFilename } from '@sentry/node';
 import { app, powerMonitor, WebContents } from 'electron';
-import { RendererStatus } from '../../common/ipc';
-import { ELECTRON_MAJOR_VERSION } from '../electron-normalize';
-import { addHeaderToSession } from '../header-injection';
-import { ElectronMainOptionsInternal } from '../sdk';
-import { sessionAnr } from '../sessions';
-import { captureRendererStackFrames } from '../stack-parse';
+import { RendererStatus } from '../../common/ipc.js';
+import { ELECTRON_MAJOR_VERSION } from '../electron-normalize.js';
+import { addHeaderToSession } from '../header-injection.js';
+import { ElectronMainOptionsInternal } from '../sdk.js';
+import { sessionAnr } from '../sessions.js';
+import { captureRendererStackFrames } from '../stack-parse.js';
 
 function log(message: string, ...args: unknown[]): void {
   debug.log(`[Renderer ANR] ${message}`, ...args);

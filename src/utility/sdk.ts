@@ -22,7 +22,7 @@ import {
   onUnhandledRejectionIntegration,
   setNodeAsyncContextStrategy,
 } from '@sentry/node';
-import { makeUtilityProcessTransport } from './transport';
+import { makeUtilityProcessTransport } from './transport.js';
 
 export const defaultStackParser: StackParser = createStackParser(nodeStackLineParser(createGetModuleFromFilename()));
 

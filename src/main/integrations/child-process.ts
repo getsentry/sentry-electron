@@ -1,8 +1,15 @@
-import { addBreadcrumb, captureMessage, defineIntegration, SeverityLevel } from '@sentry/core';
-import { childProcessIntegration as nodeChildProcessIntegration, NodeClient } from '@sentry/node';
+import {
+  addBreadcrumb,
+  captureMessage,
+  defineIntegration,
+  Log,
+  ParameterizedString,
+  SeverityLevel,
+} from '@sentry/core';
+import { childProcessIntegration as nodeChildProcessIntegration, logger, NodeClient } from '@sentry/node';
 import { app } from 'electron';
-import { EXIT_REASONS, ExitReason } from '../electron-normalize';
-import { ElectronMainOptions } from '../sdk';
+import { EXIT_REASONS, ExitReason } from '../electron-normalize.js';
+import { ElectronMainOptions } from '../sdk.js';
 
 type NodeChildProcessOptions = NonNullable<Parameters<typeof nodeChildProcessIntegration>[0]>;
 
@@ -22,21 +29,27 @@ const DEFAULT_OPTIONS: ChildProcessOptions = {
   events: ['abnormal-exit', 'launch-failed', 'integrity-failure'],
 };
 
+type LogFn = (msg: ParameterizedString, attributes: Log['attributes']) => void;
+
 /** Gets message and severity */
-function getMessageAndSeverity(reason: ExitReason, proc?: string): { message: string; level: SeverityLevel } {
-  const message = `'${proc}' process exited with '${reason}'`;
+function getMessageAndSeverity(
+  reason: ExitReason,
+  process: string,
+): { message: string; messageFmt: ParameterizedString; level: SeverityLevel; log: LogFn } {
+  const message = `'${process}' process exited with '${reason}'`;
+  const messageFmt = logger.fmt`'${process}' process exited with '${reason}'`;
 
   switch (reason) {
     case 'abnormal-exit':
     case 'killed':
-      return { message, level: 'warning' };
+      return { message, level: 'warning', log: logger.warn, messageFmt };
     case 'crashed':
     case 'oom':
     case 'launch-failed':
     case 'integrity-failure':
-      return { message, level: 'fatal' };
+      return { message, level: 'fatal', log: logger.error, messageFmt };
     default:
-      return { message, level: 'debug' };
+      return { message, level: 'debug', log: logger.info, messageFmt };
   }
 }
 
@@ -70,10 +83,10 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
 
         app.on('child-process-gone', (_, details) => {
           const { reason } = details;
+          const { message, level, log, messageFmt } = getMessageAndSeverity(details.reason, details.type);
 
           // Capture message first
           if (events.includes(reason)) {
-            const { message, level } = getMessageAndSeverity(details.reason, details.type);
             captureMessage(message, { level, tags: { 'event.process': details.type } });
           }
 
@@ -82,8 +95,15 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
             addBreadcrumb({
               type: 'process',
               category: 'child-process',
-              ...getMessageAndSeverity(details.reason, details.type),
+              message,
+              level,
               data: details,
+            });
+
+            log(messageFmt, {
+              exitCode: details.exitCode,
+              name: details.name,
+              serviceName: details.serviceName,
             });
           }
         });
@@ -91,10 +111,10 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
         app.on('render-process-gone', (_, contents, details) => {
           const { reason } = details;
           const name = clientOptions?.getRendererName?.(contents) || 'renderer';
+          const { message, level, log, messageFmt } = getMessageAndSeverity(details.reason, name);
 
           // Capture message first
           if (events.includes(reason)) {
-            const { message, level } = getMessageAndSeverity(details.reason, name);
             captureMessage(message, level);
           }
 
@@ -103,8 +123,13 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
             addBreadcrumb({
               type: 'process',
               category: 'child-process',
-              ...getMessageAndSeverity(details.reason, name),
+              message,
+              level,
               data: details,
+            });
+
+            log(messageFmt, {
+              exitCode: details.exitCode,
             });
           }
         });
