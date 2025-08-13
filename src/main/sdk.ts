@@ -36,7 +36,7 @@ import { electronNetIntegration } from './integrations/net-breadcrumbs.js';
 import { normalizePathsIntegration } from './integrations/normalize-paths.js';
 import { onUncaughtExceptionIntegration } from './integrations/onuncaughtexception.js';
 import { preloadInjectionIntegration } from './integrations/preload-injection.js';
-import { rendererAnrIntegration } from './integrations/renderer-anr.js';
+import { rendererEventLoopBlockIntegration } from './integrations/renderer-anr.js';
 import { rendererProfilingIntegration } from './integrations/renderer-profiling.js';
 import { screenshotsIntegration } from './integrations/screenshots.js';
 import { sentryMinidumpIntegration } from './integrations/sentry-minidump/index.js';
@@ -59,7 +59,7 @@ export function getDefaultIntegrations(options: ElectronMainOptions): Integratio
     additionalContextIntegration(),
     screenshotsIntegration(),
     gpuContextIntegration(),
-    rendererAnrIntegration(),
+    rendererEventLoopBlockIntegration(),
 
     // Main process sessions
     mainProcessSessionIntegration(),
@@ -92,7 +92,7 @@ export function getDefaultIntegrations(options: ElectronMainOptions): Integratio
 
 export interface ElectronMainOptionsInternal
   extends Options<ElectronOfflineTransportOptions>,
-    Omit<NodeOptions, 'transport' | 'transportOptions'> {
+  Omit<NodeOptions, 'transport' | 'transportOptions'> {
   /**
    * Inter-process communication mode to receive event and scope from renderers
    *

@@ -40,7 +40,6 @@ export {
   cron,
   dataloaderIntegration,
   dedupeIntegration,
-  disableAnrDetectionForCallback,
   endSession,
   eventFiltersIntegration,
   expressErrorHandler,
@@ -136,6 +135,7 @@ export {
   statsigIntegration,
   supabaseIntegration,
   suppressTracing,
+  systemErrorIntegration,
   tediousIntegration,
   trpcMiddleware,
   unleashIntegration,
@@ -166,9 +166,7 @@ export { rendererProfileFromIpc } from './integrations/renderer-profiling.js';
 export { normalizePathsIntegration } from './integrations/normalize-paths.js';
 export { electronContextIntegration } from './integrations/electron-context.js';
 export { gpuContextIntegration } from './integrations/gpu-context.js';
-// eslint-disable-next-line deprecation/deprecation
-export { anrIntegration } from './integrations/anr.js';
-export { rendererAnrIntegration } from './integrations/renderer-anr.js';
+export { rendererEventLoopBlockIntegration } from './integrations/renderer-anr.js';
 
 export { makeElectronTransport } from './transports/electron-net.js';
 export { makeElectronOfflineTransport } from './transports/electron-offline-net.js';
