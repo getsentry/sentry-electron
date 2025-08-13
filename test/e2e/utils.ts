@@ -93,7 +93,7 @@ function dropUndefinedKeys<T extends Record<string, any>>(obj: T): T {
   return obj;
 }
 
-function getSdk(): SdkInfo {
+function getSdk(sdk: SdkInfo | undefined): SdkInfo {
   return {
     integrations: expect.any(Array),
     name: 'sentry.javascript.electron',
@@ -104,6 +104,8 @@ function getSdk(): SdkInfo {
       },
     ],
     version: SDK_VERSION,
+    settings: { infer_ip: 'never' },
+    ...sdk,
   };
 }
 
@@ -220,9 +222,8 @@ export function expectedEvent(event: Event): Event {
     environment: 'development',
     release: expect.any(String),
     breadcrumbs: expect.any(Array),
-    sdk: getSdk(),
-    settings: { infer_ip: 'never' },
     ...event,
+    sdk: getSdk(event.sdk),
     contexts: defaultContexts(event.contexts),
   });
 }
@@ -233,8 +234,8 @@ export function expectedEventNoLiveContext(event: Event): Event {
     environment: 'development',
     release: expect.any(String),
     breadcrumbs: expect.any(Array),
-    sdk: getSdk(),
     ...event,
+    sdk: getSdk(event.sdk),
     contexts: defaultContextsNoLive(event.contexts),
   });
 }
@@ -289,8 +290,8 @@ export function feedbackEnvelope(event: Partial<FeedbackEvent>, ...otherEnvelope
           environment: 'development',
           release: expect.any(String),
           breadcrumbs: expect.any(Array),
-          sdk: getSdk(),
           ...event,
+          sdk: getSdk(event.sdk),
           contexts: defaultContexts(event.contexts),
         },
       ],
@@ -325,8 +326,8 @@ export function transactionEnvelope(event: TransactionEvent, ...otherEnvelopeIte
           release: expect.any(String),
           start_timestamp: expect.any(Number),
           breadcrumbs: expect.any(Array),
-          sdk: getSdk(),
           ...event,
+          sdk: getSdk(event.sdk),
           contexts: defaultContexts(event.contexts),
         },
       ],

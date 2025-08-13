@@ -155,8 +155,8 @@ type RendererEventLoopBlockIntegration = Integration & {
 /**
  * An integration that captures App Not Responding events from renderer processes
  */
-export const rendererEventLoopBlockIntegration: (options?: Options) => RendererEventLoopBlockIntegration = defineIntegration(
-  (options: Options = {}) => {
+export const rendererEventLoopBlockIntegration: (options?: Options) => RendererEventLoopBlockIntegration =
+  defineIntegration((options: Options = {}) => {
     const rendererWatchdogTimers = new Map<WebContents, ReturnType<typeof watchdogTimer>>();
     let clientOptions: ElectronMainOptionsInternal | undefined;
 
@@ -279,8 +279,7 @@ export const rendererEventLoopBlockIntegration: (options?: Options) => RendererE
         };
       },
     };
-  },
-) as (options?: Options) => RendererEventLoopBlockIntegration;
+  }) as (options?: Options) => RendererEventLoopBlockIntegration;
 
 /**
  * Creates a hook which notifies the integration when the state of renderers change

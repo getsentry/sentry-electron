@@ -1,6 +1,5 @@
 import {
   addAutoIpAddressToSession,
-  addAutoIpAddressToUser,
   debug,
   getIntegrationsToSetup,
   Integration,
@@ -92,7 +91,7 @@ export function getDefaultIntegrations(options: ElectronMainOptions): Integratio
 
 export interface ElectronMainOptionsInternal
   extends Options<ElectronOfflineTransportOptions>,
-  Omit<NodeOptions, 'transport' | 'transportOptions'> {
+    Omit<NodeOptions, 'transport' | 'transportOptions'> {
   /**
    * Inter-process communication mode to receive event and scope from renderers
    *
@@ -153,7 +152,7 @@ export function init(userOptions: ElectronMainOptions): void {
   }
 
   const optionsWithDefaults = {
-    _metadata: { sdk: getSdkInfo() },
+    _metadata: { sdk: getSdkInfo(!!userOptions.sendDefaultPii) },
     ipcMode: IPCMode.Both,
     release: getDefaultReleaseName(),
     environment: getDefaultEnvironment(),
@@ -186,7 +185,6 @@ export function init(userOptions: ElectronMainOptions): void {
   const client = new NodeClient(options);
 
   if (options.sendDefaultPii === true) {
-    client.on('postprocessEvent', addAutoIpAddressToUser);
     client.on('beforeSendSession', addAutoIpAddressToSession);
   }
 

@@ -7,11 +7,11 @@ electronTestRunner(__dirname, async (ctx) => {
       envelope: eventEnvelope({
         level: 'warning',
         platform: 'node',
-        message: "'GPU' process exited with 'killed'",
+        message: "'gpu' process exited with 'killed'",
         tags: {
           'event.environment': 'javascript',
           'event.origin': 'electron',
-          'event.process': 'GPU',
+          'event.process': 'gpu',
         },
       }),
     })
@@ -62,10 +62,10 @@ electronTestRunner(__dirname, async (ctx) => {
             timestamp: expect.any(Number),
             type: 'process',
             category: 'child-process',
-            message: "'GPU' process exited with 'killed'",
+            message: "'gpu' process exited with 'killed'",
             level: 'warning',
             data: expect.objectContaining({
-              type: 'GPU',
+              type: 'gpu',
               reason: 'killed',
             }),
           },
