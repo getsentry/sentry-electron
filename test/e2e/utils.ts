@@ -221,6 +221,7 @@ export function expectedEvent(event: Event): Event {
     release: expect.any(String),
     breadcrumbs: expect.any(Array),
     sdk: getSdk(),
+    settings: { infer_ip: 'never' },
     ...event,
     contexts: defaultContexts(event.contexts),
   });
