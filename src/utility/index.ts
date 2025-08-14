@@ -137,6 +137,7 @@ export {
   statsigIntegration,
   supabaseIntegration,
   suppressTracing,
+  systemErrorIntegration,
   tediousIntegration,
   trpcMiddleware,
   unleashIntegration,
