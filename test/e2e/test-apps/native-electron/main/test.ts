@@ -22,7 +22,7 @@ electronTestRunner(__dirname, async (ctx) => {
               },
             ],
             version: SDK_VERSION,
-            integrations: undefined
+            integrations: undefined,
           },
           level: 'fatal',
           platform: 'native',
