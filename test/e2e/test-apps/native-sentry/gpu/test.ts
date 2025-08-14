@@ -17,7 +17,7 @@ electronTestRunner(
             tags: expect.objectContaining({
               'event.environment': 'native',
               'event.origin': 'electron',
-              'event.process': 'GPU',
+              'event.process': 'gpu',
               'exit.reason': 'crashed',
             }),
           },

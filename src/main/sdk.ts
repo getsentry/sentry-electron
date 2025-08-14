@@ -1,6 +1,5 @@
 import {
   addAutoIpAddressToSession,
-  addAutoIpAddressToUser,
   debug,
   getIntegrationsToSetup,
   Integration,
@@ -36,7 +35,7 @@ import { electronNetIntegration } from './integrations/net-breadcrumbs.js';
 import { normalizePathsIntegration } from './integrations/normalize-paths.js';
 import { onUncaughtExceptionIntegration } from './integrations/onuncaughtexception.js';
 import { preloadInjectionIntegration } from './integrations/preload-injection.js';
-import { rendererAnrIntegration } from './integrations/renderer-anr.js';
+import { rendererEventLoopBlockIntegration } from './integrations/renderer-anr.js';
 import { rendererProfilingIntegration } from './integrations/renderer-profiling.js';
 import { screenshotsIntegration } from './integrations/screenshots.js';
 import { sentryMinidumpIntegration } from './integrations/sentry-minidump/index.js';
@@ -59,7 +58,7 @@ export function getDefaultIntegrations(options: ElectronMainOptions): Integratio
     additionalContextIntegration(),
     screenshotsIntegration(),
     gpuContextIntegration(),
-    rendererAnrIntegration(),
+    rendererEventLoopBlockIntegration(),
 
     // Main process sessions
     mainProcessSessionIntegration(),
@@ -153,7 +152,7 @@ export function init(userOptions: ElectronMainOptions): void {
   }
 
   const optionsWithDefaults = {
-    _metadata: { sdk: getSdkInfo() },
+    _metadata: { sdk: getSdkInfo(!!userOptions.sendDefaultPii) },
     ipcMode: IPCMode.Both,
     release: getDefaultReleaseName(),
     environment: getDefaultEnvironment(),
@@ -186,7 +185,6 @@ export function init(userOptions: ElectronMainOptions): void {
   const client = new NodeClient(options);
 
   if (options.sendDefaultPii === true) {
-    client.on('postprocessEvent', addAutoIpAddressToUser);
     client.on('beforeSendSession', addAutoIpAddressToSession);
   }
 

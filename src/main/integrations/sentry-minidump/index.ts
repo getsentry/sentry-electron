@@ -107,13 +107,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
     await minidumpLoader?.(deleteAll, async (minidumpResult, attachment) => {
       minidumpFound = true;
 
-      let minidumpProcess = minidumpResult.crashpadAnnotations?.process_type;
-
-      // For backwards compatibility, we need to map 'gpu-process' to 'GPU'
-      // TODO (v7): Remove this
-      if (minidumpProcess === 'gpu-process') {
-        minidumpProcess = 'GPU';
-      }
+      const minidumpProcess = minidumpResult.crashpadAnnotations?.process_type?.replace('-process', '');
 
       const event = await getEvent(minidumpProcess);
 
@@ -191,7 +185,6 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
         'event.environment': 'native',
         'event.process': minidumpProcess || details.type,
         'exit.reason': details.reason,
-        event_type: 'native',
       },
     }));
   }

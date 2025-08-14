@@ -36,8 +36,10 @@ electronTestRunner(__dirname, async (ctx) => {
           'event.origin': 'electron',
           'event.process': 'browser',
         },
-        user: {
-          ip_address: '{{auto}}',
+        sdk: {
+          settings: {
+            infer_ip: 'auto',
+          },
         },
       }),
     })

@@ -24,7 +24,7 @@ electronTestRunner(__dirname, async (ctx) => {
                 ]),
               },
               mechanism: {
-                type: 'onunhandledrejection',
+                type: 'auto.browser.global_handlers.onunhandledrejection',
                 handled: false,
               },
             },
