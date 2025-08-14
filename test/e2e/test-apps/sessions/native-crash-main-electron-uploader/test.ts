@@ -58,6 +58,7 @@ electronTestRunner(
                 },
               ],
               version: SDK_VERSION,
+              integrations: undefined,
             },
             level: 'fatal',
             platform: 'native',
