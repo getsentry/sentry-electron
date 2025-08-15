@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 6.11.0
+
+- feat: Update JavaScript SDKs from [v9.45.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.45.0) to [v9.46.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.46.0)
+- fix: Ensure native directory ends up in package (#1216)
+
 ## 6.10.0
 
 - feat: Update JavaScript SDKs from [v9.43.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.43.0) to [v9.45.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.45.0)
