@@ -126,7 +126,7 @@
     "koa-bodyparser": "^4.3.0",
     "koa-tree-router": "^0.12.1",
     "latest-version": "^7.0.0",
-    "npm-run-all": "^4.1.5",
+    "npm-run-all2": "^8.0.4",
     "prettier": "^2.8.4",
     "rimraf": "^5.0.5",
     "rollup": "^4.13.1",
