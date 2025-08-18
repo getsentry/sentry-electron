@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
-const response = await fetch('https://npm.antfu.dev/@sentry/core');
+const response = await fetch('https://registry.npmjs.org/@sentry/core/latest');
 const data = await response.json();
 const latest = data.version;
 
@@ -43,3 +43,4 @@ if (current !== latest) {
   // Update parameter that has the version in it
   spawnSync('yarn', ['build'], { stdio: 'inherit' });
 }
+
