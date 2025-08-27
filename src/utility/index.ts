@@ -20,6 +20,7 @@ export {
   addEventProcessor,
   addIntegration,
   amqplibIntegration,
+  anthropicAIIntegration,
   buildLaunchDarklyFlagUsedHandler,
   captureCheckIn,
   captureConsoleIntegration,
