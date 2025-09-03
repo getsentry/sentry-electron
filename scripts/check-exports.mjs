@@ -51,9 +51,11 @@ const ignoredNode = [
   'initWithoutDefaultIntegrations',
   // We can't call these from Electron
   'vercelAIIntegration',
+  'anrIntegration',
+  'disableAnrDetectionForCallback'
 ];
 
-const ignoredUtility = [...ignoredNode, 'anrIntegration'];
+const ignoredUtility = [...ignoredNode];
 
 const missingRenderer = browserExports.filter((key) => !rendererExports.includes(key) && !ignoredBrowser.includes(key));
 const missingMain = nodeExports.filter((key) => !mainExports.includes(key) && !ignoredNode.includes(key));

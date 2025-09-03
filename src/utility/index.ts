@@ -20,6 +20,7 @@ export {
   addEventProcessor,
   addIntegration,
   amqplibIntegration,
+  anthropicAIIntegration,
   buildLaunchDarklyFlagUsedHandler,
   captureCheckIn,
   captureConsoleIntegration,
@@ -41,7 +42,6 @@ export {
   cron,
   dataloaderIntegration,
   dedupeIntegration,
-  disableAnrDetectionForCallback,
   endSession,
   eventFiltersIntegration,
   expressErrorHandler,
@@ -49,6 +49,7 @@ export {
   extraErrorDataIntegration,
   fastifyIntegration,
   featureFlagsIntegration,
+  firebaseIntegration,
   flush,
   fsIntegration,
   functionToStringIntegration,
@@ -137,6 +138,7 @@ export {
   statsigIntegration,
   supabaseIntegration,
   suppressTracing,
+  systemErrorIntegration,
   tediousIntegration,
   trpcMiddleware,
   unleashIntegration,
@@ -152,6 +154,6 @@ export {
 
 export type { NodeOptions } from '@sentry/node';
 
-export { makeUtilityProcessTransport } from './transport';
+export { makeUtilityProcessTransport } from './transport.js';
 
-export { init, getDefaultIntegrations, defaultStackParser } from './sdk';
+export { init, getDefaultIntegrations, defaultStackParser } from './sdk.js';

@@ -9,14 +9,14 @@
 
       init({
         debug: true,
-        _experiments: { enableLogs: true },
+        enableLogs: true,
       });
 
-        logger.trace('User clicked submit button', {
-          buttonId: 'submit-form',
-          formId: 'user-profile',
-          timestamp: Date.now()
-        });
+      logger.trace('User clicked submit button', {
+        buttonId: 'submit-form',
+        formId: 'user-profile',
+        timestamp: Date.now()
+      });
 
       // setTimeout(() => {
       //   throw new Error('Some renderer error');

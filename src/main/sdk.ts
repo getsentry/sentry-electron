@@ -1,6 +1,5 @@
 import {
   addAutoIpAddressToSession,
-  addAutoIpAddressToUser,
   debug,
   getIntegrationsToSetup,
   Integration,
@@ -24,26 +23,26 @@ import {
   setNodeAsyncContextStrategy,
 } from '@sentry/node';
 import { Session, session, WebContents } from 'electron';
-import { IPCMode } from '../common/ipc';
-import { getDefaultEnvironment, getDefaultReleaseName, getSdkInfo } from './context';
-import { additionalContextIntegration } from './integrations/additional-context';
-import { childProcessIntegration } from './integrations/child-process';
-import { electronBreadcrumbsIntegration } from './integrations/electron-breadcrumbs';
-import { electronContextIntegration } from './integrations/electron-context';
-import { gpuContextIntegration } from './integrations/gpu-context';
-import { mainProcessSessionIntegration } from './integrations/main-process-session';
-import { electronNetIntegration } from './integrations/net-breadcrumbs';
-import { normalizePathsIntegration } from './integrations/normalize-paths';
-import { onUncaughtExceptionIntegration } from './integrations/onuncaughtexception';
-import { preloadInjectionIntegration } from './integrations/preload-injection';
-import { rendererAnrIntegration } from './integrations/renderer-anr';
-import { rendererProfilingIntegration } from './integrations/renderer-profiling';
-import { screenshotsIntegration } from './integrations/screenshots';
-import { sentryMinidumpIntegration } from './integrations/sentry-minidump';
-import { configureIPC } from './ipc';
-import { defaultStackParser } from './stack-parse';
-import { ElectronOfflineTransportOptions, makeElectronOfflineTransport } from './transports/electron-offline-net';
-import { configureUtilityProcessIPC } from './utility-processes';
+import { IPCMode } from '../common/ipc.js';
+import { getDefaultEnvironment, getDefaultReleaseName, getSdkInfo } from './context.js';
+import { additionalContextIntegration } from './integrations/additional-context.js';
+import { childProcessIntegration } from './integrations/child-process.js';
+import { electronBreadcrumbsIntegration } from './integrations/electron-breadcrumbs.js';
+import { electronContextIntegration } from './integrations/electron-context.js';
+import { gpuContextIntegration } from './integrations/gpu-context.js';
+import { mainProcessSessionIntegration } from './integrations/main-process-session.js';
+import { electronNetIntegration } from './integrations/net-breadcrumbs.js';
+import { normalizePathsIntegration } from './integrations/normalize-paths.js';
+import { onUncaughtExceptionIntegration } from './integrations/onuncaughtexception.js';
+import { preloadInjectionIntegration } from './integrations/preload-injection.js';
+import { rendererEventLoopBlockIntegration } from './integrations/renderer-anr.js';
+import { rendererProfilingIntegration } from './integrations/renderer-profiling.js';
+import { screenshotsIntegration } from './integrations/screenshots.js';
+import { sentryMinidumpIntegration } from './integrations/sentry-minidump/index.js';
+import { configureIPC } from './ipc.js';
+import { defaultStackParser } from './stack-parse.js';
+import { ElectronOfflineTransportOptions, makeElectronOfflineTransport } from './transports/electron-offline-net.js';
+import { configureUtilityProcessIPC } from './utility-processes.js';
 
 /** Get the default integrations for the main process SDK. */
 export function getDefaultIntegrations(options: ElectronMainOptions): Integration[] {
@@ -59,7 +58,7 @@ export function getDefaultIntegrations(options: ElectronMainOptions): Integratio
     additionalContextIntegration(),
     screenshotsIntegration(),
     gpuContextIntegration(),
-    rendererAnrIntegration(),
+    rendererEventLoopBlockIntegration(),
 
     // Main process sessions
     mainProcessSessionIntegration(),
@@ -153,7 +152,7 @@ export function init(userOptions: ElectronMainOptions): void {
   }
 
   const optionsWithDefaults = {
-    _metadata: { sdk: getSdkInfo() },
+    _metadata: { sdk: getSdkInfo(!!userOptions.sendDefaultPii) },
     ipcMode: IPCMode.Both,
     release: getDefaultReleaseName(),
     environment: getDefaultEnvironment(),
@@ -186,7 +185,6 @@ export function init(userOptions: ElectronMainOptions): void {
   const client = new NodeClient(options);
 
   if (options.sendDefaultPii === true) {
-    client.on('postprocessEvent', addAutoIpAddressToUser);
     client.on('beforeSendSession', addAutoIpAddressToSession);
   }
 

@@ -5,7 +5,7 @@ import {
   TransportMakeRequestResponse,
   TransportRequest,
 } from '@sentry/core';
-import { getIPC } from './ipc';
+import { getIPC } from './ipc.js';
 
 /**
  * Creates a Transport that passes envelopes to the Electron main process.

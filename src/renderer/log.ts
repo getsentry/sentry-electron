@@ -7,7 +7,7 @@ import {
   ParameterizedString,
   SerializedLog,
 } from '@sentry/core';
-import { getIPC } from './ipc';
+import { getIPC } from './ipc.js';
 
 function captureLog(
   level: LogSeverityLevel,
@@ -24,7 +24,7 @@ function captureLog(
 }
 
 /**
- * @summary Capture a log with the `trace` level. Requires `_experiments.enableLogs` to be enabled in the Electron main process.
+ * @summary Capture a log with the `trace` level. Requires `enableLogs` to be enabled in the Electron main process.
  *
  * @param message - The message to log.
  * @param attributes - Arbitrary structured data that stores information about the log - e.g., { userId: 100, route: '/dashboard' }.
@@ -53,7 +53,7 @@ export function trace(message: ParameterizedString, attributes?: Log['attributes
 }
 
 /**
- * @summary Capture a log with the `debug` level. Requires `_experiments.enableLogs` to be enabled in the Electron main process.
+ * @summary Capture a log with the `debug` level. Requires `enableLogs` to be enabled in the Electron main process.
  *
  * @param message - The message to log.
  * @param attributes - Arbitrary structured data that stores information about the log - e.g., { component: 'Header', state: 'loading' }.
@@ -83,7 +83,7 @@ export function debug(message: ParameterizedString, attributes?: Log['attributes
 }
 
 /**
- * @summary Capture a log with the `info` level. Requires `_experiments.enableLogs` to be enabled in the Electron main process.
+ * @summary Capture a log with the `info` level. Requires `enableLogs` to be enabled in the Electron main process.
  *
  * @param message - The message to log.
  * @param attributes - Arbitrary structured data that stores information about the log - e.g., { feature: 'checkout', status: 'completed' }.
@@ -113,7 +113,7 @@ export function info(message: ParameterizedString, attributes?: Log['attributes'
 }
 
 /**
- * @summary Capture a log with the `warn` level. Requires `_experiments.enableLogs` to be enabled in the Electron main process.
+ * @summary Capture a log with the `warn` level. Requires `enableLogs` to be enabled in the Electron main process.
  *
  * @param message - The message to log.
  * @param attributes - Arbitrary structured data that stores information about the log - e.g., { browser: 'Chrome', version: '91.0' }.
@@ -144,7 +144,7 @@ export function warn(message: ParameterizedString, attributes?: Log['attributes'
 }
 
 /**
- * @summary Capture a log with the `error` level. Requires `_experiments.enableLogs` to be enabled in the Electron main process.
+ * @summary Capture a log with the `error` level. Requires `enableLogs` to be enabled in the Electron main process.
  *
  * @param message - The message to log.
  * @param attributes - Arbitrary structured data that stores information about the log - e.g., { error: 'NetworkError', url: '/api/data' }.
@@ -176,7 +176,7 @@ export function error(message: ParameterizedString, attributes?: Log['attributes
 }
 
 /**
- * @summary Capture a log with the `fatal` level. Requires `_experiments.enableLogs` to be enabled in the Electron main process.
+ * @summary Capture a log with the `fatal` level. Requires `enableLogs` to be enabled in the Electron main process.
  *
  * @param message - The message to log.
  * @param attributes - Arbitrary structured data that stores information about the log - e.g., { appState: 'corrupted', sessionId: 'abc-123' }.

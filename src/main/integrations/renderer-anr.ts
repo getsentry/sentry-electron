@@ -12,15 +12,15 @@ import {
 } from '@sentry/core';
 import { createGetModuleFromFilename } from '@sentry/node';
 import { app, powerMonitor, WebContents } from 'electron';
-import { RendererStatus } from '../../common/ipc';
-import { ELECTRON_MAJOR_VERSION } from '../electron-normalize';
-import { addHeaderToSession } from '../header-injection';
-import { ElectronMainOptionsInternal } from '../sdk';
-import { sessionAnr } from '../sessions';
-import { captureRendererStackFrames } from '../stack-parse';
+import { RendererStatus } from '../../common/ipc.js';
+import { ELECTRON_MAJOR_VERSION } from '../electron-normalize.js';
+import { addHeaderToSession } from '../header-injection.js';
+import { ElectronMainOptionsInternal } from '../sdk.js';
+import { sessionAnr } from '../sessions.js';
+import { captureRendererStackFrames } from '../stack-parse.js';
 
 function log(message: string, ...args: unknown[]): void {
-  debug.log(`[Renderer ANR] ${message}`, ...args);
+  debug.log(`[Renderer Event Loop Block] ${message}`, ...args);
 }
 
 interface ScriptParsedEventDataType {
@@ -132,7 +132,7 @@ function createHrTimer(): { getTimeMs: () => number; reset: () => void } {
   };
 }
 
-const INTEGRATION_NAME = 'RendererAnr';
+const INTEGRATION_NAME = 'RendererEventLoopBlock';
 
 type Options = {
   /**
@@ -148,15 +148,15 @@ type Options = {
 
 type RendererStatusHandler = (status: RendererStatus, contents: WebContents) => void;
 
-type RendererAnrIntegration = Integration & {
-  createRendererAnrStatusHandler: () => RendererStatusHandler;
+type RendererEventLoopBlockIntegration = Integration & {
+  createRendererEventLoopBlockStatusHandler: () => RendererStatusHandler;
 };
 
 /**
  * An integration that captures App Not Responding events from renderer processes
  */
-export const rendererAnrIntegration: (options?: Options) => RendererAnrIntegration = defineIntegration(
-  (options: Options = {}) => {
+export const rendererEventLoopBlockIntegration: (options?: Options) => RendererEventLoopBlockIntegration =
+  defineIntegration((options: Options = {}) => {
     const rendererWatchdogTimers = new Map<WebContents, ReturnType<typeof watchdogTimer>>();
     let clientOptions: ElectronMainOptionsInternal | undefined;
 
@@ -164,7 +164,7 @@ export const rendererAnrIntegration: (options?: Options) => RendererAnrIntegrati
       return clientOptions?.getRendererName?.(contents);
     }
 
-    function sendRendererAnrEvent(contents: WebContents, blockedMs: number, frames?: StackFrame[]): void {
+    function sendRendererEventLoopBlockEvent(contents: WebContents, blockedMs: number, frames?: StackFrame[]): void {
       sessionAnr();
 
       const rendererName = getRendererName(contents) || 'renderer';
@@ -211,7 +211,7 @@ export const rendererAnrIntegration: (options?: Options) => RendererAnrIntegrati
           }
         }
       },
-      createRendererAnrStatusHandler: (): RendererStatusHandler => {
+      createRendererEventLoopBlockStatusHandler: (): RendererStatusHandler => {
         return (message: RendererStatus, contents: WebContents): void => {
           let watchdog = rendererWatchdogTimers.get(contents);
 
@@ -237,7 +237,7 @@ export const rendererAnrIntegration: (options?: Options) => RendererAnrIntegrati
 
               pauseAndCapture = stackCaptureImpl(contents, (frames) => {
                 log('Event captured with stack frames');
-                sendRendererAnrEvent(contents, message.config.anrThreshold, frames);
+                sendRendererEventLoopBlockEvent(contents, message.config.anrThreshold, frames);
               });
             }
 
@@ -247,7 +247,7 @@ export const rendererAnrIntegration: (options?: Options) => RendererAnrIntegrati
                 pauseAndCapture();
               } else {
                 log('Capturing event');
-                sendRendererAnrEvent(contents, message.config.anrThreshold);
+                sendRendererEventLoopBlockEvent(contents, message.config.anrThreshold);
               }
             });
 
@@ -279,13 +279,12 @@ export const rendererAnrIntegration: (options?: Options) => RendererAnrIntegrati
         };
       },
     };
-  },
-) as (options?: Options) => RendererAnrIntegration;
+  }) as (options?: Options) => RendererEventLoopBlockIntegration;
 
 /**
  * Creates a hook which notifies the integration when the state of renderers change
  */
-export function createRendererAnrStatusHandler(client: Client): RendererStatusHandler | undefined {
-  const integration = client.getIntegrationByName(INTEGRATION_NAME) as RendererAnrIntegration | undefined;
-  return integration?.createRendererAnrStatusHandler();
+export function createRendererEventLoopBlockStatusHandler(client: Client): RendererStatusHandler | undefined {
+  const integration = client.getIntegrationByName(INTEGRATION_NAME) as RendererEventLoopBlockIntegration | undefined;
+  return integration?.createRendererEventLoopBlockStatusHandler();
 }

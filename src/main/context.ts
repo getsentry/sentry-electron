@@ -2,12 +2,12 @@
 import { Event, EventHint, SdkInfo } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { app } from 'electron';
-import { SDK_VERSION } from './version';
+import { SDK_VERSION } from './version.js';
 
 export const SDK_NAME = 'sentry.javascript.electron';
 
 /** Gets SDK info */
-export function getSdkInfo(): SdkInfo {
+export function getSdkInfo(sendDefaultPii: boolean): SdkInfo {
   return {
     name: SDK_NAME,
     packages: [
@@ -17,6 +17,7 @@ export function getSdkInfo(): SdkInfo {
       },
     ],
     version: SDK_VERSION,
+    settings: { infer_ip: sendDefaultPii ? 'auto' : 'never' },
   };
 }
 

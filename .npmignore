@@ -4,8 +4,8 @@
 !/esm/**/*
 !/preload/**/*
 !/main/**/*
+!/native/**/*
 !/renderer/**/*
 !/common/**/*
 !/utility/**/*
 !/index.*
-!/integrations.*

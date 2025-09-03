@@ -11,15 +11,15 @@ import {
 } from '@sentry/core';
 import { captureEvent, getClient, getCurrentScope } from '@sentry/node';
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
-import { eventFromEnvelope } from '../common/envelope';
-import { IPCChannel, IPCMode, PROTOCOL_SCHEME, RendererStatus } from '../common/ipc';
-import { registerProtocol } from './electron-normalize';
-import { createRendererAnrStatusHandler } from './integrations/renderer-anr';
-import { rendererProfileFromIpc } from './integrations/renderer-profiling';
-import { mergeEvents } from './merge';
-import { normalizeReplayEnvelope } from './normalize';
-import { ElectronMainOptionsInternal } from './sdk';
-import { SDK_VERSION } from './version';
+import { eventFromEnvelope } from '../common/envelope.js';
+import { IPCChannel, IPCMode, PROTOCOL_SCHEME, RendererStatus } from '../common/ipc.js';
+import { registerProtocol } from './electron-normalize.js';
+import { createRendererEventLoopBlockStatusHandler } from './integrations/renderer-anr.js';
+import { rendererProfileFromIpc } from './integrations/renderer-profiling.js';
+import { mergeEvents } from './merge.js';
+import { normalizeReplayEnvelope } from './normalize.js';
+import { ElectronMainOptionsInternal } from './sdk.js';
+import { SDK_VERSION } from './version.js';
 
 let KNOWN_RENDERERS: Set<number> | undefined;
 let WINDOW_ID_TO_WEB_CONTENTS: Map<string, number> | undefined;
@@ -198,7 +198,7 @@ function configureProtocol(client: Client, options: ElectronMainOptionsInternal)
     },
   });
 
-  const rendererStatusChanged = createRendererAnrStatusHandler(client);
+  const rendererStatusChanged = createRendererEventLoopBlockStatusHandler(client);
 
   app
     .whenReady()
@@ -264,7 +264,7 @@ function configureClassic(client: Client, options: ElectronMainOptionsInternal):
   );
   ipcMain.on(IPCChannel.STRUCTURED_LOG, (_, log: SerializedLog) => handleLogFromRenderer(client, options, log));
 
-  const rendererStatusChanged = createRendererAnrStatusHandler(client);
+  const rendererStatusChanged = createRendererEventLoopBlockStatusHandler(client);
   if (rendererStatusChanged) {
     ipcMain.on(IPCChannel.STATUS, ({ sender }, status: RendererStatus) => rendererStatusChanged(status, sender));
   }
