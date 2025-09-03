@@ -1,12 +1,12 @@
 const path = require('path');
 
 const { app, BrowserWindow } = require('electron');
-const { init, rendererAnrIntegration } = require('@sentry/electron/main');
+const { init, rendererEventLoopBlockIntegration } = require('@sentry/electron/main');
 
 init({
   dsn: '__DSN__',
   debug: true,
-  integrations: [rendererAnrIntegration({ injectDocumentPolicy: true })],
+  integrations: [rendererEventLoopBlockIntegration({ injectDocumentPolicy: true })],
   onFatalError: () => {},
 });
 
