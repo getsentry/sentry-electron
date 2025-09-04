@@ -117,7 +117,7 @@
     "@types/koa-bodyparser": "^4.3.0",
     "@types/tmp": "^0.2.2",
     "busboy": "^1.6.0",
-    "electron": "^25.9.8",
+    "electron": "^35.7.5",
     "electron-latest-versions": "^0.2.0",
     "eslint": "7.32.0",
     "eslint-plugin-require-extensions": "^0.1.3",
