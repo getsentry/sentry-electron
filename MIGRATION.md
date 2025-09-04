@@ -1,8 +1,19 @@
 This document details the changes between major versions of the Sentry Electron
 SDK.
 
+- [Upgrading from 6.x to 7.x](#upgrading-from-6x-to-7x)
 - [Upgrading from 5.x to 6.x](#upgrading-from-5x-to-6x)
 - [Upgrading from 4.x to 5.x](#upgrading-from-4x-to-5x)
+
+# Upgrading from 6.x to 7.x
+
+Most users won't notice many breaking API changes in v7 but it's worth checking
+out the
+[JavaScript v10 migration guide](https://docs.sentry.io/platforms/javascript/migration/v9-to-v10/).
+
+## Supported Electron Versions
+
+No change. The Sentry Electron SDK supports Electron >= 23.0.0.
 
 # Upgrading from 5.x to 6.x
 

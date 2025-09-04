@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 7.0.0
+
+This release updates the underlying Sentry JavaScript SDKs to v10 which includes
+some breaking changes. Check out the the [migration guide](./MIGRATION.md) for
+more details.
+
+- feat: Update JavaScript SDKs to v10.8.0 (#1205)
+
 ## 6.11.0
 
 - feat: Update JavaScript SDKs from [v9.45.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.45.0) to [v9.46.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.46.0)
