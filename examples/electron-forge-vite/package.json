@@ -17,7 +17,7 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.6.1",
     "@electron-forge/plugin-vite": "^7.6.1",
     "@sentry/vite-plugin": "^3.1.2",
-    "electron": "34.2.0",
+    "electron": "35.7.5",
     "vite": "^5.0.12"
   },
   "license": "MIT",
