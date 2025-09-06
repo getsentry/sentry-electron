@@ -7,6 +7,7 @@ export type {
   BreadcrumbHint,
   Event,
   EventHint,
+  ErrorEvent,
   Exception,
   SdkInfo,
   Session,
