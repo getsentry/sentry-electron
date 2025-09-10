@@ -43,7 +43,7 @@
         "default": "./esm/preload/default.js"
       }
     },
-    "./preload-custom": {
+    "./preload-namespaced": {
       "require": {
         "types": "./preload/index.d.ts",
         "default": "./preload/index.js"
