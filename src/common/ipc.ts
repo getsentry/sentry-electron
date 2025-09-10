@@ -17,17 +17,43 @@ export enum IPCMode {
 
 export const PROTOCOL_SCHEME = 'sentry-ipc';
 
-export enum IPCChannel {
+export type Channel =
   /** IPC to check main process is listening */
-  RENDERER_START = 'sentry-electron.renderer-start',
+  | 'start'
   /** IPC to pass scope changes to main process. */
-  SCOPE = 'sentry-electron.scope',
+  | 'scope'
   /** IPC to pass envelopes to the main process. */
-  ENVELOPE = 'sentry-electron.envelope',
+  | 'envelope'
   /** IPC to pass renderer status updates */
-  STATUS = 'sentry-electron.status',
+  | 'status'
   /** IPC to pass structured log messages */
-  STRUCTURED_LOG = 'sentry-electron.structured-log',
+  | 'structured-log';
+
+/**
+ * Utilities for creating namespaced IPC channels and protocol routes
+ */
+export function ipcChannelUtils(namespace: string | undefined): {
+  createUrl: (channel: Channel) => string;
+  urlMatches: (url: string, channel: Channel) => boolean;
+  createKey: (channel: Channel) => string;
+  readonly globalKey: string;
+} {
+  const globalKey = `__${namespace?.replace('-', '_').toUpperCase() || 'SENTRY_IPC'}__`;
+
+  return {
+    createUrl: (channel: Channel) => {
+      const scheme = namespace ? `${PROTOCOL_SCHEME}-${namespace}` : PROTOCOL_SCHEME;
+      // sentry_key in the url stops these messages from being picked up by our HTTP instrumentations
+      return `${scheme}://${channel}/sentry_key`;
+    },
+    urlMatches: function (url: string, channel: Channel): boolean {
+      return url.startsWith(this.createUrl(channel));
+    },
+    createKey: (channel: Channel) => {
+      return namespace ? `${PROTOCOL_SCHEME}-${namespace}.${channel}` : `${PROTOCOL_SCHEME}.${channel}`;
+    },
+    globalKey,
+  };
 }
 
 export interface RendererProcessAnrOptions {
@@ -83,7 +109,7 @@ export function getMagicMessage(): unknown {
  */
 declare global {
   interface Window {
-    __SENTRY_IPC__?: IPCInterface;
+    [key: string]: unknown;
     __SENTRY__RENDERER_INIT__?: boolean;
     __SENTRY_RENDERER_ID__?: string;
   }
