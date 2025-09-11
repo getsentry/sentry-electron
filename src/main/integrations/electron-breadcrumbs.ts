@@ -110,55 +110,58 @@ export const electronBreadcrumbsIntegration = defineIntegration(
       ...normalizeOptions(userOptions),
     };
 
-    function patchEventEmitter(
-      emitter: NodeJS.EventEmitter | WebContents | BrowserWindow,
-      category: string,
-      shouldCapture: EventFunction | undefined | false,
-      id?: number | undefined,
-    ): void {
-      const emit = emitter.emit.bind(emitter) as (event: string, ...args: unknown[]) => boolean;
-
-      emitter.emit = (event: string, ...args: unknown[]) => {
-        // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
-        if (shouldCapture && shouldCapture(event)) {
-          const breadcrumb: Breadcrumb = {
-            category: 'electron',
-            message: `${category}.${event}`,
-            timestamp: new Date().getTime() / 1_000,
-            type: 'ui',
-          };
-
-          if (id) {
-            breadcrumb.data = { ...getRendererProperties(id) };
-
-            if (!options.captureWindowTitles && breadcrumb.data?.title) {
-              delete breadcrumb.data?.title;
-            }
-          }
-
-          addBreadcrumb(breadcrumb);
-
-          const attributes: Record<string, unknown> = {};
-
-          if (breadcrumb.data?.id) {
-            attributes.id = breadcrumb.data.id;
-          }
-
-          if (breadcrumb.data?.url) {
-            attributes.url = breadcrumb.data.url;
-          }
-
-          logger.info(logger.fmt`electron.${category}.${event}`, attributes);
-        }
-
-        return emit(event, ...args);
-      };
-    }
-
     return {
       name: 'ElectronBreadcrumbs',
       setup(client: NodeClient) {
         const clientOptions = client.getOptions() as ElectronMainOptions | undefined;
+        const enableLogs = !!clientOptions?.enableLogs;
+
+        function patchEventEmitter(
+          emitter: NodeJS.EventEmitter | WebContents | BrowserWindow,
+          category: string,
+          shouldCapture: EventFunction | undefined | false,
+          id?: number | undefined,
+        ): void {
+          const emit = emitter.emit.bind(emitter) as (event: string, ...args: unknown[]) => boolean;
+
+          emitter.emit = (event: string, ...args: unknown[]) => {
+            // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
+            if (shouldCapture && shouldCapture(event)) {
+              const breadcrumb: Breadcrumb = {
+                category: 'electron',
+                message: `${category}.${event}`,
+                timestamp: new Date().getTime() / 1_000,
+                type: 'ui',
+              };
+
+              if (id) {
+                breadcrumb.data = { ...getRendererProperties(id) };
+
+                if (!options.captureWindowTitles && breadcrumb.data?.title) {
+                  delete breadcrumb.data?.title;
+                }
+              }
+
+              addBreadcrumb(breadcrumb);
+
+              const attributes: Record<string, unknown> = {};
+
+              if (breadcrumb.data?.id) {
+                attributes.id = breadcrumb.data.id;
+              }
+
+              if (breadcrumb.data?.url) {
+                attributes.url = breadcrumb.data.url;
+              }
+
+              if (enableLogs) {
+                logger.info(logger.fmt`electron.${category}.${event}`, attributes);
+              }
+            }
+
+            return emit(event, ...args);
+          };
+        }
 
         trackRendererProperties();
 
