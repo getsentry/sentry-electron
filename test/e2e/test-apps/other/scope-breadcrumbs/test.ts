@@ -18,7 +18,7 @@ electronTestRunner(__dirname, { skipEsmAutoTransform: true }, async (ctx) => {
                 },
                 mechanism: {
                   handled: false,
-                  type: 'instrument',
+                  type: 'auto.browser.browserapierrors.setTimeout',
                   data: {
                     function: 'setTimeout',
                   },
