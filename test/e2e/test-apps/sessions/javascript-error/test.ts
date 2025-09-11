@@ -57,9 +57,6 @@ electronTestRunner(__dirname, async (ctx) => {
               mechanism: {
                 type: 'auto.browser.browserapierrors.setTimeout',
                 handled: false,
-                data: {
-                  function: 'setTimeout',
-                },
               },
             },
           ],

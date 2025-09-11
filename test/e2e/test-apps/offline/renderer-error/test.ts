@@ -26,9 +26,6 @@ electronTestRunner(__dirname, { runTwice: true, timeout: 25_000 }, async (ctx) =
               mechanism: {
                 type: 'auto.browser.browserapierrors.setTimeout',
                 handled: false,
-                data: {
-                  function: 'setTimeout',
-                },
               },
             },
           ],

@@ -33,11 +33,8 @@ electronTestRunner(
                   ]),
                 },
                 mechanism: {
-                  type: 'instrument',
+                  type: 'auto.browser.browserapierrors.setTimeout',
                   handled: false,
-                  data: {
-                    function: 'setTimeout',
-                  },
                 },
               },
             ],
