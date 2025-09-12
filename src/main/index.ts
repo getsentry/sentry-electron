@@ -68,6 +68,7 @@ export {
   getTraceMetaTags,
   graphqlIntegration,
   hapiIntegration,
+  httpHeadersToSpanAttributes,
   httpIntegration,
   // eslint-disable-next-line deprecation/deprecation
   inboundFiltersIntegration,
@@ -143,6 +144,7 @@ export {
   unleashIntegration,
   updateSpanName,
   validateOpenTelemetrySetup,
+  winterCGHeadersToDict,
   withActiveSpan,
   withIsolationScope,
   withMonitor,

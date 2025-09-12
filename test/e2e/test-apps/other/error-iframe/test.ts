@@ -24,11 +24,8 @@ electronTestRunner(__dirname, { skipEsmAutoTransform: true, skip: () => process.
                 ]),
               },
               mechanism: {
-                data: {
-                  function: 'setTimeout',
-                },
                 handled: false,
-                type: 'instrument',
+                type: 'auto.browser.browserapierrors.setTimeout',
               },
             },
           ],
