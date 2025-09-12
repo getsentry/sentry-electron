@@ -15,11 +15,12 @@ function captureLog(
   attributes?: Log['attributes'],
   severityNumber?: Log['severityNumber'],
 ): void {
+  const client = getClient();
   _INTERNAL_captureLog(
     { level, message, attributes, severityNumber },
-    getClient(),
+    client,
     getCurrentScope(),
-    (_: unknown, log: SerializedLog) => getIPC().sendStructuredLog(log),
+    (_: unknown, log: SerializedLog) => getIPC(client).sendStructuredLog(log),
   );
 }
 

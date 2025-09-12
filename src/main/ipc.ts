@@ -12,7 +12,7 @@ import {
 import { captureEvent, getClient, getCurrentScope } from '@sentry/node';
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
 import { eventFromEnvelope } from '../common/envelope.js';
-import { IPCChannel, IPCMode, PROTOCOL_SCHEME, RendererStatus } from '../common/ipc.js';
+import { ipcChannelUtils, IPCMode, PROTOCOL_SCHEME, RendererStatus } from '../common/ipc.js';
 import { registerProtocol } from './electron-normalize.js';
 import { createRendererEventLoopBlockStatusHandler } from './integrations/renderer-anr.js';
 import { rendererProfileFromIpc } from './integrations/renderer-profiling.js';
@@ -188,6 +188,8 @@ function configureProtocol(client: Client, options: ElectronMainOptionsInternal)
     throw new Error("Sentry SDK should be initialized before the Electron app 'ready' event is fired");
   }
 
+  const ipcUtil = ipcChannelUtils(options.ipcNamespace);
+
   protocol.registerSchemesAsPrivileged([SENTRY_CUSTOM_SCHEME]);
 
   // We Proxy this function so that later user calls to registerSchemesAsPrivileged don't overwrite our custom scheme
@@ -211,19 +213,15 @@ function configureProtocol(client: Client, options: ElectronMainOptionsInternal)
           };
 
           const data = request.body;
-          if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.RENDERER_START}`)) {
+          if (ipcUtil.urlMatches(request.url, 'start')) {
             newProtocolRenderer();
-          } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.SCOPE}`) && data) {
+          } else if (ipcUtil.urlMatches(request.url, 'scope') && data) {
             handleScope(options, data.toString());
-          } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.ENVELOPE}`) && data) {
+          } else if (ipcUtil.urlMatches(request.url, 'envelope') && data) {
             handleEnvelope(client, options, data, getWebContents());
-          } else if (request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.STRUCTURED_LOG}`) && data) {
+          } else if (ipcUtil.urlMatches(request.url, 'structured-log') && data) {
             handleLogFromRenderer(client, options, JSON.parse(data.toString()));
-          } else if (
-            rendererStatusChanged &&
-            request.url.startsWith(`${PROTOCOL_SCHEME}://${IPCChannel.STATUS}`) &&
-            data
-          ) {
+          } else if (rendererStatusChanged && ipcUtil.urlMatches(request.url, 'status') && data) {
             const contents = getWebContents();
             if (contents) {
               const status = (JSON.parse(data.toString()) as { status: RendererStatus }).status;
@@ -240,7 +238,9 @@ function configureProtocol(client: Client, options: ElectronMainOptionsInternal)
  * Hooks IPC for communication with the renderer processes
  */
 function configureClassic(client: Client, options: ElectronMainOptionsInternal): void {
-  ipcMain.on(IPCChannel.RENDERER_START, ({ sender }) => {
+  const ipcUtil = ipcChannelUtils(options.ipcNamespace);
+
+  ipcMain.on(ipcUtil.createKey('start'), ({ sender }) => {
     const id = sender.id;
     // Keep track of renderers that are using IPC
     KNOWN_RENDERERS = KNOWN_RENDERERS || new Set();
@@ -258,15 +258,19 @@ function configureClassic(client: Client, options: ElectronMainOptionsInternal):
       });
     }
   });
-  ipcMain.on(IPCChannel.SCOPE, (_, jsonScope: string) => handleScope(options, jsonScope));
-  ipcMain.on(IPCChannel.ENVELOPE, ({ sender }, env: Uint8Array | string) =>
+  ipcMain.on(ipcUtil.createKey('scope'), (_, jsonScope: string) => handleScope(options, jsonScope));
+  ipcMain.on(ipcUtil.createKey('envelope'), ({ sender }, env: Uint8Array | string) =>
     handleEnvelope(client, options, env, sender),
   );
-  ipcMain.on(IPCChannel.STRUCTURED_LOG, (_, log: SerializedLog) => handleLogFromRenderer(client, options, log));
+  ipcMain.on(ipcUtil.createKey('structured-log'), (_, log: SerializedLog) =>
+    handleLogFromRenderer(client, options, log),
+  );
 
   const rendererStatusChanged = createRendererEventLoopBlockStatusHandler(client);
   if (rendererStatusChanged) {
-    ipcMain.on(IPCChannel.STATUS, ({ sender }, status: RendererStatus) => rendererStatusChanged(status, sender));
+    ipcMain.on(ipcUtil.createKey('status'), ({ sender }, status: RendererStatus) =>
+      rendererStatusChanged(status, sender),
+    );
   }
 }
 

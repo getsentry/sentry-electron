@@ -18,13 +18,21 @@ export function getDefaultIntegrations(options: ElectronRendererOptions): Integr
   ];
 }
 
-interface ElectronRendererOptions extends Omit<BrowserOptions, 'dsn' | 'environment' | 'release'> {
+export interface ElectronRendererOptions extends Omit<BrowserOptions, 'dsn' | 'environment' | 'release'> {
   /** @deprecated `dsn` should only be passed to the main process `Sentry.init` call */
   dsn?: string;
   /** @deprecated `release` should only be passed to the main process `Sentry.init` call */
   release?: string;
   /** @deprecated `environment` should only be passed to the main process `Sentry.init` call */
   environment?: string;
+
+  /**
+   * Custom namespace for IPC channels and protocol routes.
+   *
+   * Valid characters are a-z, 0-9, hyphen (-).
+   * Should match `ipcNamespace` passed in the main process.
+   */
+  ipcNamespace?: string;
 }
 
 /**

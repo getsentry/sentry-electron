@@ -4,31 +4,40 @@
 
 import { SerializedLog } from '@sentry/core';
 import { contextBridge, ipcRenderer } from 'electron';
-import { IPCChannel, RendererStatus } from '../common/ipc.js';
+import { ipcChannelUtils, RendererStatus } from '../common/ipc.js';
 
-// eslint-disable-next-line no-restricted-globals
-if (window.__SENTRY_IPC__) {
-  // eslint-disable-next-line no-console
-  console.log('Sentry Electron preload has already been run');
-} else {
-  const ipcObject = {
-    sendRendererStart: () => ipcRenderer.send(IPCChannel.RENDERER_START),
-    sendScope: (scopeJson: string) => ipcRenderer.send(IPCChannel.SCOPE, scopeJson),
-    sendEnvelope: (envelope: Uint8Array | string) => ipcRenderer.send(IPCChannel.ENVELOPE, envelope),
-    sendStatus: (status: RendererStatus) => ipcRenderer.send(IPCChannel.STATUS, status),
-    sendStructuredLog: (log: SerializedLog) => ipcRenderer.send(IPCChannel.STRUCTURED_LOG, log),
-  };
+/**
+ * Hook up IPC to the window object and uses contextBridge if available.
+ *
+ * @param namespace An optional namespace to use for the IPC channels
+ */
+export function hookupIpc(namespace?: string): void {
+  const ipcUtil = ipcChannelUtils(namespace);
 
   // eslint-disable-next-line no-restricted-globals
-  window.__SENTRY_IPC__ = ipcObject;
+  if (window[ipcUtil.globalKey]) {
+    // eslint-disable-next-line no-console
+    console.log('Sentry Electron preload has already been run');
+  } else {
+    const ipcObject = {
+      sendRendererStart: () => ipcRenderer.send(ipcUtil.createKey('start')),
+      sendScope: (scopeJson: string) => ipcRenderer.send(ipcUtil.createKey('scope'), scopeJson),
+      sendEnvelope: (envelope: Uint8Array | string) => ipcRenderer.send(ipcUtil.createKey('envelope'), envelope),
+      sendStatus: (status: RendererStatus) => ipcRenderer.send(ipcUtil.createKey('status'), status),
+      sendStructuredLog: (log: SerializedLog) => ipcRenderer.send(ipcUtil.createKey('structured-log'), log),
+    };
 
-  // We attempt to use contextBridge if it's available
-  if (contextBridge) {
-    // This will fail if contextIsolation is not enabled
-    try {
-      contextBridge.exposeInMainWorld('__SENTRY_IPC__', ipcObject);
-    } catch (e) {
-      //
+    // eslint-disable-next-line no-restricted-globals
+    window[ipcUtil.globalKey] = ipcObject;
+
+    // We attempt to use contextBridge if it's available
+    if (contextBridge) {
+      // This will fail if contextIsolation is not enabled
+      try {
+        contextBridge.exposeInMainWorld(ipcUtil.globalKey, ipcObject);
+      } catch (e) {
+        //
+      }
     }
   }
 }

@@ -8,8 +8,8 @@ import { getIPC } from '../ipc.js';
 export const scopeToMainIntegration = defineIntegration(() => {
   return {
     name: 'ScopeToMain',
-    setup() {
-      const ipc = getIPC();
+    setup(client) {
+      const ipc = getIPC(client);
 
       addScopeListener((merged, changed) => {
         ipc.sendScope(JSON.stringify(normalize(merged, 20, 2_000)));

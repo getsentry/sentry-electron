@@ -104,6 +104,14 @@ export interface ElectronMainOptionsInternal
   ipcMode: IPCMode;
 
   /**
+   * Custom namespace for IPC channels and protocol routes.
+   *
+   * Valid characters are a-z, 0-9, hyphen (-).
+   * Should match `ipcNamespace` passed in renderer init.
+   */
+  ipcNamespace?: string;
+
+  /**
    * A function that returns an array of Electron session objects
    *
    * These sessions are used to configure communication between the Electron

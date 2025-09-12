@@ -1,7 +1,7 @@
 {
   "extends": "./node_modules/@sentry-internal/typescript/tsconfig.json",
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "src/preload/**/*.ts"],
+  "exclude": ["node_modules"],
   "compilerOptions": {
     "skipLibCheck": true,
     "baseUrl": ".",
