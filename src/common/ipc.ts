@@ -15,8 +15,6 @@ export enum IPCMode {
   Both = 3,
 }
 
-export const PROTOCOL_SCHEME = 'sentry-ipc';
-
 export type Channel =
   /** IPC to check main process is listening */
   | 'start'
@@ -29,30 +27,29 @@ export type Channel =
   /** IPC to pass structured log messages */
   | 'structured-log';
 
-/**
- * Utilities for creating namespaced IPC channels and protocol routes
- */
-export function ipcChannelUtils(namespace: string | undefined): {
+export interface IpcUtils {
   createUrl: (channel: Channel) => string;
   urlMatches: (url: string, channel: Channel) => boolean;
   createKey: (channel: Channel) => string;
-  readonly globalKey: string;
-} {
-  const globalKey = `__${namespace?.replace('-', '_').toUpperCase() || 'SENTRY_IPC'}__`;
+  readonly namespace: string;
+}
 
+/**
+ * Utility for creating namespaced IPC channels and protocol routes
+ */
+export function ipcChannelUtils(namespace: string): IpcUtils {
   return {
     createUrl: (channel: Channel) => {
-      const scheme = namespace ? `${PROTOCOL_SCHEME}-${namespace}` : PROTOCOL_SCHEME;
       // sentry_key in the url stops these messages from being picked up by our HTTP instrumentations
-      return `${scheme}://${channel}/sentry_key`;
+      return `${namespace}://${channel}/sentry_key`;
     },
     urlMatches: function (url: string, channel: Channel): boolean {
       return url.startsWith(this.createUrl(channel));
     },
     createKey: (channel: Channel) => {
-      return namespace ? `${PROTOCOL_SCHEME}-${namespace}.${channel}` : `${PROTOCOL_SCHEME}.${channel}`;
+      return `${namespace}.${channel}`;
     },
-    globalKey,
+    namespace,
   };
 }
 
@@ -109,7 +106,7 @@ export function getMagicMessage(): unknown {
  */
 declare global {
   interface Window {
-    [key: string]: unknown;
+    __SENTRY_IPC__?: Record<string, IPCInterface>;
     __SENTRY__RENDERER_INIT__?: boolean;
     __SENTRY_RENDERER_ID__?: string;
   }

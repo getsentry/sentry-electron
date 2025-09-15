@@ -107,9 +107,11 @@ export interface ElectronMainOptionsInternal
    * Custom namespace for IPC channels and protocol routes.
    *
    * Valid characters are a-z, 0-9, hyphen (-).
-   * Should match `ipcNamespace` passed in renderer init.
+   * Should match `ipcNamespace` passed in the renderer processes.
+   *
+   * @default 'sentry-ipc'
    */
-  ipcNamespace?: string;
+  ipcNamespace: string;
 
   /**
    * A function that returns an array of Electron session objects
@@ -145,8 +147,11 @@ export interface ElectronMainOptionsInternal
 }
 
 // getSessions and ipcMode properties are optional because they have defaults
-export type ElectronMainOptions = Pick<Partial<ElectronMainOptionsInternal>, 'getSessions' | 'ipcMode'> &
-  Omit<ElectronMainOptionsInternal, 'getSessions' | 'ipcMode'> &
+export type ElectronMainOptions = Pick<
+  Partial<ElectronMainOptionsInternal>,
+  'getSessions' | 'ipcMode' | 'ipcNamespace'
+> &
+  Omit<ElectronMainOptionsInternal, 'getSessions' | 'ipcMode' | 'ipcNamespace'> &
   NodeOptions;
 
 /**
@@ -162,6 +167,7 @@ export function init(userOptions: ElectronMainOptions): void {
   const optionsWithDefaults = {
     _metadata: { sdk: getSdkInfo(!!userOptions.sendDefaultPii) },
     ipcMode: IPCMode.Both,
+    ipcNamespace: 'sentry-ipc',
     release: getDefaultReleaseName(),
     environment: getDefaultEnvironment(),
     defaultIntegrations: getDefaultIntegrations(userOptions),

@@ -11,11 +11,14 @@ import { ipcChannelUtils, RendererStatus } from '../common/ipc.js';
  *
  * @param namespace An optional namespace to use for the IPC channels
  */
-export function hookupIpc(namespace?: string): void {
+export function hookupIpc(namespace: string = 'sentry-ipc'): void {
   const ipcUtil = ipcChannelUtils(namespace);
 
   // eslint-disable-next-line no-restricted-globals
-  if (window[ipcUtil.globalKey]) {
+  window.__SENTRY_IPC__ = window.__SENTRY_IPC__ || {};
+
+  // eslint-disable-next-line no-restricted-globals
+  if (window.__SENTRY_IPC__[ipcUtil.namespace]) {
     // eslint-disable-next-line no-console
     console.log('Sentry Electron preload has already been run');
   } else {
@@ -28,13 +31,13 @@ export function hookupIpc(namespace?: string): void {
     };
 
     // eslint-disable-next-line no-restricted-globals
-    window[ipcUtil.globalKey] = ipcObject;
+    window.__SENTRY_IPC__[ipcUtil.namespace] = ipcObject;
 
     // We attempt to use contextBridge if it's available
     if (contextBridge) {
       // This will fail if contextIsolation is not enabled
       try {
-        contextBridge.exposeInMainWorld(ipcUtil.globalKey, ipcObject);
+        contextBridge.exposeInMainWorld(ipcUtil.namespace, ipcObject);
       } catch (e) {
         //
       }

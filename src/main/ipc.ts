@@ -12,7 +12,7 @@ import {
 import { captureEvent, getClient, getCurrentScope } from '@sentry/node';
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
 import { eventFromEnvelope } from '../common/envelope.js';
-import { ipcChannelUtils, IPCMode, PROTOCOL_SCHEME, RendererStatus } from '../common/ipc.js';
+import { ipcChannelUtils, IPCMode, IpcUtils, RendererStatus } from '../common/ipc.js';
 import { registerProtocol } from './electron-normalize.js';
 import { createRendererEventLoopBlockStatusHandler } from './integrations/renderer-anr.js';
 import { rendererProfileFromIpc } from './integrations/renderer-profiling.js';
@@ -23,11 +23,6 @@ import { SDK_VERSION } from './version.js';
 
 let KNOWN_RENDERERS: Set<number> | undefined;
 let WINDOW_ID_TO_WEB_CONTENTS: Map<string, number> | undefined;
-
-const SENTRY_CUSTOM_SCHEME = {
-  scheme: PROTOCOL_SCHEME,
-  privileges: { bypassCSP: true, corsEnabled: true, supportFetchAPI: true, secure: true },
-};
 
 function newProtocolRenderer(): void {
   KNOWN_RENDERERS = KNOWN_RENDERERS || new Set();
@@ -183,20 +178,23 @@ function handleLogFromRenderer(client: Client, options: ElectronMainOptionsInter
 }
 
 /** Enables Electron protocol handling */
-function configureProtocol(client: Client, options: ElectronMainOptionsInternal): void {
+function configureProtocol(client: Client, ipcUtil: IpcUtils, options: ElectronMainOptionsInternal): void {
   if (app.isReady()) {
     throw new Error("Sentry SDK should be initialized before the Electron app 'ready' event is fired");
   }
 
-  const ipcUtil = ipcChannelUtils(options.ipcNamespace);
+  const scheme = {
+    scheme: ipcUtil.namespace,
+    privileges: { bypassCSP: true, corsEnabled: true, supportFetchAPI: true, secure: true },
+  };
 
-  protocol.registerSchemesAsPrivileged([SENTRY_CUSTOM_SCHEME]);
+  protocol.registerSchemesAsPrivileged([scheme]);
 
   // We Proxy this function so that later user calls to registerSchemesAsPrivileged don't overwrite our custom scheme
   // eslint-disable-next-line @typescript-eslint/unbound-method
   protocol.registerSchemesAsPrivileged = new Proxy(protocol.registerSchemesAsPrivileged, {
     apply: (target, __, args: Parameters<typeof protocol.registerSchemesAsPrivileged>) => {
-      target([...args[0], SENTRY_CUSTOM_SCHEME]);
+      target([...args[0], scheme]);
     },
   });
 
@@ -206,7 +204,7 @@ function configureProtocol(client: Client, options: ElectronMainOptionsInternal)
     .whenReady()
     .then(() => {
       for (const sesh of options.getSessions()) {
-        registerProtocol(sesh.protocol, PROTOCOL_SCHEME, (request) => {
+        registerProtocol(sesh.protocol, ipcUtil.namespace, (request) => {
           const getWebContents = (): WebContents | undefined => {
             const webContentsId = request.windowId ? WINDOW_ID_TO_WEB_CONTENTS?.get(request.windowId) : undefined;
             return webContentsId ? webContents.fromId(webContentsId) : undefined;
@@ -237,9 +235,7 @@ function configureProtocol(client: Client, options: ElectronMainOptionsInternal)
 /**
  * Hooks IPC for communication with the renderer processes
  */
-function configureClassic(client: Client, options: ElectronMainOptionsInternal): void {
-  const ipcUtil = ipcChannelUtils(options.ipcNamespace);
-
+function configureClassic(client: Client, ipcUtil: IpcUtils, options: ElectronMainOptionsInternal): void {
   ipcMain.on(ipcUtil.createKey('start'), ({ sender }) => {
     const id = sender.id;
     // Keep track of renderers that are using IPC
@@ -276,13 +272,15 @@ function configureClassic(client: Client, options: ElectronMainOptionsInternal):
 
 /** Sets up communication channels with the renderer */
 export function configureIPC(client: Client, options: ElectronMainOptionsInternal): void {
+  const ipcUtil = ipcChannelUtils(options.ipcNamespace);
+
   // eslint-disable-next-line no-bitwise
   if ((options.ipcMode & IPCMode.Protocol) > 0) {
-    configureProtocol(client, options);
+    configureProtocol(client, ipcUtil, options);
   }
 
   // eslint-disable-next-line no-bitwise
   if ((options.ipcMode & IPCMode.Classic) > 0) {
-    configureClassic(client, options);
+    configureClassic(client, ipcUtil, options);
   }
 }
