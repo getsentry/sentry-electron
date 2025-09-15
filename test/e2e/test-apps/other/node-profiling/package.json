@@ -7,7 +7,7 @@
     "build": "electron-rebuild"
   },
   "dependencies": {
-    "@electron/rebuild":"^3.7.1",
+    "@electron/rebuild":"^4.0.1",
     "@sentry/electron": "5.6.0",
     "@sentry/profiling-node": "9.0.0"
   }
