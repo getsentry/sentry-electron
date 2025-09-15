@@ -109,7 +109,7 @@ export interface ElectronMainOptionsInternal
    * Valid characters are a-z, 0-9, hyphen (-).
    * Should match `ipcNamespace` passed in the renderer processes.
    *
-   * @default 'sentry-ipc'
+   * @default "sentry-ipc"
    */
   ipcNamespace: string;
 

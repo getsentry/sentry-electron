@@ -32,7 +32,7 @@ export interface ElectronRendererOptionsInternal extends Omit<BrowserOptions, 'd
    * Valid characters are a-z, 0-9, hyphen (-).
    * Should match `ipcNamespace` passed in the main process.
    *
-   * @default 'sentry-ipc'
+   * @default "sentry-ipc"
    */
   ipcNamespace: string;
 }
