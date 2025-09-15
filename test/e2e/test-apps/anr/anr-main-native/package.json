@@ -7,7 +7,7 @@
     "build": "electron-rebuild --force"
   },
   "dependencies": {
-    "@electron/rebuild":"^4.0.1",
+    "@electron/rebuild":"^3.7.1",
     "@sentry/electron": "5.6.0",
     "@sentry/node-native": "6.8.0",
     "electron": "^37.2.2"
