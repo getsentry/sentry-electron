@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 7.1.0
+
+- feat: Update JavaScript SDKs from [v10.7.0](https://github.com/getsentry/sentry-javascript/releases/tag/10.7.0) to [v10.11.0](https://github.com/getsentry/sentry-javascript/releases/tag/10.11.0) (#1236)
+- feat: Optional Namespaced IPC (#1234)
+- fix: Export `ErrorEvent` type (#1229)
+- fix: Only capture logs if `enableLogs` is true (#1235)
+
 ## 7.0.0
 
 This release updates the underlying Sentry JavaScript SDKs to v10 which includes
