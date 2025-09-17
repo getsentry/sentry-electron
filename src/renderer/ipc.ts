@@ -1,19 +1,18 @@
 /* eslint-disable no-restricted-globals */
 /* eslint-disable no-console */
-import { debug, SerializedLog, uuid4 } from '@sentry/core';
-import { IPCChannel, IPCInterface, PROTOCOL_SCHEME, RENDERER_ID_HEADER, RendererStatus } from '../common/ipc.js';
-
-function buildUrl(channel: IPCChannel): string {
-  // We include sentry_key in the URL so these don't end up in fetch breadcrumbs
-  // https://github.com/getsentry/sentry-javascript/blob/a3f70d8869121183bec037571a3ee78efaf26b0b/packages/browser/src/integrations/breadcrumbs.ts#L240
-  return `${PROTOCOL_SCHEME}://${channel}/sentry_key`;
-}
+import { Client, debug, getClient, SerializedLog, uuid4 } from '@sentry/core';
+import { ipcChannelUtils, IPCInterface, RENDERER_ID_HEADER, RendererStatus } from '../common/ipc.js';
+import { ElectronRendererOptionsInternal } from './sdk.js';
 
 /** Gets the available IPC implementation */
-function getImplementation(): IPCInterface {
+function getImplementation(ipcKey: string): IPCInterface {
+  const ipcUtil = ipcChannelUtils(ipcKey);
+
+  window.__SENTRY_IPC__ = window.__SENTRY_IPC__ || {};
+
   // Favour IPC if it's been exposed by a preload script
-  if (window.__SENTRY_IPC__) {
-    return window.__SENTRY_IPC__;
+  if (window.__SENTRY_IPC__[ipcUtil.namespace]) {
+    return window.__SENTRY_IPC__[ipcUtil.namespace] as IPCInterface;
   } else {
     debug.log('IPC was not configured in preload script, falling back to custom protocol and fetch');
 
@@ -24,7 +23,7 @@ function getImplementation(): IPCInterface {
 
     return {
       sendRendererStart: () => {
-        fetch(buildUrl(IPCChannel.RENDERER_START), { method: 'POST', body: '', headers }).catch(() => {
+        fetch(ipcUtil.createUrl('start'), { method: 'POST', body: '', headers }).catch(() => {
           console.error(`Sentry SDK failed to establish connection with the Electron main process.
   - Ensure you have initialized the SDK in the main process
   - If your renderers use custom sessions, be sure to set 'getSessions' in the main process options
@@ -32,22 +31,26 @@ function getImplementation(): IPCInterface {
         });
       },
       sendScope: (body: string) => {
-        fetch(buildUrl(IPCChannel.SCOPE), { method: 'POST', body, headers }).catch(() => {
+        fetch(ipcUtil.createUrl('scope'), { method: 'POST', body, headers }).catch(() => {
           // ignore
         });
       },
       sendEnvelope: (body: string | Uint8Array) => {
-        fetch(buildUrl(IPCChannel.ENVELOPE), { method: 'POST', body, headers }).catch(() => {
+        fetch(ipcUtil.createUrl('envelope'), { method: 'POST', body, headers }).catch(() => {
           // ignore
         });
       },
       sendStatus: (status: RendererStatus) => {
-        fetch(buildUrl(IPCChannel.STATUS), { method: 'POST', body: JSON.stringify({ status }), headers }).catch(() => {
+        fetch(ipcUtil.createUrl('status'), {
+          method: 'POST',
+          body: JSON.stringify({ status }),
+          headers,
+        }).catch(() => {
           // ignore
         });
       },
       sendStructuredLog: (log: SerializedLog) => {
-        fetch(buildUrl(IPCChannel.STRUCTURED_LOG), {
+        fetch(ipcUtil.createUrl('structured-log'), {
           method: 'POST',
           body: JSON.stringify(log),
           headers,
@@ -59,7 +62,7 @@ function getImplementation(): IPCInterface {
   }
 }
 
-let cachedInterface: IPCInterface | undefined;
+let cachedInterfaces: WeakMap<Client, IPCInterface> | undefined;
 
 /**
  * Renderer IPC interface
@@ -67,11 +70,25 @@ let cachedInterface: IPCInterface | undefined;
  * Favours IPC if its been exposed via a preload script but will
  * fallback to custom protocol and fetch if IPC is not available
  */
-export function getIPC(): IPCInterface {
-  if (!cachedInterface) {
-    cachedInterface = getImplementation();
-    cachedInterface.sendRendererStart();
+export function getIPC(client: Client | undefined = getClient()): IPCInterface {
+  if (!client) {
+    throw new Error('Could not find client, make sure to call Sentry.init before getIPC');
   }
 
-  return cachedInterface;
+  if (!cachedInterfaces) {
+    cachedInterfaces = new WeakMap();
+  }
+
+  const found = cachedInterfaces.get(client);
+
+  if (found) {
+    return found;
+  }
+
+  const namespace = (client.getOptions() as ElectronRendererOptionsInternal).ipcNamespace;
+  const implementation = getImplementation(namespace);
+  cachedInterfaces.set(client, implementation);
+  implementation.sendRendererStart();
+
+  return implementation;
 }

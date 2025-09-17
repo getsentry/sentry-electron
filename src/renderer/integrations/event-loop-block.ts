@@ -25,7 +25,7 @@ export const eventLoopBlockIntegration = defineIntegration((options?: Options) =
 
   return {
     name: 'EventLoopBlockRenderer',
-    setup() {
+    setup(client) {
       const config: RendererProcessAnrOptions = {
         pollInterval,
         anrThreshold,
@@ -33,7 +33,7 @@ export const eventLoopBlockIntegration = defineIntegration((options?: Options) =
         ...options,
       };
 
-      const ipc = getIPC();
+      const ipc = getIPC(client);
 
       // eslint-disable-next-line no-restricted-globals
       ipc.sendStatus({ status: document.visibilityState, config });

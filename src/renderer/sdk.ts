@@ -18,13 +18,28 @@ export function getDefaultIntegrations(options: ElectronRendererOptions): Integr
   ];
 }
 
-interface ElectronRendererOptions extends Omit<BrowserOptions, 'dsn' | 'environment' | 'release'> {
+export interface ElectronRendererOptionsInternal extends Omit<BrowserOptions, 'dsn' | 'environment' | 'release'> {
   /** @deprecated `dsn` should only be passed to the main process `Sentry.init` call */
   dsn?: string;
   /** @deprecated `release` should only be passed to the main process `Sentry.init` call */
   release?: string;
   /** @deprecated `environment` should only be passed to the main process `Sentry.init` call */
   environment?: string;
+
+  /**
+   * Custom namespace for IPC channels and protocol routes.
+   *
+   * Valid characters are a-z, 0-9, hyphen (-).
+   * Should match `ipcNamespace` passed in the main process.
+   *
+   * @default "sentry-ipc"
+   */
+  ipcNamespace: string;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface ElectronRendererOptions extends Partial<ElectronRendererOptionsInternal> {
+  //
 }
 
 /**
@@ -57,6 +72,10 @@ If init has been called in the preload and contextIsolation is disabled, is not 
 
   if (options.stackParser === undefined) {
     options.stackParser = electronRendererStackParser;
+  }
+
+  if (options.ipcNamespace === undefined) {
+    options.ipcNamespace = 'sentry-ipc';
   }
 
   // eslint-disable-next-line deprecation/deprecation

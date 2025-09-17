@@ -76,11 +76,12 @@ const entryPoints = [
   'src/renderer/index.ts',
   'src/utility/index.ts',
   'src/native/index.ts',
+  'src/preload/index.ts',
 ];
 
 export default [
   transpileFiles('cjs', entryPoints, '.'),
   transpileFiles('esm', entryPoints, './esm'),
-  bundlePreload('cjs', 'src/preload/index.ts', './preload/index.js'),
-  bundlePreload('esm', 'src/preload/index.ts', './esm/preload/index.js'),
+  bundlePreload('cjs', 'src/preload/default.ts', './preload/default.js'),
+  bundlePreload('esm', 'src/preload/default.ts', './esm/preload/default.js'),
 ];
