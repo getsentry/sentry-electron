@@ -4,7 +4,6 @@ import {
   defineIntegration,
   fill,
   getBreadcrumbLogLevelFromHttpStatusCode,
-  getClient,
   getTraceData,
   LRUMap,
   SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN,
@@ -89,6 +88,7 @@ type WrappedRequestMethodFactory = (original: RequestMethod) => RequestMethod;
 
 function createWrappedRequestFactory(
   options: NetOptions,
+  enableLogs: boolean,
   tracePropagationTargets: TracePropagationTargets | undefined,
 ): WrappedRequestMethodFactory {
   // We're caching results so we don't have to recompute regexp every time we create a request.
@@ -134,6 +134,57 @@ function createWrappedRequestFactory(
     // We cannot reach here since either `tracePropagationTargets` or `tracingOrigins` will be defined but TypeScript
     // cannot infer that
     return true;
+  };
+
+  /**
+   * Captures Breadcrumb based on provided request/response pair
+   */
+  const addRequestBreadcrumb = (
+    event: string,
+    method: string,
+    url: string,
+    req: ClientRequest,
+    res?: IncomingMessage,
+  ): void => {
+    const level = getBreadcrumbLogLevelFromHttpStatusCode(res?.statusCode);
+
+    addBreadcrumb(
+      {
+        type: 'http',
+        category: 'electron.net',
+        data: {
+          url,
+          method: method,
+          status_code: res?.statusCode,
+        },
+        level,
+      },
+      {
+        event,
+        request: req,
+        response: res,
+      },
+    );
+
+    if (!enableLogs) {
+      return;
+    }
+
+    const attributes = {
+      'sentry.origin': 'auto.electron.net',
+      statusCode: res?.statusCode,
+    };
+
+    switch (level) {
+      case 'error':
+        logger.error(logger.fmt`Electron.net request failed: ${method} ${url}`, attributes);
+        break;
+      case 'warning':
+        logger.warn(logger.fmt`Electron.net request warning: ${method} ${url}`, attributes);
+        break;
+      default:
+        logger.info(logger.fmt`Electron.net request succeeded: ${method} ${url}`, attributes);
+    }
   };
 
   return function wrappedRequestMethodFactory(originalRequestMethod: RequestMethod): RequestMethod {
@@ -192,63 +243,25 @@ function createWrappedRequestFactory(
 }
 
 /**
- * Captures Breadcrumb based on provided request/response pair
- */
-function addRequestBreadcrumb(
-  event: string,
-  method: string,
-  url: string,
-  req: ClientRequest,
-  res?: IncomingMessage,
-): void {
-  const level = getBreadcrumbLogLevelFromHttpStatusCode(res?.statusCode);
-  addBreadcrumb(
-    {
-      type: 'http',
-      category: 'electron.net',
-      data: {
-        url,
-        method: method,
-        status_code: res?.statusCode,
-      },
-      level,
-    },
-    {
-      event,
-      request: req,
-      response: res,
-    },
-  );
-
-  const attributes = { statusCode: res?.statusCode };
-
-  switch (level) {
-    case 'error':
-      logger.error(logger.fmt`Electron.net request failed: ${method} ${url}`, attributes);
-      break;
-    case 'warning':
-      logger.warn(logger.fmt`Electron.net request warning: ${method} ${url}`, attributes);
-      break;
-    default:
-      logger.info(logger.fmt`Electron.net request succeeded: ${method} ${url}`, attributes);
-  }
-}
-
-/**
  * Electron 'net' module integration
  */
 export const electronNetIntegration = defineIntegration((options: NetOptions = {}) => {
   return {
     name: 'ElectronNet',
-    setup() {
-      const clientOptions = getClient()?.getOptions();
+    setup(client) {
+      const clientOptions = client.getOptions();
+      const enableLogs = !!clientOptions?.enableLogs;
 
       // No need to instrument if we don't want to track anything
       if (options.breadcrumbs === false && options.tracing === false) {
         return;
       }
 
-      fill(electronNet, 'request', createWrappedRequestFactory(options, clientOptions?.tracePropagationTargets));
+      fill(
+        electronNet,
+        'request',
+        createWrappedRequestFactory(options, enableLogs, clientOptions?.tracePropagationTargets),
+      );
     },
   };
 });
