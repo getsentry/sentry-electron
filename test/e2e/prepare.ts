@@ -96,7 +96,7 @@ export async function prepareTestFiles(
         // We replace the @sentry/electron dependency in package.json with the path to the tarball
         .replace(
           /"@sentry\/electron": ".*"/,
-          `"@sentry/electron": "file:./../../../../sentry-electron-${SDK_VERSION}.tgz"`,
+          `"@sentry/electron": "file:./../../../../sentry-electron-v${SDK_VERSION}.tgz"`,
         )
         // We replace the Sentry JavaScript dependency versions to match that of @sentry/core
         .replace(/"@sentry\/replay": ".*"/, `"@sentry/replay": "${JS_SDK_VERSION}"`)

@@ -85,11 +85,12 @@
     "access": "public"
   },
   "scripts": {
-    "prebuild": "yarn clean && node scripts/update-version.js",
+    "set-version": "node scripts/update-version.js",
+    "prebuild": "yarn clean && yarn set-version",
     "build": "rollup --config rollup.config.mjs",
-    "postbuild": "node scripts/check-exports.mjs && node scripts/check-types.mjs",
+    "postbuild": "node scripts/check-exports.mjs && node scripts/check-types.mjs && node scripts/check-loading.mjs && yarn pack",
     "clean": "rimraf --glob coverage common esm main preload renderer index.* sentry-electron*.tgz .eslintcache",
-    "prelint": "node scripts/update-version.js",
+    "prelint": "yarn set-version",
     "lint": "run-s lint:prettier lint:eslint",
     "lint:prettier": "prettier --check \"{src,test,examples}/**/*.{ts,js}\"",
     "lint:eslint": "eslint . --cache --format stylish",
@@ -98,9 +99,9 @@
     "fix:eslint": "eslint . --format stylish --fix",
     "update-electron-versions": "electron-latest-versions --start 23 --beta > ./test/e2e/versions.json",
     "update-sdk-versions": "node ./scripts/update-sdk-versions.mjs",
-    "pretest": "yarn build",
+    "pretest": "yarn set-version",
     "test": "vitest run --root=./test/unit",
-    "pree2e": "rimraf --glob test/e2e/dist/**/node_modules/@sentry/** test/e2e/dist/**/yarn.lock test/e2e/dist/**/package-lock.json && node scripts/clean-cache.js && yarn build && npm pack",
+    "pree2e": "yarn set-version && rimraf --glob test/e2e/dist/**/node_modules/@sentry/** test/e2e/dist/**/yarn.lock test/e2e/dist/**/package-lock.json && node scripts/clean-cache.js",
     "e2e": "xvfb-maybe vitest run --root=./test/e2e --silent=false --disable-console-intercept"
   },
   "dependencies": {
