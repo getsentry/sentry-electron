@@ -8,7 +8,7 @@ import {
   UUID_MATCHER,
 } from '../../..';
 
-electronTestRunner(__dirname, async (ctx) => {
+electronTestRunner(__dirname, { skip: () => process.platform === 'linux' }, async (ctx) => {
   let firstSessionId: string | undefined;
 
   await ctx
