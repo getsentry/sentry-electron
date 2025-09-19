@@ -8,6 +8,6 @@ app.getPath = () => {
   app.exit(1);
 };
 
-require('../../../main');
+require('../../main');
 
 app.exit(0);
