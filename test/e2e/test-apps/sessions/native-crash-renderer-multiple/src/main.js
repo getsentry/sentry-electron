@@ -24,11 +24,11 @@ function createWindow() {
 
 app.on('ready', () => {
   createWindow();
-});
 
-setTimeout(() => {
-  createWindow();
-}, 3000);
+  setTimeout(() => {
+    createWindow();
+  }, 3000);
+});
 
 setTimeout(() => {
   app.quit();
