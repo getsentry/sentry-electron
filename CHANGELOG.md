@@ -5,6 +5,7 @@
 ## 7.1.1
 
 - fix: Preload injection path (#1243)
+- fix: Preload `contextIsolation` issues (#1244)
 
 ## 7.1.0
 

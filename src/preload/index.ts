@@ -37,7 +37,8 @@ export function hookupIpc(namespace: string = 'sentry-ipc'): void {
     if (contextBridge) {
       // This will fail if contextIsolation is not enabled
       try {
-        contextBridge.exposeInMainWorld(ipcUtil.namespace, ipcObject);
+        // eslint-disable-next-line no-restricted-globals
+        contextBridge.exposeInMainWorld('__SENTRY_IPC__', window.__SENTRY_IPC__);
       } catch (e) {
         //
       }

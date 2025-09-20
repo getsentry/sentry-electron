@@ -5,12 +5,12 @@ electronTestRunner(__dirname, { skipEsmAutoTransform: true, skip: () => process.
   await ctx
     .expect({
       envelope: eventEnvelope({
-        level: 'fatal',
-        platform: 'node',
+        level: 'error',
+        platform: 'javascript',
         debug_meta: {
           images: [
             {
-              code_file: 'app:///dist/main.js',
+              code_file: 'app:///dist/renderer.js',
               type: 'sourcemap',
               debug_id: UUID_V4_MATCHER,
             },
@@ -20,30 +20,36 @@ electronTestRunner(__dirname, { skipEsmAutoTransform: true, skip: () => process.
           values: [
             {
               type: 'Error',
-              value: 'Some main error',
+              value: 'Some renderer error',
               stacktrace: {
                 frames: expect.arrayContaining([
                   {
                     colno: expect.any(Number),
-                    filename: 'app:///dist/main.js',
+                    filename: 'app:///dist/renderer.js',
                     function: expect.any(String),
                     in_app: true,
                     lineno: expect.any(Number),
-                    module: 'dist:main',
                   },
                 ]),
               },
               mechanism: {
                 handled: false,
-                type: 'generic',
+                type: 'auto.browser.browserapierrors.setTimeout',
               },
             },
           ],
         },
+        request: {
+          headers: {},
+          url: 'app:///dist/index.html',
+        },
+        extra: {
+          arguments: [],
+        },
         tags: {
           'event.environment': 'javascript',
           'event.origin': 'electron',
-          'event.process': 'browser',
+          'event.process': 'renderer',
         },
         user: {
           id: 'abc-123',
