@@ -1,12 +1,13 @@
 // eslint-disable-next-line import/no-unresolved
-import { init } from '@sentry/electron/main';
-import { app, BrowserWindow } from 'electron';
-import * as path from 'path';
-import * as url from 'url';
+const { init, IPCMode } = require('@sentry/electron/main');
+const { app, BrowserWindow } = require('electron');
+const path = require('path');
+const url = require('url');
 
 init({
   dsn: '__DSN__',
   debug: true,
+  ipcMode: IPCMode.Classic,
   onFatalError: () => {},
 });
 
@@ -22,13 +23,9 @@ app.on('ready', () => {
 
   window.loadURL(
     url.format({
-      pathname: path.join(__dirname, 'index.html'),
+      pathname: path.join(__dirname, 'dist', 'index.html'),
       protocol: 'file:',
       slashes: true,
     }),
   );
-
-  setTimeout(() => {
-    throw new Error('Some main error');
-  }, 2000);
 });
