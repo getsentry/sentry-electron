@@ -6,6 +6,7 @@
 
 - fix: Preload injection path (#1243)
 - fix: Preload `contextIsolation` issues (#1244)
+- fix: Include `sentry.origin` with auto-generated logs (#1241)
 
 ## 7.1.0
 

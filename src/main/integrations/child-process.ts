@@ -103,6 +103,7 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
 
             if (enableLogs) {
               log(messageFmt, {
+                'sentry.origin': 'auto.electron.child-process',
                 exitCode: details.exitCode,
                 name: details.name,
                 serviceName: details.serviceName,
@@ -133,6 +134,7 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
 
             if (enableLogs) {
               log(messageFmt, {
+                'sentry.origin': 'auto.electron.child-process',
                 exitCode: details.exitCode,
               });
             }

@@ -144,7 +144,9 @@ export const electronBreadcrumbsIntegration = defineIntegration(
 
               addBreadcrumb(breadcrumb);
 
-              const attributes: Record<string, unknown> = {};
+              const attributes: Record<string, unknown> = {
+                'sentry.origin': 'auto.electron.events',
+              };
 
               if (breadcrumb.data?.id) {
                 attributes.id = breadcrumb.data.id;

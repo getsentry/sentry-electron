@@ -23,6 +23,7 @@ electronTestRunner(__dirname, async (ctx) => {
                   trace_id: UUID_MATCHER,
                   severity_number: 9,
                   attributes: {
+                    'sentry.origin': { value: 'auto.electron.events', type: 'string' },
                     'sentry.release': { value: 'javascript-logs@1.0.0', type: 'string' },
                     'sentry.environment': { value: 'development', type: 'string' },
                     'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
