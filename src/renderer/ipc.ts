@@ -8,10 +8,8 @@ import { ElectronRendererOptionsInternal } from './sdk.js';
 function getImplementation(ipcKey: string): IPCInterface {
   const ipcUtil = ipcChannelUtils(ipcKey);
 
-  window.__SENTRY_IPC__ = window.__SENTRY_IPC__ || {};
-
   // Favour IPC if it's been exposed by a preload script
-  if (window.__SENTRY_IPC__[ipcUtil.namespace]) {
+  if (window.__SENTRY_IPC__?.[ipcUtil.namespace]) {
     return window.__SENTRY_IPC__[ipcUtil.namespace] as IPCInterface;
   } else {
     debug.log('IPC was not configured in preload script, falling back to custom protocol and fetch');

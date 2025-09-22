@@ -1,12 +1,12 @@
 {
-  "name": "webpack-main-process",
-  "description": "Webpack app with error in main process",
+  "name": "preload-injection",
+  "description": "Preload injection",
   "version": "1.0.0",
   "scripts": {
     "start": "electron .",
     "build": "webpack"
   },
-  "main": "dist/main.js",
+  "main": "main.js",
   "devDependencies": {
     "@sentry/webpack-plugin": "^2.2.0",
     "csp-html-webpack-plugin": "^5.1.0",
