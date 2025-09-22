@@ -20,32 +20,20 @@ const sentryWebpackPluginOptions = {
   },
 };
 
-module.exports = [
-  {
-    mode: 'production',
-    entry: './src/main.js',
-    target: 'electron-main',
-    output: {
-      libraryTarget: 'commonjs2',
-      filename: 'main.js',
-    },
-    plugins: [/* new WarningsToErrorsPlugin(), */ sentryWebpackPlugin(sentryWebpackPluginOptions)],
+module.exports = {
+  mode: 'production',
+  entry: './renderer.js',
+  target: 'web',
+  output: {
+    filename: 'renderer.js',
   },
-  {
-    mode: 'production',
-    entry: './src/renderer.js',
-    target: 'web',
-    output: {
-      filename: 'renderer.js',
-    },
-    plugins: [
-      new HtmlWebpackPlugin(),
-      // new WarningsToErrorsPlugin(),
-      new CspHtmlWebpackPlugin({
-        'default-src': "'self'",
-        'script-src': "'self'",
-      }),
-      sentryWebpackPlugin(sentryWebpackPluginOptions),
-    ],
-  },
-];
+  plugins: [
+    new HtmlWebpackPlugin(),
+    // new WarningsToErrorsPlugin(),
+    new CspHtmlWebpackPlugin({
+      'default-src': "'self'",
+      'script-src': "'self'",
+    }),
+    sentryWebpackPlugin(sentryWebpackPluginOptions),
+  ],
+};

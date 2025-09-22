@@ -8,3 +8,7 @@ init({
 console.log('renderer logging');
 
 getCurrentScope().setUser({ id: 'abc-123' });
+
+setTimeout(() => {
+  throw new Error('Some renderer error');
+}, 2000);
