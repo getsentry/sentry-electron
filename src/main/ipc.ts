@@ -182,7 +182,7 @@ function handleLogFromRenderer(
   log.attributes['sentry.sdk.name'] = { value: 'sentry.javascript.electron', type: 'string' };
   log.attributes['sentry.sdk.version'] = { value: SDK_VERSION, type: 'string' };
 
-  log.attributes['log.process'] = { value: process, type: 'string' };
+  log.attributes['electron.process'] = { value: process, type: 'string' };
 
   const osDeviceAttributes = getOsDeviceLogAttributes(client);
 

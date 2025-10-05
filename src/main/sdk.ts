@@ -206,7 +206,7 @@ export function init(userOptions: ElectronMainOptions): void {
   client.on('beforeCaptureLog', (log) => {
     log.attributes = {
       ...log.attributes,
-      'log.process': 'browser',
+      'electron.process': 'browser',
       ...getOsDeviceLogAttributes(client),
     };
   });
