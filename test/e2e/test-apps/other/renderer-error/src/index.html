@@ -12,15 +12,13 @@
         enableLogs: true,
       });
 
-      logger.trace('User clicked submit button', {
-        buttonId: 'submit-form',
-        formId: 'user-profile',
-        timestamp: Date.now()
-      });
-
-      // setTimeout(() => {
-      //   throw new Error('Some renderer error');
-      // }, 500);
+      setTimeout(() => {
+        logger.trace('User clicked submit button', {
+          buttonId: 'submit-form',
+          formId: 'user-profile',
+          timestamp: Date.now()
+        });
+      }, 500);
     </script>
   </body>
 </html>

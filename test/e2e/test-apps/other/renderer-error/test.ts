@@ -31,6 +31,7 @@ electronTestRunner(__dirname, async (ctx) => {
                     'sentry.message.template': { value: 'electron.%s.%s', type: 'string' },
                     'sentry.message.parameter.0': { value: 'app', type: 'string' },
                     'sentry.message.parameter.1': { value: 'ready', type: 'string' },
+                    'log.process': { value: 'browser', type: 'string' },
                   },
                 },
                 {
@@ -46,6 +47,9 @@ electronTestRunner(__dirname, async (ctx) => {
                     'sentry.environment': { value: 'development', type: 'string' },
                     'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
                     'sentry.sdk.version': { value: SDK_VERSION, type: 'string' },
+                    'os.name': { value: expect.any(String), type: 'string' },
+                    'os.version': { value: expect.any(String), type: 'string' },
+                    'log.process': { value: 'browser', type: 'string' },
                   },
                 },
                 {
@@ -62,6 +66,9 @@ electronTestRunner(__dirname, async (ctx) => {
                     'sentry.environment': { value: 'development', type: 'string' },
                     'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
                     'sentry.sdk.version': { value: SDK_VERSION, type: 'string' },
+                    'os.name': { value: expect.any(String), type: 'string' },
+                    'os.version': { value: expect.any(String), type: 'string' },
+                    'log.process': { value: 'renderer', type: 'string' },
                   },
                 },
               ]),
