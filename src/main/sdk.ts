@@ -40,6 +40,7 @@ import { rendererProfilingIntegration } from './integrations/renderer-profiling.
 import { screenshotsIntegration } from './integrations/screenshots.js';
 import { sentryMinidumpIntegration } from './integrations/sentry-minidump/index.js';
 import { configureIPC } from './ipc.js';
+import { getOsDeviceLogAttributes } from './log.js';
 import { defaultStackParser } from './stack-parse.js';
 import { ElectronOfflineTransportOptions, makeElectronOfflineTransport } from './transports/electron-offline-net.js';
 import { configureUtilityProcessIPC } from './utility-processes.js';
@@ -201,6 +202,14 @@ export function init(userOptions: ElectronMainOptions): void {
   if (options.sendDefaultPii === true) {
     client.on('beforeSendSession', addAutoIpAddressToSession);
   }
+
+  client.on('beforeCaptureLog', (log) => {
+    log.attributes = {
+      ...log.attributes,
+      'electron.process': 'browser',
+      ...getOsDeviceLogAttributes(client),
+    };
+  });
 
   scope.setClient(client);
   client.init();

@@ -11,11 +11,6 @@ init({
 });
 
 app.on('ready', () => {
-  logger.info('User profile updated', {
-    userId: 'user_123',
-    updatedFields: ['email', 'preferences'],
-  });
-
   const mainWindow = new BrowserWindow({
     show: false,
     webPreferences: {
@@ -25,8 +20,15 @@ app.on('ready', () => {
   });
 
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
+
+  setTimeout(() => {
+    logger.info('User profile updated', {
+      userId: 'user_123',
+      updatedFields: ['email', 'preferences'],
+    });
+  }, 500);
 });
 
 setTimeout(() => {
   app.quit();
-}, 2000);
+}, 4000);
