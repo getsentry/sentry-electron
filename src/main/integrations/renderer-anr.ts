@@ -285,6 +285,8 @@ export const rendererEventLoopBlockIntegration: (options?: Options) => RendererE
  * Creates a hook which notifies the integration when the state of renderers change
  */
 export function createRendererEventLoopBlockStatusHandler(client: Client): RendererStatusHandler | undefined {
-  const integration = client.getIntegrationByName(INTEGRATION_NAME) as RendererEventLoopBlockIntegration | undefined;
+  const integration = client.getIntegrationByName(INTEGRATION_NAME) as unknown as
+    | RendererEventLoopBlockIntegration
+    | undefined;
   return integration?.createRendererEventLoopBlockStatusHandler();
 }
