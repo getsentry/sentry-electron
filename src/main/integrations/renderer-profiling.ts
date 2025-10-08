@@ -62,7 +62,7 @@ export const rendererProfilingIntegration = defineIntegration(() => {
             const event = item[j] as Event;
 
             if (event?.contexts?.profile?.profile_id) {
-              profile_id = event.contexts.profile.profile_id as string;
+              profile_id = event.contexts.profile.profile_id;
               // This can be removed as it's no longer needed
               delete event.contexts.profile;
             }

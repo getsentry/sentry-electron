@@ -25,7 +25,7 @@ electronTestRunner(__dirname, { skipEsmAutoTransform: true }, async (ctx) => {
               },
               mechanism: {
                 handled: false,
-                type: 'onuncaughtexception',
+                type: 'auto.node.onuncaughtexception',
               },
             },
           ],

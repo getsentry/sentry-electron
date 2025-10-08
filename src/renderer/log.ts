@@ -18,7 +18,6 @@ function captureLog(
   const client = getClient();
   _INTERNAL_captureLog(
     { level, message, attributes, severityNumber },
-    client,
     getCurrentScope(),
     (_: unknown, log: SerializedLog) => getIPC(client).sendStructuredLog(log),
   );
