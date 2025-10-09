@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 7.2.0
+
+- feat: Update JavaScript SDKs from [v10.11.0](https://github.com/getsentry/sentry-javascript/releases/tag/10.11.0) to [v10.17.0](https://github.com/getsentry/sentry-javascript/releases/tag/10.17.0)
+- feat: Log os and device attributes (#1246)
+
 ## 7.1.1
 
 - fix: Preload injection path (#1243)
