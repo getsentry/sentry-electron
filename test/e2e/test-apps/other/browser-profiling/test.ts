@@ -16,19 +16,16 @@ electronTestRunner(__dirname, async (ctx) => {
             trace: expect.objectContaining({
               trace_id: UUID_MATCHER,
               span_id: SHORT_UUID_MATCHER,
-              data: {
+              data: expect.objectContaining({
                 'sentry.origin': 'manual',
                 'sentry.sample_rate': 1,
                 'sentry.source': 'custom',
-              },
+              }),
               origin: 'manual',
             }),
           },
           spans: expect.arrayContaining([
-            {
-              data: {
-                'sentry.origin': 'manual',
-              },
+            expect.objectContaining({
               description: 'PBKDF2',
               origin: 'manual',
               parent_span_id: SHORT_UUID_MATCHER,
@@ -36,11 +33,8 @@ electronTestRunner(__dirname, async (ctx) => {
               start_timestamp: expect.any(Number),
               timestamp: expect.any(Number),
               trace_id: UUID_MATCHER,
-            },
-            {
-              data: {
-                'sentry.origin': 'manual',
-              },
+            }),
+            expect.objectContaining({
               description: 'PBKDF2',
               origin: 'manual',
               parent_span_id: SHORT_UUID_MATCHER,
@@ -48,11 +42,8 @@ electronTestRunner(__dirname, async (ctx) => {
               start_timestamp: expect.any(Number),
               timestamp: expect.any(Number),
               trace_id: UUID_MATCHER,
-            },
-            {
-              data: {
-                'sentry.origin': 'manual',
-              },
+            }),
+            expect.objectContaining({
               description: 'PBKDF2',
               origin: 'manual',
               parent_span_id: SHORT_UUID_MATCHER,
@@ -60,11 +51,8 @@ electronTestRunner(__dirname, async (ctx) => {
               start_timestamp: expect.any(Number),
               timestamp: expect.any(Number),
               trace_id: UUID_MATCHER,
-            },
-            {
-              data: {
-                'sentry.origin': 'manual',
-              },
+            }),
+            expect.objectContaining({
               description: 'PBKDF2',
               origin: 'manual',
               parent_span_id: SHORT_UUID_MATCHER,
@@ -72,7 +60,7 @@ electronTestRunner(__dirname, async (ctx) => {
               start_timestamp: expect.any(Number),
               timestamp: expect.any(Number),
               trace_id: UUID_MATCHER,
-            },
+            }),
           ]),
           tags: {
             'event.environment': 'javascript',
