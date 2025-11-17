@@ -203,6 +203,8 @@ function handleAttributes(
   if (osDeviceAttributes['device.family']) {
     attributes['device.family'] = { value: osDeviceAttributes['device.family'], type: 'string' };
   }
+
+  return attributes;
 }
 
 function handleLogFromRenderer(
