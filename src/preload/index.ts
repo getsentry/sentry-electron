@@ -2,7 +2,7 @@
  * This preload script may be used with sandbox mode enabled which means regular require is not available.
  */
 
-import { SerializedLog } from '@sentry/core';
+import { SerializedLog, SerializedMetric } from '@sentry/core';
 import { contextBridge, ipcRenderer } from 'electron';
 import { ipcChannelUtils, RendererStatus } from '../common/ipc.js';
 
@@ -28,6 +28,7 @@ export function hookupIpc(namespace: string = 'sentry-ipc'): void {
       sendEnvelope: (envelope: Uint8Array | string) => ipcRenderer.send(ipcUtil.createKey('envelope'), envelope),
       sendStatus: (status: RendererStatus) => ipcRenderer.send(ipcUtil.createKey('status'), status),
       sendStructuredLog: (log: SerializedLog) => ipcRenderer.send(ipcUtil.createKey('structured-log'), log),
+      sendMetric: (metric: SerializedMetric) => ipcRenderer.send(ipcUtil.createKey('metric'), metric),
     };
 
     // eslint-disable-next-line no-restricted-globals
