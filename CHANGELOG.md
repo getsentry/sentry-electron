@@ -4,7 +4,7 @@
 
 ## 7.3.0
 
-- feat: Update JavaScript SDKs from [v10.17.0](https://github.com/getsentry/sentry-javascript/releases/tag/10.17.0) to [v10.22.0](https://github.com/getsentry/sentry-javascript/releases/tag/10.22.0)
+- feat: Update JavaScript SDKs from [v10.17.0](https://github.com/getsentry/sentry-javascript/releases/tag/10.17.0) to [v10.26.0](https://github.com/getsentry/sentry-javascript/releases/tag/10.26.0)
 
 ## 7.2.0
 
