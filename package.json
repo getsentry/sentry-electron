@@ -107,7 +107,7 @@
   "dependencies": {
     "@sentry/browser": "10.26.0",
     "@sentry/core": "10.26.0",
-    "@sentry/node": "10.26.0"
+    "@sentry/node": "10.27.0"
   },
   "peerDependencies": {
     "@sentry/node-native": "10.26.0"
