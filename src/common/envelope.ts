@@ -1,4 +1,13 @@
-import { Attachment, AttachmentItem, Envelope, Event, EventItem, forEachEnvelopeItem, Profile } from '@sentry/core';
+import {
+  Attachment,
+  AttachmentItem,
+  Envelope,
+  Event,
+  EventItem,
+  forEachEnvelopeItem,
+  Profile,
+  ProfileChunk,
+} from '@sentry/core';
 
 /** Pulls an event and additional envelope items out of an envelope. Returns undefined if there was no event */
 export function eventFromEnvelope(envelope: Envelope): [Event, Attachment[], Profile | undefined] | undefined {
@@ -24,4 +33,17 @@ export function eventFromEnvelope(envelope: Envelope): [Event, Attachment[], Pro
   });
 
   return event ? [event, attachments, profile] : undefined;
+}
+
+/** Extracts profile_chunk from an envelope if present */
+export function profileChunkFromEnvelope(envelope: Envelope): ProfileChunk | undefined {
+  let profileChunk: ProfileChunk | undefined;
+
+  forEachEnvelopeItem(envelope, (item, type) => {
+    if (type === 'profile_chunk') {
+      profileChunk = item[1] as unknown as ProfileChunk;
+    }
+  });
+
+  return profileChunk;
 }

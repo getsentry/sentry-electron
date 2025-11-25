@@ -1,0 +1,10 @@
+{
+  "name": "browser-profiling-trace",
+  "description": "Browser Profiling with Trace Lifecycle",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "dependencies": {
+    "@sentry/electron": "5.6.0"
+  }
+}
+

@@ -6,17 +6,14 @@
   <body>
     <script>
       const crypto = require('crypto');
-      const {
-        init,
-        browserProfilingIntegration,
-        startSpan,
-      } = require('@sentry/electron/renderer');
+      const { init, browserProfilingIntegration, startSpan, uiProfiler } = require('@sentry/electron/renderer');
 
       init({
         debug: true,
         integrations: [browserProfilingIntegration()],
         tracesSampleRate: 1,
-        profilesSampleRate: 1,
+        profileSessionSampleRate: 1,
+        profileLifecycle: 'manual',
       });
 
       function pbkdf2() {
@@ -34,10 +31,16 @@
         }
       }
 
-      setTimeout(() => {
-        startSpan({ name: 'Long work' }, async () => {
+      setTimeout(async () => {
+        // Start UI profiling manually
+        uiProfiler.startProfiler();
+
+        await startSpan({ name: 'Long work' }, async () => {
           await longWork();
         });
+
+        // Stop profiling - this will send a profile_chunk
+        uiProfiler.stopProfiler();
       }, 500);
     </script>
   </body>

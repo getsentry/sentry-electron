@@ -11,6 +11,7 @@ export {
   feedbackEnvelope,
   getEventFromEnvelope,
   getSessionFromEnvelope,
+  profileChunkEnvelope,
   sessionEnvelope,
   transactionEnvelope,
 } from './utils';

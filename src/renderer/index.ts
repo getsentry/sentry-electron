@@ -129,6 +129,7 @@ export {
   supabaseIntegration,
   suppressTracing,
   thirdPartyErrorFilterIntegration,
+  uiProfiler,
   unleashIntegration,
   updateSpanName,
   webWorkerIntegration,

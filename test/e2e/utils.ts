@@ -5,6 +5,7 @@ import {
   Event,
   FeedbackEvent,
   parseSemver,
+  ProfileChunk,
   ProfileItem,
   SdkInfo,
   SerializedSession,
@@ -366,4 +367,46 @@ export function getSessionFromEnvelope(envelope: Envelope): SerializedSession | 
 
 export function isSessionEnvelope(envelope: Envelope): boolean {
   return envelope[1][0][0].type === 'session';
+}
+
+export function profileChunkEnvelope(chunk: Partial<ProfileChunk>): Envelope {
+  return [
+    {
+      event_id: UUID_MATCHER,
+      sent_at: ISO_DATE_MATCHER,
+      sdk: { name: 'sentry.javascript.electron', version: SDK_VERSION },
+    },
+    [
+      [
+        { type: 'profile_chunk' },
+        {
+          chunk_id: UUID_MATCHER,
+          profiler_id: UUID_MATCHER,
+          platform: 'javascript',
+          version: '2',
+          release: 'some-release',
+          environment: 'development',
+          client_sdk: expect.any(Object),
+          debug_meta: expect.any(Object),
+          profile: expect.objectContaining({
+            samples: expect.arrayContaining([
+              expect.objectContaining({
+                stack_id: expect.any(Number),
+                thread_id: expect.any(String),
+                timestamp: expect.any(Number),
+              }),
+            ]),
+            stacks: expect.any(Array),
+            frames: expect.arrayContaining([
+              expect.objectContaining({
+                function: expect.any(String),
+              }),
+            ]),
+            thread_metadata: expect.any(Object),
+          }),
+          ...chunk,
+        },
+      ],
+    ],
+  ];
 }

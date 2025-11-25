@@ -11,14 +11,14 @@ import {
 } from '@sentry/core';
 import { captureEvent, getClient, getCurrentScope } from '@sentry/node';
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
-import { eventFromEnvelope } from '../common/envelope.js';
+import { eventFromEnvelope, profileChunkFromEnvelope } from '../common/envelope.js';
 import { ipcChannelUtils, IPCMode, IpcUtils, RendererStatus } from '../common/ipc.js';
 import { registerProtocol } from './electron-normalize.js';
 import { createRendererEventLoopBlockStatusHandler } from './integrations/renderer-anr.js';
 import { rendererProfileFromIpc } from './integrations/renderer-profiling.js';
 import { getOsDeviceLogAttributes } from './log.js';
 import { mergeEvents } from './merge.js';
-import { normalizeReplayEnvelope } from './normalize.js';
+import { normalizeProfileChunkEnvelope, normalizeReplayEnvelope } from './normalize.js';
 import { ElectronMainOptionsInternal } from './sdk.js';
 import { SDK_VERSION } from './version.js';
 
@@ -114,9 +114,16 @@ function handleEnvelope(
 
     captureEventFromRenderer(options, event, dynamicSamplingContext, attachments, contents);
   } else {
-    const normalizedEnvelope = normalizeReplayEnvelope(options, envelope, app.getAppPath());
-    // Pass other types of envelope straight to the transport
-    void getClient()?.getTransport()?.send(normalizedEnvelope);
+    // Check if this is a profile_chunk envelope (from UI profiling)
+    const profileChunk = profileChunkFromEnvelope(envelope);
+    if (profileChunk) {
+      const normalizedEnvelope = normalizeProfileChunkEnvelope(options, envelope, app.getAppPath());
+      void getClient()?.getTransport()?.send(normalizedEnvelope);
+    } else {
+      const normalizedEnvelope = normalizeReplayEnvelope(options, envelope, app.getAppPath());
+      // Pass other types of envelope straight to the transport
+      void getClient()?.getTransport()?.send(normalizedEnvelope);
+    }
   }
 }
 
