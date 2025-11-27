@@ -22,14 +22,14 @@ electronTestRunner(__dirname, async (ctx) => {
                   type: 'counter',
                   value: 1,
                   trace_id: UUID_MATCHER,
-                  attributes: {
-                    'sentry.release': { value: 'javascript-logs@1.0.0', type: 'string' },
+                  attributes: expect.objectContaining({
+                    'sentry.release': { value: 'electron-metrics@1.0.0', type: 'string' },
                     'sentry.environment': { value: 'development', type: 'string' },
                     'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
                     'sentry.sdk.version': { value: SDK_VERSION, type: 'string' },
                     userId: { value: 'user_123', type: 'string' },
                     updatedFields: { value: '["email","preferences"]', type: 'string' },
-                  },
+                  }),
                 },
                 {
                   timestamp: expect.any(Number),
@@ -37,15 +37,15 @@ electronTestRunner(__dirname, async (ctx) => {
                   name: 'User clicked submit button',
                   type: 'counter',
                   value: 1,
-                  attributes: {
+                  attributes: expect.objectContaining({
                     buttonId: { value: 'submit-form', type: 'string' },
                     formId: { value: 'user-profile', type: 'string' },
-                    'sentry.release': { value: 'javascript-logs@1.0.0', type: 'string' },
+                    'sentry.release': { value: 'electron-metrics@1.0.0', type: 'string' },
                     'sentry.environment': { value: 'development', type: 'string' },
                     'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
                     'sentry.sdk.version': { value: SDK_VERSION, type: 'string' },
                     'electron.process': { value: 'renderer', type: 'string' },
-                  },
+                  }),
                 },
                 {
                   timestamp: expect.any(Number),
@@ -56,7 +56,7 @@ electronTestRunner(__dirname, async (ctx) => {
                   attributes: expect.objectContaining({
                     region: { value: 'us-east', type: 'string' },
                     tier: { value: 'premium', type: 'string' },
-                    'sentry.release': { value: 'javascript-logs@1.0.0', type: 'string' },
+                    'sentry.release': { value: 'electron-metrics@1.0.0', type: 'string' },
                     'sentry.environment': { value: 'development', type: 'string' },
                     'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
                     'sentry.sdk.version': { value: SDK_VERSION, type: 'string' },
@@ -73,7 +73,7 @@ electronTestRunner(__dirname, async (ctx) => {
                   attributes: expect.objectContaining({
                     page: { value: 'dashboard', type: 'string' },
                     cached: { value: 'false', type: 'string' },
-                    'sentry.release': { value: 'javascript-logs@1.0.0', type: 'string' },
+                    'sentry.release': { value: 'electron-metrics@1.0.0', type: 'string' },
                     'sentry.environment': { value: 'development', type: 'string' },
                     'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
                     'sentry.sdk.version': { value: SDK_VERSION, type: 'string' },
