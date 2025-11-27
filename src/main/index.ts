@@ -86,6 +86,7 @@ export {
   kafkaIntegration,
   knexIntegration,
   koaIntegration,
+  langGraphIntegration,
   lastEventId,
   launchDarklyIntegration,
   linkedErrorsIntegration,
