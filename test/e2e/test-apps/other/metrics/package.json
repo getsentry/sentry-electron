@@ -1,6 +1,6 @@
 {
-  "name": "javascript-logs",
-  "description": "JavaScript Structural Logging",
+  "name": "electron-metrics",
+  "description": "Electron Metrics",
   "version": "1.0.0",
   "main": "src/main.js",
   "dependencies": {
