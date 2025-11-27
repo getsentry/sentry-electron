@@ -6,7 +6,6 @@ const { init, metrics } = require('@sentry/electron/main');
 init({
   dsn: '__DSN__',
   debug: true,
-  enableLogs: true,
   onFatalError: () => {},
 });
 

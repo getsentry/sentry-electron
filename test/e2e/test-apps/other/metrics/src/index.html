@@ -18,6 +18,21 @@
             formId: 'user-profile',
           },
         });
+
+        metrics.gauge('Active users online', 42, {
+          attributes: {
+            region: 'us-east',
+            tier: 'premium',
+          },
+        });
+
+        metrics.distribution('Page load time', 1250, {
+          unit: 'millisecond',
+          attributes: {
+            page: 'dashboard',
+            cached: 'false',
+          },
+        });
       }, 500);
     </script>
   </body>
