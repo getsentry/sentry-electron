@@ -4,14 +4,11 @@
 
 ## 7.3.0
 
-- feat: Update JavaScript SDKs from [v10.17.0](https://github.com/getsentry/sentry-javascript/releases/tag/10.17.0) to
-  [v10.25.0](https://github.com/getsentry/sentry-javascript/releases/tag/10.25.0)
-- feat: Add support for [Sentry Metrics](https://docs.sentry.io/product/metrics/) (#1260)
+- feat: Update JavaScript SDKs from [v10.17.0](https://github.com/getsentry/sentry-javascript/releases/tag/10.17.0) to [v10.26.0](https://github.com/getsentry/sentry-javascript/releases/tag/10.26.0)
 
 ## 7.2.0
 
-- feat: Update JavaScript SDKs from [v10.11.0](https://github.com/getsentry/sentry-javascript/releases/tag/10.11.0) to
-  [v10.17.0](https://github.com/getsentry/sentry-javascript/releases/tag/10.17.0)
+- feat: Update JavaScript SDKs from [v10.11.0](https://github.com/getsentry/sentry-javascript/releases/tag/10.11.0) to [v10.17.0](https://github.com/getsentry/sentry-javascript/releases/tag/10.17.0)
 - feat: Log os and device attributes (#1246)
 
 ## 7.1.1
@@ -22,151 +19,163 @@
 
 ## 7.1.0
 
-- feat: Update JavaScript SDKs from [v10.7.0](https://github.com/getsentry/sentry-javascript/releases/tag/10.7.0) to
-  [v10.11.0](https://github.com/getsentry/sentry-javascript/releases/tag/10.11.0) (#1236)
+- feat: Update JavaScript SDKs from [v10.7.0](https://github.com/getsentry/sentry-javascript/releases/tag/10.7.0) to [v10.11.0](https://github.com/getsentry/sentry-javascript/releases/tag/10.11.0) (#1236)
 - feat: Optional Namespaced IPC (#1234)
 - fix: Export `ErrorEvent` type (#1229)
 - fix: Only capture logs if `enableLogs` is true (#1235)
 
 ## 7.0.0
 
-This release updates the underlying Sentry JavaScript SDKs to v10 which includes some breaking changes. Check out the
-the [migration guide](./MIGRATION.md) for more details.
+This release updates the underlying Sentry JavaScript SDKs to v10 which includes
+some breaking changes. Check out the the [migration guide](./MIGRATION.md) for
+more details.
 
 - feat: Update JavaScript SDKs to v10.8.0 (#1205)
 
 ## 6.11.0
 
-- feat: Update JavaScript SDKs from [v9.45.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.45.0) to
-  [v9.46.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.46.0)
+- feat: Update JavaScript SDKs from [v9.45.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.45.0) to [v9.46.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.46.0)
 - fix: Ensure native directory ends up in package (#1216)
 
 ## 6.10.0
 
-- feat: Update JavaScript SDKs from [v9.43.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.43.0) to
-  [v9.45.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.45.0)
+- feat: Update JavaScript SDKs from [v9.43.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.43.0) to [v9.45.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.45.0)
 - fix: Don't use `deepmerge` to merge events to remove circular ref. issues (#1210)
 - fix: Support `node16` for TypeScript `moduleResolution` (#1203)
 
 ## 6.9.0
 
-- feat: Update JavaScript SDKs from [v9.26.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.26.0) to
+- feat: Update JavaScript SDKs from
+  [v9.26.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.26.0)
+  to
   [v9.43.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.43.0)
 - feat: Add `eventLoopBlockIntegration` (#1188)
 - feat: Move renderer event loop block detection to an integration (#1196)
 
 ## 6.8.0
 
-- feat: Update JavaScript SDKs from [v9.25.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.25.0) to
-  [v9.26.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.26.0)
+- feat: Update JavaScript SDKs from [v9.25.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.25.0) to [v9.26.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.26.0)
 - fix: Don't capture stack traces from destroyed renderers (#1165)
 
 ## 6.7.0
 
-- feat: Update JavaScript SDKs from [v9.18.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.18.0) to
-  [v9.25.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.25.0)
+- feat: Update JavaScript SDKs from [v9.18.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.18.0) to [v9.25.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.25.0)
 - feat: Add structured logging support (#1159)
 
 ## 6.6.0
 
-- feat: Update JavaScript SDKs from [v9.11.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.11.0) to
-  [v9.18.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.18.0)
+- feat: Update JavaScript SDKs from [v9.11.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.11.0) to [v9.18.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.18.0)
 
 ## 6.5.0
 
-- feat: Update JavaScript SDKs from [v9.10.1](https://github.com/getsentry/sentry-javascript/releases/tag/9.10.1) to
-  [v9.11.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.11.0)
+- feat: Update JavaScript SDKs from [v9.10.1](https://github.com/getsentry/sentry-javascript/releases/tag/9.10.1) to [v9.11.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.11.0)
 - fix: GPU context should use id rather than device_id (#1126)
 - feat: Optionally capture manufacturer and model device context (#1125)
 
 ## 6.4.0
 
-- feat: Update JavaScript SDKs from [v9.8.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.8.0) to
-  [v9.10.1](https://github.com/getsentry/sentry-javascript/releases/tag/9.10.1)
+- feat: Update JavaScript SDKs from [v9.8.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.8.0) to [v9.10.1](https://github.com/getsentry/sentry-javascript/releases/tag/9.10.1)
 - fix: Missing Dynamic Sampling Context in envelope header for renderer tracing (#1117)
 - feat: Use `frame.collectJavaScriptCallStack()` for renderer ANR in Electron >= v34 (#1105)
 
 ## 6.3.0
 
-- feat: Update JavaScript SDKs from [v9.6.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.6.0) to
-  [v9.8.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.8.0)
+- feat: Update JavaScript SDKs from [v9.6.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.6.0) to [v9.8.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.8.0)
 - fix: Electron app.getPath('crashDumps') API can throw (#1106)
 
 ## 6.2.0
 
-- feat: Update JavaScript SDKs from [v9.1.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.1.0) to
-  [v9.6.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.6.0)
+- feat: Update JavaScript SDKs from [v9.1.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.1.0) to [v9.6.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.6.0)
 - feat: Use new `registerPreloadScript` API in Electron >= v35 (#1098)
 - feat: Add `gpuContextIntegration` (#1097)
-- feat: Parse crashpad metadata from minidumps and include in electron context (#1095)
+- feat: Parse crashpad metadata from minidumps and include in electron context
+  (#1095)
 
 ## 6.1.0
 
-- feat: Update JavaScript SDKs from [v9.0.1](https://github.com/getsentry/sentry-javascript/releases/tag/9.0.1) to
-  [v9.1.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.1.0) (#1080)
+- feat: Update JavaScript SDKs from [v9.0.1](https://github.com/getsentry/sentry-javascript/releases/tag/9.0.1) to [v9.1.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.1.0) (#1080)
 - feat: Support `@sentry/profiling-node` (#1084)
 - fix: Renderer ANR detection (#1083)
 
 ## 6.0.0
 
-This release updates the underlying Sentry JavaScript SDKs to v9 which includes some breaking changes. Check out the the
-[migration guide](./MIGRATION.md) for more details.
+This release updates the underlying Sentry JavaScript SDKs to v9 which includes
+some breaking changes. Check out the the [migration guide](./MIGRATION.md) for
+more details.
 
 - feat: Update JavaScript SDKs to v9.0.0 (#1072)
 
 ### Supported Electron Versions
 
-The Sentry Node SDK now requires Node >= 18.0.0 which means the Sentry Electron SDK now supports Electron >= 23.0.0.
+The Sentry Node SDK now requires Node >= 18.0.0 which means the Sentry Electron
+SDK now supports Electron >= 23.0.0.
 
 ### The `autoSessionTracking` option has been removed
 
-Whereas in v5, session tracking was disabled by setting `autoSessionTracking` to `false`, in v6 session tracking can be
-disabled by removing the `MainProcessSession` integration
+Whereas in v5, session tracking was disabled by setting `autoSessionTracking` to
+`false`, in v6 session tracking can be disabled by removing the `MainProcessSession` integration
 
 ```javascript
-import * as Sentry from '@sentry/electron/main';
+import * as Sentry from "@sentry/electron/main";
 
 Sentry.init({
-  dsn: '__DSN__',
+  dsn: "__DSN__",
   // autoSessionTracking: false,
-  integrations: (defaults) => defaults.filter((i) => i.name !== 'MainProcessSession'),
+  integrations: (defaults) => defaults.filter((i) => i.name !== "MainProcessSession"),
 });
 ```
 
 ## 5.11.0
 
-- feat: Update from [v8.48.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.48.0) to
-  [v8.51.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.51.0) (#1066)
-- fix: Returing `null` in `beforeSend` for native crashes should not impact release health (#1066)
+- feat: Update from
+  [v8.48.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.48.0)
+  to
+  [v8.51.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.51.0)
+  (#1066)
+- fix: Returing `null` in `beforeSend` for native crashes should not impact
+  release health (#1066)
 - feat: Set log level for `net` breadcrumbs based on status code (#1070)
 - test: Test more child process types (#1063)
 
 ## 5.10.0
 
-- fix: Deprecate renderer init options which should only be used in main process (#1044)
-- feat: Update from [v8.46.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.46.0) to
-  [v8.48.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.48.0) of JavaScript SDKs (#1046)
+- fix: Deprecate renderer init options which should only be used in main process
+  (#1044)
+- feat: Update from
+  [v8.46.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.46.0)
+  to
+  [v8.48.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.48.0)
+  of JavaScript SDKs (#1046)
 - feat: Determine Electron process from minidump metadata (#1049)
 - fix: Guard against invalid queue entries (#1053)
 
 ## 5.9.0
 
-- feat: Update from [v8.42.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.42.0) to
-  [v8.46.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.46.0) of JavaScript SDKs
+- feat: Update from
+  [v8.42.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.42.0)
+  to
+  [v8.46.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.46.0)
+  of JavaScript SDKs
 - fix: Disable ANR when screen locked (#1036)
 - fix: Disable ANR when debugger is in use
 
 ## 5.8.0
 
-- feat: Update from [v8.35.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.35.0) to
-  [v8.42.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.42.0) of JavaScript SDKs
+- feat: Update from
+  [v8.35.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.35.0)
+  to
+  [v8.42.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.42.0)
+  of JavaScript SDKs
 - fix: Sync global scope to main process (#1024)
 - fix: contextLinesIntegration should come before path normalization (#1008)
 
 ## 5.7.0
 
-- feat: Update from [v8.33.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.33.0) to
-  [v8.35.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.35.0) of JavaScript SDKs
+- feat: Update from
+  [v8.33.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.33.0)
+  to
+  [v8.35.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.35.0)
+  of JavaScript SDKs
 
 ## 5.6.0
 
@@ -282,7 +291,7 @@ For the full list of changes, see the [migration guide](./MIGRATION.md).
 
 - feat: Renderer process ANR detection with stack traces (#770)
   - Update from [v7.73.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.73.0) to
-    [v7.74.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.74.0) of JavaScript SDKs
+  [v7.74.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.74.0) of JavaScript SDKs
 - fix: Hide ANR child process from dock (#777)
 - test: Electron v28 main process ESM (#773)
 
@@ -311,22 +320,21 @@ fix: Don't send minidumps that are too small to be valid (#748)
   [v7.68.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.68.0) of JavaScript SDKs (#738)
 - **feat: Mark errors caught by the SDK as unhandled**
 
-As per the changes in the JavaScript SDKs
-[for v7.67.0](https://github.com/getsentry/sentry-javascript/blob/develop/CHANGELOG.md#7670), this release fixes
-inconsistent behaviour of when our SDKs classify captured errors as unhandled. Previously, some of our instrumentations
-correctly set unhandled, while others set handled.
+As per the changes in the JavaScript SDKs [for
+v7.67.0](https://github.com/getsentry/sentry-javascript/blob/develop/CHANGELOG.md#7670), this release fixes inconsistent
+behaviour of when our SDKs classify captured errors as unhandled. Previously, some of our instrumentations correctly set
+unhandled, while others set handled.
 
-Going forward, all errors caught automatically from our SDKs will be marked as unhandled. If you manually capture errors
-(e.g. by calling `Sentry.captureException`), your errors will continue to be reported as handled.
+Going forward, all errors caught automatically from our SDKs will be marked as unhandled.
+If you manually capture errors (e.g. by calling `Sentry.captureException`), your errors will continue to be reported as handled.
 
-This change might lead to a decrease in reported crash-free sessions and consequently in your release health score. If
-you have concerns about this, feel free to open an issue.
+This change might lead to a decrease in reported crash-free sessions and consequently in your release health score.
+If you have concerns about this, feel free to open an issue.
 
 ## 4.10.0
 
 - feat: Optionally send sessions when they're created (#715)
-- feat: Update from [v7.61.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.61.0) to
-  [v7.63.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.63.0) of JavaScript SDKs (#719)
+- feat: Update from [v7.61.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.61.0) to [v7.63.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.63.0) of JavaScript SDKs (#719)
 
 ## 4.9.0
 
@@ -334,8 +342,7 @@ you have concerns about this, feel free to open an issue.
 - feat: Tracing without performance (#710)
 - feat: Deprecate `tracingOrigins` for `tracePropagationTargets` (#703)
 - feat: Use `protocol.handle` on Electron >= v25 (#704)
-- test: Update from [v7.58.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.58.0) to
-  [v7.61.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.61.0) of JavaScript SDKs (#709)
+- test: Update from [v7.58.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.58.0) to [v7.61.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.61.0) of JavaScript SDKs (#709)
 
 ## 4.8.0
 
