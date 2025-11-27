@@ -1,4 +1,6 @@
 import {
+  type SerializedLog,
+  type SerializedMetric,
   _INTERNAL_captureSerializedLog,
   _INTERNAL_captureSerializedMetric,
   Attachment,
@@ -8,8 +10,6 @@ import {
   Event,
   parseEnvelope,
   ScopeData,
-  SerializedLog,
-  SerializedMetric,
 } from '@sentry/core';
 import { captureEvent, getClient, getCurrentScope } from '@sentry/node';
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
@@ -167,11 +167,11 @@ function handleAttributes(
   client: Client,
   options: ElectronMainOptionsInternal,
   contents: WebContents | undefined,
-  maybeAttributes?: (typeof SerializedLog)['attributes'],
-): (typeof SerializedLog)['attributes'] {
+  maybeAttributes?: SerializedLog['attributes'],
+): SerializedLog['attributes'] {
   const process = contents ? options?.getRendererName?.(contents) || 'renderer' : 'renderer';
 
-  const attributes: Record<string, { value: string; type: 'string' }> = maybeAttributes || {};
+  const attributes: SerializedLog['attributes'] = maybeAttributes || {};
 
   if (options.release) {
     attributes['sentry.release'] = { value: options.release, type: 'string' };
