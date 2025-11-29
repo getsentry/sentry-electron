@@ -1,0 +1,9 @@
+{
+  "name": "electron-metrics",
+  "description": "Electron Metrics",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "dependencies": {
+    "@sentry/electron": "7.2.0"
+  }
+}

@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 /* eslint-disable no-console */
-import { Client, debug, getClient, SerializedLog, uuid4 } from '@sentry/core';
+import { Client, debug, getClient, SerializedLog, SerializedMetric, uuid4 } from '@sentry/core';
 import { ipcChannelUtils, IPCInterface, RENDERER_ID_HEADER, RendererStatus } from '../common/ipc.js';
 import { ElectronRendererOptionsInternal } from './sdk.js';
 
@@ -51,6 +51,15 @@ function getImplementation(ipcKey: string): IPCInterface {
         fetch(ipcUtil.createUrl('structured-log'), {
           method: 'POST',
           body: JSON.stringify(log),
+          headers,
+        }).catch(() => {
+          // ignore
+        });
+      },
+      sendMetric: (metric: SerializedMetric) => {
+        fetch(ipcUtil.createUrl('metric'), {
+          method: 'POST',
+          body: JSON.stringify(metric),
           headers,
         }).catch(() => {
           // ignore
