@@ -105,12 +105,12 @@
     "e2e": "xvfb-maybe vitest run --root=./test/e2e --silent=false --disable-console-intercept"
   },
   "dependencies": {
-    "@sentry/browser": "10.27.0",
-    "@sentry/core": "10.27.0",
-    "@sentry/node": "10.27.0"
+    "@sentry/browser": "10.29.0",
+    "@sentry/core": "10.29.0",
+    "@sentry/node": "10.29.0"
   },
   "peerDependencies": {
-    "@sentry/node-native": "10.27.0"
+    "@sentry/node-native": "10.29.0"
   },
   "peerDependenciesMeta": {
     "@sentry/node-native": {
@@ -119,9 +119,9 @@
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^12.1.3",
-    "@sentry/node-native": "10.27.0",
-    "@sentry-internal/eslint-config-sdk": "10.27.0",
-    "@sentry-internal/typescript": "10.26.0",
+    "@sentry/node-native": "10.29.0",
+    "@sentry-internal/eslint-config-sdk": "10.29.0",
+    "@sentry-internal/typescript": "10.29.0",
     "@types/busboy": "^1.5.4",
     "@types/koa": "^2.0.52",
     "@types/koa-bodyparser": "^4.3.0",
