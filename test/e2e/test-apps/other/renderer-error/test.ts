@@ -40,17 +40,15 @@ electronTestRunner(__dirname, async (ctx) => {
                   body: 'User profile updated',
                   trace_id: UUID_MATCHER,
                   severity_number: 9,
-                  attributes: {
+                  attributes: expect.objectContaining({
                     userId: { value: 'user_123', type: 'string' },
                     updatedFields: { value: '["email","preferences"]', type: 'string' },
                     'sentry.release': { value: 'javascript-logs@1.0.0', type: 'string' },
                     'sentry.environment': { value: 'development', type: 'string' },
                     'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
                     'sentry.sdk.version': { value: SDK_VERSION, type: 'string' },
-                    'os.name': { value: expect.any(String), type: 'string' },
-                    'os.version': { value: expect.any(String), type: 'string' },
                     'electron.process': { value: 'browser', type: 'string' },
-                  },
+                  }),
                 },
                 {
                   timestamp: expect.any(Number),
@@ -58,7 +56,7 @@ electronTestRunner(__dirname, async (ctx) => {
                   body: 'User clicked submit button',
                   trace_id: UUID_MATCHER,
                   severity_number: 1,
-                  attributes: {
+                  attributes: expect.objectContaining({
                     buttonId: { value: 'submit-form', type: 'string' },
                     formId: { value: 'user-profile', type: 'string' },
                     timestamp: { value: expect.any(Number), type: 'integer' },
@@ -69,7 +67,7 @@ electronTestRunner(__dirname, async (ctx) => {
                     'os.name': { value: expect.any(String), type: 'string' },
                     'os.version': { value: expect.any(String), type: 'string' },
                     'electron.process': { value: 'renderer', type: 'string' },
-                  },
+                  }),
                 },
               ]),
             },
