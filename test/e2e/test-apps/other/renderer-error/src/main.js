@@ -26,9 +26,9 @@ app.on('ready', () => {
       userId: 'user_123',
       updatedFields: ['email', 'preferences'],
     });
-  }, 4000);
+  }, 50);
 });
 
 setTimeout(() => {
   app.quit();
-}, 10000);
+}, 6000);
