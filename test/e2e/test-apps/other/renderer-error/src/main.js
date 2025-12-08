@@ -19,16 +19,18 @@ app.on('ready', () => {
     },
   });
 
+  // Ensure we only quit once the browser SDK has sent its logs
+  mainWindow.webContents.on('dom-ready', () => {
+    setTimeout(() => {
+      app.quit();
+    }, 4000);
+  });
+
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
 
-  setTimeout(() => {
-    logger.info('User profile updated', {
-      userId: 'user_123',
-      updatedFields: ['email', 'preferences'],
-    });
-  }, 50);
+  logger.info('User profile updated', {
+    userId: 'user_123',
+    updatedFields: ['email', 'preferences'],
+  });
 });
 
-setTimeout(() => {
-  app.quit();
-}, 6000);
