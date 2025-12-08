@@ -33,4 +33,3 @@ app.on('ready', () => {
     updatedFields: ['email', 'preferences'],
   });
 });
-

@@ -1,6 +1,4 @@
 import {
-  type SerializedLog,
-  type SerializedMetric,
   _INTERNAL_captureSerializedLog,
   _INTERNAL_captureSerializedMetric,
   Attachment,
@@ -10,6 +8,8 @@ import {
   Event,
   parseEnvelope,
   ScopeData,
+  type SerializedLog,
+  type SerializedMetric,
 } from '@sentry/core';
 import { captureEvent, getClient, getCurrentScope } from '@sentry/node';
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
