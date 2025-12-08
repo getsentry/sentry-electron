@@ -20,6 +20,7 @@ export type {
 } from '@sentry/core';
 
 export {
+  MULTIPLEXED_TRANSPORT_EXTRA_KEY,
   addBreadcrumb,
   addEventProcessor,
   addIntegration,
@@ -42,6 +43,7 @@ export {
   continueTrace,
   createTransport,
   createConsolaReporter,
+  createLangChainCallbackHandler,
   createUserFeedbackEnvelope,
   dedupeIntegration,
   defaultRequestInstrumentationOptions,
@@ -77,6 +79,7 @@ export {
   inboundFiltersIntegration,
   instrumentAnthropicAiClient,
   instrumentGoogleGenAIClient,
+  instrumentLangGraph,
   instrumentOpenAiClient,
   instrumentOutgoingRequests,
   instrumentSupabaseClient,
@@ -129,6 +132,7 @@ export {
   supabaseIntegration,
   suppressTracing,
   thirdPartyErrorFilterIntegration,
+  uiProfiler,
   unleashIntegration,
   updateSpanName,
   webWorkerIntegration,

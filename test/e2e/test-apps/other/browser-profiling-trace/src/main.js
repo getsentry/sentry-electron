@@ -1,12 +1,13 @@
 const path = require('path');
 
 const { app, BrowserWindow } = require('electron');
-const { init, logger } = require('@sentry/electron/main');
+const { init } = require('@sentry/electron/main');
 
 init({
   dsn: '__DSN__',
   debug: true,
-  enableLogs: true,
+  release: 'some-release',
+  enableRendererProfiling: true,
   onFatalError: () => {},
 });
 
@@ -20,15 +21,4 @@ app.on('ready', () => {
   });
 
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
-
-  setTimeout(() => {
-    logger.info('User profile updated', {
-      userId: 'user_123',
-      updatedFields: ['email', 'preferences'],
-    });
-  }, 50);
 });
-
-setTimeout(() => {
-  app.quit();
-}, 6000);
