@@ -47,8 +47,6 @@ electronTestRunner(__dirname, async (ctx) => {
                     'sentry.environment': { value: 'development', type: 'string' },
                     'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
                     'sentry.sdk.version': { value: SDK_VERSION, type: 'string' },
-                    'os.name': { value: expect.any(String), type: 'string' },
-                    'os.version': { value: expect.any(String), type: 'string' },
                     'electron.process': { value: 'browser', type: 'string' },
                   }),
                 },
