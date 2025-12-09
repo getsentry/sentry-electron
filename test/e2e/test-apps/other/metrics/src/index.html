@@ -11,14 +11,12 @@
         debug: true,
       });
 
-      setTimeout(() => {
-        metrics.count('User clicked submit button', 1, {
-          attributes: {
-            buttonId: 'submit-form',
-            formId: 'user-profile',
-          },
-        });
-      }, 500);
+      metrics.count('User clicked submit button', 1, {
+        attributes: {
+          buttonId: 'submit-form',
+          formId: 'user-profile',
+        },
+      });
     </script>
   </body>
 </html>

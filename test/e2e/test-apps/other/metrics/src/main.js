@@ -18,18 +18,18 @@ app.on('ready', () => {
     },
   });
 
+  mainWindow.webContents.on('dom-ready', () => {
+    setTimeout(() => {
+      app.quit();
+    }, 4000);
+  });
+
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
 
-  setTimeout(() => {
-    metrics.count('User profile updated', 1, {
-      attributes: {
-        userId: 'user_123',
-        updatedFields: ['email', 'preferences'],
-      },
-    });
-  }, 500);
+  metrics.count('User profile updated', 1, {
+    attributes: {
+      userId: 'user_123',
+      updatedFields: ['email', 'preferences'],
+    },
+  });
 });
-
-setTimeout(() => {
-  app.quit();
-}, 4000);
