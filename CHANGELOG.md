@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 7.5.0
+
+This release adds support for Sentry Metrics to the Electron SDK. To get started, see the docs
+[here](https://docs.sentry.io/platforms/javascript/guides/electron/metrics/).
+
+- feat: Add support for Sentry Metrics (#1260)
+- Update JavaScript SDKs from [v10.27.0](https://github.com/getsentry/sentry-javascript/releases/tag/10.27.0) to [v10.29.0](https://github.com/getsentry/sentry-javascript/releases/tag/10.29.0)
+
 ## 7.4.0
 
 This release adds support for UI profiling to the Electron SDK. To get started, see the docs
