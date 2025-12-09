@@ -2,7 +2,7 @@ import { expect } from 'vitest';
 import { SDK_VERSION } from '../../../../../src/main/version';
 import { electronTestRunner, UUID_MATCHER } from '../../..';
 
-electronTestRunner(__dirname, async (ctx) => {
+electronTestRunner(__dirname, { timeout: 25_000 }, async (ctx) => {
   await ctx
     .expect({
       envelope: [

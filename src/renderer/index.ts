@@ -1,6 +1,7 @@
 import * as logger from './log.js';
+import * as metrics from './metric.js';
 
-export { logger };
+export { logger, metrics };
 
 export type {
   Breadcrumb,
@@ -87,7 +88,6 @@ export {
   lastEventId,
   launchDarklyIntegration,
   linkedErrorsIntegration,
-  metrics,
   moduleMetadataIntegration,
   onLoad,
   openFeatureIntegration,

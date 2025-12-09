@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <script>
+      const { init, metrics } = require('@sentry/electron/renderer');
+
+      init({
+        debug: true,
+      });
+
+      metrics.count('User clicked submit button', 1, {
+        attributes: {
+          buttonId: 'submit-form',
+          formId: 'user-profile',
+        },
+      });
+    </script>
+  </body>
+</html>

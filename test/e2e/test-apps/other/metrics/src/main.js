@@ -1,12 +1,11 @@
 const path = require('path');
 
 const { app, BrowserWindow } = require('electron');
-const { init, logger } = require('@sentry/electron/main');
+const { init, metrics } = require('@sentry/electron/main');
 
 init({
   dsn: '__DSN__',
   debug: true,
-  enableLogs: true,
   onFatalError: () => {},
 });
 
@@ -19,7 +18,6 @@ app.on('ready', () => {
     },
   });
 
-  // Ensure we only quit once the browser SDK has sent its logs
   mainWindow.webContents.on('dom-ready', () => {
     setTimeout(() => {
       app.quit();
@@ -28,8 +26,10 @@ app.on('ready', () => {
 
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
 
-  logger.info('User profile updated', {
-    userId: 'user_123',
-    updatedFields: ['email', 'preferences'],
+  metrics.count('User profile updated', 1, {
+    attributes: {
+      userId: 'user_123',
+      updatedFields: ['email', 'preferences'],
+    },
   });
 });
