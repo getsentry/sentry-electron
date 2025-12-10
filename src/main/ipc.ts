@@ -1,5 +1,6 @@
 import {
   _INTERNAL_captureSerializedLog,
+  _INTERNAL_captureSerializedMetric,
   Attachment,
   Client,
   debug,
@@ -7,7 +8,8 @@ import {
   Event,
   parseEnvelope,
   ScopeData,
-  SerializedLog,
+  type SerializedLog,
+  type SerializedMetric,
 } from '@sentry/core';
 import { captureEvent, getClient, getCurrentScope } from '@sentry/node';
 import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
@@ -168,48 +170,68 @@ function handleScope(options: ElectronMainOptionsInternal, jsonScope: string): v
   }
 }
 
+function handleAttributes(
+  client: Client,
+  options: ElectronMainOptionsInternal,
+  contents: WebContents | undefined,
+  maybeAttributes?: SerializedLog['attributes'],
+): SerializedLog['attributes'] {
+  const process = contents ? options?.getRendererName?.(contents) || 'renderer' : 'renderer';
+
+  const attributes: SerializedLog['attributes'] = maybeAttributes || {};
+
+  if (options.release) {
+    attributes['sentry.release'] = { value: options.release, type: 'string' };
+  }
+
+  if (options.environment) {
+    attributes['sentry.environment'] = { value: options.environment, type: 'string' };
+  }
+
+  attributes['sentry.sdk.name'] = { value: 'sentry.javascript.electron', type: 'string' };
+  attributes['sentry.sdk.version'] = { value: SDK_VERSION, type: 'string' };
+
+  attributes['electron.process'] = { value: process, type: 'string' };
+
+  const osDeviceAttributes = getOsDeviceLogAttributes(client);
+
+  if (osDeviceAttributes['os.name']) {
+    attributes['os.name'] = { value: osDeviceAttributes['os.name'], type: 'string' };
+  }
+  if (osDeviceAttributes['os.version']) {
+    attributes['os.version'] = { value: osDeviceAttributes['os.version'], type: 'string' };
+  }
+  if (osDeviceAttributes['device.brand']) {
+    attributes['device.brand'] = { value: osDeviceAttributes['device.brand'], type: 'string' };
+  }
+  if (osDeviceAttributes['device.model']) {
+    attributes['device.model'] = { value: osDeviceAttributes['device.model'], type: 'string' };
+  }
+  if (osDeviceAttributes['device.family']) {
+    attributes['device.family'] = { value: osDeviceAttributes['device.family'], type: 'string' };
+  }
+
+  return attributes;
+}
+
 function handleLogFromRenderer(
   client: Client,
   options: ElectronMainOptionsInternal,
   log: SerializedLog,
   contents: WebContents | undefined,
 ): void {
-  const process = contents ? options?.getRendererName?.(contents) || 'renderer' : 'renderer';
-
-  log.attributes = log.attributes || {};
-
-  if (options.release) {
-    log.attributes['sentry.release'] = { value: options.release, type: 'string' };
-  }
-
-  if (options.environment) {
-    log.attributes['sentry.environment'] = { value: options.environment, type: 'string' };
-  }
-
-  log.attributes['sentry.sdk.name'] = { value: 'sentry.javascript.electron', type: 'string' };
-  log.attributes['sentry.sdk.version'] = { value: SDK_VERSION, type: 'string' };
-
-  log.attributes['electron.process'] = { value: process, type: 'string' };
-
-  const osDeviceAttributes = getOsDeviceLogAttributes(client);
-
-  if (osDeviceAttributes['os.name']) {
-    log.attributes['os.name'] = { value: osDeviceAttributes['os.name'], type: 'string' };
-  }
-  if (osDeviceAttributes['os.version']) {
-    log.attributes['os.version'] = { value: osDeviceAttributes['os.version'], type: 'string' };
-  }
-  if (osDeviceAttributes['device.brand']) {
-    log.attributes['device.brand'] = { value: osDeviceAttributes['device.brand'], type: 'string' };
-  }
-  if (osDeviceAttributes['device.model']) {
-    log.attributes['device.model'] = { value: osDeviceAttributes['device.model'], type: 'string' };
-  }
-  if (osDeviceAttributes['device.family']) {
-    log.attributes['device.family'] = { value: osDeviceAttributes['device.family'], type: 'string' };
-  }
-
+  log.attributes = handleAttributes(client, options, contents, log.attributes);
   _INTERNAL_captureSerializedLog(client, log);
+}
+
+function handleMetricFromRenderer(
+  client: Client,
+  options: ElectronMainOptionsInternal,
+  metric: SerializedMetric,
+  contents: WebContents | undefined,
+): void {
+  metric.attributes = handleAttributes(client, options, contents, metric.attributes);
+  _INTERNAL_captureSerializedMetric(client, metric);
 }
 
 /** Enables Electron protocol handling */
@@ -254,6 +276,8 @@ function configureProtocol(client: Client, ipcUtil: IpcUtils, options: ElectronM
             handleEnvelope(client, options, data, getWebContents());
           } else if (ipcUtil.urlMatches(request.url, 'structured-log') && data) {
             handleLogFromRenderer(client, options, JSON.parse(data.toString()), getWebContents());
+          } else if (ipcUtil.urlMatches(request.url, 'metric') && data) {
+            handleMetricFromRenderer(client, options, JSON.parse(data.toString()), getWebContents());
           } else if (rendererStatusChanged && ipcUtil.urlMatches(request.url, 'status') && data) {
             const contents = getWebContents();
             if (contents) {
@@ -295,6 +319,9 @@ function configureClassic(client: Client, ipcUtil: IpcUtils, options: ElectronMa
   );
   ipcMain.on(ipcUtil.createKey('structured-log'), ({ sender }, log: SerializedLog) =>
     handleLogFromRenderer(client, options, log, sender),
+  );
+  ipcMain.on(ipcUtil.createKey('metric'), ({ sender }, metric: SerializedMetric) =>
+    handleMetricFromRenderer(client, options, metric, sender),
   );
 
   const rendererStatusChanged = createRendererEventLoopBlockStatusHandler(client);

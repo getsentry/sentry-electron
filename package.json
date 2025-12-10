@@ -1,7 +1,7 @@
 {
   "name": "@sentry/electron",
   "description": "Official Sentry SDK for Electron",
-  "version": "7.4.0",
+  "version": "7.5.0",
   "main": "./index.js",
   "module": "./esm/main/index.js",
   "browser": "./esm/renderer/index.js",
@@ -105,12 +105,12 @@
     "e2e": "xvfb-maybe vitest run --root=./test/e2e --silent=false --disable-console-intercept"
   },
   "dependencies": {
-    "@sentry/browser": "10.27.0",
-    "@sentry/core": "10.27.0",
-    "@sentry/node": "10.27.0"
+    "@sentry/browser": "10.29.0",
+    "@sentry/core": "10.29.0",
+    "@sentry/node": "10.29.0"
   },
   "peerDependencies": {
-    "@sentry/node-native": "10.27.0"
+    "@sentry/node-native": "10.29.0"
   },
   "peerDependenciesMeta": {
     "@sentry/node-native": {
@@ -119,9 +119,9 @@
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^12.1.3",
-    "@sentry/node-native": "10.27.0",
-    "@sentry-internal/eslint-config-sdk": "10.27.0",
-    "@sentry-internal/typescript": "10.26.0",
+    "@sentry/node-native": "10.29.0",
+    "@sentry-internal/eslint-config-sdk": "10.29.0",
+    "@sentry-internal/typescript": "10.29.0",
     "@types/busboy": "^1.5.4",
     "@types/koa": "^2.0.52",
     "@types/koa-bodyparser": "^4.3.0",
@@ -129,7 +129,7 @@
     "busboy": "^1.6.0",
     "electron": "^25.9.8",
     "electron-latest-versions": "^0.2.0",
-    "eslint": "7.32.0",
+    "eslint": "8.57.0",
     "eslint-plugin-require-extensions": "^0.1.3",
     "extract-zip": "^2.0.1",
     "koa": "^3.0.1",

@@ -5,20 +5,18 @@
   </head>
   <body>
     <script>
-      const { init, logger } = require('@sentry/electron/renderer');
+      const { init, metrics } = require('@sentry/electron/renderer');
 
       init({
         debug: true,
-        enableLogs: true,
       });
 
-      setTimeout(() => {
-        logger.trace('User clicked submit button', {
+      metrics.count('User clicked submit button', 1, {
+        attributes: {
           buttonId: 'submit-form',
           formId: 'user-profile',
-          timestamp: Date.now()
-        });
-      }, 1000);
+        },
+      });
     </script>
   </body>
 </html>
