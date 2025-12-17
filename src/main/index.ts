@@ -80,6 +80,7 @@ export {
   // eslint-disable-next-line deprecation/deprecation
   inboundFiltersIntegration,
   initOpenTelemetry,
+  instrumentOpenAiClient,
   instrumentSupabaseClient,
   isEnabled,
   isInitialized,

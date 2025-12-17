@@ -1,5 +1,6 @@
 import {
   addBreadcrumb,
+  ClientOptions,
   debug,
   defineIntegration,
   fill,
@@ -11,7 +12,6 @@ import {
   setHttpStatus,
   startInactiveSpan,
   stringMatchesSomePattern,
-  TracePropagationTargets,
 } from '@sentry/core';
 import { logger } from '@sentry/node';
 import { ClientRequest, ClientRequestConstructorOptions, IncomingMessage, net as electronNet } from 'electron';
@@ -87,20 +87,19 @@ type RequestMethod = (opt: RequestOptions) => ClientRequest;
 type WrappedRequestMethodFactory = (original: RequestMethod) => RequestMethod;
 
 function createWrappedRequestFactory(
-  options: NetOptions,
-  enableLogs: boolean,
-  tracePropagationTargets: TracePropagationTargets | undefined,
+  { tracing, breadcrumbs }: NetOptions,
+  { enableLogs, tracePropagationTargets, propagateTraceparent }: ClientOptions,
 ): WrappedRequestMethodFactory {
   // We're caching results so we don't have to recompute regexp every time we create a request.
   const createSpanUrlMap = new LRUMap<string, boolean>(100);
   const headersUrlMap = new LRUMap<string, boolean>(100);
 
   const shouldCreateSpan = (method: string, url: string): boolean => {
-    if (options.tracing === undefined) {
+    if (tracing === undefined) {
       return true;
     }
 
-    if (options.tracing === false) {
+    if (tracing === false) {
       return false;
     }
 
@@ -111,7 +110,7 @@ function createWrappedRequestFactory(
       return cachedDecision;
     }
 
-    const decision = options.tracing === true || options.tracing(method, url);
+    const decision = tracing === true || tracing(method, url);
     createSpanUrlMap.set(key, decision);
     return decision;
   };
@@ -212,7 +211,7 @@ function createWrappedRequestFactory(
       span.setAttribute(SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN, 'auto.http.electron.net');
 
       if (shouldAttachTraceData(method, url)) {
-        for (const [key, value] of Object.entries(getTraceData({ span }))) {
+        for (const [key, value] of Object.entries(getTraceData({ span, propagateTraceparent }))) {
           debug.log(`[Tracing] Adding ${key} header ${value} to outgoing request to "${url}": `);
           request.setHeader(key, value);
         }
@@ -220,7 +219,7 @@ function createWrappedRequestFactory(
 
       return request
         .once('response', function (this: ClientRequest, res: IncomingMessage): void {
-          if (options.breadcrumbs !== false) {
+          if (breadcrumbs !== false) {
             addRequestBreadcrumb('response', method, url, this, res);
           }
 
@@ -231,7 +230,7 @@ function createWrappedRequestFactory(
           span.end();
         })
         .once('error', function (this: ClientRequest, _error: Error): void {
-          if (options.breadcrumbs !== false) {
+          if (breadcrumbs !== false) {
             addRequestBreadcrumb('error', method, url, this, undefined);
           }
 
@@ -249,19 +248,12 @@ export const electronNetIntegration = defineIntegration((options: NetOptions = {
   return {
     name: 'ElectronNet',
     setup(client) {
-      const clientOptions = client.getOptions();
-      const enableLogs = !!clientOptions?.enableLogs;
-
       // No need to instrument if we don't want to track anything
       if (options.breadcrumbs === false && options.tracing === false) {
         return;
       }
 
-      fill(
-        electronNet,
-        'request',
-        createWrappedRequestFactory(options, enableLogs, clientOptions?.tracePropagationTargets),
-      );
+      fill(electronNet, 'request', createWrappedRequestFactory(options, client.getOptions()));
     },
   };
 });
