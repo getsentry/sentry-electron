@@ -3,6 +3,7 @@ import { electronTestRunner, SHORT_UUID_MATCHER, transactionEnvelope, UUID_MATCH
 
 electronTestRunner(__dirname, { skipEsmAutoTransform: true }, async (ctx) => {
   await ctx
+    .expectErrorOutputToContain('Adding traceparent header')
     .expect({
       envelope: transactionEnvelope({
         type: 'transaction',
