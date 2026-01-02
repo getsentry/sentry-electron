@@ -97,7 +97,7 @@
     "fix": "run-s fix:prettier fix:eslint",
     "fix:prettier": "prettier --write \"{src,test,examples}/**/*.{ts,js}\"",
     "fix:eslint": "eslint . --format stylish --fix",
-    "update-electron-versions": "node ./scripts/update-electron-versions.mjs > ./test/e2e/versions.json",
+    "update-electron-versions": "node ./scripts/update-electron-versions.mjs",
     "update-sdk-versions": "node ./scripts/update-sdk-versions.mjs",
     "pretest": "yarn set-version",
     "test": "vitest run --root=./test/unit",
