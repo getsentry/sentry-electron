@@ -12,7 +12,6 @@ import {
 import { app } from 'electron';
 import { ipcMainHooks } from '../ipc.js';
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface StartupTracingOptions {
   /*
    * Timeout in seconds to wait before ending the startup transaction
@@ -34,7 +33,7 @@ function rootTransaction(): Span {
     startSpanManual(
       {
         name: 'electron.startup',
-        op: 'electron.startup',
+        op: 'auto.electron.startup',
         startTime,
         attributes: {
           [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'auto.electron.startup',
@@ -102,33 +101,45 @@ function applyRendererSpansAndMeasurements(parentSpan: Span, event: Event | unde
     parentSpan.setAttribute('performance.timeOrigin', rendererStartTime);
   }
 
-  if (event?.spans?.length) {
-    for (const spanJson of event.spans) {
-      const startTime = spanJson.start_timestamp;
-      const endTime = spanJson.timestamp;
+  startSpanManual(
+    {
+      name: event.transaction || 'electron.renderer',
+      op: 'electron.renderer',
+      startTime: rendererStartTime,
+      parentSpan,
+    },
+    (rendererSpan) => {
+      if (event?.spans?.length) {
+        for (const spanJson of event.spans) {
+          const startTime = spanJson.start_timestamp;
+          const endTime = spanJson.timestamp;
 
-      if (endTime) {
-        lastEndTimestamp = Math.max(lastEndTimestamp, endTime);
-      }
-
-      startSpanManual(
-        {
-          name: spanJson.description || 'electron.renderer',
-          op: spanJson.op,
-          startTime,
-          attributes: spanJson.data,
-          parentSpan,
-        },
-        (span) => {
-          if (spanJson.status) {
-            span.setStatus(parseStatus(spanJson.status));
+          if (endTime) {
+            lastEndTimestamp = Math.max(lastEndTimestamp, endTime);
           }
 
-          span.end((endTime || startTime) * 1000);
-        },
-      );
-    }
-  }
+          startSpanManual(
+            {
+              name: spanJson.description || 'electron.renderer',
+              op: spanJson.op,
+              startTime,
+              attributes: spanJson.data,
+              parentSpan: rendererSpan,
+            },
+            (span) => {
+              if (spanJson.status) {
+                span.setStatus(parseStatus(spanJson.status));
+              }
+
+              span.end((endTime || startTime) * 1000);
+            },
+          );
+        }
+      }
+
+      rendererSpan.end(lastEndTimestamp * 1000);
+    },
+  );
 
   if (event.measurements) {
     for (const [name, measurement] of Object.entries(event.measurements)) {

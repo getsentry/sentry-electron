@@ -20,7 +20,7 @@ electronTestRunner(__dirname, async (ctx) => {
             data: expect.objectContaining({
               'sentry.source': 'url',
               'sentry.sample_rate': 1,
-              'sentry.op': 'electron.startup',
+              'sentry.op': 'auto.electron.startup',
               'sentry.origin': 'auto.electron.startup',
               'performance.timeOrigin': expect.any(Number),
               effectiveConnectionType: expect.any(String),
@@ -29,7 +29,7 @@ electronTestRunner(__dirname, async (ctx) => {
               'performance.activationStart': 0,
               'sentry.idle_span_finish_reason': 'idleTimeout',
             }),
-            op: 'electron.startup',
+            op: 'auto.electron.startup',
             origin: 'auto.electron.startup',
           }),
         },
