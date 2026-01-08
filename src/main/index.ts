@@ -184,6 +184,7 @@ export { normalizePathsIntegration } from './integrations/normalize-paths.js';
 export { electronContextIntegration } from './integrations/electron-context.js';
 export { gpuContextIntegration } from './integrations/gpu-context.js';
 export { rendererEventLoopBlockIntegration } from './integrations/renderer-anr.js';
+export { startupTracingIntegration } from './integrations/startup-tracing.js';
 
 export { makeElectronTransport } from './transports/electron-net.js';
 export { makeElectronOfflineTransport } from './transports/electron-offline-net.js';

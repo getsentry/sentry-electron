@@ -1,3 +1,4 @@
+import { EventEmitter } from 'node:events';
 import {
   _INTERNAL_captureSerializedLog,
   _INTERNAL_captureSerializedMetric,
@@ -23,6 +24,12 @@ import { mergeEvents } from './merge.js';
 import { normalizeProfileChunkEnvelope, normalizeReplayEnvelope } from './normalize.js';
 import { ElectronMainOptionsInternal } from './sdk.js';
 import { SDK_VERSION } from './version.js';
+
+interface IpcMainEvents {
+  'pageload-transaction': [event: Event, contents: WebContents | undefined];
+}
+
+export const ipcMainHooks = new EventEmitter<IpcMainEvents>();
 
 let KNOWN_RENDERERS: Set<number> | undefined;
 let WINDOW_ID_TO_WEB_CONTENTS: Map<string, number> | undefined;
@@ -112,6 +119,15 @@ function handleEnvelope(
       // We have a 'profile' item and there is no way for us to pass this through event capture
       // so store them in a cache and reattach them via the `beforeEnvelope` hook before sending
       rendererProfileFromIpc(event, profile);
+    }
+
+    if (
+      ipcMainHooks.listenerCount('pageload-transaction') > 0 &&
+      event.type === 'transaction' &&
+      event.contexts?.trace?.origin === 'auto.pageload.browser'
+    ) {
+      ipcMainHooks.emit('pageload-transaction', event, contents);
+      return;
     }
 
     captureEventFromRenderer(options, event, dynamicSamplingContext, attachments, contents);
