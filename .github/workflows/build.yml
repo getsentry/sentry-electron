@@ -9,6 +9,10 @@ env:
   ELECTRON_CACHE_DIR: ${{ github.workspace }}
   FAILURE_LOG: true
 
+
+permissions:
+  contents: write
+  pull-requests: write
 jobs:
   build:
     name: Build

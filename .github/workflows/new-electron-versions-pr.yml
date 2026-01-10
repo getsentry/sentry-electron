@@ -4,6 +4,10 @@ on:
     # At 9am every day
     - cron: '0 9 * * *'
 
+
+permissions:
+  contents: write
+  pull-requests: write
 jobs:
   test:
     name: Check new versions
