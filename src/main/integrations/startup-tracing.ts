@@ -109,7 +109,7 @@ function applyRendererSpansAndMeasurements(parentSpan: Span, event: Event | unde
       parentSpan,
       attributes: {
         [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'auto.electron.startup',
-      }
+      },
     },
     (rendererSpan) => {
       if (event?.spans?.length) {
