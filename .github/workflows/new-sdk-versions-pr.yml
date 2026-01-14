@@ -26,7 +26,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: test/new-sdk-version
           delete-branch: true
-          title: 'test: New Sentry SDK version'
-          commit-message: 'test: New Sentry SDK version'
+          title: 'feat: Update Sentry SDKs to v${{ env.SENTRY_LATEST_VERSION }}'
+          commit-message: 'feat: Update Sentry SDKs to v${{ env.SENTRY_LATEST_VERSION }}'
           body: |
             Automatically generated PR to test new Sentry SDK version
