@@ -230,7 +230,7 @@ function handleMetricFromRenderer(
   metric: SerializedMetric,
   contents: WebContents | undefined,
 ): void {
-  metric.attributes = handleAttributes(client, options, contents, metric.attributes) as SerializedMetric['attributes'];
+  metric.attributes = handleAttributes(client, options, contents, metric.attributes);
   _INTERNAL_captureSerializedMetric(client, metric);
 }
 
