@@ -1,7 +1,8 @@
 import { spawnSync } from 'child_process';
-import { readFileSync, writeFileSync } from 'fs';
+import { appendFileSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
+import { EOL } from 'os';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -42,5 +43,11 @@ if (current !== latest) {
   spawnSync('yarn', ['install'], { stdio: 'inherit' });
   // Update parameter that has the version in it
   spawnSync('yarn', ['build'], { stdio: 'inherit' });
+
+  // If we're in a GH Action, add the version in GITHUB_ENV so it can be used to name the PR
+  const envFilePath = process.env.GITHUB_ENV;
+  if (envFilePath) {
+    appendFileSync(envFilePath, `SENTRY_LATEST_VERSION=${latest}${EOL}`, { encoding: 'utf8' });
+  }
 }
 
