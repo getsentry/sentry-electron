@@ -32,8 +32,8 @@ function rootTransaction(): Span {
 
     startSpanManual(
       {
-        name: 'electron.startup',
-        op: 'auto.electron.startup',
+        name: 'Startup',
+        op: 'app.start',
         startTime,
         attributes: {
           [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'auto.electron.startup',
@@ -95,11 +95,8 @@ function applyRendererSpansAndMeasurements(parentSpan: Span, event: Event | unde
     return lastEndTimestamp;
   }
 
-  const rendererStartTime = event.start_timestamp;
-
-  if (rendererStartTime) {
-    parentSpan.setAttribute('performance.timeOrigin', rendererStartTime);
-  }
+  const rendererStartTime = event.start_timestamp || event.timestamp;
+  parentSpan.setAttribute('performance.timeOrigin', rendererStartTime);
 
   startSpanManual(
     {
@@ -162,8 +159,15 @@ function applyRendererSpansAndMeasurements(parentSpan: Span, event: Event | unde
 }
 
 /**
+ * An integration that instruments Electron's startup sequence.
+ *
+ * If you also use the `browserTracingIntegration` in the renderer process, the spans created in
+ * the renderer will be included in the main process's startup transaction. This allows capturing
+ * from main process start until the browser front-end is ready to use.
  *
  * Example:
+ *
+ * `main.mjs`
  * ```js
  * import { init, startupTracingIntegration } from '@sentry/electron/main';
  *
@@ -171,6 +175,15 @@ function applyRendererSpansAndMeasurements(parentSpan: Span, event: Event | unde
  *   dsn: '__YOUR_DSN__',
  *   tracesSampleRate: 1.0,
  *   integrations: [startupTracingIntegration()],
+ * });
+ * ```
+ * `renderer.mjs`
+ * ```js
+ * import { init, browserTracingIntegration } from '@sentry/electron/renderer';
+ *
+ * init({
+ *   tracesSampleRate: 1.0,
+ *   integrations: [browserTracingIntegration()],
  * });
  * ```
  */

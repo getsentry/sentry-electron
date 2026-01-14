@@ -13,7 +13,7 @@ electronTestRunner(
         envelope: transactionEnvelope({
           type: 'transaction',
           platform: 'node',
-          transaction: 'electron.startup',
+          transaction: 'Startup',
           tags: {
             'event.environment': 'javascript',
             'event.origin': 'electron',
@@ -26,7 +26,7 @@ electronTestRunner(
               data: expect.objectContaining({
                 'sentry.source': 'url',
                 'sentry.sample_rate': 1,
-                'sentry.op': 'auto.electron.startup',
+                'sentry.op': 'app.start',
                 'sentry.origin': 'auto.electron.startup',
                 'performance.timeOrigin': expect.any(Number),
                 effectiveConnectionType: expect.any(String),
@@ -35,7 +35,7 @@ electronTestRunner(
                 'performance.activationStart': 0,
                 'sentry.idle_span_finish_reason': 'idleTimeout',
               }),
-              op: 'auto.electron.startup',
+              op: 'app.start',
               origin: 'auto.electron.startup',
             }),
           },
