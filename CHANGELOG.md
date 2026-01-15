@@ -1,6 +1,38 @@
 # Changelog
 
-## Unreleased
+## 7.6.0
+
+### New Features ✨
+
+- Update Sentry SDKs to v10.34.0 by @github-actions in [#1290](https://github.com/getsentry/sentry-electron/pull/1290)
+- Add `startupTracingIntegration` by @timfish in [#1282](https://github.com/getsentry/sentry-electron/pull/1282)
+- Update JavaScript SDKs to v10.33.0 by @timfish in [#1287](https://github.com/getsentry/sentry-electron/pull/1287)
+- Add support for `propagateTraceparent` by @timfish in [#1277](https://github.com/getsentry/sentry-electron/pull/1277)
+
+### Bug Fixes 🐛
+
+- TypeScript warning by @timfish in [#1281](https://github.com/getsentry/sentry-electron/pull/1281)
+
+### Build / dependencies / internal 🔧
+
+#### Release
+
+- Bump Craft version to fix issues by @BYK in [#1286](https://github.com/getsentry/sentry-electron/pull/1286)
+- Switch from action-prepare-release to Craft by @BYK in [#1283](https://github.com/getsentry/sentry-electron/pull/1283)
+
+#### Other
+
+- (deps) Bump qs from 6.13.0 to 6.14.1 by @dependabot in [#1279](https://github.com/getsentry/sentry-electron/pull/1279)
+- Add 'unlabeled' event to changelog preview workflow by @BYK in [#1292](https://github.com/getsentry/sentry-electron/pull/1292)
+- Set craft to auto changelog by @timfish in [#1291](https://github.com/getsentry/sentry-electron/pull/1291)
+- Auto SDK update PRs now include SDK version in name for release notes by @timfish in [#1288](https://github.com/getsentry/sentry-electron/pull/1288)
+- Simpler Electron version lookup by @timfish in [#1280](https://github.com/getsentry/sentry-electron/pull/1280)
+
+### Other
+
+- test: Fix another flakey test by @timfish in [#1284](https://github.com/getsentry/sentry-electron/pull/1284)
+- test: New Sentry SDK version by @github-actions in [#1278](https://github.com/getsentry/sentry-electron/pull/1278)
+- test: More Electron versions by @timfish in [#1273](https://github.com/getsentry/sentry-electron/pull/1273)
 
 ## 7.5.0
 
