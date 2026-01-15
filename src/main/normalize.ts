@@ -56,7 +56,7 @@ export function normalizePaths(event: Event, basePath: string): Event {
 
   if (event.spans) {
     for (const span of event.spans) {
-      if (span.description?.startsWith('file://')) {
+      if (span.description) {
         span.description = normalizeUrlToBase(span.description, basePath);
       }
     }
