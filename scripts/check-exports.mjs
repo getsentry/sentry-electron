@@ -52,7 +52,9 @@ const ignoredNode = [
   // We can't call these from Electron
   'vercelAIIntegration',
   'anrIntegration',
-  'disableAnrDetectionForCallback'
+  'disableAnrDetectionForCallback',
+  // Electron has it's own session handling
+  'processSessionIntegration'
 ];
 
 const ignoredUtility = [...ignoredNode];
