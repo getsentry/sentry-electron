@@ -115,6 +115,7 @@ export {
   postgresIntegration,
   postgresJsIntegration,
   prismaIntegration,
+  processSessionIntegration,
   profiler,
   redisIntegration,
   requestDataIntegration,
