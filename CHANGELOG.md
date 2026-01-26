@@ -1,5 +1,17 @@
 # Changelog
 
+## 7.7.0
+
+### New Features ✨
+
+- Update Sentry SDKs to v10.36.0 by @github-actions in [#1299](https://github.com/getsentry/sentry-electron/pull/1299)
+- Update Sentry SDKs to v10.35.0 by @timfish in [#1297](https://github.com/getsentry/sentry-electron/pull/1297)
+
+### Internal Changes 🔧
+
+- (release) Fix changelog-preview permissions by @BYK in [#1300](https://github.com/getsentry/sentry-electron/pull/1300)
+- Use pull_request_target for changelog preview by @BYK in [#1294](https://github.com/getsentry/sentry-electron/pull/1294)
+
 ## 7.6.0
 
 ### New Features ✨
