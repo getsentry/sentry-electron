@@ -7,6 +7,7 @@ import {
   getBreadcrumbLogLevelFromHttpStatusCode,
   getTraceData,
   LRUMap,
+  parseStringToURLObject,
   SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN,
   SentryNonRecordingSpan,
   setHttpStatus,
@@ -15,7 +16,7 @@ import {
 } from '@sentry/core';
 import { logger } from '@sentry/node';
 import { ClientRequest, ClientRequestConstructorOptions, IncomingMessage, net as electronNet } from 'electron';
-import * as urlModule from 'url';
+import { format as urlFormat, UrlObject } from 'url';
 
 type ShouldTraceFn = (method: string, url: string) => boolean;
 
@@ -42,16 +43,23 @@ export interface NetOptions {
  * We want to match the final URL that Electron uses
  */
 function parseOptions(optionsIn: ClientRequestConstructorOptions | string): { method: string; url: string } {
-  const { method, options } =
-    typeof optionsIn === 'string'
-      ? // eslint-disable-next-line deprecation/deprecation
-        { method: 'GET', options: urlModule.parse(optionsIn) }
-      : { method: (optionsIn.method || 'GET').toUpperCase(), options: optionsIn };
+  if (typeof optionsIn === 'string') {
+    // For full URL strings, use the WHATWG URL API directly
+    try {
+      return { method: 'GET', url: new URL(optionsIn).href };
+    } catch {
+      // If URL parsing fails, return the original string
+      return { method: 'GET', url: optionsIn };
+    }
+  }
+
+  const method = (optionsIn.method || 'GET').toUpperCase();
+  const options = optionsIn;
 
   let url = 'url' in options ? options.url : undefined;
 
   if (!url) {
-    const urlObj: urlModule.UrlObject = {};
+    const urlObj: UrlObject = {};
     urlObj.protocol = options.protocol || 'http:';
 
     if (options.host) {
@@ -68,12 +76,12 @@ function parseOptions(optionsIn: ClientRequestConstructorOptions | string): { me
       }
     }
 
-    // eslint-disable-next-line deprecation/deprecation
-    const pathObj = urlModule.parse(options.path || '/');
-    urlObj.pathname = pathObj.pathname;
-    urlObj.search = pathObj.search;
-    urlObj.hash = pathObj.hash;
-    url = urlModule.format(urlObj);
+    // Use parseStringToURLObject for path parsing (handles relative URLs)
+    const pathObj = parseStringToURLObject(options.path || '/');
+    urlObj.pathname = pathObj?.pathname;
+    urlObj.search = pathObj?.search;
+    urlObj.hash = pathObj?.hash;
+    url = urlFormat(urlObj);
   }
 
   return {
