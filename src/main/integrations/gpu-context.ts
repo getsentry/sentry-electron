@@ -55,8 +55,14 @@ export const gpuContextIntegration = defineIntegration((options: Options = { inf
     name: 'GpuContext',
     processEvent: async (event): Promise<Event> => {
       if (gpuContexts === undefined) {
-        const result = (await app.getGPUInfo(options.infoLevel)) as GpuInfoResult;
-        gpuContexts = result.gpuDevice.map(gpuDeviceToGpuContext);
+        try {
+          const result = (await app.getGPUInfo(options.infoLevel)) as GpuInfoResult;
+          gpuContexts = result.gpuDevice.map(gpuDeviceToGpuContext);
+        } catch {
+          // getGPUInfo can throw on Linux when hardware acceleration is disabled (Electron v40+)
+          // In this case, we just don't add GPU context to events
+          gpuContexts = [];
+        }
       }
 
       if (gpuContexts.length === 1) {
