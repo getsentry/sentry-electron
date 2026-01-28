@@ -23,7 +23,9 @@ app.on('ready', () => {
 
   // Keep reloading the window to cause multiple crash events
   app.on('render-process-gone', () => {
-    console.log('Reloading window');
-    mainWindow.reload();
+    setTimeout(() => {
+      console.log('Reloading window');
+      mainWindow.reload();
+    }, 500);
   });
 });
