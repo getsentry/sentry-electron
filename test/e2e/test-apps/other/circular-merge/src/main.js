@@ -5,6 +5,14 @@ init({
   debug: true,
   integrations: [captureConsoleIntegration({ levels: ['error'] })],
   onFatalError: () => {},
+  // https://github.com/electron/electron/issues/49550
+  beforeSend(event) {
+    if (typeof event.extra.arguments[0] === 'string') {
+      return null;
+    }
+
+    return event;
+  },
 });
 
 setTimeout(() => {
