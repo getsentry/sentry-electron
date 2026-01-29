@@ -1,5 +1,12 @@
 # Changelog
 
+## 7.7.1
+
+### Bug Fixes 🐛
+
+- Handle getGPUInfo error on Linux with Electron v40+ by @AbhiPrasad in [#1302](https://github.com/getsentry/sentry-electron/pull/1302)
+- Replace deprecated url.parse with parseStringToURLObject by @AbhiPrasad in [#1303](https://github.com/getsentry/sentry-electron/pull/1303)
+
 ## 7.7.0
 
 ### New Features ✨
