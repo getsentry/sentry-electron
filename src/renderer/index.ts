@@ -6,9 +6,9 @@ export { logger, metrics };
 export type {
   Breadcrumb,
   BreadcrumbHint,
+  ErrorEvent,
   Event,
   EventHint,
-  ErrorEvent,
   Exception,
   SdkInfo,
   Session,
@@ -41,9 +41,9 @@ export {
   consoleLoggingIntegration,
   contextLinesIntegration,
   continueTrace,
-  createTransport,
   createConsolaReporter,
   createLangChainCallbackHandler,
+  createTransport,
   createUserFeedbackEnvelope,
   dedupeIntegration,
   defaultRequestInstrumentationOptions,
@@ -144,8 +144,8 @@ export {
 
 export type { BrowserOptions, ReportDialogOptions } from '@sentry/browser';
 
-export { scopeToMainIntegration } from './integrations/scope-to-main.js';
-export { eventLoopBlockIntegration } from './integrations/event-loop-block.js';
-export { makeRendererTransport } from './transport.js';
 export { electronRendererStackParser as defaultStackParser } from './stack-parse.js';
-export { init, getDefaultIntegrations } from './sdk.js';
+export { eventLoopBlockIntegration } from './integrations/event-loop-block.js';
+export { getDefaultIntegrations, init } from './sdk.js';
+export { makeRendererTransport } from './transport.js';
+export { scopeToMainIntegration } from './integrations/scope-to-main.js';
