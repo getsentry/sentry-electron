@@ -1,19 +1,19 @@
 export type {
   Breadcrumb,
   BreadcrumbHint,
-  PolymorphicRequest,
-  SdkInfo,
+  ErrorEvent,
   Event,
   EventHint,
-  ErrorEvent,
   Exception,
+  PolymorphicRequest,
+  SdkInfo,
   Session,
   SeverityLevel,
+  Span,
   StackFrame,
   Stacktrace,
   Thread,
   User,
-  Span,
 } from '@sentry/core';
 
 export {
@@ -80,19 +80,23 @@ export {
   // eslint-disable-next-line deprecation/deprecation
   inboundFiltersIntegration,
   initOpenTelemetry,
+  instrumentAnthropicAiClient,
+  instrumentGoogleGenAIClient,
+  instrumentLangGraph,
   instrumentOpenAiClient,
+  instrumentStateGraphCompile,
   instrumentSupabaseClient,
   isEnabled,
   isInitialized,
   kafkaIntegration,
   knexIntegration,
   koaIntegration,
+  langChainIntegration,
   langGraphIntegration,
   lastEventId,
   launchDarklyIntegration,
   linkedErrorsIntegration,
   localVariablesIntegration,
-  langChainIntegration,
   logger,
   lruMemoizerIntegration,
   metrics,
@@ -123,6 +127,7 @@ export {
   SEMANTIC_ATTRIBUTE_SENTRY_SAMPLE_RATE,
   SEMANTIC_ATTRIBUTE_SENTRY_SOURCE,
   SentryContextManager,
+  setConversationId,
   setContext,
   setCurrentClient,
   setExtra,
@@ -168,29 +173,29 @@ export {
 
 export type { NodeOptions } from '@sentry/node';
 
-export { electronBreadcrumbsIntegration } from './integrations/electron-breadcrumbs.js';
-export { onUncaughtExceptionIntegration } from './integrations/onuncaughtexception.js';
-export { sentryMinidumpIntegration } from './integrations/sentry-minidump/index.js';
-export { electronMinidumpIntegration } from './integrations/electron-minidump.js';
-export { preloadInjectionIntegration } from './integrations/preload-injection.js';
-export { mainProcessSessionIntegration } from './integrations/main-process-session.js';
-export { browserWindowSessionIntegration } from './integrations/browser-window-session.js';
 export { additionalContextIntegration } from './integrations/additional-context.js';
-export { electronNetIntegration } from './integrations/net-breadcrumbs.js';
+export { browserWindowSessionIntegration } from './integrations/browser-window-session.js';
 export { childProcessIntegration } from './integrations/child-process.js';
-export { screenshotsIntegration } from './integrations/screenshots.js';
-export { rendererProfileFromIpc } from './integrations/renderer-profiling.js';
-export { normalizePathsIntegration } from './integrations/normalize-paths.js';
+export { electronBreadcrumbsIntegration } from './integrations/electron-breadcrumbs.js';
 export { electronContextIntegration } from './integrations/electron-context.js';
+export { electronMinidumpIntegration } from './integrations/electron-minidump.js';
+export { electronNetIntegration } from './integrations/net-breadcrumbs.js';
 export { gpuContextIntegration } from './integrations/gpu-context.js';
+export { mainProcessSessionIntegration } from './integrations/main-process-session.js';
+export { normalizePathsIntegration } from './integrations/normalize-paths.js';
+export { onUncaughtExceptionIntegration } from './integrations/onuncaughtexception.js';
+export { preloadInjectionIntegration } from './integrations/preload-injection.js';
 export { rendererEventLoopBlockIntegration } from './integrations/renderer-anr.js';
+export { rendererProfileFromIpc } from './integrations/renderer-profiling.js';
+export { screenshotsIntegration } from './integrations/screenshots.js';
+export { sentryMinidumpIntegration } from './integrations/sentry-minidump/index.js';
 export { startupTracingIntegration } from './integrations/startup-tracing.js';
 
-export { makeElectronTransport } from './transports/electron-net.js';
 export { makeElectronOfflineTransport } from './transports/electron-offline-net.js';
+export { makeElectronTransport } from './transports/electron-net.js';
 
-export type { ElectronMainOptions } from './sdk.js';
-export { init, getDefaultIntegrations } from './sdk.js';
 export { defaultStackParser } from './stack-parse.js';
+export type { ElectronMainOptions } from './sdk.js';
+export { getDefaultIntegrations, init } from './sdk.js';
 
 export { IPCMode } from '../common/ipc.js';

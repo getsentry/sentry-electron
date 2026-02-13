@@ -1,19 +1,19 @@
 export type {
   Breadcrumb,
   BreadcrumbHint,
-  PolymorphicRequest,
-  SdkInfo,
+  ErrorEvent,
   Event,
   EventHint,
-  ErrorEvent,
   Exception,
+  PolymorphicRequest,
+  SdkInfo,
   Session,
   SeverityLevel,
+  Span,
   StackFrame,
   Stacktrace,
   Thread,
   User,
-  Span,
 } from '@sentry/core';
 
 export {
@@ -81,19 +81,23 @@ export {
   // eslint-disable-next-line deprecation/deprecation
   inboundFiltersIntegration,
   initOpenTelemetry,
+  instrumentAnthropicAiClient,
+  instrumentGoogleGenAIClient,
+  instrumentLangGraph,
   instrumentOpenAiClient,
+  instrumentStateGraphCompile,
   instrumentSupabaseClient,
   isEnabled,
   isInitialized,
   kafkaIntegration,
   knexIntegration,
   koaIntegration,
+  langChainIntegration,
   langGraphIntegration,
   lastEventId,
   launchDarklyIntegration,
   linkedErrorsIntegration,
   localVariablesIntegration,
-  langChainIntegration,
   logger,
   lruMemoizerIntegration,
   metrics,
@@ -125,6 +129,7 @@ export {
   SEMANTIC_ATTRIBUTE_SENTRY_SAMPLE_RATE,
   SEMANTIC_ATTRIBUTE_SENTRY_SOURCE,
   SentryContextManager,
+  setConversationId,
   setContext,
   setCurrentClient,
   setExtra,
@@ -172,4 +177,4 @@ export type { NodeOptions } from '@sentry/node';
 
 export { makeUtilityProcessTransport } from './transport.js';
 
-export { init, getDefaultIntegrations, defaultStackParser } from './sdk.js';
+export { defaultStackParser, getDefaultIntegrations, init } from './sdk.js';

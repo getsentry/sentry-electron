@@ -378,7 +378,10 @@ export function profileChunkEnvelope(chunk: Partial<ProfileChunk>): Envelope {
     },
     [
       [
-        { type: 'profile_chunk' },
+        {
+          platform: 'javascript',
+          type: 'profile_chunk',
+        },
         {
           chunk_id: UUID_MATCHER,
           profiler_id: UUID_MATCHER,
