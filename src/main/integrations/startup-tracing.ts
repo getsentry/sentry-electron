@@ -191,11 +191,14 @@ export const startupTracingIntegration = defineIntegration((options: StartupTrac
   return {
     name: 'StartupTracing',
     setup() {
-      const fallbackTimeout = setTimeout(() => {
-        const transaction = rootTransaction();
-        transaction.setStatus({ code: 2, message: 'Timeout exceeded' });
-        transaction.end();
-      }, (options.timeoutSeconds || 10) * 1000);
+      const fallbackTimeout = setTimeout(
+        () => {
+          const transaction = rootTransaction();
+          transaction.setStatus({ code: 2, message: 'Timeout exceeded' });
+          transaction.end();
+        },
+        (options.timeoutSeconds || 10) * 1000,
+      );
 
       app.once('will-finish-launching', () => {
         zeroLengthSpan({

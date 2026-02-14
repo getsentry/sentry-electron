@@ -91,8 +91,7 @@ export function getDefaultIntegrations(options: ElectronMainOptions): Integratio
 }
 
 export interface ElectronMainOptionsInternal
-  extends Options<ElectronOfflineTransportOptions>,
-    Omit<NodeOptions, 'transport' | 'transportOptions'> {
+  extends Options<ElectronOfflineTransportOptions>, Omit<NodeOptions, 'transport' | 'transportOptions'> {
   /**
    * Inter-process communication mode to receive event and scope from renderers
    *
@@ -232,7 +231,9 @@ const INTEGRATION_OVERRIDES = [
 /** Sets the default integrations and ensures that multiple minidump or session integrations are not enabled */
 function removeRedundantIntegrations(
   // At this point we know that the integrations are an array
-  options: { integrations: Integration[] },
+  options: {
+    integrations: Integration[];
+  },
 ): void {
   for (const { userAdded, toRemove } of INTEGRATION_OVERRIDES) {
     if (options.integrations.some((i) => i.name === userAdded)) {
