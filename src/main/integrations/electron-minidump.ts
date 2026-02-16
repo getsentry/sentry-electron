@@ -66,10 +66,13 @@ function getNativeUploaderExtraParams(event: Event): { [key: string]: string } {
     buf = buf.subarray(i + 1);
   }
 
-  return chunks.reduce((acc, cur, i) => {
-    acc[`sentry__${i + 1}`] = cur;
-    return acc;
-  }, {} as { [key: string]: string });
+  return chunks.reduce(
+    (acc, cur, i) => {
+      acc[`sentry__${i + 1}`] = cur;
+      return acc;
+    },
+    {} as { [key: string]: string },
+  );
 }
 
 /**

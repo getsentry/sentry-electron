@@ -23,9 +23,7 @@ module.exports = {
     '/utility/**',
     'rollup.config.mjs',
   ],
-  plugins: [
-    'require-extensions',
-  ],
+  plugins: ['require-extensions'],
   overrides: [
     {
       files: ['*.ts', '*.tsx', '*.d.ts'],

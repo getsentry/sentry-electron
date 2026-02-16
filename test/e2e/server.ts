@@ -27,10 +27,13 @@ export interface MinidumpResult {
 function sentryNamespacedFormFields(form: MultipartResult): Record<string, any> {
   return Object.entries(form.fields)
     .filter(([key, _]) => key.startsWith('sentry___'))
-    .reduce((acc, [key, value]) => {
-      acc[key.replace('sentry___', '')] = JSON.parse(value);
-      return acc;
-    }, {} as Record<string, any>);
+    .reduce(
+      (acc, [key, value]) => {
+        acc[key.replace('sentry___', '')] = JSON.parse(value);
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
 }
 
 export function sentryEventFromFormFields(logger: TestLogger, form: MultipartResult): [Event, Record<string, any>] {

@@ -128,7 +128,12 @@ export class BufferedWriteStore<T> extends Store<T> {
    * @param initial An initial value to initialize data with.
    * @param throttleTime The minimum time between writes
    */
-  public constructor(path: string, id: string, initial: T, private readonly _throttleTime: number = 500) {
+  public constructor(
+    path: string,
+    id: string,
+    initial: T,
+    private readonly _throttleTime: number = 500,
+  ) {
     super(path, id, initial);
   }
 
