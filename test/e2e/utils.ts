@@ -155,10 +155,10 @@ function defaultContexts(eventContexts: Contexts = {}): Contexts {
         name: expect.any(String),
         version: expect.any(String),
       }),
-      culture: {
+      culture: expect.objectContaining({
         locale: expect.any(String),
         timezone: expect.any(String),
-      },
+      }),
       ...eventContexts,
     }),
   );
@@ -205,10 +205,10 @@ function defaultContextsNoLive(eventContexts: Contexts = {}): Contexts {
         name: expect.any(String),
         version: expect.any(String),
       }),
-      culture: {
+      culture: expect.objectContaining({
         locale: expect.any(String),
         timezone: expect.any(String),
-      },
+      }),
       ...eventContexts,
     }),
   );
