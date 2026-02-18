@@ -1,5 +1,23 @@
 # Changelog
 
+## 7.8.0
+
+### New Features ✨
+
+- Update Sentry SDKs to v10.39.0 by @github-actions in [#1312](https://github.com/getsentry/sentry-electron/pull/1312)
+- Update JavaScript SDKs to v10.38.0 by @timfish in [#1306](https://github.com/getsentry/sentry-electron/pull/1306)
+
+### Internal Changes 🔧
+
+- (deps) Bump qs from 6.14.1 to 6.14.2 by @dependabot in [#1308](https://github.com/getsentry/sentry-electron/pull/1308)
+- (deps-dev) Bump tmp from 0.2.3 to 0.2.4 by @dependabot in [#1310](https://github.com/getsentry/sentry-electron/pull/1310)
+- Update Vitest to v4 by @timfish in [#1311](https://github.com/getsentry/sentry-electron/pull/1311)
+- Migrate to oxfmt by @timfish in [#1309](https://github.com/getsentry/sentry-electron/pull/1309)
+
+### Other
+
+- test: New Electron versions by @github-actions in [#1305](https://github.com/getsentry/sentry-electron/pull/1305)
+
 ## 7.7.1
 
 ### Bug Fixes 🐛
