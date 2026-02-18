@@ -15,11 +15,14 @@ const SENTRY_KEY = '37f8a2ee37c0409d8970bc7559c7c7e4';
 function getFiles(rootDir: string): Record<string, string> {
   return Array.from(walkSync(rootDir))
     .filter((path) => !path.endsWith('test.ts'))
-    .reduce((acc, absPath) => {
-      const relPath = absPath.replace(rootDir + sep, '');
-      acc[relPath] = readFileSync(absPath, { encoding: 'utf-8' });
-      return acc;
-    }, {} as Record<string, string>);
+    .reduce(
+      (acc, absPath) => {
+        const relPath = absPath.replace(rootDir + sep, '');
+        acc[relPath] = readFileSync(absPath, { encoding: 'utf-8' });
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
 }
 
 function insertAfterLastImport(content: string, insert: string): string {

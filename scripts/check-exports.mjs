@@ -36,7 +36,9 @@ const ignoredBrowser = [
   // deprecated
   'captureUserFeedback',
   // Electron sends via main process
-  'diagnoseSdkConnectivity'
+  'diagnoseSdkConnectivity',
+  // Electron captures this from the main process
+  'cultureContextIntegration'
 ];
 
 const ignoredNode = [

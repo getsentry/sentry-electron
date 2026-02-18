@@ -29,6 +29,7 @@ To use this SDK, call `init(options)` as early as possible in the entry modules 
 renderer processes or further sub processes you spawn. This will initialize the SDK and hook the environment.
 
 In the Electron main process:
+
 ```javascript
 import { init } from '@sentry/electron/main';
 
@@ -39,6 +40,7 @@ init({
 ```
 
 In all Electron renderer processes:
+
 ```javascript
 // In the Electron renderer processes
 import { init } from '@sentry/electron/renderer';
@@ -48,12 +50,17 @@ init();
 
 If you are using a framework specific Sentry SDK, you can pass that `init` function as the second parameter in the
 renderer and the two SDKs functionalities will be combined:
+
 ```javascript
 import { init } from '@sentry/electron/renderer';
 import { init as reactInit } from '@sentry/react';
 
-init({ /* config */ }, reactInit);
-
+init(
+  {
+    /* config */
+  },
+  reactInit,
+);
 ```
 
 To set context information or send manual events, use the exported functions of `@sentry/electron`. Note that these

@@ -84,20 +84,23 @@ const DEFAULT_OPTIONS: ElectronBreadcrumbsOptions<EventFunction> = {
 export function normalizeOptions(
   options: Partial<ElectronBreadcrumbsOptions<EventTypes>>,
 ): Partial<ElectronBreadcrumbsOptions<EventFunction | false>> {
-  return (Object.keys(options) as (keyof ElectronBreadcrumbsOptions<EventTypes>)[]).reduce((obj, k) => {
-    if (k === 'captureWindowTitles') {
-      obj[k] = !!options[k];
-    } else {
-      const val: EventTypes = options[k];
-      if (Array.isArray(val)) {
-        obj[k] = (name) => val.includes(name);
-      } else if (typeof val === 'function' || val === false) {
-        obj[k] = val;
+  return (Object.keys(options) as (keyof ElectronBreadcrumbsOptions<EventTypes>)[]).reduce(
+    (obj, k) => {
+      if (k === 'captureWindowTitles') {
+        obj[k] = !!options[k];
+      } else {
+        const val: EventTypes = options[k];
+        if (Array.isArray(val)) {
+          obj[k] = (name) => val.includes(name);
+        } else if (typeof val === 'function' || val === false) {
+          obj[k] = val;
+        }
       }
-    }
 
-    return obj;
-  }, {} as Partial<ElectronBreadcrumbsOptions<EventFunction | false>>);
+      return obj;
+    },
+    {} as Partial<ElectronBreadcrumbsOptions<EventFunction | false>>,
+  );
 }
 
 /**
