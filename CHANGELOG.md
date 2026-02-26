@@ -1,5 +1,11 @@
 # Changelog
 
+## 7.9.0
+
+### New Features ✨
+
+- Update Sentry SDKs to v10.40.0 by @github-actions in [#1314](https://github.com/getsentry/sentry-electron/pull/1314)
+
 ## 7.8.0
 
 ### New Features ✨
