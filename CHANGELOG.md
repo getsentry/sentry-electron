@@ -1,5 +1,24 @@
 # Changelog
 
+## 7.10.0
+
+### New Features ✨
+
+- Update Sentry SDKs to v10.42.0 by @github-actions in [#1319](https://github.com/getsentry/sentry-electron/pull/1319)
+- Update Sentry SDKs to v10.41.0 by @github-actions in [#1318](https://github.com/getsentry/sentry-electron/pull/1318)
+
+### Internal Changes 🔧
+
+#### Deps Dev
+
+- Bump koa from 3.0.3 to 3.1.2 by @dependabot in [#1317](https://github.com/getsentry/sentry-electron/pull/1317)
+- Bump rollup from 4.46.2 to 4.59.0 by @dependabot in [#1316](https://github.com/getsentry/sentry-electron/pull/1316)
+
+#### Other
+
+- (deps) Bump @isaacs/brace-expansion from 5.0.0 to 5.0.1 by @dependabot in [#1315](https://github.com/getsentry/sentry-electron/pull/1315)
+- New Electron versions by @github-actions in [#1313](https://github.com/getsentry/sentry-electron/pull/1313)
+
 ## 7.9.0
 
 ### New Features ✨
