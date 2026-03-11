@@ -40,7 +40,7 @@ export function makeUtilityProcessTransport(): (options: BaseTransportOptions) =
   });
 
   // We proxy `process.parentPort.on` so we can filter messages from the main SDK and ensure that users do not see them
-  // oxlint-disable-next-line typescript/unbound-method
+  // eslint-disable-next-line typescript/unbound-method
   process.parentPort.on = new Proxy(process.parentPort.on, {
     apply: (target, thisArg, [event, listener]) => {
       if (event === 'message') {

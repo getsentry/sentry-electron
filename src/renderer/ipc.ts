@@ -1,5 +1,5 @@
-/* oxlint-disable no-restricted-globals */
-/* oxlint-disable no-console */
+/* eslint-disable no-restricted-globals */
+/* eslint-disable no-console */
 import { Client, debug, getClient, SerializedLog, SerializedMetric, uuid4 } from '@sentry/core';
 import { ipcChannelUtils, IPCInterface, RENDERER_ID_HEADER, RendererStatus } from '../common/ipc.js';
 import { ElectronRendererOptionsInternal } from './sdk.js';

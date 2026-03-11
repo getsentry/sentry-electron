@@ -14,12 +14,12 @@ import { ipcChannelUtils, RendererStatus } from '../common/ipc.js';
 export function hookupIpc(namespace: string = 'sentry-ipc'): void {
   const ipcUtil = ipcChannelUtils(namespace);
 
-  // oxlint-disable-next-line no-restricted-globals
+  // eslint-disable-next-line no-restricted-globals
   window.__SENTRY_IPC__ = window.__SENTRY_IPC__ || {};
 
-  // oxlint-disable-next-line no-restricted-globals
+  // eslint-disable-next-line no-restricted-globals
   if (window.__SENTRY_IPC__[ipcUtil.namespace]) {
-    // oxlint-disable-next-line no-console
+    // eslint-disable-next-line no-console
     console.log('Sentry Electron preload has already been run');
   } else {
     const ipcObject = {
@@ -31,14 +31,14 @@ export function hookupIpc(namespace: string = 'sentry-ipc'): void {
       sendMetric: (metric: SerializedMetric) => ipcRenderer.send(ipcUtil.createKey('metric'), metric),
     };
 
-    // oxlint-disable-next-line no-restricted-globals
+    // eslint-disable-next-line no-restricted-globals
     window.__SENTRY_IPC__[ipcUtil.namespace] = ipcObject;
 
     // We attempt to use contextBridge if it's available
     if (contextBridge) {
       // This will fail if contextIsolation is not enabled
       try {
-        // oxlint-disable-next-line no-restricted-globals
+        // eslint-disable-next-line no-restricted-globals
         contextBridge.exposeInMainWorld('__SENTRY_IPC__', window.__SENTRY_IPC__);
       } catch {
         //

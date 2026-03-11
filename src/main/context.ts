@@ -1,4 +1,4 @@
-/* oxlint-disable max-lines */
+/* eslint-disable max-lines */
 import { Event, EventHint, SdkInfo } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { app } from 'electron';

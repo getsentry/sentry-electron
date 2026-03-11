@@ -24,7 +24,7 @@ function getScope(options: NodeOptions): Event {
   return {
     release: options.release,
     environment: options.environment,
-    /* oxlint-disable typescript/no-unsafe-member-access */
+    /* eslint-disable typescript/no-unsafe-member-access */
     ...(hasKeys(scope.user) && { user: scope.user }),
     ...(hasKeys(scope.tags) && { tags: scope.tags }),
     ...(hasKeys(scope.extra) && { extra: scope.extra }),

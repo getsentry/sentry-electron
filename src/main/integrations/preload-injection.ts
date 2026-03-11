@@ -38,7 +38,7 @@ export const preloadInjectionIntegration = defineIntegration(() => {
       const options = client.getOptions() as ElectronMainOptionsInternal;
 
       // If classic IPC mode is disabled, we shouldn't attempt to inject preload scripts
-      // oxlint-disable-next-line no-bitwise
+      // eslint-disable-next-line no-bitwise
       if ((options.ipcMode & IPCMode.Classic) === 0) {
         return;
       }

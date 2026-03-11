@@ -1,5 +1,5 @@
-/* oxlint-disable deprecation/deprecation */
-/* oxlint-disable no-restricted-globals */
+/* eslint-disable deprecation/deprecation */
+/* eslint-disable no-restricted-globals */
 import {
   BrowserOptions,
   getDefaultIntegrations as getDefaultBrowserIntegrations,
@@ -78,10 +78,10 @@ If init has been called in the preload and contextIsolation is disabled, is not 
     options.ipcNamespace = 'sentry-ipc';
   }
 
-  // oxlint-disable-next-line deprecation/deprecation
+  // eslint-disable-next-line deprecation/deprecation
   if (options.dsn === undefined) {
     // Events are sent via the main process but browser SDK wont start without dsn
-    // oxlint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line deprecation/deprecation
     options.dsn = 'https://12345@dummy.dsn/12345';
   }
 

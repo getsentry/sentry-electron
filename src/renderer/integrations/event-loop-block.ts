@@ -35,7 +35,7 @@ export const eventLoopBlockIntegration = defineIntegration((options?: Options) =
 
       const ipc = getIPC(client);
 
-      // oxlint-disable-next-line no-restricted-globals
+      // eslint-disable-next-line no-restricted-globals
       ipc.sendStatus({ status: document.visibilityState, config });
 
       setInterval(() => {

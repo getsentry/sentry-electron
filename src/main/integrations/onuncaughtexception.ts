@@ -30,9 +30,9 @@ export const onUncaughtExceptionIntegration = defineIntegration(() => {
             } else if (global.process.listenerCount('uncaughtException') <= 2) {
               // In addition to this handler there is always one in Electron
               // The dialog is only shown if there are no other handlers
-              // oxlint-disable-next-line no-console
+              // eslint-disable-next-line no-console
               console.error('Uncaught Exception:');
-              // oxlint-disable-next-line no-console
+              // eslint-disable-next-line no-console
               console.error(error);
               const ref = error.stack;
               const stack = ref !== undefined ? ref : `${error.name}: ${error.message}`;
