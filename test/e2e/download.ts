@@ -34,7 +34,6 @@ function getExecutablePath(): string {
 /**
  * Downloads and unpacks the requested Electron version
  *
- * @export
  * @param version The Electron version
  * @param arch The Electron arch
  * @returns Path to the Electron executable

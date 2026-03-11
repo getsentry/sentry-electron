@@ -12,13 +12,13 @@ import { ElectronMainOptionsInternal } from '../sdk.js';
 function getPreloadPath(): string | number | undefined {
   try {
     return require.resolve('../../preload/default.js');
-  } catch (_) {
+  } catch {
     try {
       // This could be ESM
       const currentDir = fileURLToPath(import.meta.url);
       // Use the CJS preload
       return resolve(currentDir, '..', '..', '..', '..', 'preload', 'default.js');
-    } catch (_) {
+    } catch {
       //
     }
   }
@@ -38,7 +38,7 @@ export const preloadInjectionIntegration = defineIntegration(() => {
       const options = client.getOptions() as ElectronMainOptionsInternal;
 
       // If classic IPC mode is disabled, we shouldn't attempt to inject preload scripts
-      // eslint-disable-next-line no-bitwise
+      // oxlint-disable-next-line no-bitwise
       if ((options.ipcMode & IPCMode.Classic) === 0) {
         return;
       }

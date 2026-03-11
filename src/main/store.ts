@@ -53,7 +53,7 @@ export class Store<T> {
         if (data === undefined) {
           try {
             await fs.unlink(this._path);
-          } catch (_) {
+          } catch {
             //
           }
         } else {
@@ -81,7 +81,7 @@ export class Store<T> {
       if (this._data === undefined) {
         try {
           this._data = JSON.parse(await fs.readFile(this._path, 'utf8'), dateReviver) as T;
-        } catch (e) {
+        } catch {
           this._data = this._initial;
         }
       }
@@ -107,7 +107,7 @@ export class Store<T> {
   public async getModifiedDate(): Promise<Date | undefined> {
     try {
       return (await fs.stat(this._path))?.mtime;
-    } catch (_) {
+    } catch {
       return undefined;
     }
   }

@@ -215,12 +215,12 @@ export const rendererEventLoopBlockIntegration: (options?: Options) => RendererE
         return (message: RendererStatus, contents: WebContents): void => {
           let watchdog = rendererWatchdogTimers.get(contents);
 
-          // eslint-disable-next-line jsdoc/require-jsdoc
+          // oxlint-disable-next-line jsdoc/require-jsdoc
           function disable(): void {
             watchdog?.enabled(false);
           }
 
-          // eslint-disable-next-line jsdoc/require-jsdoc
+          // oxlint-disable-next-line jsdoc/require-jsdoc
           function enable(): void {
             watchdog?.enabled(true);
           }

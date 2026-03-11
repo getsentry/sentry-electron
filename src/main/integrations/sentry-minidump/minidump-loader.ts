@@ -100,7 +100,7 @@ export function createMinidumpLoader(getMinidumpPaths: () => Promise<string[]>):
           // We always attempt to delete the minidump
           try {
             await fs.unlink(path);
-          } catch (e) {
+          } catch {
             debug.warn('Could not delete minidump', path);
           }
         }
@@ -120,7 +120,7 @@ async function deleteCrashpadMetadataFile(crashesDirectory: string, waitMs: numb
     await fs.unlink(metadataPath);
     debug.log('Deleted Crashpad metadata file', metadataPath);
   } catch (e: any) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    // oxlint-disable-next-line typescript/no-unsafe-member-access
     if (e.code && e.code == 'EBUSY') {
       // Since Crashpad probably still has the metadata file open, we make a few attempts to delete it, backing
       // off and waiting longer each time.
@@ -137,7 +137,7 @@ async function readDirsAsync(paths: string[]): Promise<string[]> {
     try {
       const files = await fs.readdir(path);
       found.push(...files.map((file) => join(path, file)));
-    } catch (_) {
+    } catch {
       //
     }
   }

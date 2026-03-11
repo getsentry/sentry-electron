@@ -75,7 +75,7 @@ export {
   growthbookIntegration,
   httpClientIntegration,
   httpContextIntegration,
-  // eslint-disable-next-line deprecation/deprecation
+  // oxlint-disable-next-line deprecation/deprecation
   inboundFiltersIntegration,
   instrumentAnthropicAiClient,
   instrumentGoogleGenAIClient,

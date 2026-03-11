@@ -59,7 +59,7 @@ export function registerProtocol(
       return new Response('');
     });
   } else {
-    // eslint-disable-next-line deprecation/deprecation
+    // oxlint-disable-next-line deprecation/deprecation
     protocol.registerStringProtocol(scheme, (request, complete) => {
       callback({
         windowId: request.headers[RENDERER_ID_HEADER],

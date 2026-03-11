@@ -78,7 +78,7 @@ export {
   httpIntegration,
   httpServerIntegration,
   httpServerSpansIntegration,
-  // eslint-disable-next-line deprecation/deprecation
+  // oxlint-disable-next-line deprecation/deprecation
   inboundFiltersIntegration,
   initOpenTelemetry,
   instrumentAnthropicAiClient,

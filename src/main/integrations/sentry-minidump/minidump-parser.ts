@@ -238,7 +238,7 @@ export function parseMinidump(buf: Buffer): MinidumpParseResult {
   let header: MinidumpHeader | undefined;
   try {
     header = readHeader(buf);
-  } catch (_) {
+  } catch {
     throw new Error('Failed to parse minidump header');
   }
 
@@ -262,7 +262,7 @@ export function parseMinidump(buf: Buffer): MinidumpParseResult {
         };
       }
     }
-  } catch (_) {
+  } catch {
     //
   }
 

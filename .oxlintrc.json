@@ -1,0 +1,86 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "import", "jsdoc", "vitest"],
+  "jsPlugins": [
+    {
+      "name": "sdk",
+      "specifier": "@sentry-internal/eslint-plugin-sdk"
+    }
+  ],
+  "env": {
+    "es2017": true,
+    "node": true
+  },
+  "ignorePatterns": [
+    "**/dist/**",
+    "/esm/**",
+    "/scripts/**",
+    "/preload/**",
+    "/main/**",
+    "/renderer/**",
+    "/examples/**",
+    "/common/**",
+    "/native/**",
+    "/index.*",
+    "/integrations.*",
+    "/utility/**"
+  ],
+  "rules": {
+    "no-unused-vars": [
+      "warn",
+      { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrorsIgnorePattern": "^_" }
+    ],
+
+    // === Base rules from eslint-config-sdk/base.js ===
+    "no-console": "error",
+    "no-alert": "error",
+    "no-param-reassign": "error",
+    "prefer-template": "error",
+    "no-bitwise": "error",
+    "complexity": ["error", { "max": 33 }],
+    "no-unused-expressions": ["error", { "allowShortCircuit": true }],
+    "guard-for-in": "error",
+    "array-callback-return": ["error", { "allowImplicit": true }],
+    "quotes": ["error", "single", { "avoidEscape": true }],
+    "no-return-await": "error",
+    "max-lines": ["error", { "max": 300, "skipComments": true, "skipBlankLines": true }],
+
+    // === Custom SDK rules (via JS plugin) ===
+    "sdk/no-eq-empty": "error"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.ts", "**/*.tsx", "**/*.d.ts"],
+      "rules": {
+        "typescript/ban-ts-comment": "error",
+        // "typescript/consistent-type-imports": "error",  TODO: enable this
+        "typescript/no-unnecessary-type-assertion": "error",
+        "typescript/prefer-for-of": "error",
+        "typescript/no-floating-promises": ["error", { "ignoreVoid": true }],
+        "typescript/no-dynamic-delete": "error",
+        "typescript/no-unsafe-member-access": "error",
+        "typescript/unbound-method": "error",
+        // "typescript/no-explicit-any": "error", TODO: enable this
+        "typescript/no-empty-function": "off",
+        "typescript/prefer-optional-chain": ["error"],
+        "typescript/no-redundant-type-constituents": "off",
+        "typescript/restrict-template-expressions": "off",
+        "typescript/await-thenable": "warn",
+        "typescript/no-base-to-string": "warn",
+        "no-restricted-globals": ["error", "window", "document", "location", "navigator"],
+        "sdk/no-class-field-initializers": "error",
+        "sdk/no-regexp-constructor": "error"
+      }
+    },
+    {
+      "files": ["test/**"],
+      "rules": {
+        "no-console": "off",
+        "no-unused-expressions": "off",
+        "no-unsafe-optional-chaining": "off",
+        "max-lines": "off",
+        "vitest/no-conditional-tests": "off"
+      }
+    }
+  ]
+}

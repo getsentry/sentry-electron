@@ -25,7 +25,7 @@ app.on('ready', () => {
   if (process.env.APP_FIRST_RUN) {
     try {
       child_process.execSync(getPath());
-    } catch (_) {
+    } catch {
       //
     }
 
