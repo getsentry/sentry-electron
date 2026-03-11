@@ -37,7 +37,7 @@ export interface ElectronRendererOptionsInternal extends Omit<BrowserOptions, 'd
   ipcNamespace: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
+// eslint-disable-next-line typescript/no-empty-interface
 interface ElectronRendererOptions extends Partial<ElectronRendererOptionsInternal> {
   //
 }

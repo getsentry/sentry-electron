@@ -28,7 +28,7 @@ function getScope(options: NodeOptions): Event {
     ...(hasKeys(scope.user) && { user: scope.user }),
     ...(hasKeys(scope.tags) && { tags: scope.tags }),
     ...(hasKeys(scope.extra) && { extra: scope.extra }),
-    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+    /* eslint-enable typescript/no-unsafe-member-access */
   };
 }
 

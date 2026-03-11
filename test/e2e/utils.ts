@@ -87,7 +87,7 @@ export const ISO_DATE_MATCHER = expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:
 function dropUndefinedKeys<T extends Record<string, any>>(obj: T): T {
   for (const [key, value] of Object.entries(obj)) {
     if (value === undefined) {
-      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+      // eslint-disable-next-line typescript/no-dynamic-delete
       delete obj[key];
     }
   }
