@@ -46,13 +46,13 @@ function getWindowsDeviceModelManufacturer(): Promise<DeviceContext> {
               });
               return;
             }
-          } catch (_) {
+          } catch {
             //
           }
           resolve({});
         },
       );
-    } catch (_) {
+    } catch {
       resolve({});
     }
   });
@@ -82,12 +82,12 @@ function getMacOSDeviceModelManufacturer(): Promise<DeviceContext> {
             });
             return;
           }
-        } catch (_) {
+        } catch {
           //
         }
         resolve({});
       });
-    } catch (_) {
+    } catch {
       resolve({});
     }
   });

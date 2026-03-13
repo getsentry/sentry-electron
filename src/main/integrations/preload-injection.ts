@@ -12,13 +12,13 @@ import { ElectronMainOptionsInternal } from '../sdk.js';
 function getPreloadPath(): string | number | undefined {
   try {
     return require.resolve('../../preload/default.js');
-  } catch (_) {
+  } catch {
     try {
       // This could be ESM
       const currentDir = fileURLToPath(import.meta.url);
       // Use the CJS preload
       return resolve(currentDir, '..', '..', '..', '..', 'preload', 'default.js');
-    } catch (_) {
+    } catch {
       //
     }
   }

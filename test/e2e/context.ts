@@ -26,7 +26,7 @@ export class TestContext {
   /** Can check if the main process is running and kill it */
   public mainProcess?: ProcessStatus;
 
-  private _started: boolean = false;
+  private _started: boolean;
 
   /**
    * Creates an instance of TestContext.
@@ -40,7 +40,9 @@ export class TestContext {
     private readonly _electronPath: string,
     private readonly _appPath: string,
     private readonly _appName: string,
-  ) {}
+  ) {
+    this._started = false;
+  }
 
   /** Starts the app. */
   public async start(options: { secondRun?: boolean } = {}): Promise<void> {
@@ -163,7 +165,7 @@ export class TestContext {
     for (const dir of getDeleteDirectories(this._appName)) {
       try {
         rmSync(dir, { recursive: true, force: true });
-      } catch (_) {
+      } catch {
         //
       }
     }
@@ -197,7 +199,7 @@ export class ProcessStatus {
         process.kill(this._chProcess.pid, 0);
         return true;
       }
-    } catch (e) {
+    } catch {
       //
     }
 

@@ -17,7 +17,7 @@ export function configureUtilityProcessIPC(): void {
     return;
   }
 
-  // eslint-disable-next-line @typescript-eslint/unbound-method
+  // eslint-disable-next-line typescript/unbound-method
   electron.utilityProcess.fork = new Proxy(electron.utilityProcess.fork, {
     apply: (target, thisArg, args: Parameters<typeof electron.utilityProcess.fork>) => {
       // Call the underlying function to get the child process
@@ -49,7 +49,7 @@ export function configureUtilityProcessIPC(): void {
       });
 
       // We proxy child.on so we can filter messages from the child SDK and ensure that users do not see them
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+      // eslint-disable-next-line typescript/unbound-method
       child.on = new Proxy(child.on, {
         apply: (target, thisArg, [event, listener]) => {
           if (event === 'message') {

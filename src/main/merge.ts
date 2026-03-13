@@ -7,7 +7,7 @@ function removePrivateProperties(event: Event): void {
   delete event.sdkProcessingMetadata?.capturedSpanIsolationScope;
 
   for (const span of event.spans || []) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    // eslint-disable-next-line typescript/no-unsafe-member-access
     delete (span as any).spanRecorder;
   }
 }

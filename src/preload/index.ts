@@ -40,7 +40,7 @@ export function hookupIpc(namespace: string = 'sentry-ipc'): void {
       try {
         // eslint-disable-next-line no-restricted-globals
         contextBridge.exposeInMainWorld('__SENTRY_IPC__', window.__SENTRY_IPC__);
-      } catch (e) {
+      } catch {
         //
       }
     }
