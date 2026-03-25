@@ -108,6 +108,7 @@ export {
   sendFeedback,
   setActiveSpanInBrowser,
   setContext,
+  setConversationId,
   setCurrentClient,
   setExtra,
   setExtras,
