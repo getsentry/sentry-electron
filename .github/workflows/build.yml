@@ -9,7 +9,6 @@ env:
   ELECTRON_CACHE_DIR: ${{ github.workspace }}
   FAILURE_LOG: true
 
-
 permissions:
   contents: write
   pull-requests: write
@@ -75,7 +74,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-2022, macos-latest]
+        os: [ubuntu-22.04, windows-2022, macos-latest]
         electron: ${{ fromJson(needs.build.outputs.matrix) }}
         shard: [1, 2, 3, 4]
     env:
