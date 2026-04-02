@@ -148,7 +148,10 @@ export interface ElectronMainOptionsInternal
   /**
    * Enables of auto register schemes privileged.
    *
-   * If set to false, you should call protocol.registerSchemesAsPrivileged by yourself
+   * If set to false and ipcMode is Protocol or Both,
+   *
+   * should call `protocol.registerSchemesAsPriviledged([{scheme:<ipcNamespace>,privileges: {bypassCSP: true, corsEnabled: true, supportFetchAPI: true, secure: true}}])`
+   * before the `app.ready()` event
    *
    * @default true
    * */
