@@ -144,6 +144,13 @@ export interface ElectronMainOptionsInternal
    * Enables injection of 'js-profiling' document policy headers and ensure profiles are forwarded with transactions
    */
   enableRendererProfiling?: boolean;
+
+  /**
+   * If false, assumes privileged protocol scheme registration is handled by the app.
+   *
+   * @default true
+   */
+  registerSchemesAsPrivileged?: boolean;
 }
 
 // getSessions and ipcMode properties are optional because they have defaults
@@ -174,6 +181,7 @@ export function init(userOptions: ElectronMainOptions): void {
     transport: makeElectronOfflineTransport(),
     transportOptions: {},
     getSessions: () => [session.defaultSession],
+    registerSchemesAsPrivileged: true,
     ...userOptions,
     stackParser: stackParserFromStackParserOptions(userOptions.stackParser || defaultStackParser),
     includeServerName: false,
