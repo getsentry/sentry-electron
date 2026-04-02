@@ -256,20 +256,22 @@ function configureProtocol(client: Client, ipcUtil: IpcUtils, options: ElectronM
     throw new Error("Sentry SDK should be initialized before the Electron app 'ready' event is fired");
   }
 
-  const scheme = {
-    scheme: ipcUtil.namespace,
-    privileges: { bypassCSP: true, corsEnabled: true, supportFetchAPI: true, secure: true },
-  };
+  if(options.registerSchemesAsPrivileged) {
+    const scheme = {
+      scheme: ipcUtil.namespace,
+      privileges: {bypassCSP: true, corsEnabled: true, supportFetchAPI: true, secure: true},
+    };
 
-  protocol.registerSchemesAsPrivileged([scheme]);
+    protocol.registerSchemesAsPrivileged([scheme]);
 
-  // We Proxy this function so that later user calls to registerSchemesAsPrivileged don't overwrite our custom scheme
-  // eslint-disable-next-line typescript/unbound-method
-  protocol.registerSchemesAsPrivileged = new Proxy(protocol.registerSchemesAsPrivileged, {
-    apply: (target, __, args: Parameters<typeof protocol.registerSchemesAsPrivileged>) => {
-      target([...args[0], scheme]);
-    },
-  });
+    // We Proxy this function so that later user calls to registerSchemesAsPrivileged don't overwrite our custom scheme
+    // eslint-disable-next-line typescript/unbound-method
+    protocol.registerSchemesAsPrivileged = new Proxy(protocol.registerSchemesAsPrivileged, {
+      apply: (target, __, args: Parameters<typeof protocol.registerSchemesAsPrivileged>) => {
+        target([...args[0], scheme]);
+      },
+    });
+  }
 
   const rendererStatusChanged = createRendererEventLoopBlockStatusHandler(client);
 
