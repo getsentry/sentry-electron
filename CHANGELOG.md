@@ -1,5 +1,28 @@
 # Changelog
 
+## 7.11.0
+
+### New Features ✨
+
+- Update Sentry SDKs to v10.47.0 by @github-actions in [#1342](https://github.com/getsentry/sentry-electron/pull/1342)
+- Update Sentry SDKs to v10.46.0 by @github-actions in [#1330](https://github.com/getsentry/sentry-electron/pull/1330)
+- Update Sentry SDKs to v10.45.0 by @github-actions in [#1325](https://github.com/getsentry/sentry-electron/pull/1325)
+- Update Sentry SDKs to v10.43.0 by @github-actions in [#1321](https://github.com/getsentry/sentry-electron/pull/1321)
+
+### Bug Fixes 🐛
+
+- Update validate-pr.yml to use new Sentry action version by @stephanie-anderson in [#1344](https://github.com/getsentry/sentry-electron/pull/1344)
+
+### Internal Changes 🔧
+
+- (deps) Bump vite from 7.3.1 to 7.3.2 by @dependabot in [#1349](https://github.com/getsentry/sentry-electron/pull/1349)
+- New Electron versions by @github-actions in [#1343](https://github.com/getsentry/sentry-electron/pull/1343)
+- Use older Ubuntu to fix tests by @timfish in [#1332](https://github.com/getsentry/sentry-electron/pull/1332)
+- New Electron versions by @github-actions in [#1326](https://github.com/getsentry/sentry-electron/pull/1326)
+- New Electron versions by @github-actions in [#1324](https://github.com/getsentry/sentry-electron/pull/1324)
+- Migrate to oxlint by @timfish in [#1323](https://github.com/getsentry/sentry-electron/pull/1323)
+- New Electron versions by @github-actions in [#1322](https://github.com/getsentry/sentry-electron/pull/1322)
+
 ## 7.10.0
 
 ### New Features ✨
