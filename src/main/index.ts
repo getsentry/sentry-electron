@@ -108,6 +108,7 @@ export {
   nativeNodeFetchIntegration,
   NodeClient,
   nodeContextIntegration,
+  nodeRuntimeMetricsIntegration,
   onUnhandledRejectionIntegration,
   openAIIntegration,
   OpenFeatureIntegrationHook,

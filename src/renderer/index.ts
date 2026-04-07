@@ -47,6 +47,7 @@ export {
   createUserFeedbackEnvelope,
   dedupeIntegration,
   defaultRequestInstrumentationOptions,
+  elementTimingIntegration,
   endSession,
   eventFiltersIntegration,
   eventFromException,
