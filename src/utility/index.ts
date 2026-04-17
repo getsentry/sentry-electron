@@ -83,6 +83,7 @@ export {
   initOpenTelemetry,
   instrumentAnthropicAiClient,
   instrumentGoogleGenAIClient,
+  instrumentLangChainEmbeddings,
   instrumentLangGraph,
   instrumentOpenAiClient,
   instrumentStateGraphCompile,
@@ -147,6 +148,7 @@ export {
   setupHonoErrorHandler,
   setupKoaErrorHandler,
   setUser,
+  spanStreamingIntegration,
   spanToBaggageHeader,
   spanToJSON,
   spanToTraceHeader,
@@ -170,6 +172,7 @@ export {
   withIsolationScope,
   withMonitor,
   withScope,
+  withStreamedSpan,
   wrapMcpServerWithSentry,
   zodErrorsIntegration,
 } from '@sentry/node';
