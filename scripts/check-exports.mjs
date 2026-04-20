@@ -38,7 +38,7 @@ const ignoredBrowser = [
   // Electron sends via main process
   'diagnoseSdkConnectivity',
   // Electron captures this from the main process
-  'cultureContextIntegration'
+  'cultureContextIntegration',
 ];
 
 const ignoredNode = [
@@ -56,7 +56,8 @@ const ignoredNode = [
   'anrIntegration',
   'disableAnrDetectionForCallback',
   // Electron has it's own session handling
-  'processSessionIntegration'
+  'processSessionIntegration',
+  '_INTERNAL_normalizeCollectionInterval',
 ];
 
 const ignoredUtility = [...ignoredNode];
