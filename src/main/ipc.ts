@@ -291,26 +291,34 @@ function configureProtocol(client: Client, ipcUtil: IpcUtils, options: ElectronM
           } else if (ipcUtil.urlMatches(request.url, 'envelope') && data) {
             handleEnvelope(client, options, data, getWebContents());
           } else if (ipcUtil.urlMatches(request.url, 'structured-log') && data) {
+            let log: SerializedLog;
             try {
-              handleLogFromRenderer(client, options, JSON.parse(data.toString()), getWebContents());
+              log = JSON.parse(data.toString());
             } catch {
               debug.warn('sentry-electron received an invalid structured-log message');
+              return;
             }
+            handleLogFromRenderer(client, options, log, getWebContents());
           } else if (ipcUtil.urlMatches(request.url, 'metric') && data) {
+            let metric: SerializedMetric;
             try {
-              handleMetricFromRenderer(client, options, JSON.parse(data.toString()), getWebContents());
+              metric = JSON.parse(data.toString());
             } catch {
               debug.warn('sentry-electron received an invalid metric message');
+              return;
             }
+            handleMetricFromRenderer(client, options, metric, getWebContents());
           } else if (rendererStatusChanged && ipcUtil.urlMatches(request.url, 'status') && data) {
             const contents = getWebContents();
             if (contents) {
+              let status: RendererStatus;
               try {
-                const status = (JSON.parse(data.toString()) as { status: RendererStatus }).status;
-                rendererStatusChanged(status, contents);
+                status = (JSON.parse(data.toString()) as { status: RendererStatus }).status;
               } catch {
                 debug.warn('sentry-electron received an invalid status message');
+                return;
               }
+              rendererStatusChanged(status, contents);
             }
           }
         });
