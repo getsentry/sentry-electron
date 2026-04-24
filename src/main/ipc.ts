@@ -291,14 +291,26 @@ function configureProtocol(client: Client, ipcUtil: IpcUtils, options: ElectronM
           } else if (ipcUtil.urlMatches(request.url, 'envelope') && data) {
             handleEnvelope(client, options, data, getWebContents());
           } else if (ipcUtil.urlMatches(request.url, 'structured-log') && data) {
-            handleLogFromRenderer(client, options, JSON.parse(data.toString()), getWebContents());
+            try {
+              handleLogFromRenderer(client, options, JSON.parse(data.toString()), getWebContents());
+            } catch {
+              debug.warn('sentry-electron received an invalid structured-log message');
+            }
           } else if (ipcUtil.urlMatches(request.url, 'metric') && data) {
-            handleMetricFromRenderer(client, options, JSON.parse(data.toString()), getWebContents());
+            try {
+              handleMetricFromRenderer(client, options, JSON.parse(data.toString()), getWebContents());
+            } catch {
+              debug.warn('sentry-electron received an invalid metric message');
+            }
           } else if (rendererStatusChanged && ipcUtil.urlMatches(request.url, 'status') && data) {
             const contents = getWebContents();
             if (contents) {
-              const status = (JSON.parse(data.toString()) as { status: RendererStatus }).status;
-              rendererStatusChanged(status, contents);
+              try {
+                const status = (JSON.parse(data.toString()) as { status: RendererStatus }).status;
+                rendererStatusChanged(status, contents);
+              } catch {
+                debug.warn('sentry-electron received an invalid status message');
+              }
             }
           }
         });
