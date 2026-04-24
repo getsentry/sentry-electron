@@ -1,3 +1,4 @@
+// oxlint-disable max-lines
 import { EventEmitter } from 'node:events';
 import {
   _INTERNAL_captureSerializedLog,
