@@ -1,5 +1,15 @@
 # Changelog
 
+## 7.12.0
+
+### New Features ✨
+
+- Update JavaScript SDKs to v10.49.0 by @timfish in [#1355](https://github.com/getsentry/sentry-electron/pull/1355)
+
+### Internal Changes 🔧
+
+- New Electron versions by @github-actions in [#1351](https://github.com/getsentry/sentry-electron/pull/1351)
+
 ## 7.11.0
 
 ### New Features ✨
