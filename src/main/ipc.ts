@@ -1,3 +1,4 @@
+// oxlint-disable max-lines
 import { EventEmitter } from 'node:events';
 import {
   _INTERNAL_captureSerializedLog,
@@ -291,13 +292,33 @@ function configureProtocol(client: Client, ipcUtil: IpcUtils, options: ElectronM
           } else if (ipcUtil.urlMatches(request.url, 'envelope') && data) {
             handleEnvelope(client, options, data, getWebContents());
           } else if (ipcUtil.urlMatches(request.url, 'structured-log') && data) {
-            handleLogFromRenderer(client, options, JSON.parse(data.toString()), getWebContents());
+            let log: SerializedLog;
+            try {
+              log = JSON.parse(data.toString());
+            } catch {
+              debug.warn('sentry-electron received an invalid structured-log message');
+              return;
+            }
+            handleLogFromRenderer(client, options, log, getWebContents());
           } else if (ipcUtil.urlMatches(request.url, 'metric') && data) {
-            handleMetricFromRenderer(client, options, JSON.parse(data.toString()), getWebContents());
+            let metric: SerializedMetric;
+            try {
+              metric = JSON.parse(data.toString());
+            } catch {
+              debug.warn('sentry-electron received an invalid metric message');
+              return;
+            }
+            handleMetricFromRenderer(client, options, metric, getWebContents());
           } else if (rendererStatusChanged && ipcUtil.urlMatches(request.url, 'status') && data) {
             const contents = getWebContents();
             if (contents) {
-              const status = (JSON.parse(data.toString()) as { status: RendererStatus }).status;
+              let status: RendererStatus;
+              try {
+                status = (JSON.parse(data.toString()) as { status: RendererStatus }).status;
+              } catch {
+                debug.warn('sentry-electron received an invalid status message');
+                return;
+              }
               rendererStatusChanged(status, contents);
             }
           }
