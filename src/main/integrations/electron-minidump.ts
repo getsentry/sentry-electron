@@ -96,6 +96,7 @@ export function minidumpUrlFromDsn(dsn: string): string | undefined {
 export const electronMinidumpIntegration = defineIntegration(() => {
   /** Counter used to ensure no race condition when updating extra params */
   let updateEpoch = 0;
+  let lastParamCount = 0;
 
   async function getNativeUploaderEvent(client: NodeClient, scope: ScopeData): Promise<Event> {
     const { sendDefaultPii = false } = client.getOptions();
@@ -128,9 +129,21 @@ export const electronMinidumpIntegration = defineIntegration(() => {
 
         // Update the extra parameters in the main process
         const mainParams = getNativeUploaderExtraParams(event);
+        const count = Object.keys(mainParams).length;
+
+        // Remove any extra parameters that extend beyond the current count
+        if (lastParamCount > count) {
+          for (let i = count + 1; i <= lastParamCount; i++) {
+            crashReporter.removeExtraParameter(`sentry__${i}`);
+          }
+        }
+
         for (const [key, value] of Object.entries(mainParams)) {
           crashReporter.addExtraParameter(key, value);
         }
+
+        // Track how many parameters we added so we can remove extras next time
+        lastParamCount = count;
       })
       .catch((error) => debug.error(error));
   }
