@@ -27,6 +27,13 @@
 
 export const MINIDUMP_MAGIC_SIGNATURE = 'MDMP';
 
+// Maximum number of annotation objects to prevent memory exhaustion from malformed minidumps
+const MAX_ANNOTATION_COUNT = 1000;
+// Maximum number of module links to prevent memory exhaustion from malformed minidumps
+const MAX_MODULE_COUNT = 1000;
+// Maximum string length to prevent excessive memory allocation (100KB)
+const MAX_STRING_LENGTH = 1024 * 100;
+
 // https://docs.microsoft.com/en-us/windows/win32/api/minidumpapiset/ns-minidumpapiset-minidump_header
 type MinidumpHeader = {
   /** This should be MDMP */
@@ -125,7 +132,19 @@ function readCrashpadModuleInfoAnnotationObjectsLocation(buf: Buffer, base: numb
 
 function readStringUtf8Unterminated(buf: Buffer, rva: number): string {
   const length = buf.readUInt32LE(rva);
-  return buf.toString('utf8', rva + 4, rva + 4 + length);
+
+  // Validate length to prevent excessive memory allocation
+  if (length > MAX_STRING_LENGTH) {
+    throw new Error(`String length ${length} exceeds maximum allowed ${MAX_STRING_LENGTH}`);
+  }
+
+  // Validate that the string doesn't exceed buffer bounds
+  const endOffset = rva + 4 + length;
+  if (endOffset > buf.length) {
+    throw new Error(`String extends beyond buffer bounds (${endOffset} > ${buf.length})`);
+  }
+
+  return buf.toString('utf8', rva + 4, endOffset);
 }
 
 type AnnotationObject = {
@@ -167,6 +186,12 @@ function readAnnotationObjects(buf: Buffer, location: MinidumpLocation): Record<
   );
 
   const count = annotationObjectsData.readUInt32LE(0);
+
+  // Validate count to prevent memory exhaustion from crafted minidumps
+  if (count > MAX_ANNOTATION_COUNT) {
+    throw new Error(`Annotation count ${count} exceeds maximum allowed ${MAX_ANNOTATION_COUNT}`);
+  }
+
   let offset = 4;
 
   const annotationObjects: Record<string, string> = {};
@@ -190,6 +215,12 @@ function readCrashpadModuleLinks(buf: Buffer, location: MinidumpLocation): Recor
   }
 
   const count = data.readUInt32LE(0);
+
+  // Validate count to prevent memory exhaustion from crafted minidumps
+  if (count > MAX_MODULE_COUNT) {
+    throw new Error(`Module count ${count} exceeds maximum allowed ${MAX_MODULE_COUNT}`);
+  }
+
   let offset = 4;
 
   let annotationObjects = {};
