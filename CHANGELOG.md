@@ -1,5 +1,23 @@
 # Changelog
 
+## 7.13.0
+
+### New Features ✨
+
+- Update Sentry SDKs to v10.50.0 by @github-actions in [#1358](https://github.com/getsentry/sentry-electron/pull/1358)
+
+### Bug Fixes 🐛
+
+- Protect against malformed minidumps by @timfish in [#1359](https://github.com/getsentry/sentry-electron/pull/1359)
+- Catch invalid JSON from renderers by @timfish in [#1360](https://github.com/getsentry/sentry-electron/pull/1360)
+- Truncate minidump extra parameters when updating by @timfish in [#1361](https://github.com/getsentry/sentry-electron/pull/1361)
+
+### Internal Changes 🔧
+
+- (deps) Bump postcss from 8.5.6 to 8.5.10 by @dependabot in [#1362](https://github.com/getsentry/sentry-electron/pull/1362)
+- New Electron versions by @github-actions in [#1357](https://github.com/getsentry/sentry-electron/pull/1357)
+- Remove changelog preview by @chargome in [#1356](https://github.com/getsentry/sentry-electron/pull/1356)
+
 ## 7.12.0
 
 ### New Features ✨
