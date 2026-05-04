@@ -6,7 +6,7 @@ import { Mutex } from './mutex.js';
 const dateFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.*\d{0,10}Z$/;
 
 /** JSON revive function to enable de-serialization of Date objects */
-function dateReviver(_: string, value: any): any {
+function dateReviver(_: string, value: unknown): unknown {
   if (typeof value === 'string' && dateFormat.test(value)) {
     return new Date(value);
   }

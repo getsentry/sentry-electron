@@ -36,8 +36,7 @@ function getSessionStore(): Store<SessionContext | undefined> {
 /** Copies a session and removes the toJSON function so it can be serialised without conversion */
 function makeSessionSafeToSerialize(session: Session): Session {
   const copy = { ...session };
-  // eslint-disable-next-line typescript/no-unsafe-member-access
-  delete (copy as any).toJSON;
+  delete (copy as unknown as { toJSON?: unknown }).toJSON;
   return copy;
 }
 
