@@ -79,6 +79,7 @@ export {
   // eslint-disable-next-line deprecation/deprecation
   inboundFiltersIntegration,
   instrumentAnthropicAiClient,
+  instrumentCreateReactAgent,
   instrumentGoogleGenAIClient,
   instrumentLangChainEmbeddings,
   instrumentLangGraph,
