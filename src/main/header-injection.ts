@@ -1,4 +1,4 @@
-import { Session } from 'electron';
+import type { Session } from 'electron';
 
 function addHeader(
   responseHeaders: Record<string, string | string[]> = {},

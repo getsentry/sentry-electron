@@ -1,18 +1,14 @@
+import type { Envelope, Event, Profile, ProfileChunk, ReplayEvent } from '@sentry/core';
 import {
   addItemToEnvelope,
   createEnvelope,
-  Envelope,
-  Event,
   forEachEnvelopeItem,
   getCurrentScope,
   normalizeUrlToBase,
-  Profile,
-  ProfileChunk,
-  ReplayEvent,
 } from '@sentry/core';
 import { createGetModuleFromFilename } from '@sentry/node';
 import { app } from 'electron';
-import { ElectronMainOptionsInternal } from './sdk.js';
+import type { ElectronMainOptionsInternal } from './sdk.js';
 import { SDK_VERSION } from './version.js';
 
 const getModuleFromFilename = createGetModuleFromFilename(app.getAppPath());

@@ -1,5 +1,6 @@
-import { applyScopeDataToEvent, debug, defineIntegration, Event, makeDsn, ScopeData, uuid4 } from '@sentry/core';
-import { NodeClient, NodeOptions } from '@sentry/node';
+import type { Event, ScopeData } from '@sentry/core';
+import { applyScopeDataToEvent, debug, defineIntegration, makeDsn, uuid4 } from '@sentry/core';
+import type { NodeClient, NodeOptions } from '@sentry/node';
 import { app, crashReporter } from 'electron';
 import { addScopeListener, getScopeData } from '../../common/scope.js';
 import { getEventDefaults, getSdkInfo } from '../context.js';

@@ -1,6 +1,9 @@
-import { BaseTransportOptions, makeOfflineTransport, OfflineTransportOptions, Transport } from '@sentry/core';
-import { ElectronNetTransportOptions, makeElectronTransport } from './electron-net.js';
-import { createOfflineStore, OfflineStoreOptions } from './offline-store.js';
+import type { BaseTransportOptions, OfflineTransportOptions, Transport } from '@sentry/core';
+import { makeOfflineTransport } from '@sentry/core';
+import type { ElectronNetTransportOptions } from './electron-net.js';
+import { makeElectronTransport } from './electron-net.js';
+import type { OfflineStoreOptions } from './offline-store.js';
+import { createOfflineStore } from './offline-store.js';
 
 export type ElectronOfflineTransportOptions = ElectronNetTransportOptions &
   OfflineTransportOptions &

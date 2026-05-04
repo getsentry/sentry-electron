@@ -1,12 +1,5 @@
-import {
-  _INTERNAL_captureLog,
-  getClient,
-  getCurrentScope,
-  Log,
-  LogSeverityLevel,
-  ParameterizedString,
-  SerializedLog,
-} from '@sentry/core';
+import type { Log, LogSeverityLevel, ParameterizedString, SerializedLog } from '@sentry/core';
+import { _INTERNAL_captureLog, getClient, getCurrentScope } from '@sentry/core';
 import { getIPC } from './ipc.js';
 
 function captureLog(

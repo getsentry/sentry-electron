@@ -1,3 +1,4 @@
+import type { SerializedSession, Session, SessionContext, SessionStatus } from '@sentry/core';
 import {
   captureSession,
   debug,
@@ -5,14 +6,11 @@ import {
   getClient,
   getIsolationScope,
   makeSession,
-  SerializedSession,
-  Session,
-  SessionContext,
-  SessionStatus,
   startSession as startSessionCore,
   updateSession,
 } from '@sentry/core';
-import { flush, NodeClient } from '@sentry/node';
+import type { NodeClient } from '@sentry/node';
+import { flush } from '@sentry/node';
 import { app } from 'electron';
 import { getSentryCachePath } from './electron-normalize.js';
 import { Store } from './store.js';

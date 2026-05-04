@@ -5,7 +5,7 @@ import { isAbsolute, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { IPCMode } from '../../common/ipc.js';
 import { setPreload } from '../electron-normalize.js';
-import { ElectronMainOptionsInternal } from '../sdk.js';
+import type { ElectronMainOptionsInternal } from '../sdk.js';
 
 // After bundling with webpack, require.resolve can return number so we include that in the types
 // to ensure we check for that!

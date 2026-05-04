@@ -1,10 +1,5 @@
-import {
-  BaseTransportOptions,
-  createTransport,
-  Transport,
-  TransportMakeRequestResponse,
-  TransportRequest,
-} from '@sentry/core';
+import type { BaseTransportOptions, Transport, TransportMakeRequestResponse, TransportRequest } from '@sentry/core';
+import { createTransport } from '@sentry/core';
 import { getMagicMessage, isMagicMessage } from '../common/ipc.js';
 
 /**

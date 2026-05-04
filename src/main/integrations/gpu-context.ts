@@ -1,4 +1,5 @@
-import { defineIntegration, Event } from '@sentry/core';
+import type { Event } from '@sentry/core';
+import { defineIntegration } from '@sentry/core';
 import { app } from 'electron';
 
 interface Options {

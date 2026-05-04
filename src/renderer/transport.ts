@@ -1,11 +1,6 @@
-import {
-  BaseTransportOptions,
-  createTransport,
-  Transport,
-  TransportMakeRequestResponse,
-  TransportRequest,
-} from '@sentry/core';
-import { IPCInterface } from '../common/ipc.js';
+import type { BaseTransportOptions, Transport, TransportMakeRequestResponse, TransportRequest } from '@sentry/core';
+import { createTransport } from '@sentry/core';
+import type { IPCInterface } from '../common/ipc.js';
 import { getIPC } from './ipc.js';
 
 /**

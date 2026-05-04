@@ -1,4 +1,5 @@
-import { defineIntegration, Integration } from '@sentry/core';
+import type { Integration } from '@sentry/core';
+import { defineIntegration } from '@sentry/core';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import {
   disableBlockDetectionForCallback,

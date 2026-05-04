@@ -1,4 +1,4 @@
-import { Client, Event } from '@sentry/core';
+import type { Client, Event } from '@sentry/core';
 
 interface Attributes {
   'os.name'?: string;

@@ -1,5 +1,6 @@
 import { parseSemver } from '@sentry/core';
-import { app, Session } from 'electron';
+import type { Session } from 'electron';
+import { app } from 'electron';
 import { join } from 'path';
 import { RENDERER_ID_HEADER } from '../common/ipc.js';
 

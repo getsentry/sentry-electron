@@ -1,11 +1,5 @@
-import {
-  _INTERNAL_captureMetric,
-  getClient,
-  getCurrentScope,
-  MetricOptions,
-  MetricType,
-  SerializedMetric,
-} from '@sentry/core';
+import type { MetricOptions, MetricType, SerializedMetric } from '@sentry/core';
+import { _INTERNAL_captureMetric, getClient, getCurrentScope } from '@sentry/core';
 import { getIPC } from './ipc.js';
 
 function captureMetric(type: MetricType, name: string, value: number, options?: MetricOptions): void {

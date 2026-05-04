@@ -1,4 +1,4 @@
-import { Event } from '@sentry/core';
+import type { Event } from '@sentry/core';
 
 /** Removes private properties from event before merging */
 function removePrivateProperties(event: Event): void {

@@ -53,7 +53,7 @@
       "files": ["**/*.ts", "**/*.tsx", "**/*.d.ts"],
       "rules": {
         "typescript/ban-ts-comment": "error",
-        // "typescript/consistent-type-imports": "error",  TODO: enable this
+        "typescript/consistent-type-imports": "error",
         "typescript/no-unnecessary-type-assertion": "error",
         "typescript/prefer-for-of": "error",
         "typescript/no-floating-promises": ["error", { "ignoreVoid": true }],

@@ -1,13 +1,14 @@
-import {
+import type {
   BaseTransportOptions,
-  createTransport,
   Transport,
   TransportMakeRequestResponse,
   TransportRequest,
   TransportRequestExecutor,
 } from '@sentry/core';
+import { createTransport } from '@sentry/core';
 import { app, net } from 'electron';
-import { Readable, Writable } from 'stream';
+import type { Writable } from 'stream';
+import { Readable } from 'stream';
 import { URL } from 'url';
 import { createGzip } from 'zlib';
 

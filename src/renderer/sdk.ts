@@ -1,11 +1,9 @@
 /* eslint-disable deprecation/deprecation */
 /* eslint-disable no-restricted-globals */
-import {
-  BrowserOptions,
-  getDefaultIntegrations as getDefaultBrowserIntegrations,
-  init as browserInit,
-} from '@sentry/browser';
-import { debug, Integration } from '@sentry/core';
+import type { BrowserOptions } from '@sentry/browser';
+import { getDefaultIntegrations as getDefaultBrowserIntegrations, init as browserInit } from '@sentry/browser';
+import type { Integration } from '@sentry/core';
+import { debug } from '@sentry/core';
 import { scopeToMainIntegration } from './integrations/scope-to-main.js';
 import { electronRendererStackParser } from './stack-parse.js';
 import { makeRendererTransport } from './transport.js';

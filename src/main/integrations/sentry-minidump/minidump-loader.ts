@@ -1,9 +1,11 @@
-import { Attachment, debug } from '@sentry/core';
+import type { Attachment } from '@sentry/core';
+import { debug } from '@sentry/core';
 import { app } from 'electron';
 import { promises as fs } from 'fs';
 import { basename, join } from 'path';
 import { Mutex } from '../../mutex.js';
-import { MinidumpParseResult, parseMinidump } from './minidump-parser.js';
+import type { MinidumpParseResult } from './minidump-parser.js';
+import { parseMinidump } from './minidump-parser.js';
 
 /** Maximum number of days to keep a minidump before deleting it. */
 const MAX_AGE_DAYS = 30;
