@@ -1,11 +1,11 @@
+import type { Integration, Options } from '@sentry/core';
 import {
   addAutoIpAddressToSession,
   debug,
   getIntegrationsToSetup,
-  Integration,
-  Options,
   stackParserFromStackParserOptions,
 } from '@sentry/core';
+import type { NodeOptions } from '@sentry/node';
 import {
   consoleIntegration,
   contextLinesIntegration,
@@ -18,11 +18,11 @@ import {
   nativeNodeFetchIntegration,
   NodeClient,
   nodeContextIntegration,
-  NodeOptions,
   onUnhandledRejectionIntegration,
   setNodeAsyncContextStrategy,
 } from '@sentry/node';
-import { Session, session, WebContents } from 'electron';
+import type { Session, WebContents } from 'electron';
+import { session } from 'electron';
 import { IPCMode } from '../common/ipc.js';
 import { getDefaultEnvironment, getDefaultReleaseName, getSdkInfo } from './context.js';
 import { additionalContextIntegration } from './integrations/additional-context.js';
@@ -42,7 +42,8 @@ import { sentryMinidumpIntegration } from './integrations/sentry-minidump/index.
 import { configureIPC } from './ipc.js';
 import { getOsDeviceLogAttributes } from './log.js';
 import { defaultStackParser } from './stack-parse.js';
-import { ElectronOfflineTransportOptions, makeElectronOfflineTransport } from './transports/electron-offline-net.js';
+import type { ElectronOfflineTransportOptions } from './transports/electron-offline-net.js';
+import { makeElectronOfflineTransport } from './transports/electron-offline-net.js';
 import { configureUtilityProcessIPC } from './utility-processes.js';
 
 /** Get the default integrations for the main process SDK. */

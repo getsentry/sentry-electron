@@ -1,8 +1,10 @@
 /* eslint-disable no-restricted-globals */
 /* eslint-disable no-console */
-import { Client, debug, getClient, SerializedLog, SerializedMetric, uuid4 } from '@sentry/core';
-import { ipcChannelUtils, IPCInterface, RENDERER_ID_HEADER, RendererStatus } from '../common/ipc.js';
-import { ElectronRendererOptionsInternal } from './sdk.js';
+import type { Client, SerializedLog, SerializedMetric } from '@sentry/core';
+import { debug, getClient, uuid4 } from '@sentry/core';
+import type { IPCInterface, RendererStatus } from '../common/ipc.js';
+import { ipcChannelUtils, RENDERER_ID_HEADER } from '../common/ipc.js';
+import type { ElectronRendererOptionsInternal } from './sdk.js';
 
 /** Gets the available IPC implementation */
 function getImplementation(ipcKey: string): IPCInterface {

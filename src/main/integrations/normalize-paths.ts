@@ -1,4 +1,5 @@
-import { defineIntegration, forEachEnvelopeItem, Profile } from '@sentry/core';
+import type { Profile } from '@sentry/core';
+import { defineIntegration, forEachEnvelopeItem } from '@sentry/core';
 import { app } from 'electron';
 import { normaliseProfile, normalizePaths } from '../normalize.js';
 

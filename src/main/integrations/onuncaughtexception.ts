@@ -1,5 +1,5 @@
 import { captureException, defineIntegration } from '@sentry/core';
-import { NodeClient } from '@sentry/node';
+import type { NodeClient } from '@sentry/node';
 import { dialog } from 'electron';
 
 /** Capture unhandled errors. */

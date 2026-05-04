@@ -1,4 +1,4 @@
-import { SerializedLog, SerializedMetric } from '@sentry/core';
+import type { SerializedLog, SerializedMetric } from '@sentry/core';
 
 /** Ways to communicate between the renderer and main process  */
 export enum IPCMode {

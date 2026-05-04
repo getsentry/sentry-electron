@@ -1,4 +1,5 @@
-import { debug, Envelope, OfflineStore, parseEnvelope, serializeEnvelope, uuid4 } from '@sentry/core';
+import type { Envelope, OfflineStore } from '@sentry/core';
+import { debug, parseEnvelope, serializeEnvelope, uuid4 } from '@sentry/core';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import { getSentryCachePath } from '../electron-normalize.js';

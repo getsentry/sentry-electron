@@ -1,9 +1,10 @@
-import { ChildProcess, spawn, spawnSync } from 'child_process';
+import type { ChildProcess } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import { rmSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
 import { delay } from '../helpers';
-import { TestLogger } from './utils';
+import type { TestLogger } from './utils';
 
 function getDeleteDirectories(appName: string): string[] {
   switch (process.platform) {

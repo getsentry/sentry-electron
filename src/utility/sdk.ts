@@ -1,12 +1,12 @@
+import type { Integration, StackParser } from '@sentry/core';
 import {
   createStackParser,
   debug,
   getIntegrationsToSetup,
-  Integration,
   nodeStackLineParser,
-  StackParser,
   stackParserFromStackParserOptions,
 } from '@sentry/core';
+import type { NodeOptions } from '@sentry/node';
 import {
   consoleIntegration,
   createGetModuleFromFilename,
@@ -17,7 +17,6 @@ import {
   linkedErrorsIntegration,
   nativeNodeFetchIntegration,
   NodeClient,
-  NodeOptions,
   onUncaughtExceptionIntegration,
   onUnhandledRejectionIntegration,
   setNodeAsyncContextStrategy,

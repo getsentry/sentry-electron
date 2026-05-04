@@ -2,9 +2,10 @@
  * This preload script may be used with sandbox mode enabled which means regular require is not available.
  */
 
-import { SerializedLog, SerializedMetric } from '@sentry/core';
+import type { SerializedLog, SerializedMetric } from '@sentry/core';
 import { contextBridge, ipcRenderer } from 'electron';
-import { ipcChannelUtils, RendererStatus } from '../common/ipc.js';
+import type { RendererStatus } from '../common/ipc.js';
+import { ipcChannelUtils } from '../common/ipc.js';
 
 /**
  * Hook up IPC to the window object and uses contextBridge if available.

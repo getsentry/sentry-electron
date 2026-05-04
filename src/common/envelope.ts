@@ -1,13 +1,5 @@
-import {
-  Attachment,
-  AttachmentItem,
-  Envelope,
-  Event,
-  EventItem,
-  forEachEnvelopeItem,
-  Profile,
-  ProfileChunk,
-} from '@sentry/core';
+import type { Attachment, AttachmentItem, Envelope, Event, EventItem, Profile, ProfileChunk } from '@sentry/core';
+import { forEachEnvelopeItem } from '@sentry/core';
 
 /** Pulls an event and additional envelope items out of an envelope. Returns undefined if there was no event */
 export function eventFromEnvelope(envelope: Envelope): [Event, Attachment[], Profile | undefined] | undefined {

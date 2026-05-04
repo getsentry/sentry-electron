@@ -1,4 +1,4 @@
-import { Envelope } from '@sentry/core';
+import type { Envelope } from '@sentry/core';
 import { expect } from 'vitest';
 import { electronTestRunner, getSessionFromEnvelope, ISO_DATE_MATCHER, sessionEnvelope, UUID_MATCHER } from '../../..';
 

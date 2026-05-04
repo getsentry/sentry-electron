@@ -1,21 +1,19 @@
+import type { Client, Event, Integration, StackFrame } from '@sentry/core';
 import {
   callFrameToStackFrame,
   captureEvent,
-  Client,
   debug,
   defineIntegration,
-  Event,
-  Integration,
-  StackFrame,
   stripSentryFramesAndReverse,
   watchdogTimer,
 } from '@sentry/core';
 import { createGetModuleFromFilename } from '@sentry/node';
-import { app, powerMonitor, WebContents } from 'electron';
-import { RendererStatus } from '../../common/ipc.js';
+import type { WebContents } from 'electron';
+import { app, powerMonitor } from 'electron';
+import type { RendererStatus } from '../../common/ipc.js';
 import { ELECTRON_MAJOR_VERSION } from '../electron-normalize.js';
 import { addHeaderToSession } from '../header-injection.js';
-import { ElectronMainOptionsInternal } from '../sdk.js';
+import type { ElectronMainOptionsInternal } from '../sdk.js';
 import { sessionAnr } from '../sessions.js';
 import { captureRendererStackFrames } from '../stack-parse.js';
 

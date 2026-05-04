@@ -1,5 +1,5 @@
 import { defineIntegration } from '@sentry/core';
-import { RendererProcessAnrOptions } from '../../common/ipc.js';
+import type { RendererProcessAnrOptions } from '../../common/ipc.js';
 import { getIPC } from '../ipc.js';
 
 interface Options {

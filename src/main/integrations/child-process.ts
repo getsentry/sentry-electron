@@ -1,15 +1,11 @@
-import {
-  addBreadcrumb,
-  captureMessage,
-  defineIntegration,
-  Log,
-  ParameterizedString,
-  SeverityLevel,
-} from '@sentry/core';
-import { childProcessIntegration as nodeChildProcessIntegration, logger, NodeClient } from '@sentry/node';
+import type { Log, ParameterizedString, SeverityLevel } from '@sentry/core';
+import { addBreadcrumb, captureMessage, defineIntegration } from '@sentry/core';
+import type { NodeClient } from '@sentry/node';
+import { childProcessIntegration as nodeChildProcessIntegration, logger } from '@sentry/node';
 import { app } from 'electron';
-import { EXIT_REASONS, ExitReason } from '../electron-normalize.js';
-import { ElectronMainOptions } from '../sdk.js';
+import type { ExitReason } from '../electron-normalize.js';
+import { EXIT_REASONS } from '../electron-normalize.js';
+import type { ElectronMainOptions } from '../sdk.js';
 
 type NodeChildProcessOptions = NonNullable<Parameters<typeof nodeChildProcessIntegration>[0]>;
 

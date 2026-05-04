@@ -1,16 +1,16 @@
-import {
+import type {
   AttachmentItem,
   Contexts,
   Envelope,
   Event,
   FeedbackEvent,
-  parseSemver,
   ProfileChunk,
   ProfileItem,
   SdkInfo,
   SerializedSession,
   TransactionEvent,
 } from '@sentry/core';
+import { parseSemver } from '@sentry/core';
 import { readdirSync } from 'fs';
 import { join } from 'path';
 import { inspect } from 'util';

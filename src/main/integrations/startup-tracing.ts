@@ -1,12 +1,9 @@
+import type { Event, Span, SpanStatus, StartSpanOptions } from '@sentry/core';
 import {
   defineIntegration,
-  Event,
   SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN,
   setMeasurement,
-  Span,
-  SpanStatus,
   startSpanManual,
-  StartSpanOptions,
   timestampInSeconds,
 } from '@sentry/core';
 import { app } from 'electron';

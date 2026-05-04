@@ -1,6 +1,6 @@
+import type { ClientOptions } from '@sentry/core';
 import {
   addBreadcrumb,
-  ClientOptions,
   debug,
   defineIntegration,
   fill,
@@ -15,8 +15,10 @@ import {
   stringMatchesSomePattern,
 } from '@sentry/core';
 import { logger } from '@sentry/node';
-import { ClientRequest, ClientRequestConstructorOptions, IncomingMessage, net as electronNet } from 'electron';
-import { format as urlFormat, UrlObject } from 'url';
+import type { ClientRequest, ClientRequestConstructorOptions, IncomingMessage } from 'electron';
+import { net as electronNet } from 'electron';
+import type { UrlObject } from 'url';
+import { format as urlFormat } from 'url';
 
 type ShouldTraceFn = (method: string, url: string) => boolean;
 

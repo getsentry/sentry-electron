@@ -1,4 +1,5 @@
-import { Attachment, debug, Event, parseEnvelope } from '@sentry/core';
+import type { Attachment, Event } from '@sentry/core';
+import { debug, parseEnvelope } from '@sentry/core';
 import { captureEvent, getClient } from '@sentry/node';
 import * as electron from 'electron';
 import { eventFromEnvelope } from '../common/envelope.js';

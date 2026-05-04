@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { Envelope } from '@sentry/core';
+import type { Envelope } from '@sentry/core';
 import { readFileSync } from 'fs';
 import { inspect } from 'util';
 import { afterEach, beforeEach, expect, onTestFailed, test } from 'vitest';
@@ -7,7 +7,8 @@ import { delay } from '../helpers';
 import { TestContext } from './context';
 import { downloadElectron } from './download';
 import { installDepsAndBuild, prepareTestFiles } from './prepare';
-import { createSentryTestServer, MinidumpResult, TestServer } from './server';
+import type { MinidumpResult, TestServer } from './server';
+import { createSentryTestServer } from './server';
 import { createTestLogger, getCurrentElectronVersion, isSessionEnvelope } from './utils';
 
 function getTestMeta(path: string) {

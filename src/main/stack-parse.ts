@@ -1,6 +1,8 @@
-import { createStackParser, debug, nodeStackLineParser, StackFrame, StackParser } from '@sentry/core';
+import type { StackFrame, StackParser } from '@sentry/core';
+import { createStackParser, debug, nodeStackLineParser } from '@sentry/core';
 import { createGetModuleFromFilename } from '@sentry/node';
-import { app, WebContents, WebFrameMain } from 'electron';
+import type { WebContents, WebFrameMain } from 'electron';
+import { app } from 'electron';
 import { electronRendererStackParser } from '../renderer/stack-parse.js';
 import { ELECTRON_MAJOR_VERSION } from './electron-normalize.js';
 

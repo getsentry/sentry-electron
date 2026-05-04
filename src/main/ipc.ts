@@ -1,29 +1,27 @@
 // oxlint-disable max-lines
 import { EventEmitter } from 'node:events';
+import type { Attachment, Client, DynamicSamplingContext, Event, ScopeData } from '@sentry/core';
 import {
   _INTERNAL_captureSerializedLog,
   _INTERNAL_captureSerializedMetric,
-  Attachment,
-  Client,
   debug,
-  DynamicSamplingContext,
-  Event,
   parseEnvelope,
-  ScopeData,
   type SerializedLog,
   type SerializedMetric,
 } from '@sentry/core';
 import { captureEvent, getClient, getCurrentScope } from '@sentry/node';
-import { app, ipcMain, protocol, WebContents, webContents } from 'electron';
+import type { WebContents } from 'electron';
+import { app, ipcMain, protocol, webContents } from 'electron';
 import { eventFromEnvelope, profileChunkFromEnvelope } from '../common/envelope.js';
-import { ipcChannelUtils, IPCMode, IpcUtils, RendererStatus } from '../common/ipc.js';
+import type { IpcUtils, RendererStatus } from '../common/ipc.js';
+import { ipcChannelUtils, IPCMode } from '../common/ipc.js';
 import { registerProtocol } from './electron-normalize.js';
 import { createRendererEventLoopBlockStatusHandler } from './integrations/renderer-anr.js';
 import { rendererProfileFromIpc } from './integrations/renderer-profiling.js';
 import { getOsDeviceLogAttributes } from './log.js';
 import { mergeEvents } from './merge.js';
 import { normalizeProfileChunkEnvelope, normalizeReplayEnvelope } from './normalize.js';
-import { ElectronMainOptionsInternal } from './sdk.js';
+import type { ElectronMainOptionsInternal } from './sdk.js';
 import { SDK_VERSION } from './version.js';
 
 interface IpcMainEvents {

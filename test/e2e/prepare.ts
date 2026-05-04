@@ -6,7 +6,8 @@ import { SDK_VERSION as JS_SDK_VERSION } from '@sentry/core';
 import { dirname, join, sep } from 'path';
 import { SDK_VERSION } from '../../src/main/version';
 import { ERROR_ID, HANG_ID, RATE_LIMIT_ID } from './server';
-import { TestLogger, walkSync } from './utils';
+import type { TestLogger } from './utils';
+import { walkSync } from './utils';
 
 const exec = promisify(child_process.exec);
 

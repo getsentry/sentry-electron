@@ -1,12 +1,13 @@
-import { Envelope, Event, parseEnvelope } from '@sentry/core';
+import type { Envelope, Event } from '@sentry/core';
+import { parseEnvelope } from '@sentry/core';
 import Busboy from 'busboy';
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
 import Router from 'koa-tree-router';
-import { Readable } from 'stream';
+import type { Readable } from 'stream';
 import { createGunzip, gunzipSync } from 'zlib';
 import { delay } from '../helpers';
-import { TestLogger } from './utils';
+import type { TestLogger } from './utils';
 
 export const SERVER_PORT = 8123;
 export const RATE_LIMIT_ID = 666;
