@@ -25,11 +25,9 @@ function getScope(options: NodeOptions): Event {
   return {
     release: options.release,
     environment: options.environment,
-    /* eslint-disable typescript/no-unsafe-member-access */
     ...(hasKeys(scope.user) && { user: scope.user }),
     ...(hasKeys(scope.tags) && { tags: scope.tags }),
     ...(hasKeys(scope.extra) && { extra: scope.extra }),
-    /* eslint-enable typescript/no-unsafe-member-access */
   };
 }
 

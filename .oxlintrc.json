@@ -60,7 +60,7 @@
         "typescript/no-dynamic-delete": "error",
         "typescript/no-unsafe-member-access": "error",
         "typescript/unbound-method": "error",
-        // "typescript/no-explicit-any": "error", TODO: enable this
+        "typescript/no-explicit-any": "error",
         "typescript/no-empty-function": "off",
         "typescript/prefer-optional-chain": ["error"],
         "typescript/no-redundant-type-constituents": "off",
@@ -79,7 +79,8 @@
         "no-unused-expressions": "off",
         "no-unsafe-optional-chaining": "off",
         "max-lines": "off",
-        "vitest/no-conditional-tests": "off"
+        "vitest/no-conditional-tests": "off",
+        "typescript/no-explicit-any": "off"
       }
     }
   ]

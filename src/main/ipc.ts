@@ -145,7 +145,7 @@ function handleEnvelope(
 }
 
 /** Is object defined and has keys */
-function hasKeys(obj: any): boolean {
+function hasKeys(obj: unknown): boolean {
   return obj != undefined && Object.keys(obj).length > 0;
 }
 
