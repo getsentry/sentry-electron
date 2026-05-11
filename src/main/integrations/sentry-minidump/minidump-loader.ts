@@ -121,9 +121,8 @@ async function deleteCrashpadMetadataFile(crashesDirectory: string, waitMs: numb
   try {
     await fs.unlink(metadataPath);
     debug.log('Deleted Crashpad metadata file', metadataPath);
-  } catch (e: any) {
-    // eslint-disable-next-line typescript/no-unsafe-member-access
-    if (e.code && e.code == 'EBUSY') {
+  } catch (e) {
+    if (typeof e === 'object' && e !== null && 'code' in e && e.code === 'EBUSY') {
       // Since Crashpad probably still has the metadata file open, we make a few attempts to delete it, backing
       // off and waiting longer each time.
       setTimeout(async () => {
