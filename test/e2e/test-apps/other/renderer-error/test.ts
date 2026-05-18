@@ -15,6 +15,7 @@ electronTestRunner(__dirname, { timeout: 25_000 }, async (ctx) => {
               content_type: 'application/vnd.sentry.items.log+json',
             },
             {
+              version: 2,
               items: expect.arrayContaining([
                 {
                   timestamp: expect.any(Number),
