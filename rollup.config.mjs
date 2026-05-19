@@ -44,9 +44,11 @@ function transpileFiles(format, input, outDir) {
     treeshake: { moduleSideEffects: false },
     plugins: [
       typescript({
+        compilerOptions: {
+          outDir,
+          rootDir: 'src',
+        },
         outDir,
-        tsconfig: './tsconfig.build.json',
-        noEmitOnError: true,
       }),
       format === 'esm' ? modulePackageJson : {},
     ],
@@ -64,8 +66,11 @@ function bundlePreload(format, input, output) {
     },
     plugins: [
       typescript({
-        tsconfig: './tsconfig.preload.json',
-        noEmitOnError: true,
+        compilerOptions: {
+          declaration: false,
+          declarationMap: false,
+          rootDir: 'src',
+        },
       }),
     ],
     external,

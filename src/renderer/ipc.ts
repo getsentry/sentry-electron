@@ -36,7 +36,18 @@ function getImplementation(ipcKey: string): IPCInterface {
         });
       },
       sendEnvelope: (body: string | Uint8Array) => {
-        fetch(ipcUtil.createUrl('envelope'), { method: 'POST', body, headers }).catch(() => {
+        const requestBody =
+          typeof body === 'string'
+            ? body
+            : body.buffer instanceof ArrayBuffer
+              ? body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength)
+              : Uint8Array.from(body).buffer;
+
+        fetch(ipcUtil.createUrl('envelope'), {
+          method: 'POST',
+          body: requestBody,
+          headers,
+        }).catch(() => {
           // ignore
         });
       },

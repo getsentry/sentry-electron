@@ -52,10 +52,12 @@ export function configureUtilityProcessIPC(): void {
       // We proxy child.on so we can filter messages from the child SDK and ensure that users do not see them
       // eslint-disable-next-line typescript/unbound-method
       child.on = new Proxy(child.on, {
-        apply: (target, thisArg, [event, listener]) => {
+        apply: (target, thisArg, args: [string, (message: unknown) => unknown]) => {
+          const [event, listener] = args;
+
           if (event === 'message') {
-            return target.apply(thisArg, [
-              'message',
+            return Reflect.apply(target, thisArg, [
+              event,
               (msg: unknown) => {
                 if (isMagicMessage(msg)) {
                   return;
@@ -66,7 +68,7 @@ export function configureUtilityProcessIPC(): void {
             ]);
           }
 
-          return target.apply(thisArg, [event, listener]);
+          return Reflect.apply(target, thisArg, args);
         },
       });
 
