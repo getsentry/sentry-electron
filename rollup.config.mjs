@@ -48,7 +48,6 @@ function transpileFiles(format, input, outDir) {
           outDir,
           rootDir: 'src',
         },
-        outDir,
       }),
       format === 'esm' ? modulePackageJson : {},
     ],
