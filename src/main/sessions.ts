@@ -58,7 +58,7 @@ export function startSession(sendOnCreate: boolean): void {
   persistTimer = setInterval(async () => {
     const currentSession = getIsolationScope().getSession();
     // Only bother saving if it hasn't already ended
-    if (currentSession && currentSession.status === 'ok') {
+    if (currentSession?.status === 'ok') {
       await getSessionStore().set(makeSessionSafeToSerialize(currentSession));
     }
   }, PERSIST_INTERVAL_MS);
@@ -161,7 +161,7 @@ export async function previousSessionWasAbnormal(): Promise<void> {
       environment: (previous as unknown as SerializedSession).attrs?.environment,
     });
 
-    await client.sendSession(sesh);
+    client.sendSession(sesh);
 
     previousSession = undefined;
   }
@@ -193,7 +193,7 @@ export async function checkPreviousSession(crashed: boolean): Promise<void> {
       environment: (previous as unknown as SerializedSession).attrs?.environment,
     });
 
-    await client.sendSession(sesh);
+    client.sendSession(sesh);
 
     previousSession = undefined;
   }
