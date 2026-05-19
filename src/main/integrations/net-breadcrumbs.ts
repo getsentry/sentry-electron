@@ -199,7 +199,7 @@ function createWrappedRequestFactory(
   return function wrappedRequestMethodFactory(originalRequestMethod: RequestMethod): RequestMethod {
     return function requestMethod(this: typeof electronNet, reqOptions: RequestOptions): ClientRequest {
       const { url, method } = parseOptions(reqOptions);
-      const request = originalRequestMethod.apply(this, [reqOptions]) as ClientRequest;
+      const request = originalRequestMethod.apply(this, [reqOptions]);
 
       if (url.match(/sentry_key/) || request.getHeader('x-sentry-auth')) {
         return request;

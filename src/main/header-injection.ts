@@ -6,7 +6,7 @@ function addHeader(
   value: string,
 ): Electron.HeadersReceivedResponse {
   if (responseHeaders[name]) {
-    const existing = responseHeaders[name] as string | string[];
+    const existing = responseHeaders[name];
 
     if (Array.isArray(existing)) {
       existing.push(value);

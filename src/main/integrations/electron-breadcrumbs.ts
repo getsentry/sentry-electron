@@ -126,7 +126,7 @@ export const electronBreadcrumbsIntegration = defineIntegration(
           emitter: NodeJS.EventEmitter | WebContents | BrowserWindow,
           category: string,
           shouldCapture: EventFunction | undefined | false,
-          id?: number | undefined,
+          id?: number,
         ): void {
           const emit = emitter.emit.bind(emitter) as (event: string, ...args: unknown[]) => boolean;
 
