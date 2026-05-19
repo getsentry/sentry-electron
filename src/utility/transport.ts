@@ -37,11 +37,13 @@ export function makeUtilityProcessTransport(): (options: BaseTransportOptions) =
   // We proxy `process.parentPort.on` so we can filter messages from the main SDK and ensure that users do not see them
   // eslint-disable-next-line typescript/unbound-method
   process.parentPort.on = new Proxy(process.parentPort.on, {
-    apply: (target, thisArg, [event, listener]) => {
+    apply: (target, thisArg, args: Parameters<typeof process.parentPort.on>) => {
+      const [event, listener] = args;
+
       if (event === 'message') {
         return target.apply(thisArg, [
-          'message',
-          (msg: MessageEvent) => {
+          event,
+          (msg) => {
             if (isMagicMessage(msg.data)) {
               return;
             }
@@ -51,7 +53,7 @@ export function makeUtilityProcessTransport(): (options: BaseTransportOptions) =
         ]);
       }
 
-      return target.apply(thisArg, [event, listener]);
+      return target.apply(thisArg, args);
     },
   });
 

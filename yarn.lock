@@ -805,11 +805,6 @@
     "@sentry-internal/browser-utils" "10.53.1"
     "@sentry/core" "10.53.1"
 
-"@sentry-internal/typescript@10.53.1":
-  version "10.53.1"
-  resolved "https://registry.yarnpkg.com/@sentry-internal/typescript/-/typescript-10.53.1.tgz#216b3e3ec0d5aa7ef3e7055ea50d6371d9786cce"
-  integrity sha512-7ncY4Ww9MsTf5lsX9qAUaiNeQdKNBeZm7rtFze0UeU8fTLxOKx9ink4jCFa1xB/sztIR1pq/rGmnBs7evvn+aw==
-
 "@sentry/browser@10.53.1":
   version "10.53.1"
   resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-10.53.1.tgz#db8dbbf4fc752acec9fec5073a7105a2b0f58f97"
@@ -2694,10 +2689,10 @@ type-is@^2.0.1:
     media-typer "^1.1.0"
     mime-types "^3.0.0"
 
-typescript@~5.0.0:
-  version "5.0.4"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.0.4.tgz#b217fd20119bd61a94d4011274e0ab369058da3b"
-  integrity sha512-cW9T5W9xY37cc+jfEnaUvX91foxtHkza3Nw3wkoF4sSlKn0MONdkdEndig/qPBWXNkmplh3NzayQzCiHM4/hqw==
+typescript@^6.0.0:
+  version "6.0.3"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-6.0.3.tgz#90251dc007916e972786cb94d74d15b185577d21"
+  integrity sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==
 
 undici-types@~5.26.4:
   version "5.26.5"

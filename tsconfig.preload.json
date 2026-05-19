@@ -1,9 +1,0 @@
-{
-  "extends": "./tsconfig.build.json",
-  "include": ["src/preload/**/*.ts"],
-  "exclude": ["node_modules"],
-  "compilerOptions": {
-    "declaration": false,
-    "declarationMap": false
-  }
-}
