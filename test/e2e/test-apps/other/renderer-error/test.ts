@@ -43,7 +43,7 @@ electronTestRunner(__dirname, { timeout: 25_000 }, async (ctx) => {
                   severity_number: 9,
                   attributes: expect.objectContaining({
                     userId: { value: 'user_123', type: 'string' },
-                    updatedFields: { value: '["email","preferences"]', type: 'string' },
+                    updatedFields: { value: ['email', 'preferences'], type: 'array' },
                     'sentry.release': { value: 'javascript-logs@1.0.0', type: 'string' },
                     'sentry.environment': { value: 'development', type: 'string' },
                     'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },

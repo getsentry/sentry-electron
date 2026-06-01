@@ -29,7 +29,7 @@ electronTestRunner(__dirname, { timeout: 25_000 }, async (ctx) => {
                     'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
                     'sentry.sdk.version': { value: SDK_VERSION, type: 'string' },
                     userId: { value: 'user_123', type: 'string' },
-                    updatedFields: { value: '["email","preferences"]', type: 'string' },
+                    updatedFields: { value: ['email', 'preferences'], type: 'array' },
                   }),
                 },
                 {
