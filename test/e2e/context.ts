@@ -41,6 +41,7 @@ export class TestContext {
     private readonly _electronPath: string,
     private readonly _appPath: string,
     private readonly _appName: string,
+    private readonly _args: string[],
   ) {
     this._started = false;
   }
@@ -63,7 +64,7 @@ export class TestContext {
       this._clearAppUserData();
     }
 
-    const args = [this._appPath];
+    const args = [this._appPath, ...this._args];
     // Electron no longer work correctly on Github Actions 'ubuntu-latest' with sandbox
     if (process.platform === 'linux') {
       args.push('--no-sandbox');

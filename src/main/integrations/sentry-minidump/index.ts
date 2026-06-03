@@ -1,6 +1,7 @@
 import type { Event, ScopeData, Session } from '@sentry/core';
-import { applyScopeDataToEvent, captureEvent, debug, defineIntegration, Scope } from '@sentry/core';
+import { applyScopeDataToEvent, captureEvent, createStackParser, debug, defineIntegration, Scope } from '@sentry/core';
 import type { NodeClient } from '@sentry/node';
+import { chromeStackLineParser } from '@sentry/browser';
 import { app, crashReporter } from 'electron';
 import { addScopeListener, getScopeData } from '../../../common/scope.js';
 import { getEventDefaults } from '../../context.js';
@@ -11,6 +12,8 @@ import { previousSessionWasAbnormal, restorePreviousSession, setPreviousSessionA
 import { BufferedWriteStore } from '../../store.js';
 import type { MinidumpLoader } from './minidump-loader.js';
 import { getMinidumpLoader } from './minidump-loader.js';
+
+const chromeStackParser = createStackParser(chromeStackLineParser);
 
 interface PreviousRun {
   scope: ScopeData;
@@ -119,6 +122,26 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
             ...prependedAnnotations,
           },
         };
+
+        if (minidumpResult.crashpadAnnotations['electron.v8-oom.stack']) {
+          // Remove the unparsed stack from the annotations as we are going to parse it here
+          delete event?.contexts?.electron?.['crashpad.electron.v8-oom.stack'];
+          delete event?.contexts?.electron?.['crashpad.v8-oom-stack'];
+
+          const stack = minidumpResult.crashpadAnnotations['electron.v8-oom.stack'].replace(/^ *#\d+/gm, '  at');
+
+          event.exception = {
+            values: [
+              {
+                type: 'OutOfMemoryError',
+                value: 'Renderer reached heap limit',
+                stacktrace: {
+                  frames: chromeStackParser(stack),
+                },
+              },
+            ],
+          };
+        }
       }
 
       if (minidumpsRemaining > 0) {

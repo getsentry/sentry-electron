@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <script>
+      const { init } = require('@sentry/electron/renderer');
+
+      init({
+        debug: true,
+      });
+
+      function oomTrigger() {
+        const arr = [];
+        while (true) arr.push(new Array(10000).fill('x'.repeat(100)));
+      }
+
+      setTimeout(() => {
+        oomTrigger();
+      }, 500);
+    </script>
+  </body>
+</html>

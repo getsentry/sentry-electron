@@ -249,6 +249,7 @@ function parseCrashpadInfo(buf: Buffer, info: Buffer): Record<string, string> {
 
 type CrashpadAnnotations = {
   process_type?: string;
+  'electron.v8-oom.stack'?: string;
 } & Record<string, string>;
 
 export type MinidumpParseResult = {
