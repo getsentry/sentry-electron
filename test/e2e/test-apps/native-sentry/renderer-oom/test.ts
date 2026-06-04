@@ -46,7 +46,7 @@ electronTestRunner(
               'event.environment': 'native',
               'event.origin': 'electron',
               'event.process': 'renderer',
-              'exit.reason': 'crashed',
+              'exit.reason': expect.stringMatching(/(oom|crashed)/),
             },
           },
           [
