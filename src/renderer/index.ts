@@ -143,6 +143,7 @@ export {
   uiProfiler,
   unleashIntegration,
   updateSpanName,
+  webVitalsIntegration,
   webWorkerIntegration,
   withActiveSpan,
   withIsolationScope,

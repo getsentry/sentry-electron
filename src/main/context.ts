@@ -7,7 +7,7 @@ import { SDK_VERSION } from './version.js';
 export const SDK_NAME = 'sentry.javascript.electron';
 
 /** Gets SDK info */
-export function getSdkInfo(sendDefaultPii: boolean): SdkInfo {
+export function getSdkInfo(inferIp: boolean): SdkInfo {
   return {
     name: SDK_NAME,
     packages: [
@@ -17,7 +17,7 @@ export function getSdkInfo(sendDefaultPii: boolean): SdkInfo {
       },
     ],
     version: SDK_VERSION,
-    settings: { infer_ip: sendDefaultPii ? 'auto' : 'never' },
+    settings: { infer_ip: inferIp ? 'auto' : 'never' },
   };
 }
 

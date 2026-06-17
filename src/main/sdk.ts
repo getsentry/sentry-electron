@@ -155,6 +155,12 @@ export type ElectronMainOptions = Pick<
   Omit<ElectronMainOptionsInternal, 'getSessions' | 'ipcMode' | 'ipcNamespace'> &
   NodeOptions;
 
+function resolveUserInfo(options: ElectronMainOptions): boolean {
+  const base = options.dataCollection != null ? true : !!options.sendDefaultPii;
+  const dc = options.dataCollection ?? {};
+  return dc.userInfo ?? base;
+}
+
 /**
  * Initialize Sentry in the Electron main process
  */
@@ -165,8 +171,10 @@ export function init(userOptions: ElectronMainOptions): void {
     throw new Error('Sentry Electron SDK requires Electron 23 or higher');
   }
 
+  const inferIpAddress = resolveUserInfo(userOptions);
+
   const optionsWithDefaults = {
-    _metadata: { sdk: getSdkInfo(!!userOptions.sendDefaultPii) },
+    _metadata: { sdk: getSdkInfo(inferIpAddress) },
     ipcMode: IPCMode.Both,
     ipcNamespace: 'sentry-ipc',
     release: getDefaultReleaseName(),
@@ -199,7 +207,7 @@ export function init(userOptions: ElectronMainOptions): void {
 
   const client = new NodeClient(options);
 
-  if (options.sendDefaultPii === true) {
+  if (inferIpAddress) {
     client.on('beforeSendSession', addAutoIpAddressToSession);
   }
 
