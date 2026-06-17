@@ -98,10 +98,10 @@ export const electronMinidumpIntegration = defineIntegration(() => {
   let lastParamCount = 0;
 
   async function getNativeUploaderEvent(client: NodeClient, scope: ScopeData): Promise<Event> {
-    const { sendDefaultPii = false } = client.getOptions();
+    const { userInfo: inferIpAddress } = client.getDataCollectionOptions();
 
     const event = mergeEvents(await getEventDefaults(client), {
-      sdk: getSdkInfo(sendDefaultPii),
+      sdk: getSdkInfo(inferIpAddress),
       event_id: uuid4(),
       level: 'fatal',
       platform: 'native',
