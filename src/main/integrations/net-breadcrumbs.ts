@@ -13,6 +13,7 @@ import {
   setHttpStatus,
   startInactiveSpan,
   stringMatchesSomePattern,
+  withActiveSpan,
 } from '@sentry/core';
 import { logger } from '@sentry/node';
 import type { ClientRequest, ClientRequestConstructorOptions, IncomingMessage } from 'electron';
@@ -221,9 +222,17 @@ function createWrappedRequestFactory(
       span.setAttribute(SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN, 'auto.http.electron.net');
 
       if (shouldAttachTraceData(method, url)) {
-        for (const [key, value] of Object.entries(getTraceData({ span, propagateTraceparent }))) {
-          debug.log(`[Tracing] Adding ${key} header ${value} to outgoing request to "${url}": `);
-          request.setHeader(key, value);
+        const inject = (): void => {
+          for (const [key, value] of Object.entries(getTraceData({ propagateTraceparent }))) {
+            debug.log(`[Tracing] Adding ${key} header ${value} to outgoing request to "${url}": `);
+            request.setHeader(key, value);
+          }
+        };
+
+        if (span.isRecording()) {
+          withActiveSpan(span, inject);
+        } else {
+          inject();
         }
       }
 
