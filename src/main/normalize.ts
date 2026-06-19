@@ -175,7 +175,7 @@ export function normalizeProfileChunkEnvelope(
   forEachEnvelopeItem(envelope, (item, type) => {
     if (type === 'profile_chunk') {
       isProfileChunk = true;
-      const [headers, chunk] = item as [{ type: 'profile_chunk' }, ProfileChunk];
+      const [headers, chunk] = item as [{ type: 'profile_chunk'; platform: ProfileChunk['platform'] }, ProfileChunk];
 
       normaliseProfileChunk(chunk, basePath, options);
 
