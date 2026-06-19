@@ -166,6 +166,7 @@ export {
   trpcMiddleware,
   unleashIntegration,
   updateSpanName,
+  experimentalUseDiagnosticsChannelInjection,
   validateOpenTelemetrySetup,
   winterCGHeadersToDict,
   withActiveSpan,
