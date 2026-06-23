@@ -1,5 +1,46 @@
 # Changelog
 
+## 7.14.0
+
+### New Features ✨
+
+- Update Sentry SDKs to v10.60.0 by @github-actions in [#1391](https://github.com/getsentry/sentry-electron/pull/1391)
+- Update JavaScript SDKs to v10.59.0 by @timfish in [#1390](https://github.com/getsentry/sentry-electron/pull/1390)
+- Update SDKs and migrate to `dataCollection` by @timfish in [#1388](https://github.com/getsentry/sentry-electron/pull/1388)
+- Update Sentry SDKs to v10.56.0 by @github-actions in [#1381](https://github.com/getsentry/sentry-electron/pull/1381)
+- Update Sentry SDKs to v10.55.0 by @github-actions in [#1375](https://github.com/getsentry/sentry-electron/pull/1375)
+- Update Sentry SDKs to v10.53.1 by @github-actions in [#1369](https://github.com/getsentry/sentry-electron/pull/1369)
+- Update Sentry SDKs to v10.51.0 by @github-actions in [#1363](https://github.com/getsentry/sentry-electron/pull/1363)
+
+### Bug Fixes 🐛
+
+- (net) Propagate correct distributed tracing IDs by @lcian in [#1389](https://github.com/getsentry/sentry-electron/pull/1389)
+
+### Internal Changes 🔧
+
+#### Deps
+
+- Bump shell-quote from 1.8.3 to 1.8.4 by @dependabot in [#1386](https://github.com/getsentry/sentry-electron/pull/1386)
+- Bump qs from 6.14.2 to 6.15.2 by @dependabot in [#1374](https://github.com/getsentry/sentry-electron/pull/1374)
+- Bump brace-expansion from 5.0.5 to 5.0.6 by @dependabot in [#1371](https://github.com/getsentry/sentry-electron/pull/1371)
+
+#### Deps Dev
+
+- Bump tmp from 0.2.6 to 0.2.7 by @dependabot in [#1387](https://github.com/getsentry/sentry-electron/pull/1387)
+- Bump vitest from 4.0.18 to 4.1.0 by @dependabot in [#1378](https://github.com/getsentry/sentry-electron/pull/1378)
+- Bump tmp from 0.2.4 to 0.2.6 by @dependabot in [#1376](https://github.com/getsentry/sentry-electron/pull/1376)
+
+#### Other
+
+- New Electron versions by @github-actions in [#1383](https://github.com/getsentry/sentry-electron/pull/1383)
+- New Electron versions by @github-actions in [#1380](https://github.com/getsentry/sentry-electron/pull/1380)
+- New Electron versions by @github-actions in [#1368](https://github.com/getsentry/sentry-electron/pull/1368)
+- Enable type-aware linting by @timfish in [#1373](https://github.com/getsentry/sentry-electron/pull/1373)
+- Modernize TypeScript configuration by @timfish in [#1372](https://github.com/getsentry/sentry-electron/pull/1372)
+- Lint - Re-enable `typescript/no-explicit-any` by @timfish in [#1367](https://github.com/getsentry/sentry-electron/pull/1367)
+- Lint - Re-enable `typescript/consistent-type-imports` by @timfish in [#1366](https://github.com/getsentry/sentry-electron/pull/1366)
+- New Electron versions by @github-actions in [#1364](https://github.com/getsentry/sentry-electron/pull/1364)
+
 ## 7.13.0
 
 ### New Features ✨
