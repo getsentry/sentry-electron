@@ -22,6 +22,7 @@ export {
   addIntegration,
   amqplibIntegration,
   anthropicAIIntegration,
+  bindScopeToEmitter,
   buildLaunchDarklyFlagUsedHandler,
   captureCheckIn,
   captureConsoleIntegration,
