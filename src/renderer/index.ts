@@ -24,6 +24,7 @@ export {
   addBreadcrumb,
   addEventProcessor,
   addIntegration,
+  bindScopeToEmitter,
   breadcrumbsIntegration,
   browserApiErrorsIntegration,
   BrowserClient,
