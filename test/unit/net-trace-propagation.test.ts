@@ -13,10 +13,12 @@ function createMockClientRequest(): any {
 }
 
 let latestMockRequest: ReturnType<typeof createMockClientRequest>;
+let latestOriginalRequestArgs: unknown[];
 
 vi.mock('electron', () => ({
   net: {
-    request: () => {
+    request: (...args: unknown[]) => {
+      latestOriginalRequestArgs = args;
       latestMockRequest = createMockClientRequest();
       return latestMockRequest;
     },
@@ -122,5 +124,19 @@ describe('electron net trace header propagation', () => {
       expect(traceId).toBe(parentTraceId);
       expect(spanId).not.toBe(parentSpanId);
     });
+  });
+
+  test('preserves additional request arguments', () => {
+    setupSdk();
+
+    const responseCallback = vi.fn();
+
+    (net.request as unknown as (options: string, callback: typeof responseCallback) => void)(
+      'http://localhost:1234/test',
+      responseCallback,
+    );
+
+    expect(latestOriginalRequestArgs).toHaveLength(2);
+    expect(latestOriginalRequestArgs[1]).toBe(responseCallback);
   });
 });

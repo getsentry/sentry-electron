@@ -94,7 +94,7 @@ function parseOptions(optionsIn: ClientRequestConstructorOptions | string): { me
 }
 
 type RequestOptions = string | ClientRequestConstructorOptions;
-type RequestMethod = (opt: RequestOptions) => ClientRequest;
+type RequestMethod = (opt: RequestOptions, ...args: unknown[]) => ClientRequest;
 type WrappedRequestMethodFactory = (original: RequestMethod) => RequestMethod;
 
 function createWrappedRequestFactory(
@@ -198,9 +198,13 @@ function createWrappedRequestFactory(
   };
 
   return function wrappedRequestMethodFactory(originalRequestMethod: RequestMethod): RequestMethod {
-    return function requestMethod(this: typeof electronNet, reqOptions: RequestOptions): ClientRequest {
+    return function requestMethod(
+      this: typeof electronNet,
+      reqOptions: RequestOptions,
+      ...args: unknown[]
+    ): ClientRequest {
       const { url, method } = parseOptions(reqOptions);
-      const request = originalRequestMethod.apply(this, [reqOptions]);
+      const request = originalRequestMethod.apply(this, [reqOptions, ...args]);
 
       if (url.match(/sentry_key/) || request.getHeader('x-sentry-auth')) {
         return request;
