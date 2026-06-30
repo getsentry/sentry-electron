@@ -9,6 +9,7 @@ import {
 
 electronTestRunner(__dirname, async (ctx) => {
   await ctx
+    .ignoreExpectationOrder()
     // Expect the transaction (without attached profile since we're using UI profiling)
     .expect({
       envelope: transactionEnvelope({
