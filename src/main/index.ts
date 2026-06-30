@@ -130,6 +130,8 @@ export {
   SEMANTIC_ATTRIBUTE_SENTRY_SAMPLE_RATE,
   SEMANTIC_ATTRIBUTE_SENTRY_SOURCE,
   SentryContextManager,
+  setAttribute,
+  setAttributes,
   setConversationId,
   setContext,
   setCurrentClient,
