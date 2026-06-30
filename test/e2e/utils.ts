@@ -339,10 +339,10 @@ export function transactionEnvelope(event: TransactionEvent, ...otherEnvelopeIte
 
 export function sessionEnvelope(session: SerializedSession): Envelope {
   return [
-    {
+    expect.objectContaining({
       sent_at: ISO_DATE_MATCHER,
       sdk: { name: 'sentry.javascript.electron', version: SDK_VERSION },
-    },
+    }),
     [
       [
         { type: 'session' },

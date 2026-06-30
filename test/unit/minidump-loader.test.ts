@@ -130,7 +130,7 @@ describe('createMinidumpLoader', () => {
         setTimeout(() => {
           clearInterval(timer);
           closeSync(file);
-        }, 4_200);
+        }, 3_200);
 
         const loader = createMinidumpLoader(() => Promise.resolve([dumpPath]));
 
