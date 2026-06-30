@@ -124,7 +124,7 @@ describe('createMinidumpLoader', () => {
     // Mock fs.promises.stat so the retry loop resolves via microtasks rather than real
     // I/O callbacks. Real I/O callbacks fire in the event-loop poll phase, which
     // vi.advanceTimersByTimeAsync can't guarantee to drain between fake timer fires.
-    const statSpy = vi.spyOn(fsPromises, 'stat').mockImplementation(async () => {
+    vi.spyOn(fsPromises, 'stat').mockImplementation(async () => {
       return { mtimeMs: fakeMtime } as any;
     });
 
