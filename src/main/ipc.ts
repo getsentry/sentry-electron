@@ -179,7 +179,7 @@ function handleScope(options: ElectronMainOptionsInternal, jsonScope: string): v
     scope.addAttachment(attachment);
   }
 
-  const breadcrumb = sentScope.breadcrumbs.pop();
+  const breadcrumb = (sentScope.breadcrumbs || []).pop();
   if (breadcrumb) {
     scope.addBreadcrumb(breadcrumb, options?.maxBreadcrumbs || 100);
   }
