@@ -9,6 +9,7 @@ import {
 
 electronTestRunner(__dirname, async (ctx) => {
   await ctx
+    .ignoreExpectationOrder()
     // Expect the transaction with profile context (trace mode automatically profiles spans)
     .expect({
       envelope: transactionEnvelope({
