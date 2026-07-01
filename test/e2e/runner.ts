@@ -122,19 +122,17 @@ export function electronTestRunner(
         });
 
         expect(unorderedEvents).toEqual(expect.arrayContaining(expectedEvents));
+
+        if (options.waitAfterExpectedEvents) {
+          delay(options.waitAfterExpectedEvents).then(() => {
+            resolve?.();
+          });
+        } else {
+          resolve?.();
+        }
       }
     } catch (e) {
       reject?.(e);
-    }
-
-    if (expectations.length === 0) {
-      if (options.waitAfterExpectedEvents) {
-        delay(options.waitAfterExpectedEvents).then(() => {
-          resolve?.();
-        });
-      } else {
-        resolve?.();
-      }
     }
   }
 

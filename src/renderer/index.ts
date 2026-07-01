@@ -114,6 +114,8 @@ export {
   SEMANTIC_ATTRIBUTE_SENTRY_SOURCE,
   sendFeedback,
   setActiveSpanInBrowser,
+  setAttribute,
+  setAttributes,
   setContext,
   setConversationId,
   setCurrentClient,

@@ -1,14 +1,18 @@
 import '../../scripts/electron-shim.mjs';
 import { uuid4 } from '@sentry/core';
-import { closeSync, existsSync, openSync, utimesSync, writeFileSync, writeSync } from 'fs';
+import { existsSync, utimesSync, writeFileSync, promises as fsPromises } from 'fs';
 import { join } from 'path';
 import * as tmp from 'tmp';
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const { createMinidumpLoader } = await import('../../src/main/integrations/sentry-minidump/minidump-loader');
 
 function dumpFileName(): string {
   return `${uuid4()}.dmp`;
+}
+
+function setMtime(path: string, date: Date): void {
+  utimesSync(path, date, date);
 }
 
 const VALID_LOOKING_MINIDUMP = Buffer.from(`MDMP${'X'.repeat(12_000)}`);
@@ -17,6 +21,7 @@ const MINIDUMP_HEADER_BUT_TOO_SMALL = Buffer.from('MDMPdflahfalfhalkfnaklsfnalfk
 
 describe('createMinidumpLoader', () => {
   let tempDir: tmp.DirResult;
+
   beforeAll(() => {
     tempDir = tmp.dirSync({ unsafeCleanup: true });
   });
@@ -27,136 +32,141 @@ describe('createMinidumpLoader', () => {
     }
   });
 
-  test('creates attachment from minidump', () =>
-    new Promise<void>((done) => {
-      const name = dumpFileName();
-      const dumpPath = join(tempDir.name, name);
-      writeFileSync(dumpPath, VALID_LOOKING_MINIDUMP);
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
 
-      const loader = createMinidumpLoader(() => Promise.resolve([dumpPath]));
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
 
-      void loader(false, async (_, attachment) => {
-        expect(attachment).to.eql({
-          data: VALID_LOOKING_MINIDUMP,
-          filename: name,
-          attachmentType: 'event.minidump',
-        });
+  test('creates attachment from minidump', async () => {
+    const name = dumpFileName();
+    const dumpPath = join(tempDir.name, name);
+    writeFileSync(dumpPath, VALID_LOOKING_MINIDUMP);
+    setMtime(dumpPath, new Date(Date.now() - 2_000));
 
-        setTimeout(() => {
-          expect(existsSync(dumpPath)).to.be.false;
-          done();
-        }, 1_000);
-      });
-    }));
+    const loader = createMinidumpLoader(() => Promise.resolve([dumpPath]));
 
-  test("doesn't send invalid minidumps", () =>
-    new Promise<void>((done) => {
-      const missingHeaderDump = join(tempDir.name, dumpFileName());
-      writeFileSync(missingHeaderDump, LOOKS_NOTHING_LIKE_A_MINIDUMP);
-      const tooSmallDump = join(tempDir.name, dumpFileName());
-      writeFileSync(tooSmallDump, MINIDUMP_HEADER_BUT_TOO_SMALL);
+    let attachment: unknown;
+    await loader(false, async (_, att) => {
+      attachment = att;
+    });
 
-      const loader = createMinidumpLoader(() => Promise.resolve([missingHeaderDump, tooSmallDump]));
+    expect(attachment).to.eql({
+      data: VALID_LOOKING_MINIDUMP,
+      filename: name,
+      attachmentType: 'event.minidump',
+    });
+    expect(existsSync(dumpPath)).to.be.false;
+  });
 
-      let passedAttachment = false;
-      void loader(false, async () => {
-        passedAttachment = true;
-      });
+  test("doesn't send invalid minidumps", async () => {
+    const missingHeaderDump = join(tempDir.name, dumpFileName());
+    writeFileSync(missingHeaderDump, LOOKS_NOTHING_LIKE_A_MINIDUMP);
+    setMtime(missingHeaderDump, new Date(Date.now() - 2_000));
+    const tooSmallDump = join(tempDir.name, dumpFileName());
+    writeFileSync(tooSmallDump, MINIDUMP_HEADER_BUT_TOO_SMALL);
+    setMtime(tooSmallDump, new Date(Date.now() - 2_000));
 
-      setTimeout(() => {
-        expect(passedAttachment).to.be.false;
-        expect(existsSync(missingHeaderDump)).to.be.false;
-        expect(existsSync(tooSmallDump)).to.be.false;
-        done();
-      }, 2_000);
-    }));
+    const loader = createMinidumpLoader(() => Promise.resolve([missingHeaderDump, tooSmallDump]));
 
-  test("doesn't send minidumps that are over 30 days old", () =>
-    new Promise<void>((done) => {
-      const dumpPath = join(tempDir.name, dumpFileName());
-      writeFileSync(dumpPath, VALID_LOOKING_MINIDUMP);
-      const thirtyOneDaysAgo = new Date(new Date().getTime() - 31 * 24 * 3_600 * 1_000);
-      utimesSync(dumpPath, thirtyOneDaysAgo, thirtyOneDaysAgo);
+    let passedAttachment = false;
+    await loader(false, async () => {
+      passedAttachment = true;
+    });
 
-      const loader = createMinidumpLoader(() => Promise.resolve([dumpPath]));
+    expect(passedAttachment).to.be.false;
+    expect(existsSync(missingHeaderDump)).to.be.false;
+    expect(existsSync(tooSmallDump)).to.be.false;
+  });
 
-      let passedAttachment = false;
-      void loader(false, async () => {
-        passedAttachment = true;
-      });
+  test("doesn't send minidumps that are over 30 days old", async () => {
+    const dumpPath = join(tempDir.name, dumpFileName());
+    writeFileSync(dumpPath, VALID_LOOKING_MINIDUMP);
+    setMtime(dumpPath, new Date(Date.now() - 31 * 24 * 3_600 * 1_000));
 
-      setTimeout(() => {
-        expect(passedAttachment).to.be.false;
-        expect(existsSync(dumpPath)).to.be.false;
-        done();
-      }, 2_000);
-    }));
+    const loader = createMinidumpLoader(() => Promise.resolve([dumpPath]));
 
-  test('deletes minidumps when sdk is disabled', () =>
-    new Promise<void>((done) => {
-      const dumpPath = join(tempDir.name, dumpFileName());
-      writeFileSync(dumpPath, VALID_LOOKING_MINIDUMP);
+    let passedAttachment = false;
+    await loader(false, async () => {
+      passedAttachment = true;
+    });
 
-      const loader = createMinidumpLoader(() => Promise.resolve([dumpPath]));
+    expect(passedAttachment).to.be.false;
+    expect(existsSync(dumpPath)).to.be.false;
+  });
 
-      let passedAttachment = false;
-      void loader(true, async () => {
-        passedAttachment = true;
-      });
+  test('deletes minidumps when sdk is disabled', async () => {
+    const dumpPath = join(tempDir.name, dumpFileName());
+    writeFileSync(dumpPath, VALID_LOOKING_MINIDUMP);
+    setMtime(dumpPath, new Date(Date.now() - 2_000));
 
-      setTimeout(() => {
-        expect(passedAttachment).to.be.false;
-        expect(existsSync(dumpPath)).to.be.false;
-        done();
-      }, 2_000);
-    }));
+    const loader = createMinidumpLoader(() => Promise.resolve([dumpPath]));
 
-  test(
-    'waits for minidump to stop being modified',
-    { timeout: 10_000, repeats: 2 },
-    () =>
-      new Promise<void>((done) => {
-        const dumpPath = join(tempDir.name, dumpFileName());
-        const file = openSync(dumpPath, 'w');
-        writeSync(file, VALID_LOOKING_MINIDUMP);
+    let passedAttachment = false;
+    await loader(true, async () => {
+      passedAttachment = true;
+    });
 
-        let count = 0;
-        // Write the file every 500ms
-        const timer = setInterval(() => {
-          count += 500;
-          writeSync(file, 'X');
-        }, 500);
+    expect(passedAttachment).to.be.false;
+    expect(existsSync(dumpPath)).to.be.false;
+  });
 
-        setTimeout(() => {
-          clearInterval(timer);
-          closeSync(file);
-        }, 4_200);
+  test('waits for minidump to stop being modified', async () => {
+    const dumpPath = join(tempDir.name, dumpFileName());
+    writeFileSync(dumpPath, VALID_LOOKING_MINIDUMP);
 
-        const loader = createMinidumpLoader(() => Promise.resolve([dumpPath]));
+    // Track the mtime the loader will see - starts at "now" (recently modified)
+    let fakeMtime = Date.now();
 
-        void loader(false, async (_) => {
-          expect(count).to.be.greaterThanOrEqual(3_000);
-          done();
-        });
-      }),
-  );
+    // Mock fs.promises.stat so the retry loop resolves via microtasks rather than real
+    // I/O callbacks. Real I/O callbacks fire in the event-loop poll phase, which
+    // vi.advanceTimersByTimeAsync can't guarantee to drain between fake timer fires.
+    vi.spyOn(fsPromises, 'stat').mockImplementation(async () => {
+      return { mtimeMs: fakeMtime } as any;
+    });
 
-  test('sending continues after loading failures', () =>
-    new Promise<void>((done) => {
-      const missingPath = join(tempDir.name, dumpFileName());
-      const name = dumpFileName();
-      const dumpPath = join(tempDir.name, name);
-      writeFileSync(dumpPath, VALID_LOOKING_MINIDUMP);
+    let writeCount = 0;
+    const timer = setInterval(() => {
+      writeCount++;
+      fakeMtime = Date.now(); // keep mtime in sync with advancing fake clock
+    }, 500);
+    setTimeout(() => clearInterval(timer), 3_000);
 
-      const loader = createMinidumpLoader(() => Promise.resolve([missingPath, dumpPath]));
+    const loader = createMinidumpLoader(() => Promise.resolve([dumpPath]));
 
-      void loader(false, async (_, attachment) => {
-        expect(attachment.filename).to.eql(name);
+    let callbackCalled = false;
+    const loaderPromise = loader(false, async () => {
+      callbackCalled = true;
+    });
 
-        setTimeout(() => {
-          expect(existsSync(dumpPath)).to.be.false;
-          done();
-        }, 1_000);
-      });
-    }));
+    // Advance past writes stopping (3000ms) + NOT_MODIFIED_MS (1000ms) + one retry (500ms)
+    await vi.advanceTimersByTimeAsync(6_000);
+    // After the advance the mtime check passes, but fs.readFile/unlink are real I/O —
+    // await the loader promise before asserting so that I/O settles.
+    await loaderPromise;
+
+    expect(callbackCalled).toBe(true);
+    expect(writeCount).toBeGreaterThanOrEqual(5);
+  });
+
+  test('sending continues after loading failures', async () => {
+    const missingPath = join(tempDir.name, dumpFileName());
+    const name = dumpFileName();
+    const dumpPath = join(tempDir.name, name);
+    writeFileSync(dumpPath, VALID_LOOKING_MINIDUMP);
+    setMtime(dumpPath, new Date(Date.now() - 2_000));
+
+    const loader = createMinidumpLoader(() => Promise.resolve([missingPath, dumpPath]));
+
+    let receivedName: string | undefined;
+    await loader(false, async (_, attachment) => {
+      receivedName = attachment.filename;
+    });
+
+    expect(receivedName).to.eql(name);
+    expect(existsSync(dumpPath)).to.be.false;
+  });
 });
