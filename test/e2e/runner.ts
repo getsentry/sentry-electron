@@ -134,9 +134,7 @@ export function electronTestRunner(
           });
 
           if (idx === -1) {
-            throw new Error(
-              `No expectation matched received event:\n${inspect(received, false, null, true)}`,
-            );
+            throw new Error(`No expectation matched received event:\n${inspect(received, false, null, true)}`);
           }
 
           unmatched.splice(idx, 1);
