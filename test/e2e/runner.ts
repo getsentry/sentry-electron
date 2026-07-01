@@ -45,6 +45,7 @@ interface ElectronTestOptions {
   waitAfterExpectedEvents?: number;
   packageManager?: 'npm' | 'yarn';
   appExecutionPath?: string;
+  electronArgs?: string[];
   skip?: (electronVersion: Version) => boolean;
 }
 
@@ -214,7 +215,7 @@ export function electronTestRunner(
       ? join(testExecutionRoot, options.appExecutionPath)
       : testExecutionRoot;
 
-    context = new TestContext(logger, electronPath, executionPath, name);
+    context = new TestContext(logger, electronPath, executionPath, name, options.electronArgs || []);
   }, 120_000);
 
   afterEach(async () => {
