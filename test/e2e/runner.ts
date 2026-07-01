@@ -90,11 +90,7 @@ export function electronTestRunner(
 
   let resolve: undefined | (() => void);
   let reject: undefined | ((reason: unknown) => void);
-
-  const completePromise = new Promise<void>((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
+  let completePromise: Promise<void> = Promise.resolve();
 
   const unorderedEvents: Array<Envelope | MinidumpResult> = [];
 
@@ -182,7 +178,13 @@ export function electronTestRunner(
 
   beforeEach(async () => {
     electronPath = await downloadElectron(electronVersion.string);
-    server = createSentryTestServer(logger, ignoreOrder ? onNewServerEventIgnoreOrder : onNewServerEvent);
+    server = createSentryTestServer(logger, (event) => {
+      if (ignoreOrder) {
+        onNewServerEventIgnoreOrder(event);
+      } else {
+        onNewServerEvent(event);
+      }
+    });
 
     await prepareTestFiles(logger, testPath, testExecutionRoot, electronVersion.string, server.port, convertToEsm);
     await installDepsAndBuild(logger, options.packageManager || 'yarn', testExecutionRoot, hasBuildScript);
@@ -202,6 +204,17 @@ export function electronTestRunner(
   });
 
   test(description, { timeout: options.timeout || 15_000 }, async () => {
+    // Reset state for retries
+    expectations.length = 0;
+    unorderedEvents.length = 0;
+    expectedErrorOutput = undefined;
+    ignoreOrder = false;
+    includeSessionEnvelopes = false;
+    completePromise = new Promise<void>((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+
     if (!electronPath) {
       throw new Error('Electron path is not set');
     }
