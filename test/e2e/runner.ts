@@ -106,18 +106,41 @@ export function electronTestRunner(
       unorderedEvents.push(event);
 
       if (unorderedEvents.length === expectations.length) {
-        const expectedEvents = expectations.map((e) => {
-          if ('envelope' in e) {
-            return e.envelope;
-          }
-          if ('minidump' in e) {
-            return e.minidump;
+        // Match each received event to one expectation. Processed in arrival order so that
+        // function matchers with cross-event side-effects (e.g. capturing a session ID in
+        // the first handler and verifying it in the second) fire in dependency order.
+        const unmatched = [...expectations];
+
+        for (const received of unorderedEvents) {
+          const idx = unmatched.findIndex((expected) => {
+            try {
+              if ('envelope' in expected) {
+                if (typeof expected.envelope === 'function') {
+                  expected.envelope(received as Envelope);
+                } else {
+                  expect(received).toEqual(expected.envelope);
+                }
+              } else if ('minidump' in expected) {
+                if (typeof expected.minidump === 'function') {
+                  expected.minidump(received as MinidumpResult);
+                } else {
+                  expect(received).toEqual(expected.minidump);
+                }
+              }
+              return true;
+            } catch {
+              return false;
+            }
+          });
+
+          if (idx === -1) {
+            throw new Error(
+              `No expectation matched received event:\n${inspect(received, false, null, true)}`,
+            );
           }
 
-          return undefined;
-        });
-
-        expect(unorderedEvents).toEqual(expect.arrayContaining(expectedEvents));
+          unmatched.splice(idx, 1);
+        }
 
         if (options.waitAfterExpectedEvents) {
           delay(options.waitAfterExpectedEvents).then(() => {
