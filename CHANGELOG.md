@@ -1,5 +1,23 @@
 # Changelog
 
+## 7.15.0
+
+### New Features ✨
+
+- Parse JavaScript stack frames from renderer OOM minidump by @timfish in [#1382](https://github.com/getsentry/sentry-electron/pull/1382)
+- Update Sentry SDKs to v10.62.0 by @github-actions in [#1392](https://github.com/getsentry/sentry-electron/pull/1392)
+
+### Bug Fixes 🐛
+
+- Fix macOS keychain prompt in latest Electron by @timfish in [#1396](https://github.com/getsentry/sentry-electron/pull/1396)
+- Scope IPC breadcrumb pop by @timfish in [#1395](https://github.com/getsentry/sentry-electron/pull/1395)
+- Preserve electron net request arguments by @dogodo-cc in [#1393](https://github.com/getsentry/sentry-electron/pull/1393)
+
+### Internal Changes 🔧
+
+- Fix Windows test flakes by @timfish in [#1397](https://github.com/getsentry/sentry-electron/pull/1397)
+- New Electron versions by @github-actions in [#1385](https://github.com/getsentry/sentry-electron/pull/1385)
+
 ## 7.14.0
 
 ### New Features ✨
