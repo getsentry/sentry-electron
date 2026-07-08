@@ -168,6 +168,26 @@ function streamedAttr(span: SerializedStreamedSpan, key: string): string | undef
   return span.attributes?.[key]?.value as string | undefined;
 }
 
+// Attributes on the streamed pageload segment that describe the renderer segment itself (its
+// identity and SDK metadata) rather than the measurements and trace metadata (Web Vitals,
+// connection/device info, etc.) that should be merged onto the startup span.
+const NON_INHERITED_SEGMENT_ATTRIBUTES = new Set([
+  'sentry.op',
+  'sentry.origin',
+  'sentry.source',
+  'sentry.sample_rate',
+  'sentry.segment.name',
+  'sentry.segment.id',
+  'sentry.sdk.name',
+  'sentry.sdk.version',
+  'sentry.sdk.integrations',
+  'sentry.release',
+  'sentry.environment',
+  'sentry.span.source',
+  'url.full',
+  'http.request.header.user_agent',
+]);
+
 /**
  * Merges spans streamed from the renderer (when `traceLifecycle: 'stream'` is used) into the
  * startup span, mirroring {@link applyRendererSpansAndMeasurements} for the streamed span format.
@@ -184,6 +204,15 @@ function applyStreamedRendererSpans(parentSpan: Span, spans: SerializedStreamedS
 
   const rendererStartTime = segment?.start_timestamp || timestampInSeconds();
   parentSpan.setAttribute('performance.timeOrigin', rendererStartTime);
+
+  // Merge the renderer pageload measurements and trace metadata onto the startup span
+  if (segment?.attributes) {
+    for (const [key, attribute] of Object.entries(segment.attributes)) {
+      if (!NON_INHERITED_SEGMENT_ATTRIBUTES.has(key)) {
+        parentSpan.setAttribute(key, attribute.value);
+      }
+    }
+  }
 
   startSpanManual(
     {

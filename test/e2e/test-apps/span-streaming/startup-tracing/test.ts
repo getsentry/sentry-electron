@@ -31,7 +31,16 @@ electronTestRunner(
               'sentry.op': { value: 'app.start', type: 'string' },
               'sentry.origin': { value: 'auto.electron.startup', type: 'string' },
               'sentry.release': { value: 'startup-tracing@1.0.0', type: 'string' },
+              'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
               'sentry.sample_rate': { value: 1, type: 'integer' },
+              // Renderer pageload measurements / trace metadata are merged onto the startup segment
+              'sentry.idle_span_finish_reason': { value: 'idleTimeout', type: 'string' },
+              'browser.web_vital.ttfb.value': { value: expect.any(Number), type: 'double' },
+              'browser.web_vital.ttfb.request_time': { value: expect.any(Number), type: 'integer' },
+              'network.connection.effective_type': { value: expect.any(String), type: 'string' },
+              'network.connection.rtt': { value: expect.any(Number), type: 'integer' },
+              'device.memory.estimated_capacity': { value: expect.any(Number), type: 'integer' },
+              'device.processor_count': { value: expect.any(Number), type: 'integer' },
             }),
           });
 
