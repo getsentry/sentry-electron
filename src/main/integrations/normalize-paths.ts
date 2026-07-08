@@ -1,5 +1,5 @@
 import type { Profile } from '@sentry/core';
-import { defineIntegration, forEachEnvelopeItem } from '@sentry/core';
+import { defineIntegration, forEachEnvelopeItem, normalizeUrlToBase } from '@sentry/core';
 import { app } from 'electron';
 import { normaliseProfile, normalizePaths } from '../normalize.js';
 
@@ -21,6 +21,12 @@ export const normalizePathsIntegration = defineIntegration(() => {
     },
     processEvent(event) {
       return normalizePaths(event, app.getAppPath());
+    },
+    processSpan(span) {
+      span.name = normalizeUrlToBase(span.name, app.getAppPath());
+    },
+    processSegmentSpan(span, client) {
+      span.name = normalizeUrlToBase(span.name, app.getAppPath());
     },
   };
 });

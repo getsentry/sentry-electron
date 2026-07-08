@@ -9,8 +9,10 @@ import type {
   SdkInfo,
   SerializedSession,
   TransactionEvent,
+  StreamedSpanJSON,
+  SerializedMetric,
 } from '@sentry/core';
-import { parseSemver } from '@sentry/core';
+import { forEachEnvelopeItem, parseSemver } from '@sentry/core';
 import { readdirSync } from 'fs';
 import { join } from 'path';
 import { inspect } from 'util';
@@ -301,6 +303,45 @@ export function feedbackEnvelope(event: Partial<FeedbackEvent>, ...otherEnvelope
   ];
 }
 
+export function spanEnvelope(
+  transaction: string | undefined,
+  items: StreamedSpanJSON[],
+  // Renderer-owned span envelopes carry additional container fields (e.g. `ingest_settings`)
+  // that main-process span envelopes do not.
+  containerFields: Record<string, unknown> = {},
+): Envelope {
+  return [
+    {
+      sent_at: ISO_DATE_MATCHER,
+      trace: {
+        environment: 'development',
+        release: expect.any(String),
+        public_key: UUID_MATCHER,
+        trace_id: UUID_MATCHER,
+        transaction,
+        sampled: 'true',
+        sample_rand: expect.any(String),
+        sample_rate: expect.any(String),
+      },
+      sdk: { name: 'sentry.javascript.electron', version: SDK_VERSION },
+    },
+    [
+      [
+        {
+          type: 'span',
+          item_count: items.length,
+          content_type: 'application/vnd.sentry.items.span.v2+json',
+        },
+        {
+          version: 2,
+          ...containerFields,
+          items,
+        },
+      ],
+    ],
+  ];
+}
+
 export function transactionEnvelope(event: TransactionEvent, ...otherEnvelopeItems: Additions[]): Envelope {
   return [
     {
@@ -369,23 +410,40 @@ export function isSessionEnvelope(envelope: Envelope): boolean {
   return envelope[1][0][0].type === 'session';
 }
 
-export function profileChunkEnvelope(chunk: Partial<ProfileChunk>): Envelope {
+export function getSpansFromEnvelope(envelope: Envelope): StreamedSpanJSON[] | undefined {
+  let spans: StreamedSpanJSON[] | undefined;
+
+  forEachEnvelopeItem(envelope, (item, type) => {
+    if (type === 'span') {
+      spans = (item[1] as unknown as { items: StreamedSpanJSON[] }).items;
+    }
+  });
+
+  return spans;
+}
+
+export function profileChunkEnvelope(
+  chunk: Partial<ProfileChunk> & Record<string, unknown>,
+  // Node profiling reports `platform: 'node'`, browser/UI profiling `'javascript'`.
+  platform: 'javascript' | 'node' = 'javascript',
+): Envelope {
   return [
     {
       event_id: UUID_MATCHER,
       sent_at: ISO_DATE_MATCHER,
-      sdk: { name: 'sentry.javascript.electron', version: SDK_VERSION },
+      // Node envelopes include additional `packages`/`settings` on the SDK info
+      sdk: expect.objectContaining({ name: 'sentry.javascript.electron', version: SDK_VERSION }),
     },
     [
       [
         {
-          platform: 'javascript',
+          platform,
           type: 'profile_chunk',
         },
         {
           chunk_id: UUID_MATCHER,
           profiler_id: UUID_MATCHER,
-          platform: 'javascript',
+          platform,
           version: '2',
           release: 'some-release',
           environment: 'development',
