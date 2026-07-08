@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Startup Tracing Test</title>
+  </head>
+  <body>
+    <script>
+      const { init, browserTracingIntegration, spanStreamingIntegration } = require('@sentry/electron/renderer');
+
+      init({
+        integrations: [spanStreamingIntegration(), browserTracingIntegration()],
+        tracesSampleRate: 1,
+        traceLifecycle: 'stream',
+      });
+    </script>
+  </body>
+</html>

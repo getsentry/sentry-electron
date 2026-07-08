@@ -1,4 +1,4 @@
-import type { Event, Span, SpanStatus, StartSpanOptions } from '@sentry/core';
+import type { Event, SerializedStreamedSpan, Span, SpanStatus, StartSpanOptions } from '@sentry/core';
 import {
   defineIntegration,
   SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN,
@@ -65,15 +65,24 @@ function zeroLengthSpan(options: StartSpanOptions): void {
   );
 }
 
-function waitForRendererPageload(timeout: number): Promise<Event | undefined> {
+type RendererPageload = { event: Event } | { spans: SerializedStreamedSpan[] } | undefined;
+
+function waitForRendererPageload(timeout: number): Promise<RendererPageload> {
   return new Promise((resolve) => {
-    const timer = setTimeout(() => {
-      resolve(undefined);
-    }, timeout);
-    ipcMainHooks.once('pageload-transaction', (event, _contents) => {
+    const onTransaction = (event: Event): void => finish({ event });
+    const onSpans = (spans: SerializedStreamedSpan[]): void => finish({ spans });
+
+    const timer = setTimeout(() => finish(undefined), timeout);
+
+    function finish(result: RendererPageload): void {
       clearTimeout(timer);
-      resolve(event);
-    });
+      ipcMainHooks.removeListener('pageload-transaction', onTransaction);
+      ipcMainHooks.removeListener('pageload-spans', onSpans);
+      resolve(result);
+    }
+
+    ipcMainHooks.on('pageload-transaction', onTransaction);
+    ipcMainHooks.on('pageload-spans', onSpans);
   });
 }
 
@@ -155,6 +164,102 @@ function applyRendererSpansAndMeasurements(parentSpan: Span, event: Event | unde
   return lastEndTimestamp;
 }
 
+function streamedAttr(span: SerializedStreamedSpan, key: string): string | undefined {
+  return span.attributes?.[key]?.value as string | undefined;
+}
+
+// Attributes on the streamed pageload segment that describe the renderer segment itself (its
+// identity and SDK metadata) rather than the measurements and trace metadata (Web Vitals,
+// connection/device info, etc.) that should be merged onto the startup span.
+const NON_INHERITED_SEGMENT_ATTRIBUTES = new Set([
+  'sentry.op',
+  'sentry.origin',
+  'sentry.source',
+  'sentry.sample_rate',
+  'sentry.segment.name',
+  'sentry.segment.id',
+  'sentry.sdk.name',
+  'sentry.sdk.version',
+  'sentry.sdk.integrations',
+  'sentry.release',
+  'sentry.environment',
+  'sentry.span.source',
+  'url.full',
+  'http.request.header.user_agent',
+]);
+
+/**
+ * Merges spans streamed from the renderer (when `traceLifecycle: 'stream'` is used) into the
+ * startup span, mirroring {@link applyRendererSpansAndMeasurements} for the streamed span format.
+ */
+function applyStreamedRendererSpans(parentSpan: Span, spans: SerializedStreamedSpan[], endTimestamp: number): number {
+  let lastEndTimestamp = endTimestamp;
+
+  if (!spans.length) {
+    return lastEndTimestamp;
+  }
+
+  const segment = spans.find((span) => span.is_segment);
+  const childSpans = spans.filter((span) => !span.is_segment);
+
+  const rendererStartTime = segment?.start_timestamp || timestampInSeconds();
+  parentSpan.setAttribute('performance.timeOrigin', rendererStartTime);
+
+  // Merge the renderer pageload measurements and trace metadata onto the startup span
+  if (segment?.attributes) {
+    for (const [key, attribute] of Object.entries(segment.attributes)) {
+      if (!NON_INHERITED_SEGMENT_ATTRIBUTES.has(key)) {
+        parentSpan.setAttribute(key, attribute.value);
+      }
+    }
+  }
+
+  startSpanManual(
+    {
+      name: segment?.name || 'electron.renderer',
+      op: 'electron.renderer',
+      startTime: rendererStartTime,
+      parentSpan,
+      attributes: {
+        [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'auto.electron.startup',
+      },
+    },
+    (rendererSpan) => {
+      for (const span of childSpans) {
+        const startTime = span.start_timestamp;
+        const endTime = span.end_timestamp;
+
+        if (endTime) {
+          lastEndTimestamp = Math.max(lastEndTimestamp, endTime);
+        }
+
+        startSpanManual(
+          {
+            name: span.name,
+            op: streamedAttr(span, 'sentry.op'),
+            startTime,
+            attributes: {
+              [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: streamedAttr(span, 'sentry.origin'),
+            },
+            parentSpan: rendererSpan,
+          },
+          (created) => {
+            if (span.status) {
+              created.setStatus(parseStatus(span.status));
+            }
+
+            created.end((endTime || startTime) * 1000);
+          },
+        );
+      }
+
+      rendererSpan.end(lastEndTimestamp * 1000);
+    },
+  );
+
+  return lastEndTimestamp;
+}
+
 /**
  * An integration that instruments Electron's startup sequence.
  *
@@ -229,9 +334,13 @@ export const startupTracingIntegration = defineIntegration((options: StartupTrac
 
           let lastEndTimestamp = timestampInSeconds();
 
-          const event = await waitForRendererPageload((options.timeoutSeconds || 10) * 1000);
+          const pageload = await waitForRendererPageload((options.timeoutSeconds || 10) * 1000);
 
-          lastEndTimestamp = applyRendererSpansAndMeasurements(parentSpan, event, lastEndTimestamp);
+          if (pageload && 'spans' in pageload) {
+            lastEndTimestamp = applyStreamedRendererSpans(parentSpan, pageload.spans, lastEndTimestamp);
+          } else {
+            lastEndTimestamp = applyRendererSpansAndMeasurements(parentSpan, pageload?.event, lastEndTimestamp);
+          }
 
           parentSpan.end(lastEndTimestamp * 1000);
         });

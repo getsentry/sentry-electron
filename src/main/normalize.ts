@@ -1,4 +1,11 @@
-import type { Envelope, Event, Profile, ProfileChunk, ReplayEvent } from '@sentry/core';
+import type {
+  Envelope,
+  Event,
+  Profile,
+  ProfileChunk,
+  ReplayEvent,
+  SerializedStreamedSpanContainer,
+} from '@sentry/core';
 import {
   addItemToEnvelope,
   createEnvelope,
@@ -184,4 +191,60 @@ export function normalizeProfileChunkEnvelope(
   });
 
   return isProfileChunk ? modifiedEnvelope : envelope;
+}
+
+/**
+ * Normalizes profile_chunk envelope items and returns the modified envelope
+ */
+export function normalizeSpanStreamingEnvelope(
+  options: ElectronMainOptionsInternal,
+  envelope: Envelope,
+  basePath: string,
+): [Envelope, string | undefined] {
+  // Override the SDK info in the envelope header to use Electron SDK
+  const [originalHeader] = envelope;
+  const modifiedHeader = {
+    ...originalHeader,
+    sdk: { name: 'sentry.javascript.electron', version: SDK_VERSION },
+  };
+
+  let modifiedEnvelope = createEnvelope(modifiedHeader);
+  let isSpanContainer = false;
+  let transactionOrigin: string | undefined;
+
+  forEachEnvelopeItem(envelope, (item, type) => {
+    if (type === 'span') {
+      isSpanContainer = true;
+      const [headers, spanContainer] = item as [
+        {
+          type: 'span';
+          item_count: number;
+          content_type: 'application/vnd.sentry.items.span.v2+json';
+        },
+        SerializedStreamedSpanContainer,
+      ];
+
+      // Normalize paths in span container frames
+      if (spanContainer?.items) {
+        for (const span of spanContainer.items) {
+          span.name = normalizeUrlToBase(span.name, basePath);
+
+          if (span.attributes?.['sentry.segment.name']?.value) {
+            span.attributes['sentry.segment.name'].value = normalizeUrlToBase(
+              span.attributes['sentry.segment.name'].value as string,
+              basePath,
+            );
+          }
+
+          if (span.is_segment) {
+            transactionOrigin = span.attributes?.['sentry.origin']?.value as string | undefined;
+          }
+        }
+      }
+
+      modifiedEnvelope = addItemToEnvelope(modifiedEnvelope, [headers, spanContainer]);
+    }
+  });
+
+  return isSpanContainer ? [modifiedEnvelope, transactionOrigin] : [envelope, undefined];
 }

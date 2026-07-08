@@ -1,6 +1,13 @@
 // oxlint-disable max-lines
 import { EventEmitter } from 'node:events';
-import type { Attachment, Client, DynamicSamplingContext, Event, ScopeData } from '@sentry/core';
+import type {
+  Attachment,
+  Client,
+  DynamicSamplingContext,
+  Event,
+  ScopeData,
+  SerializedStreamedSpan,
+} from '@sentry/core';
 import {
   _INTERNAL_captureSerializedLog,
   _INTERNAL_captureSerializedMetric,
@@ -12,7 +19,7 @@ import {
 import { captureEvent, getClient, getCurrentScope } from '@sentry/node';
 import type { WebContents } from 'electron';
 import { app, ipcMain, protocol, webContents } from 'electron';
-import { eventFromEnvelope, profileChunkFromEnvelope } from '../common/envelope.js';
+import { eventFromEnvelope, profileChunkFromEnvelope, spanContainerFromEnvelope } from '../common/envelope.js';
 import type { IpcUtils, RendererStatus } from '../common/ipc.js';
 import { ipcChannelUtils, IPCMode } from '../common/ipc.js';
 import { registerProtocol } from './electron-normalize.js';
@@ -20,12 +27,13 @@ import { createRendererEventLoopBlockStatusHandler } from './integrations/render
 import { rendererProfileFromIpc } from './integrations/renderer-profiling.js';
 import { getOsDeviceLogAttributes } from './log.js';
 import { mergeEvents } from './merge.js';
-import { normalizeProfileChunkEnvelope, normalizeReplayEnvelope } from './normalize.js';
+import { normalizeProfileChunkEnvelope, normalizeReplayEnvelope, normalizeSpanStreamingEnvelope } from './normalize.js';
 import type { ElectronMainOptionsInternal } from './sdk.js';
 import { SDK_VERSION } from './version.js';
 
 interface IpcMainEvents {
   'pageload-transaction': [event: Event, contents: WebContents | undefined];
+  'pageload-spans': [spans: SerializedStreamedSpan[], contents: WebContents | undefined];
 }
 
 export const ipcMainHooks = new EventEmitter<IpcMainEvents>();
@@ -136,11 +144,33 @@ function handleEnvelope(
     if (profileChunk) {
       const normalizedEnvelope = normalizeProfileChunkEnvelope(options, envelope, app.getAppPath());
       void getClient()?.getTransport()?.send(normalizedEnvelope);
-    } else {
-      const normalizedEnvelope = normalizeReplayEnvelope(options, envelope, app.getAppPath());
-      // Pass other types of envelope straight to the transport
-      void getClient()?.getTransport()?.send(normalizedEnvelope);
+      return;
     }
+
+    const spans = spanContainerFromEnvelope(envelope);
+    if (spans) {
+      const [normalizedSpanEnvelope, transactionOrigin] = normalizeSpanStreamingEnvelope(
+        options,
+        envelope,
+        app.getAppPath(),
+      );
+
+      // If the startup tracing integration is waiting for a renderer pageload, hand the
+      // streamed browser pageload spans to it so they can be merged into the startup span
+      // rather than sent as their own segment.
+      if (transactionOrigin === 'auto.pageload.browser' && ipcMainHooks.listenerCount('pageload-spans') > 0) {
+        const normalizedSpans = spanContainerFromEnvelope(normalizedSpanEnvelope);
+        ipcMainHooks.emit('pageload-spans', normalizedSpans?.items ?? [], contents);
+        return;
+      }
+
+      void getClient()?.getTransport()?.send(normalizedSpanEnvelope);
+      return;
+    }
+
+    const normalizedEnvelope = normalizeReplayEnvelope(options, envelope, app.getAppPath());
+    // Pass other types of envelope straight to the transport
+    void getClient()?.getTransport()?.send(normalizedEnvelope);
   }
 }
 
