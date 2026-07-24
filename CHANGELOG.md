@@ -1,5 +1,23 @@
 # Changelog
 
+## 7.16.0
+
+### New Features ✨
+
+- Update JavaScript SDKs to v10.67.0 by @timfish in [#1405](https://github.com/getsentry/sentry-electron/pull/1405)
+- Update Sentry SDKs to v10.63.0 by @github-actions in [#1399](https://github.com/getsentry/sentry-electron/pull/1399)
+
+### Internal Changes 🔧
+
+#### Deps
+
+- Bump shell-quote from 1.8.4 to 1.10.0 by @dependabot in [#1404](https://github.com/getsentry/sentry-electron/pull/1404)
+- Bump brace-expansion from 5.0.6 to 5.0.7 by @dependabot in [#1403](https://github.com/getsentry/sentry-electron/pull/1403)
+
+#### Other
+
+- Tell Claude how to run e2e tests by @timfish in [#1406](https://github.com/getsentry/sentry-electron/pull/1406)
+
 ## 7.15.0
 
 ### New Features ✨
