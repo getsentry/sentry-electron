@@ -79,6 +79,11 @@ jobs:
         shard: [1, 2, 3, 4]
     env:
       ELECTRON_VERSION: ${{ matrix.electron }}
+      # GCC <= 12 (default on ubuntu-22.04) cannot parse the V8 headers from
+      # Electron >= 43, so build native test modules with clang. Ignored by
+      # node-gyp on Windows and macOS already defaults to clang.
+      CC: clang
+      CXX: clang++
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
