@@ -1,4 +1,4 @@
-import type { Event, SerializedStreamedSpan, Span, SpanStatus, StartSpanOptions } from '@sentry/core';
+import type { Event, SerializedStreamedSpan, Span, SpanAttributes, SpanStatus, StartSpanOptions } from '@sentry/core';
 import {
   defineIntegration,
   SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN,
@@ -188,6 +188,33 @@ const NON_INHERITED_SEGMENT_ATTRIBUTES = new Set([
   'http.request.header.user_agent',
 ]);
 
+// Attributes that pin a streamed child span to the original renderer segment or SDK. These are not
+// copied to the re-created child spans because the main process SDK re-applies them for the merged
+// startup trace.
+const NON_COPIED_CHILD_ATTRIBUTES = new Set([
+  'sentry.trace.lifecycle',
+  'sentry.segment.name',
+  'sentry.segment.id',
+  'sentry.sdk.name',
+  'sentry.sdk.version',
+  'sentry.sdk.integrations',
+  'sentry.release',
+  'sentry.environment',
+  'sentry.sample_rate',
+]);
+
+function copyChildAttributes(span: SerializedStreamedSpan): SpanAttributes {
+  const attributes: SpanAttributes = {};
+
+  for (const [key, attribute] of Object.entries(span.attributes || {})) {
+    if (!NON_COPIED_CHILD_ATTRIBUTES.has(key)) {
+      attributes[key] = attribute.value;
+    }
+  }
+
+  return attributes;
+}
+
 /**
  * Merges spans streamed from the renderer (when `traceLifecycle: 'stream'` is used) into the
  * startup span, mirroring {@link applyRendererSpansAndMeasurements} for the streamed span format.
@@ -238,9 +265,7 @@ function applyStreamedRendererSpans(parentSpan: Span, spans: SerializedStreamedS
             name: span.name,
             op: streamedAttr(span, 'sentry.op'),
             startTime,
-            attributes: {
-              [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: streamedAttr(span, 'sentry.origin'),
-            },
+            attributes: copyChildAttributes(span),
             parentSpan: rendererSpan,
           },
           (created) => {
