@@ -4,6 +4,7 @@ import type {
   Attachment,
   Client,
   DynamicSamplingContext,
+  Envelope,
   Event,
   ScopeData,
   SerializedStreamedSpan,
@@ -12,6 +13,7 @@ import {
   _INTERNAL_captureSerializedLog,
   _INTERNAL_captureSerializedMetric,
   debug,
+  forEachEnvelopeItem,
   parseEnvelope,
   type SerializedLog,
   type SerializedMetric,
@@ -96,6 +98,57 @@ function captureEventFromRenderer(
 
 let cached_public_key: string | undefined;
 
+// While buffering is active, streamed span envelopes from renderers are held here so the startup
+// tracing integration can merge pageload spans that arrive over multiple envelopes. See
+// handleEnvelope for details.
+let bufferedSpanEnvelopes: Envelope[] | undefined;
+
+/**
+ * Starts buffering streamed span envelopes from renderers
+ */
+export function startSpanEnvelopeBuffering(): void {
+  bufferedSpanEnvelopes = bufferedSpanEnvelopes || [];
+}
+
+/**
+ * Stops buffering and empties the streamed span envelope buffer.
+ *
+ * Spans matching `extractTraceId` are removed from their envelopes and returned so they can be
+ * merged into the startup trace. Envelopes that still contain spans after extraction are forwarded
+ * to the transport.
+ */
+export function flushSpanEnvelopeBuffer(extractTraceId?: string): SerializedStreamedSpan[] {
+  const extracted: SerializedStreamedSpan[] = [];
+  const buffered = bufferedSpanEnvelopes || [];
+  bufferedSpanEnvelopes = undefined;
+
+  for (const envelope of buffered) {
+    const container = spanContainerFromEnvelope(envelope);
+
+    if (!container) {
+      continue;
+    }
+
+    if (extractTraceId) {
+      extracted.push(...container.items.filter((span) => span.trace_id === extractTraceId));
+      container.items = container.items.filter((span) => span.trace_id !== extractTraceId);
+    }
+
+    if (container.items.length > 0) {
+      // Keep the envelope item header in sync with the number of remaining spans
+      forEachEnvelopeItem(envelope, (item, type) => {
+        if (type === 'span') {
+          (item[0] as { item_count?: number }).item_count = container.items.length;
+        }
+      });
+
+      void getClient()?.getTransport()?.send(envelope);
+    }
+  }
+
+  return extracted;
+}
+
 function handleEnvelope(
   client: Client,
   options: ElectronMainOptionsInternal,
@@ -155,12 +208,24 @@ function handleEnvelope(
         app.getAppPath(),
       );
 
-      // If the startup tracing integration is waiting for a renderer pageload, hand the
-      // streamed browser pageload spans to it so they can be merged into the startup span
-      // rather than sent as their own segment.
-      if (segmentOrigin === 'auto.pageload.browser' && ipcMainHooks.listenerCount('pageload-spans') > 0) {
-        const normalizedSpans = spanContainerFromEnvelope(normalizedSpanEnvelope);
-        ipcMainHooks.emit('pageload-spans', normalizedSpans?.items ?? [], contents);
+      // While the startup tracing integration is waiting for a renderer pageload, the pageload
+      // span tree can arrive over multiple envelopes because the renderer SDK flushes on an
+      // interval. The pageload segment span gets re-created in the startup trace, so pageload
+      // spans sent directly from earlier envelopes would reference a segment that is never sent.
+      // We buffer streamed span envelopes until the pageload segment arrives and then hand all
+      // spans from its trace to the integration so they can be merged into the startup span.
+      // Buffered spans from other traces are forwarded unmodified once the wait ends.
+      if (bufferedSpanEnvelopes) {
+        bufferedSpanEnvelopes.push(normalizedSpanEnvelope);
+
+        if (segmentOrigin === 'auto.pageload.browser' && ipcMainHooks.listenerCount('pageload-spans') > 0) {
+          const pageloadTraceId = spanContainerFromEnvelope(normalizedSpanEnvelope)?.items.find(
+            (span) => span.is_segment,
+          )?.trace_id;
+
+          ipcMainHooks.emit('pageload-spans', flushSpanEnvelopeBuffer(pageloadTraceId), contents);
+        }
+
         return;
       }
 

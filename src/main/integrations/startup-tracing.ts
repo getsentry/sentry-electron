@@ -7,7 +7,7 @@ import {
   timestampInSeconds,
 } from '@sentry/core';
 import { app } from 'electron';
-import { ipcMainHooks } from '../ipc.js';
+import { flushSpanEnvelopeBuffer, ipcMainHooks, startSpanEnvelopeBuffering } from '../ipc.js';
 
 export interface StartupTracingOptions {
   /*
@@ -68,6 +68,10 @@ function zeroLengthSpan(options: StartSpanOptions): void {
 type RendererPageload = { event: Event } | { spans: SerializedStreamedSpan[] } | undefined;
 
 function waitForRendererPageload(timeout: number): Promise<RendererPageload> {
+  // Ensure buffering is active while we listen in case the fallback timeout has already flushed
+  // the buffer
+  startSpanEnvelopeBuffering();
+
   return new Promise((resolve) => {
     const onTransaction = (event: Event): void => finish({ event });
     const onSpans = (spans: SerializedStreamedSpan[]): void => finish({ spans });
@@ -318,8 +322,14 @@ export const startupTracingIntegration = defineIntegration((options: StartupTrac
   return {
     name: 'StartupTracing',
     setup() {
+      // Buffer streamed span envelopes from renderers until we know whether they contain pageload
+      // spans that need to be merged into the startup trace
+      startSpanEnvelopeBuffering();
+
       const fallbackTimeout = setTimeout(
         () => {
+          flushSpanEnvelopeBuffer();
+
           const transaction = rootTransaction();
           transaction.setStatus({ code: 2, message: 'Timeout exceeded' });
           transaction.end();
@@ -360,6 +370,10 @@ export const startupTracingIntegration = defineIntegration((options: StartupTrac
           let lastEndTimestamp = timestampInSeconds();
 
           const pageload = await waitForRendererPageload((options.timeoutSeconds || 10) * 1000);
+
+          // Streamed span envelopes are buffered while we wait for the renderer pageload. If the
+          // wait timed out, forward any buffered envelopes to the transport.
+          flushSpanEnvelopeBuffer();
 
           if (pageload && 'spans' in pageload) {
             lastEndTimestamp = applyStreamedRendererSpans(parentSpan, pageload.spans, lastEndTimestamp);
