@@ -194,7 +194,7 @@ export function normalizeProfileChunkEnvelope(
 }
 
 /**
- * Normalizes profile_chunk envelope items and returns the modified envelope
+ * Normalizes span envelope items and returns the modified envelope
  */
 export function normalizeSpanStreamingEnvelope(
   options: ElectronMainOptionsInternal,
@@ -210,7 +210,7 @@ export function normalizeSpanStreamingEnvelope(
 
   let modifiedEnvelope = createEnvelope(modifiedHeader);
   let isSpanContainer = false;
-  let transactionOrigin: string | undefined;
+  let segmentOrigin: string | undefined;
 
   forEachEnvelopeItem(envelope, (item, type) => {
     if (type === 'span') {
@@ -237,7 +237,7 @@ export function normalizeSpanStreamingEnvelope(
           }
 
           if (span.is_segment) {
-            transactionOrigin = span.attributes?.['sentry.origin']?.value as string | undefined;
+            segmentOrigin = span.attributes?.['sentry.origin']?.value as string | undefined;
           }
         }
       }
@@ -246,5 +246,5 @@ export function normalizeSpanStreamingEnvelope(
     }
   });
 
-  return isSpanContainer ? [modifiedEnvelope, transactionOrigin] : [envelope, undefined];
+  return isSpanContainer ? [modifiedEnvelope, segmentOrigin] : [envelope, undefined];
 }

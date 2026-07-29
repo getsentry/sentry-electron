@@ -149,7 +149,7 @@ function handleEnvelope(
 
     const spans = spanContainerFromEnvelope(envelope);
     if (spans) {
-      const [normalizedSpanEnvelope, transactionOrigin] = normalizeSpanStreamingEnvelope(
+      const [normalizedSpanEnvelope, segmentOrigin] = normalizeSpanStreamingEnvelope(
         options,
         envelope,
         app.getAppPath(),
@@ -158,7 +158,7 @@ function handleEnvelope(
       // If the startup tracing integration is waiting for a renderer pageload, hand the
       // streamed browser pageload spans to it so they can be merged into the startup span
       // rather than sent as their own segment.
-      if (transactionOrigin === 'auto.pageload.browser' && ipcMainHooks.listenerCount('pageload-spans') > 0) {
+      if (segmentOrigin === 'auto.pageload.browser' && ipcMainHooks.listenerCount('pageload-spans') > 0) {
         const normalizedSpans = spanContainerFromEnvelope(normalizedSpanEnvelope);
         ipcMainHooks.emit('pageload-spans', normalizedSpans?.items ?? [], contents);
         return;
