@@ -22,11 +22,16 @@ export const normalizePathsIntegration = defineIntegration(() => {
     processEvent(event) {
       return normalizePaths(event, app.getAppPath());
     },
+    // All spans pass through this hook, including segment spans
     processSpan(span) {
       span.name = normalizeUrlToBase(span.name, app.getAppPath());
-    },
-    processSegmentSpan(span, client) {
-      span.name = normalizeUrlToBase(span.name, app.getAppPath());
+
+      // Child spans hold the segment name in an attribute which is serialized before the segment
+      // span itself is normalized above
+      const segmentName = span.attributes?.['sentry.segment.name'];
+      if (span.attributes && typeof segmentName === 'string') {
+        span.attributes['sentry.segment.name'] = normalizeUrlToBase(segmentName, app.getAppPath());
+      }
     },
   };
 });
