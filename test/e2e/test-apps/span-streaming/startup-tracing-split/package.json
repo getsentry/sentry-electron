@@ -1,0 +1,9 @@
+{
+  "name": "startup-tracing-split",
+  "description": "Startup Tracing Integration (Span streaming, pageload split over multiple envelopes)",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "dependencies": {
+    "@sentry/electron": "5.6.0"
+  }
+}
