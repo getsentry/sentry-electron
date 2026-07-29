@@ -35,8 +35,16 @@ electronTestRunner(
               'sentry.sample_rate': { value: 1, type: 'integer' },
               // Renderer pageload measurements / trace metadata are merged onto the startup segment
               'sentry.idle_span_finish_reason': { value: 'idleTimeout', type: 'string' },
-              'browser.web_vital.ttfb.value': { value: expect.any(Number), type: 'double' },
-              'browser.web_vital.ttfb.request_time': { value: expect.any(Number), type: 'integer' },
+              // Numeric attribute types are inferred from the value so whole numbers get typed
+              // 'integer' and fractional values 'double'
+              'browser.web_vital.ttfb.value': {
+                value: expect.any(Number),
+                type: expect.stringMatching(/^(integer|double)$/),
+              },
+              'browser.web_vital.ttfb.request_time': {
+                value: expect.any(Number),
+                type: expect.stringMatching(/^(integer|double)$/),
+              },
               'network.connection.effective_type': { value: expect.any(String), type: 'string' },
               'network.connection.rtt': { value: expect.any(Number), type: 'integer' },
               'device.memory.estimated_capacity': { value: expect.any(Number), type: 'integer' },
