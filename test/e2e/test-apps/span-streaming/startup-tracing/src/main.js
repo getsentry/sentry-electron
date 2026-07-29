@@ -1,14 +1,14 @@
 const path = require('path');
 
 const { app, BrowserWindow } = require('electron');
-const { init, startupTracingIntegration, spanStreamingIntegration } = require('@sentry/electron/main');
+const { init, startupTracingIntegration } = require('@sentry/electron/main');
 
 init({
   dsn: '__DSN__',
   debug: true,
   tracesSampleRate: 1,
   traceLifecycle: 'stream',
-  integrations: [spanStreamingIntegration(), startupTracingIntegration()],
+  integrations: [startupTracingIntegration()],
   onFatalError: () => {},
 });
 

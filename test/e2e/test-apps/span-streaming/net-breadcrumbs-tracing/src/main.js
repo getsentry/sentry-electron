@@ -1,5 +1,5 @@
 const { app } = require('electron');
-const { init, startSpan, captureException, spanStreamingIntegration } = require('@sentry/electron/main');
+const { init, startSpan, captureException } = require('@sentry/electron/main');
 const fetch = require('electron-fetch');
 
 init({
@@ -8,7 +8,6 @@ init({
   tracesSampleRate: 1,
   propagateTraceparent: true,
   traceLifecycle: 'stream',
-  integrations: [spanStreamingIntegration()],
   onFatalError: () => {},
 });
 

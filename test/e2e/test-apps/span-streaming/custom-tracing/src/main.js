@@ -8,7 +8,6 @@ Sentry.init({
   debug: true,
   tracesSampleRate: 1.0,
   traceLifecycle: 'stream',
-  integrations: [Sentry.spanStreamingIntegration()],
   onFatalError: () => {},
 });
 

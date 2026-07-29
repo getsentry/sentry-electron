@@ -2,7 +2,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 const { app, BrowserWindow } = require('electron');
-const { init, startSpan, spanStreamingIntegration } = require('@sentry/electron/main');
+const { init, startSpan } = require('@sentry/electron/main');
 const { nodeProfilingIntegration } = require('@sentry/profiling-node');
 
 init({
@@ -10,7 +10,7 @@ init({
   debug: true,
   release: 'some-release',
   traceLifecycle: 'stream',
-  integrations: [spanStreamingIntegration(), nodeProfilingIntegration()],
+  integrations: [nodeProfilingIntegration()],
   tracesSampleRate: 1,
   profileSessionSampleRate: 1,
   profileLifecycle: 'trace',
