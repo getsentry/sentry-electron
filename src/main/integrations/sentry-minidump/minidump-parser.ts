@@ -247,7 +247,7 @@ function parseCrashpadInfo(buf: Buffer, info: Buffer): Record<string, string> {
   return readCrashpadModuleLinks(buf, module_list);
 }
 
-type CrashpadAnnotations = {
+export type CrashpadAnnotations = {
   process_type?: string;
   'electron.v8-oom.stack'?: string;
 } & Record<string, string>;
@@ -256,6 +256,22 @@ export type MinidumpParseResult = {
   header: MinidumpHeader;
   crashpadAnnotations?: CrashpadAnnotations;
 };
+
+// Non-fatal `base::debug::DumpWithoutCrashing()` snapshots carry these Crashpad crash keys; real crashes never do.
+export function isDumpWithoutCrashing(annotations?: CrashpadAnnotations): boolean {
+  return !!annotations && ('DumpWithoutCrashing-file' in annotations || 'DumpWithoutCrashing-line' in annotations);
+}
+
+// Categories worth keeping even if they ever arrive as a DumpWithoutCrashing snapshot.
+const KEEP_MARKERS = ['electron.v8-oom.stack'];
+
+export function shouldDropMinidump(annotations?: CrashpadAnnotations): boolean {
+  if (!isDumpWithoutCrashing(annotations)) {
+    return false;
+  }
+
+  return !KEEP_MARKERS.some((marker) => !!annotations && marker in annotations);
+}
 
 /**
  * Parses an Electron minidump and extracts the header and crashpad annotations
