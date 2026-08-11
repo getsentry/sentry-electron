@@ -2,6 +2,8 @@ import {
   SENTRY_ENVIRONMENT,
   SENTRY_OP,
   SENTRY_ORIGIN,
+  SENTRY_PROFILE_ID,
+  SENTRY_PROFILER_ID,
   SENTRY_RELEASE,
   SENTRY_SDK_INTEGRATIONS,
   SENTRY_SDK_NAME,
@@ -40,12 +42,18 @@ function streamedAttr(span: SerializedStreamedSpan, key: string): string | undef
 }
 
 // Attributes on the streamed pageload segment that describe the renderer segment itself (its
-// identity and SDK metadata) rather than the measurements and trace metadata (Web Vitals,
-// connection/device info, etc.) that should be merged onto the startup span.
+// identity, SDK metadata and profile linkage) rather than the measurements and trace metadata (Web
+// Vitals, connection/device info, etc.) that should be merged onto the startup span.
+//
+// The profile ids are set on segment spans from the renderer scope and point at a renderer UI
+// profile, so inheriting them would attach that profile to the main process startup span. The
+// transaction path carries the same linkage in `contexts.profile` and does not transfer it either.
 const NON_INHERITED_SEGMENT_ATTRIBUTES = new Set<string>([
   SENTRY_OP,
   SENTRY_ORIGIN,
   SENTRY_SOURCE,
+  SENTRY_PROFILE_ID,
+  SENTRY_PROFILER_ID,
   SEMANTIC_ATTRIBUTE_SENTRY_SAMPLE_RATE,
   SENTRY_SEGMENT_NAME,
   SENTRY_SEGMENT_NAME_SOURCE,
