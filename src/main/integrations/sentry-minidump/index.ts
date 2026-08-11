@@ -102,12 +102,12 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
     let minidumpFound = false;
 
     await minidumpLoader?.(deleteAll, async (minidumpResult, attachment) => {
-      minidumpFound = true;
-
       if (shouldDropMinidump(minidumpResult.crashpadAnnotations)) {
         debug.log('Dropping DumpWithoutCrashing minidump as it is not a real crash');
         return;
       }
+
+      minidumpFound = true;
 
       const minidumpProcess = minidumpResult.crashpadAnnotations?.process_type?.replace('-process', '');
 
