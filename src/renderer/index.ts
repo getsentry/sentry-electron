@@ -62,6 +62,7 @@ export {
   fetchStreamPerformanceIntegration,
   forceLoad,
   functionToStringIntegration,
+  getAbsoluteUrl,
   getActiveSpan,
   getClient,
   getCurrentScope,

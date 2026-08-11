@@ -73,6 +73,7 @@ electronTestRunner(__dirname, async (ctx) => {
               },
               event_id: UUID_MATCHER,
               environment: 'custom-env',
+              segment_names: expect.any(Array),
               sdk: {
                 integrations: expect.any(Array),
                 name: 'sentry.javascript.browser',
