@@ -12,6 +12,7 @@ import { previousSessionWasAbnormal, restorePreviousSession, setPreviousSessionA
 import { BufferedWriteStore } from '../../store.js';
 import type { MinidumpLoader } from './minidump-loader.js';
 import { getMinidumpLoader } from './minidump-loader.js';
+import { shouldDropMinidump } from './minidump-parser.js';
 
 const chromeStackParser = createStackParser(chromeStackLineParser);
 
@@ -101,6 +102,11 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
     let minidumpFound = false;
 
     await minidumpLoader?.(deleteAll, async (minidumpResult, attachment) => {
+      if (shouldDropMinidump(minidumpResult.crashpadAnnotations)) {
+        debug.log('Dropping DumpWithoutCrashing minidump as it is not a real crash');
+        return;
+      }
+
       minidumpFound = true;
 
       const minidumpProcess = minidumpResult.crashpadAnnotations?.process_type?.replace('-process', '');
