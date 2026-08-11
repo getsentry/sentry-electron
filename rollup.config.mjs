@@ -7,7 +7,11 @@ import typescript from '@rollup/plugin-typescript';
 const pkgJson = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json')));
 const dependencies = Object.keys(pkgJson.dependencies || {});
 const peerDependencies = Object.keys(pkgJson.peerDependencies || {});
-const external = [...builtinModules, /^node:/, 'electron', ...dependencies, ...peerDependencies];
+// Match the package itself as well as any of its subpath exports (eg. `@sentry/conventions/attributes`)
+const externalPackages = [...dependencies, ...peerDependencies].map(
+  (name) => new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:/|$)`),
+);
+const external = [...builtinModules, /^node:/, 'electron', ...externalPackages];
 
 const outputOptions = {
   sourcemap: true,

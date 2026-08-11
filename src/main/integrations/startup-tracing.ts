@@ -1,4 +1,4 @@
-import type { Event, SerializedStreamedSpan, Span, SpanAttributes, SpanStatus, StartSpanOptions } from '@sentry/core';
+import type { Event, SerializedStreamedSpan, Span, StartSpanOptions } from '@sentry/core';
 import {
   defineIntegration,
   SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN,
@@ -8,6 +8,7 @@ import {
 } from '@sentry/core';
 import { app } from 'electron';
 import { flushSpanEnvelopeBuffer, ipcMainHooks, startSpanEnvelopeBuffering } from '../ipc.js';
+import { applyStreamedRendererSpans, parseStatus } from './streamed-renderer-spans.js';
 
 export interface StartupTracingOptions {
   /*
@@ -68,10 +69,6 @@ function zeroLengthSpan(options: StartSpanOptions): void {
 type RendererPageload = { event: Event } | { spans: SerializedStreamedSpan[] } | undefined;
 
 function waitForRendererPageload(timeout: number): Promise<RendererPageload> {
-  // Ensure buffering is active while we listen in case the fallback timeout has already flushed
-  // the buffer
-  startSpanEnvelopeBuffering();
-
   return new Promise((resolve) => {
     const onTransaction = (event: Event): void => finish({ event });
     const onSpans = (spans: SerializedStreamedSpan[]): void => finish({ spans });
@@ -88,14 +85,6 @@ function waitForRendererPageload(timeout: number): Promise<RendererPageload> {
     ipcMainHooks.on('pageload-transaction', onTransaction);
     ipcMainHooks.on('pageload-spans', onSpans);
   });
-}
-
-function parseStatus(status: string): SpanStatus {
-  if (status === 'ok') {
-    return { code: 1 };
-  }
-
-  return { code: 2, message: status };
 }
 
 function applyRendererSpansAndMeasurements(parentSpan: Span, event: Event | undefined, endTimestamp: number): number {
@@ -168,127 +157,6 @@ function applyRendererSpansAndMeasurements(parentSpan: Span, event: Event | unde
   return lastEndTimestamp;
 }
 
-function streamedAttr(span: SerializedStreamedSpan, key: string): string | undefined {
-  return span.attributes?.[key]?.value as string | undefined;
-}
-
-// Attributes on the streamed pageload segment that describe the renderer segment itself (its
-// identity and SDK metadata) rather than the measurements and trace metadata (Web Vitals,
-// connection/device info, etc.) that should be merged onto the startup span.
-const NON_INHERITED_SEGMENT_ATTRIBUTES = new Set([
-  'sentry.op',
-  'sentry.origin',
-  'sentry.source',
-  'sentry.sample_rate',
-  'sentry.segment.name',
-  'sentry.segment.id',
-  'sentry.sdk.name',
-  'sentry.sdk.version',
-  'sentry.sdk.integrations',
-  'sentry.release',
-  'sentry.environment',
-  'sentry.span.source',
-  'url.full',
-  'http.request.header.user_agent',
-]);
-
-// Attributes that pin a streamed child span to the original renderer segment or SDK. These are not
-// copied to the re-created child spans because the main process SDK re-applies them for the merged
-// startup trace.
-const NON_COPIED_CHILD_ATTRIBUTES = new Set([
-  'sentry.trace.lifecycle',
-  'sentry.segment.name',
-  'sentry.segment.id',
-  'sentry.sdk.name',
-  'sentry.sdk.version',
-  'sentry.sdk.integrations',
-  'sentry.release',
-  'sentry.environment',
-  'sentry.sample_rate',
-]);
-
-function copyChildAttributes(span: SerializedStreamedSpan): SpanAttributes {
-  const attributes: SpanAttributes = {};
-
-  for (const [key, attribute] of Object.entries(span.attributes || {})) {
-    if (!NON_COPIED_CHILD_ATTRIBUTES.has(key)) {
-      attributes[key] = attribute.value;
-    }
-  }
-
-  return attributes;
-}
-
-/**
- * Merges spans streamed from the renderer (when `traceLifecycle: 'stream'` is used) into the
- * startup span, mirroring {@link applyRendererSpansAndMeasurements} for the streamed span format.
- */
-function applyStreamedRendererSpans(parentSpan: Span, spans: SerializedStreamedSpan[], endTimestamp: number): number {
-  let lastEndTimestamp = endTimestamp;
-
-  if (!spans.length) {
-    return lastEndTimestamp;
-  }
-
-  const segment = spans.find((span) => span.is_segment);
-  const childSpans = spans.filter((span) => !span.is_segment);
-
-  const rendererStartTime = segment?.start_timestamp || timestampInSeconds();
-  parentSpan.setAttribute('performance.timeOrigin', rendererStartTime);
-
-  // Merge the renderer pageload measurements and trace metadata onto the startup span
-  if (segment?.attributes) {
-    for (const [key, attribute] of Object.entries(segment.attributes)) {
-      if (!NON_INHERITED_SEGMENT_ATTRIBUTES.has(key)) {
-        parentSpan.setAttribute(key, attribute.value);
-      }
-    }
-  }
-
-  startSpanManual(
-    {
-      name: segment?.name || 'electron.renderer',
-      op: 'electron.renderer',
-      startTime: rendererStartTime,
-      parentSpan,
-      attributes: {
-        [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'auto.electron.startup',
-      },
-    },
-    (rendererSpan) => {
-      for (const span of childSpans) {
-        const startTime = span.start_timestamp;
-        const endTime = span.end_timestamp;
-
-        if (endTime) {
-          lastEndTimestamp = Math.max(lastEndTimestamp, endTime);
-        }
-
-        startSpanManual(
-          {
-            name: span.name,
-            op: streamedAttr(span, 'sentry.op'),
-            startTime,
-            attributes: copyChildAttributes(span),
-            parentSpan: rendererSpan,
-          },
-          (created) => {
-            if (span.status) {
-              created.setStatus(parseStatus(span.status));
-            }
-
-            created.end((endTime || startTime) * 1000);
-          },
-        );
-      }
-
-      rendererSpan.end(lastEndTimestamp * 1000);
-    },
-  );
-
-  return lastEndTimestamp;
-}
-
 /**
  * An integration that instruments Electron's startup sequence.
  *
@@ -326,8 +194,11 @@ export const startupTracingIntegration = defineIntegration((options: StartupTrac
       // spans that need to be merged into the startup trace
       startSpanEnvelopeBuffering();
 
+      let fallbackTimeoutFired = false;
+
       const fallbackTimeout = setTimeout(
         () => {
+          fallbackTimeoutFired = true;
           flushSpanEnvelopeBuffer();
 
           const transaction = rootTransaction();
@@ -358,6 +229,14 @@ export const startupTracingIntegration = defineIntegration((options: StartupTrac
         });
 
         webContents.once('dom-ready', async () => {
+          // If the fallback timeout already fired, the startup span has ended and the envelope
+          // buffer has been flushed. Merging renderer spans now would attach them to a finished
+          // span and remove them from the envelopes that carry them, so we leave any streamed
+          // spans to pass straight through to the transport instead.
+          if (fallbackTimeoutFired) {
+            return;
+          }
+
           clearTimeout(fallbackTimeout);
 
           const parentSpan = rootTransaction();

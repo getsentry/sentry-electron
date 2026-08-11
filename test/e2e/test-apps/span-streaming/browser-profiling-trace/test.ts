@@ -59,7 +59,7 @@ electronTestRunner(__dirname, async (ctx) => {
               'sentry.segment.id': { value: SHORT_UUID_MATCHER, type: 'string' },
               'sentry.sdk.name': { value: 'sentry.javascript.browser', type: 'string' },
               'sentry.profiler_id': { value: UUID_MATCHER, type: 'string' },
-              'sentry.span.source': { value: 'custom', type: 'string' },
+              'sentry.segment.name.source': { value: 'custom', type: 'string' },
             }),
           },
         ],

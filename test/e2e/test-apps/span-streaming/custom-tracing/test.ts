@@ -26,7 +26,6 @@ electronTestRunner(
               'sentry.segment.id': { value: SHORT_UUID_MATCHER, type: 'string' },
               'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
               'sentry.source': { value: 'custom', type: 'string' },
-              'sentry.span.source': { value: 'custom', type: 'string' },
             }),
           },
           {
@@ -47,7 +46,7 @@ electronTestRunner(
               'sentry.source': { value: 'custom', type: 'string' },
               'sentry.sdk.integrations': { value: expect.any(Array), type: 'array' },
               'os.name': { value: expect.any(String), type: 'string' },
-              'sentry.span.source': { value: 'custom', type: 'string' },
+              'sentry.segment.name.source': { value: 'custom', type: 'string' },
             }),
           },
         ]),

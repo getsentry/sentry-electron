@@ -10,7 +10,6 @@ import type {
   SerializedSession,
   TransactionEvent,
   StreamedSpanJSON,
-  SerializedMetric,
 } from '@sentry/core';
 import { forEachEnvelopeItem, parseSemver } from '@sentry/core';
 import { readdirSync } from 'fs';
