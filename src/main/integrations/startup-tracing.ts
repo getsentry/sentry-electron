@@ -1,4 +1,4 @@
-import type { Event, Span, SpanStatus, StartSpanOptions } from '@sentry/core';
+import type { Event, SerializedStreamedSpan, Span, StartSpanOptions } from '@sentry/core';
 import {
   defineIntegration,
   SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN,
@@ -7,7 +7,8 @@ import {
   timestampInSeconds,
 } from '@sentry/core';
 import { app } from 'electron';
-import { ipcMainHooks } from '../ipc.js';
+import { flushSpanEnvelopeBuffer, ipcMainHooks, startSpanEnvelopeBuffering } from '../ipc.js';
+import { applyStreamedRendererSpans, parseStatus } from './streamed-renderer-spans.js';
 
 export interface StartupTracingOptions {
   /*
@@ -65,24 +66,25 @@ function zeroLengthSpan(options: StartSpanOptions): void {
   );
 }
 
-function waitForRendererPageload(timeout: number): Promise<Event | undefined> {
+type RendererPageload = { event: Event } | { spans: SerializedStreamedSpan[] } | undefined;
+
+function waitForRendererPageload(timeout: number): Promise<RendererPageload> {
   return new Promise((resolve) => {
-    const timer = setTimeout(() => {
-      resolve(undefined);
-    }, timeout);
-    ipcMainHooks.once('pageload-transaction', (event, _contents) => {
+    const onTransaction = (event: Event): void => finish({ event });
+    const onSpans = (spans: SerializedStreamedSpan[]): void => finish({ spans });
+
+    const timer = setTimeout(() => finish(undefined), timeout);
+
+    function finish(result: RendererPageload): void {
       clearTimeout(timer);
-      resolve(event);
-    });
+      ipcMainHooks.removeListener('pageload-transaction', onTransaction);
+      ipcMainHooks.removeListener('pageload-spans', onSpans);
+      resolve(result);
+    }
+
+    ipcMainHooks.on('pageload-transaction', onTransaction);
+    ipcMainHooks.on('pageload-spans', onSpans);
   });
-}
-
-function parseStatus(status: string): SpanStatus {
-  if (status === 'ok') {
-    return { code: 1 };
-  }
-
-  return { code: 2, message: status };
 }
 
 function applyRendererSpansAndMeasurements(parentSpan: Span, event: Event | undefined, endTimestamp: number): number {
@@ -188,8 +190,17 @@ export const startupTracingIntegration = defineIntegration((options: StartupTrac
   return {
     name: 'StartupTracing',
     setup() {
+      // Buffer streamed span envelopes from renderers until we know whether they contain pageload
+      // spans that need to be merged into the startup trace
+      startSpanEnvelopeBuffering();
+
+      let fallbackTimeoutFired = false;
+
       const fallbackTimeout = setTimeout(
         () => {
+          fallbackTimeoutFired = true;
+          flushSpanEnvelopeBuffer();
+
           const transaction = rootTransaction();
           transaction.setStatus({ code: 2, message: 'Timeout exceeded' });
           transaction.end();
@@ -218,6 +229,14 @@ export const startupTracingIntegration = defineIntegration((options: StartupTrac
         });
 
         webContents.once('dom-ready', async () => {
+          // If the fallback timeout already fired, the startup span has ended and the envelope
+          // buffer has been flushed. Merging renderer spans now would attach them to a finished
+          // span and remove them from the envelopes that carry them, so we leave any streamed
+          // spans to pass straight through to the transport instead.
+          if (fallbackTimeoutFired) {
+            return;
+          }
+
           clearTimeout(fallbackTimeout);
 
           const parentSpan = rootTransaction();
@@ -229,9 +248,17 @@ export const startupTracingIntegration = defineIntegration((options: StartupTrac
 
           let lastEndTimestamp = timestampInSeconds();
 
-          const event = await waitForRendererPageload((options.timeoutSeconds || 10) * 1000);
+          const pageload = await waitForRendererPageload((options.timeoutSeconds || 10) * 1000);
 
-          lastEndTimestamp = applyRendererSpansAndMeasurements(parentSpan, event, lastEndTimestamp);
+          // Streamed span envelopes are buffered while we wait for the renderer pageload. If the
+          // wait timed out, forward any buffered envelopes to the transport.
+          flushSpanEnvelopeBuffer();
+
+          if (pageload && 'spans' in pageload) {
+            lastEndTimestamp = applyStreamedRendererSpans(parentSpan, pageload.spans, lastEndTimestamp);
+          } else {
+            lastEndTimestamp = applyRendererSpansAndMeasurements(parentSpan, pageload?.event, lastEndTimestamp);
+          }
 
           parentSpan.end(lastEndTimestamp * 1000);
         });

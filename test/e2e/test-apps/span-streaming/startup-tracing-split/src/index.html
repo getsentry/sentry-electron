@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Startup Tracing Split Test</title>
+  </head>
+  <body>
+    <script>
+      const {
+        init,
+        browserTracingIntegration,
+        spanStreamingIntegration,
+        startInactiveSpan,
+      } = require('@sentry/electron/renderer');
+
+      init({
+        integrations: [spanStreamingIntegration(), browserTracingIntegration()],
+        tracesSampleRate: 1,
+        traceLifecycle: 'stream',
+      });
+
+      // Ends immediately so it gets streamed to the main process in an envelope flushed before
+      // the pageload segment ends
+      startInactiveSpan({ name: 'early-child', op: 'test' }).end();
+
+      // Keeps the pageload span open past the 5 second streaming flush interval so the pageload
+      // span tree is split over multiple envelopes
+      const lateChild = startInactiveSpan({ name: 'late-child', op: 'test' });
+      setTimeout(() => lateChild.end(), 6_000);
+    </script>
+  </body>
+</html>

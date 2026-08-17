@@ -1,4 +1,13 @@
-import type { Attachment, AttachmentItem, Envelope, Event, EventItem, Profile, ProfileChunk } from '@sentry/core';
+import type {
+  Attachment,
+  AttachmentItem,
+  Envelope,
+  Event,
+  EventItem,
+  Profile,
+  ProfileChunk,
+  SerializedStreamedSpanContainer,
+} from '@sentry/core';
 import { forEachEnvelopeItem } from '@sentry/core';
 
 /** Pulls an event and additional envelope items out of an envelope. Returns undefined if there was no event */
@@ -38,4 +47,16 @@ export function profileChunkFromEnvelope(envelope: Envelope): ProfileChunk | und
   });
 
   return profileChunk;
+}
+
+export function spanContainerFromEnvelope(envelope: Envelope): SerializedStreamedSpanContainer | undefined {
+  let spans: SerializedStreamedSpanContainer | undefined;
+
+  forEachEnvelopeItem(envelope, (item, type) => {
+    if (type === 'span') {
+      spans = item[1] as unknown as SerializedStreamedSpanContainer;
+    }
+  });
+
+  return spans;
 }

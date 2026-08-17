@@ -11,8 +11,10 @@ export {
   feedbackEnvelope,
   getEventFromEnvelope,
   getSessionFromEnvelope,
+  getSpansFromEnvelope,
   profileChunkEnvelope,
   sessionEnvelope,
   transactionEnvelope,
+  spanEnvelope,
 } from './utils';
 export { SDK_VERSION } from '../../src/main/version';
