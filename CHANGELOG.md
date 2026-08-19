@@ -1,5 +1,24 @@
 # Changelog
 
+## 7.17.0
+
+### New Features ✨
+
+- Update Sentry SDKs to v10.70.0 by @github-actions in [#1407](https://github.com/getsentry/sentry-electron/pull/1407)
+- Span Streaming by @timfish in [#1400](https://github.com/getsentry/sentry-electron/pull/1400)
+
+### Bug Fixes 🐛
+
+- Drop `DumpWithoutCrashing` minidumps by @timfish in [#1412](https://github.com/getsentry/sentry-electron/pull/1412)
+
+### Internal Changes 🔧
+
+- (deps) Bump postcss from 8.5.15 to 8.5.25 by @dependabot in [#1410](https://github.com/getsentry/sentry-electron/pull/1410)
+- New Electron versions by @github-actions in [#1414](https://github.com/getsentry/sentry-electron/pull/1414)
+- New Electron versions by @github-actions in [#1413](https://github.com/getsentry/sentry-electron/pull/1413)
+- New Electron versions by @github-actions in [#1409](https://github.com/getsentry/sentry-electron/pull/1409)
+- New Electron versions by @github-actions in [#1398](https://github.com/getsentry/sentry-electron/pull/1398)
+
 ## 7.16.0
 
 ### New Features ✨
