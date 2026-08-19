@@ -88,6 +88,7 @@ export {
   instrumentLangGraph,
   instrumentOpenAiClient,
   instrumentOutgoingRequests,
+  instrumentStateGraph,
   instrumentSupabaseClient,
   isBotUserAgent,
   isEnabled,

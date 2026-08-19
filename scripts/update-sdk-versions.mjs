@@ -20,6 +20,9 @@ if (current !== latest) {
   const re = /^@sentry(-internal)?\//;
 
   for (const dep of Object.keys(packageJson.dependencies)) {
+    // conventions is not published in the monorepo
+    if (dep === '@sentry/conventions') continue;
+
     if (dep.match(re)) {
       packageJson.dependencies[dep] = latest;
     }
