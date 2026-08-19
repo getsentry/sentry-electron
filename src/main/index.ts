@@ -88,6 +88,7 @@ export {
   instrumentLangChainEmbeddings,
   instrumentLangGraph,
   instrumentOpenAiClient,
+  instrumentStateGraph,
   instrumentStateGraphCompile,
   instrumentSupabaseClient,
   isDiagnosticsChannelInjectionEnabled,
