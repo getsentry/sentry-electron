@@ -79,7 +79,6 @@ export {
   httpClientIntegration,
   httpContextIntegration,
   instrumentOutgoingRequests,
-  instrumentStateGraph,
   instrumentSupabaseClient,
   isBotUserAgent,
   isEnabled,
