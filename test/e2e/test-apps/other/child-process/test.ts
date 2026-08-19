@@ -8,6 +8,21 @@ electronTestRunner(__dirname, { skip: () => process.platform === 'linux' }, asyn
         level: 'warning',
         platform: 'node',
         message: "'GPU' process exited with 'killed'",
+        exception: {
+          values: [
+            {
+              mechanism: {
+                handled: true,
+                synthetic: true,
+                type: 'generic',
+              },
+              stacktrace: {
+                frames: expect.any(Array),
+              },
+              value: "'GPU' process exited with 'killed'",
+            },
+          ],
+        },
         tags: {
           'event.environment': 'javascript',
           'event.origin': 'electron',

@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import { electronTestRunner, SHORT_UUID_MATCHER, transactionEnvelope, UUID_MATCHER } from '../../..';
+import { electronTestRunner, spanEnvelope, SHORT_UUID_MATCHER, UUID_MATCHER } from '../../..';
 
 electronTestRunner(
   __dirname,
@@ -10,47 +10,46 @@ electronTestRunner(
   async (ctx) => {
     await ctx
       .expect({
-        envelope: transactionEnvelope({
-          platform: 'node',
-          type: 'transaction',
-          transaction: 'InitSequence',
-          transaction_info: {
-            source: 'custom',
-          },
-          contexts: {
-            trace: expect.objectContaining({
-              trace_id: UUID_MATCHER,
-              span_id: SHORT_UUID_MATCHER,
-              data: expect.objectContaining({
-                'sentry.origin': 'manual',
-                'sentry.sample_rate': 1,
-                'sentry.source': 'custom',
-              }),
-              op: 'task',
-              origin: 'manual',
+        envelope: spanEnvelope('InitSequence', [
+          {
+            name: 'initializeServices',
+            span_id: SHORT_UUID_MATCHER,
+            trace_id: UUID_MATCHER,
+            parent_span_id: SHORT_UUID_MATCHER,
+            start_timestamp: expect.any(Number),
+            end_timestamp: expect.any(Number),
+            is_segment: false,
+            status: 'ok',
+            attributes: expect.objectContaining({
+              'sentry.environment': { value: 'development', type: 'string' },
+              'sentry.segment.name': { value: 'InitSequence', type: 'string' },
+              'sentry.segment.id': { value: SHORT_UUID_MATCHER, type: 'string' },
+              'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
+              'sentry.trace_lifecycle': { value: 'stream', type: 'string' },
             }),
           },
-          spans: expect.arrayContaining([
-            {
-              data: {
-                'sentry.origin': 'manual',
-              },
-              parent_span_id: SHORT_UUID_MATCHER,
-              span_id: SHORT_UUID_MATCHER,
-              start_timestamp: expect.any(Number),
-              timestamp: expect.any(Number),
-              trace_id: UUID_MATCHER,
-              description: 'initializeServices',
-              origin: 'manual',
-              status: 'ok',
-            },
-          ]),
-          tags: {
-            'event.environment': 'javascript',
-            'event.origin': 'electron',
-            'event.process': 'browser',
+          {
+            name: 'InitSequence',
+            span_id: SHORT_UUID_MATCHER,
+            trace_id: UUID_MATCHER,
+            start_timestamp: expect.any(Number),
+            end_timestamp: expect.any(Number),
+            is_segment: true,
+            status: 'ok',
+            attributes: expect.objectContaining({
+              'sentry.op': { value: 'task', type: 'string' },
+              'sentry.sample_rate': { value: 1, type: 'integer' },
+              'sentry.environment': { value: 'development', type: 'string' },
+              'sentry.segment.name': { value: 'InitSequence', type: 'string' },
+              'sentry.segment.id': { value: SHORT_UUID_MATCHER, type: 'string' },
+              'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
+              'sentry.source': { value: 'custom', type: 'string' },
+              'sentry.sdk.integrations': { value: expect.any(Array), type: 'array' },
+              'os.name': { value: expect.any(String), type: 'string' },
+              'sentry.segment.name.source': { value: 'custom', type: 'string' },
+            }),
           },
-        }),
+        ]),
       })
       .run();
   },

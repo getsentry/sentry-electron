@@ -12,18 +12,18 @@ import {
   eventFiltersIntegration,
   functionToStringIntegration,
   getCurrentScope,
-  initOpenTelemetry,
   linkedErrorsIntegration,
   localVariablesIntegration,
   nativeNodeFetchIntegration,
   NodeClient,
   nodeContextIntegration,
   onUnhandledRejectionIntegration,
-  setNodeAsyncContextStrategy,
 } from '@sentry/node';
+import { setAsyncLocalStorageAsyncContextStrategy } from '@sentry/server-utils';
 import type { Session, WebContents } from 'electron';
 import { session } from 'electron';
 import { IPCMode } from '../common/ipc.js';
+import { setupSpanDataBackfill } from '../common/span-data-backfill.js';
 import { getDefaultEnvironment, getDefaultReleaseName, getSdkInfo } from './context.js';
 import { additionalContextIntegration } from './integrations/additional-context.js';
 import { childProcessIntegration } from './integrations/child-process.js';
@@ -155,12 +155,6 @@ export type ElectronMainOptions = Pick<
   Omit<ElectronMainOptionsInternal, 'getSessions' | 'ipcMode' | 'ipcNamespace'> &
   NodeOptions;
 
-function resolveUserInfo(options: ElectronMainOptions): boolean {
-  const base = options.dataCollection != null ? true : !!options.sendDefaultPii;
-  const dc = options.dataCollection ?? {};
-  return dc.userInfo ?? base;
-}
-
 /**
  * Initialize Sentry in the Electron main process
  */
@@ -171,7 +165,7 @@ export function init(userOptions: ElectronMainOptions): void {
     throw new Error('Sentry Electron SDK requires Electron 23 or higher');
   }
 
-  const inferIpAddress = resolveUserInfo(userOptions);
+  const inferIpAddress = userOptions.dataCollection?.userInfo ?? true;
 
   const optionsWithDefaults = {
     _metadata: { sdk: getSdkInfo(inferIpAddress) },
@@ -200,12 +194,13 @@ export function init(userOptions: ElectronMainOptions): void {
   removeRedundantIntegrations(options);
   configureUtilityProcessIPC();
 
-  setNodeAsyncContextStrategy();
+  const asyncLocalStorage = setAsyncLocalStorageAsyncContextStrategy();
 
   const scope = getCurrentScope();
   scope.update(options.initialScope);
 
   const client = new NodeClient(options);
+  client.asyncLocalStorageLookup = { asyncLocalStorage };
 
   if (inferIpAddress) {
     client.on('beforeSendSession', addAutoIpAddressToSession);
@@ -224,11 +219,7 @@ export function init(userOptions: ElectronMainOptions): void {
 
   configureIPC(client, options);
 
-  // If users opt-out of this, they _have_ to set up OpenTelemetry themselves
-  // There is no way to use this SDK without OpenTelemetry!
-  if (!options.skipOpenTelemetrySetup) {
-    initOpenTelemetry(client);
-  }
+  setupSpanDataBackfill(client);
 }
 
 /** A list of integrations which cause default integrations to be removed */

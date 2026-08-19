@@ -78,7 +78,7 @@ electronTestRunner(__dirname, async (ctx) => {
                 integrations: expect.any(Array),
                 name: 'sentry.javascript.browser',
                 version: JS_SDK_VERSION,
-                settings: { infer_ip: 'never' },
+                settings: { infer_ip: 'auto' },
               },
               platform: 'javascript',
               breadcrumbs: expect.any(Array),

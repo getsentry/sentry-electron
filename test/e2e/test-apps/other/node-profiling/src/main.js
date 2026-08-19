@@ -11,7 +11,8 @@ init({
   release: 'some-release',
   integrations: [nodeProfilingIntegration()],
   tracesSampleRate: 1,
-  profilesSampleRate: 1,
+  profileSessionSampleRate: 1,
+  profileLifecycle: 'trace',
   onFatalError: () => {},
 });
 

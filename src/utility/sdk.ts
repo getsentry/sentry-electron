@@ -13,14 +13,14 @@ import {
   eventFiltersIntegration,
   functionToStringIntegration,
   getCurrentScope,
-  initOpenTelemetry,
   linkedErrorsIntegration,
   nativeNodeFetchIntegration,
   NodeClient,
   onUncaughtExceptionIntegration,
   onUnhandledRejectionIntegration,
-  setNodeAsyncContextStrategy,
 } from '@sentry/node';
+import { setAsyncLocalStorageAsyncContextStrategy } from '@sentry/server-utils';
+import { setupSpanDataBackfill } from '../common/span-data-backfill.js';
 import { makeUtilityProcessTransport } from './transport.js';
 
 export const defaultStackParser: StackParser = createStackParser(nodeStackLineParser(createGetModuleFromFilename()));
@@ -65,18 +65,15 @@ export function init(userOptions: NodeOptions = {}): void {
     debug.enable();
   }
 
-  setNodeAsyncContextStrategy();
+  const asyncLocalStorage = setAsyncLocalStorageAsyncContextStrategy();
 
   const scope = getCurrentScope();
   scope.update(options.initialScope);
 
   const client = new NodeClient(options);
+  client.asyncLocalStorageLookup = { asyncLocalStorage };
   scope.setClient(client);
   client.init();
 
-  // If users opt-out of this, they _have_ to set up OpenTelemetry themselves
-  // There is no way to use this SDK without OpenTelemetry!
-  if (!options.skipOpenTelemetrySetup) {
-    initOpenTelemetry(client);
-  }
+  setupSpanDataBackfill(client);
 }

@@ -26,8 +26,6 @@ vi.mock('electron', () => ({
 }));
 
 import { net } from 'electron';
-import { context, propagation, trace } from '@opentelemetry/api';
-import { BasicTracerProvider } from '@opentelemetry/sdk-trace-base';
 import {
   createTransport,
   getActiveSpan,
@@ -37,8 +35,9 @@ import {
   resolvedSyncPromise,
   startSpan,
 } from '@sentry/core';
-import { getSentryResource, SentryPropagator, SentrySampler, SentrySpanProcessor } from '@sentry/opentelemetry';
-import { NodeClient, SentryContextManager, setNodeAsyncContextStrategy } from '@sentry/node';
+import { NodeClient } from '@sentry/node';
+import { setAsyncLocalStorageAsyncContextStrategy } from '@sentry/server-utils';
+import { setupSpanDataBackfill } from '../../src/common/span-data-backfill';
 import { electronNetIntegration } from '../../src/main/integrations/net-breadcrumbs';
 
 const TEST_DSN = 'https://username@domain/123';
@@ -53,7 +52,7 @@ function resetGlobals(): void {
 
 function setupSdk(options: Record<string, any> = {}): NodeClient {
   resetGlobals();
-  setNodeAsyncContextStrategy();
+  const asyncLocalStorage = setAsyncLocalStorageAsyncContextStrategy();
 
   const client = new NodeClient({
     dsn: TEST_DSN,
@@ -64,33 +63,18 @@ function setupSdk(options: Record<string, any> = {}): NodeClient {
     ...options,
   });
 
+  client.asyncLocalStorageLookup = { asyncLocalStorage };
   getCurrentScope().setClient(client);
   client.init();
 
-  const provider = new BasicTracerProvider({
-    sampler: new SentrySampler(client),
-    resource: getSentryResource('node'),
-    forceFlushTimeoutMillis: 500,
-    spanProcessors: [new SentrySpanProcessor()],
-  });
-
-  trace.setGlobalTracerProvider(provider);
-  propagation.setGlobalPropagator(new SentryPropagator());
-  context.setGlobalContextManager(new SentryContextManager());
+  setupSpanDataBackfill(client);
 
   return client;
 }
 
-function cleanupOtel(): void {
-  trace.disable();
-  context.disable();
-  propagation.disable();
-  resetGlobals();
-}
-
 describe('electron net trace header propagation', () => {
   afterEach(() => {
-    cleanupOtel();
+    resetGlobals();
   });
 
   test('TWP mode: propagates valid trace ID from scope propagation context', () => {

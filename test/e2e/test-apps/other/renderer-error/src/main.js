@@ -1,12 +1,13 @@
 const path = require('path');
 
 const { app, BrowserWindow } = require('electron');
-const { init, logger } = require('@sentry/electron/main');
+const { electronBreadcrumbsIntegration, init, logger } = require('@sentry/electron/main');
 
 init({
   dsn: '__DSN__',
   debug: true,
   enableLogs: true,
+  integrations: [electronBreadcrumbsIntegration({ captureLogs: true })],
   onFatalError: () => {},
 });
 

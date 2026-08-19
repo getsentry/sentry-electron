@@ -1,120 +1,77 @@
+import type { StreamedSpanJSON } from '@sentry/core';
 import { expect } from 'vitest';
-import { electronTestRunner, ISO_DATE_MATCHER, SHORT_UUID_MATCHER, transactionEnvelope, UUID_MATCHER } from '../../..';
+import { electronTestRunner, profileChunkEnvelope, SHORT_UUID_MATCHER, spanEnvelope, UUID_MATCHER } from '../../..';
+
+// A child span for each `startSpan({ name: 'PBKDF2' })` call in the main process
+function pbkdf2Span(): StreamedSpanJSON {
+  return {
+    name: 'PBKDF2',
+    span_id: SHORT_UUID_MATCHER,
+    trace_id: UUID_MATCHER,
+    parent_span_id: SHORT_UUID_MATCHER,
+    start_timestamp: expect.any(Number),
+    end_timestamp: expect.any(Number),
+    is_segment: false,
+    status: 'ok',
+    attributes: expect.objectContaining({
+      'sentry.release': { value: 'some-release', type: 'string' },
+      'sentry.environment': { value: 'development', type: 'string' },
+      'sentry.segment.name': { value: 'Long work', type: 'string' },
+      'sentry.segment.id': { value: SHORT_UUID_MATCHER, type: 'string' },
+      'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
+      'sentry.trace_lifecycle': { value: 'stream', type: 'string' },
+    }),
+  };
+}
 
 electronTestRunner(__dirname, async (ctx) => {
   await ctx
+    .ignoreExpectationOrder()
+    // The transaction is streamed as a span envelope. In trace mode the profiler
+    // automatically starts/stops with the span and attaches its id to the segment.
     .expect({
-      envelope: transactionEnvelope(
+      envelope: spanEnvelope('Long work', [
+        pbkdf2Span(),
+        pbkdf2Span(),
+        pbkdf2Span(),
+        pbkdf2Span(),
+        pbkdf2Span(),
+        pbkdf2Span(),
+        pbkdf2Span(),
+        pbkdf2Span(),
+        pbkdf2Span(),
+        pbkdf2Span(),
         {
-          platform: 'node',
-          type: 'transaction',
-          release: 'some-release',
-          transaction: 'Long work',
-          transaction_info: { source: 'custom' },
+          name: 'Long work',
+          span_id: SHORT_UUID_MATCHER,
+          trace_id: UUID_MATCHER,
           start_timestamp: expect.any(Number),
-          contexts: {
-            trace: expect.objectContaining({
-              trace_id: UUID_MATCHER,
-              span_id: SHORT_UUID_MATCHER,
-              data: {
-                'sentry.origin': 'manual',
-                'sentry.sample_rate': 1,
-                'sentry.source': 'custom',
-              },
-              origin: 'manual',
-            }),
-          },
-          spans: expect.arrayContaining([
-            {
-              data: {
-                'sentry.origin': 'manual',
-              },
-              description: 'PBKDF2',
-              origin: 'manual',
-              parent_span_id: SHORT_UUID_MATCHER,
-              span_id: SHORT_UUID_MATCHER,
-              start_timestamp: expect.any(Number),
-              timestamp: expect.any(Number),
-              trace_id: UUID_MATCHER,
-              status: 'ok',
-            },
-            {
-              data: {
-                'sentry.origin': 'manual',
-              },
-              description: 'PBKDF2',
-              origin: 'manual',
-              parent_span_id: SHORT_UUID_MATCHER,
-              span_id: SHORT_UUID_MATCHER,
-              start_timestamp: expect.any(Number),
-              timestamp: expect.any(Number),
-              trace_id: UUID_MATCHER,
-              status: 'ok',
-            },
-            {
-              data: {
-                'sentry.origin': 'manual',
-              },
-              description: 'PBKDF2',
-              origin: 'manual',
-              parent_span_id: SHORT_UUID_MATCHER,
-              span_id: SHORT_UUID_MATCHER,
-              start_timestamp: expect.any(Number),
-              timestamp: expect.any(Number),
-              trace_id: UUID_MATCHER,
-              status: 'ok',
-            },
-            {
-              data: {
-                'sentry.origin': 'manual',
-              },
-              description: 'PBKDF2',
-              origin: 'manual',
-              parent_span_id: SHORT_UUID_MATCHER,
-              span_id: SHORT_UUID_MATCHER,
-              start_timestamp: expect.any(Number),
-              timestamp: expect.any(Number),
-              trace_id: UUID_MATCHER,
-              status: 'ok',
-            },
-          ]),
-          tags: {
-            'event.environment': 'javascript',
-            'event.origin': 'electron',
-            'event.process': 'browser',
-          },
+          end_timestamp: expect.any(Number),
+          is_segment: true,
+          status: 'ok',
+          attributes: expect.objectContaining({
+            'sentry.sample_rate': { value: 1, type: 'integer' },
+            'sentry.release': { value: 'some-release', type: 'string' },
+            'sentry.environment': { value: 'development', type: 'string' },
+            'sentry.segment.name': { value: 'Long work', type: 'string' },
+            'sentry.segment.id': { value: SHORT_UUID_MATCHER, type: 'string' },
+            'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
+            'sentry.source': { value: 'custom', type: 'string' },
+            'sentry.profiler_id': { value: UUID_MATCHER, type: 'string' },
+            'sentry.segment.name.source': { value: 'custom', type: 'string' },
+          }),
         },
-        [
-          { type: 'profile' },
-          {
-            event_id: UUID_MATCHER,
-            timestamp: ISO_DATE_MATCHER,
-            platform: 'node',
-            version: '1',
-            release: 'some-release',
-            environment: 'development',
-            measurements: {
-              cpu_usage: expect.any(Object),
-              memory_footprint: expect.any(Object),
-            },
-            runtime: expect.any(Object),
-            os: expect.any(Object),
-            device: expect.any(Object),
-            debug_meta: expect.any(Object),
-            profile: expect.objectContaining({
-              samples: expect.any(Array),
-              stacks: expect.any(Array),
-              frames: expect.any(Array),
-              thread_metadata: expect.any(Object),
-            }),
-            transaction: expect.objectContaining({
-              name: 'Long work',
-              id: UUID_MATCHER,
-              trace_id: UUID_MATCHER,
-              active_thread_id: expect.any(String),
-            }),
-          },
-        ],
+      ]),
+    })
+    // Expect the profile_chunk envelope from continuous node profiling
+    .expect({
+      envelope: profileChunkEnvelope(
+        {
+          release: 'some-release',
+          environment: 'development',
+          measurements: expect.any(Object),
+        },
+        'node',
       ),
     })
     .run();
