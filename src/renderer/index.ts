@@ -122,6 +122,7 @@ export {
   spanStreamingIntegration,
   spanToBaggageHeader,
   spanToJSON,
+  spanToStaticSpanJSON,
   spanToTraceHeader,
   spotlightBrowserIntegration,
   startBrowserTracingNavigationSpan,

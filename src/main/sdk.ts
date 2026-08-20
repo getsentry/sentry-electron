@@ -23,7 +23,6 @@ import { setAsyncLocalStorageAsyncContextStrategy } from '@sentry/server-utils';
 import type { Session, WebContents } from 'electron';
 import { session } from 'electron';
 import { IPCMode } from '../common/ipc.js';
-import { setupSpanDataBackfill } from '../common/span-data-backfill.js';
 import { getDefaultEnvironment, getDefaultReleaseName, getSdkInfo } from './context.js';
 import { additionalContextIntegration } from './integrations/additional-context.js';
 import { childProcessIntegration } from './integrations/child-process.js';
@@ -218,8 +217,6 @@ export function init(userOptions: ElectronMainOptions): void {
   client.init();
 
   configureIPC(client, options);
-
-  setupSpanDataBackfill(client);
 }
 
 /** A list of integrations which cause default integrations to be removed */

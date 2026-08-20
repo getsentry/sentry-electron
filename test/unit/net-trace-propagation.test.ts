@@ -30,24 +30,26 @@ import {
   createTransport,
   getActiveSpan,
   getCurrentScope,
-  getGlobalScope,
-  getIsolationScope,
+  getMainCarrier,
   resolvedSyncPromise,
+  SDK_VERSION,
   startSpan,
 } from '@sentry/core';
 import { NodeClient } from '@sentry/node';
 import { setAsyncLocalStorageAsyncContextStrategy } from '@sentry/server-utils';
-import { setupSpanDataBackfill } from '../../src/common/span-data-backfill';
 import { electronNetIntegration } from '../../src/main/integrations/net-breadcrumbs';
 
 const TEST_DSN = 'https://username@domain/123';
 const NIL_TRACE_ID = '00000000000000000000000000000000';
 
 function resetGlobals(): void {
-  getCurrentScope().clear();
-  getCurrentScope().setClient(undefined);
-  getIsolationScope().clear();
-  getGlobalScope().clear();
+  // Scope.clear() was removed in v11, so drop the scope singletons to force fresh scopes
+  const sentryCarrier = getMainCarrier().__SENTRY__?.[SDK_VERSION];
+  if (sentryCarrier) {
+    delete sentryCarrier.globalScope;
+    delete sentryCarrier.defaultCurrentScope;
+    delete sentryCarrier.defaultIsolationScope;
+  }
 }
 
 function setupSdk(options: Record<string, any> = {}): NodeClient {
@@ -66,8 +68,6 @@ function setupSdk(options: Record<string, any> = {}): NodeClient {
   client.asyncLocalStorageLookup = { asyncLocalStorage };
   getCurrentScope().setClient(client);
   client.init();
-
-  setupSpanDataBackfill(client);
 
   return client;
 }

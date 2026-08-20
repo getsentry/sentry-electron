@@ -148,6 +148,7 @@ export {
   spanStreamingIntegration,
   spanToBaggageHeader,
   spanToJSON,
+  spanToStaticSpanJSON,
   spanToTraceHeader,
   spotlightIntegration,
   startInactiveSpan,

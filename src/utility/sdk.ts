@@ -20,7 +20,6 @@ import {
   onUnhandledRejectionIntegration,
 } from '@sentry/node';
 import { setAsyncLocalStorageAsyncContextStrategy } from '@sentry/server-utils';
-import { setupSpanDataBackfill } from '../common/span-data-backfill.js';
 import { makeUtilityProcessTransport } from './transport.js';
 
 export const defaultStackParser: StackParser = createStackParser(nodeStackLineParser(createGetModuleFromFilename()));
@@ -74,6 +73,4 @@ export function init(userOptions: NodeOptions = {}): void {
   client.asyncLocalStorageLookup = { asyncLocalStorage };
   scope.setClient(client);
   client.init();
-
-  setupSpanDataBackfill(client);
 }
