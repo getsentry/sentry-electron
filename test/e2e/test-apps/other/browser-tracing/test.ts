@@ -24,7 +24,7 @@ electronTestRunner(
           // The segment is the browser pageload span
           const segment = spans?.find((s) => s.is_segment);
           expect(segment).toMatchObject({
-            name: 'app:///src/index.html',
+            name: 'Pageload',
             is_segment: true,
             status: 'ok',
             attributes: expect.objectContaining({
