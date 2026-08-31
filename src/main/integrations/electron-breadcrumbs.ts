@@ -55,6 +55,15 @@ export interface ElectronBreadcrumbsOptions<T> {
    * default: false
    */
   captureWindowTitles: boolean;
+
+  /**
+   * Whether to also capture Sentry logs for Electron events
+   *
+   * Logs are only sent if they have not been disabled via the `enableLogs` client option.
+   *
+   * default: false
+   */
+  captureLogs: boolean;
 }
 
 const DEFAULT_OPTIONS: ElectronBreadcrumbsOptions<EventFunction> = {
@@ -81,6 +90,7 @@ const DEFAULT_OPTIONS: ElectronBreadcrumbsOptions<EventFunction> = {
   screen: () => true,
   powerMonitor: () => true,
   captureWindowTitles: false,
+  captureLogs: false,
 };
 
 /** Converts all user supplied options to function | false */
@@ -89,7 +99,7 @@ export function normalizeOptions(
 ): Partial<ElectronBreadcrumbsOptions<EventFunction | false>> {
   return (Object.keys(options) as (keyof ElectronBreadcrumbsOptions<EventTypes>)[]).reduce(
     (obj, k) => {
-      if (k === 'captureWindowTitles') {
+      if (k === 'captureWindowTitles' || k === 'captureLogs') {
         obj[k] = !!options[k];
       } else {
         const val: EventTypes = options[k];
@@ -120,7 +130,7 @@ export const electronBreadcrumbsIntegration = defineIntegration(
       name: 'ElectronBreadcrumbs',
       setup(client: NodeClient) {
         const clientOptions = client.getOptions() as ElectronMainOptions | undefined;
-        const enableLogs = !!clientOptions?.enableLogs;
+        const enableLogs = options.captureLogs && clientOptions?.enableLogs !== false;
 
         function patchEventEmitter(
           emitter: NodeJS.EventEmitter | WebContents | BrowserWindow,

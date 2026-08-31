@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Breaking Changes
+
+- The integrations that automatically capture Sentry logs for Electron events (`electronBreadcrumbs`), `net` requests
+  (`electronNet`) and child process events (`childProcess`) no longer emit logs by default. Each integration now has a
+  `captureLogs` option which defaults to `false`. Logs are still only sent when the `enableLogs` client option has not
+  been disabled. To restore the previous behaviour, pass `captureLogs: true` to the relevant integration, e.g.
+  `electronBreadcrumbsIntegration({ captureLogs: true })`.
+
 ## 7.17.0
 
 ### New Features ✨

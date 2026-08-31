@@ -18,11 +18,20 @@ export interface ChildProcessOptions extends NodeChildProcessOptions {
   breadcrumbs: Readonly<ExitReason[]>;
   /** Child process events that generate Sentry events */
   events: Readonly<ExitReason[]>;
+  /**
+   * Whether to also capture Sentry logs for child process events
+   *
+   * Logs are only sent if they have not been disabled via the `enableLogs` client option.
+   *
+   * default: false
+   */
+  captureLogs: boolean;
 }
 
 const DEFAULT_OPTIONS: ChildProcessOptions = {
   breadcrumbs: EXIT_REASONS,
   events: ['abnormal-exit', 'launch-failed', 'integrity-failure'],
+  captureLogs: false,
 };
 
 type LogFn = (msg: ParameterizedString, attributes: Log['attributes']) => void;
@@ -63,6 +72,7 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
   const options: ChildProcessOptions = {
     breadcrumbs: Array.isArray(breadcrumbs) ? breadcrumbs : breadcrumbs === false ? [] : DEFAULT_OPTIONS.breadcrumbs,
     events: Array.isArray(events) ? events : events === false ? [] : DEFAULT_OPTIONS.events,
+    captureLogs: !!userOptions.captureLogs,
   };
 
   return {
@@ -76,7 +86,7 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
       // only hook these events if we're after more than just the unresponsive event
       if (allReasons.length > 0) {
         const clientOptions = client.getOptions() as ElectronMainOptions;
-        const enableLogs = !!clientOptions?.enableLogs;
+        const enableLogs = options.captureLogs && clientOptions?.enableLogs !== false;
 
         app.on('child-process-gone', (_, details) => {
           const { reason } = details;
