@@ -59,8 +59,6 @@ export interface ElectronBreadcrumbsOptions<T> {
   /**
    * Whether to also capture Sentry logs for Electron events
    *
-   * Logs are only sent if they have not been disabled via the `enableLogs` client option.
-   *
    * default: false
    */
   captureLogs: boolean;
@@ -130,7 +128,7 @@ export const electronBreadcrumbsIntegration = defineIntegration(
       name: 'ElectronBreadcrumbs',
       setup(client: NodeClient) {
         const clientOptions = client.getOptions() as ElectronMainOptions | undefined;
-        const enableLogs = options.captureLogs && clientOptions?.enableLogs !== false;
+        const enableLogs = options.captureLogs;
 
         function patchEventEmitter(
           emitter: NodeJS.EventEmitter | WebContents | BrowserWindow,

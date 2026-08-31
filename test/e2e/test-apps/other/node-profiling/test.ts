@@ -56,7 +56,6 @@ electronTestRunner(__dirname, async (ctx) => {
             'sentry.segment.name': { value: 'Long work', type: 'string' },
             'sentry.segment.id': { value: SHORT_UUID_MATCHER, type: 'string' },
             'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
-            'sentry.source': { value: 'custom', type: 'string' },
             'sentry.profiler_id': { value: UUID_MATCHER, type: 'string' },
             'sentry.segment.name.source': { value: 'custom', type: 'string' },
           }),

@@ -52,7 +52,6 @@ electronTestRunner(__dirname, async (ctx) => {
             status: 'ok',
             attributes: expect.objectContaining({
               'sentry.origin': { value: 'manual', type: 'string' },
-              'sentry.source': { value: 'custom', type: 'string' },
               'sentry.sample_rate': { value: 1, type: 'integer' },
               'sentry.environment': { value: 'production', type: 'string' },
               'sentry.segment.name': { value: 'Long work', type: 'string' },

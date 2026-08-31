@@ -19,7 +19,6 @@ import {
   nodeContextIntegration,
   onUnhandledRejectionIntegration,
 } from '@sentry/node';
-import { setAsyncLocalStorageAsyncContextStrategy } from '@sentry/server-utils';
 import type { Session, WebContents } from 'electron';
 import { session } from 'electron';
 import { IPCMode } from '../common/ipc.js';
@@ -193,13 +192,10 @@ export function init(userOptions: ElectronMainOptions): void {
   removeRedundantIntegrations(options);
   configureUtilityProcessIPC();
 
-  const asyncLocalStorage = setAsyncLocalStorageAsyncContextStrategy();
-
   const scope = getCurrentScope();
   scope.update(options.initialScope);
 
   const client = new NodeClient(options);
-  client.asyncLocalStorageLookup = { asyncLocalStorage };
 
   if (inferIpAddress) {
     client.on('beforeSendSession', addAutoIpAddressToSession);

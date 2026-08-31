@@ -125,7 +125,7 @@ export {
   SEMANTIC_ATTRIBUTE_SENTRY_OP,
   SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN,
   SEMANTIC_ATTRIBUTE_SENTRY_SAMPLE_RATE,
-  SEMANTIC_ATTRIBUTE_SENTRY_SOURCE,
+  SENTRY_SEGMENT_NAME_SOURCE,
   setAttribute,
   setAttributes,
   setConversationId,
@@ -169,6 +169,7 @@ export {
   withScope,
   withStaticSpan,
   withStreamedSpan,
+  workerThreadsIntegration,
   wrapMcpServerWithSentry,
   zodErrorsIntegration,
 } from '@sentry/node';

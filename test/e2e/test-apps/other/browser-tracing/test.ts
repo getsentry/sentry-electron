@@ -30,7 +30,7 @@ electronTestRunner(
             attributes: expect.objectContaining({
               'sentry.op': { value: 'pageload', type: 'string' },
               'sentry.origin': { value: 'auto.pageload.browser', type: 'string' },
-              'sentry.source': { value: 'url', type: 'string' },
+              'sentry.segment.name.source': { value: 'url', type: 'string' },
               'sentry.sample_rate': { value: 1, type: 'integer' },
             }),
           });

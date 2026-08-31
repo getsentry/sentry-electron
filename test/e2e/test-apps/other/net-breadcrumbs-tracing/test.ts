@@ -75,7 +75,6 @@ electronTestRunner(__dirname, { skipEsmAutoTransform: true }, async (ctx) => {
             'sentry.segment.name': { value: 'some-transaction', type: 'string' },
             'sentry.segment.id': { value: SHORT_UUID_MATCHER, type: 'string' },
             'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
-            'sentry.source': { value: 'custom', type: 'string' },
             'sentry.sdk.integrations': { value: expect.any(Array), type: 'array' },
             'process.runtime.engine.name': { value: 'v8', type: 'string' },
             'os.name': { value: expect.any(String), type: 'string' },

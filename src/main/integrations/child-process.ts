@@ -21,8 +21,6 @@ export interface ChildProcessOptions extends NodeChildProcessOptions {
   /**
    * Whether to also capture Sentry logs for child process events
    *
-   * Logs are only sent if they have not been disabled via the `enableLogs` client option.
-   *
    * default: false
    */
   captureLogs: boolean;
@@ -86,7 +84,7 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
       // only hook these events if we're after more than just the unresponsive event
       if (allReasons.length > 0) {
         const clientOptions = client.getOptions() as ElectronMainOptions;
-        const enableLogs = options.captureLogs && clientOptions?.enableLogs !== false;
+        const enableLogs = options.captureLogs;
 
         app.on('child-process-gone', (_, details) => {
           const { reason } = details;

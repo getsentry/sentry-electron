@@ -19,7 +19,6 @@ import {
   onUncaughtExceptionIntegration,
   onUnhandledRejectionIntegration,
 } from '@sentry/node';
-import { setAsyncLocalStorageAsyncContextStrategy } from '@sentry/server-utils';
 import { makeUtilityProcessTransport } from './transport.js';
 
 export const defaultStackParser: StackParser = createStackParser(nodeStackLineParser(createGetModuleFromFilename()));
@@ -64,13 +63,10 @@ export function init(userOptions: NodeOptions = {}): void {
     debug.enable();
   }
 
-  const asyncLocalStorage = setAsyncLocalStorageAsyncContextStrategy();
-
   const scope = getCurrentScope();
   scope.update(options.initialScope);
 
   const client = new NodeClient(options);
-  client.asyncLocalStorageLookup = { asyncLocalStorage };
   scope.setClient(client);
   client.init();
 }

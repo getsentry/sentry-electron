@@ -40,8 +40,6 @@ export interface NetOptions {
   /**
    * Whether to also capture Sentry logs for net requests
    *
-   * Logs are only sent if they have not been disabled via the `enableLogs` client option.
-   *
    * Defaults to: false
    */
   captureLogs?: boolean;
@@ -107,9 +105,9 @@ type WrappedRequestMethodFactory = (original: RequestMethod) => RequestMethod;
 
 function createWrappedRequestFactory(
   { tracing, breadcrumbs, captureLogs }: NetOptions,
-  { enableLogs, tracePropagationTargets, propagateTraceparent }: ClientOptions,
+  { tracePropagationTargets, propagateTraceparent }: ClientOptions,
 ): WrappedRequestMethodFactory {
-  const logsEnabled = !!captureLogs && enableLogs !== false;
+  const logsEnabled = !!captureLogs;
   // We're caching results so we don't have to recompute regexp every time we create a request.
   const createSpanUrlMap = new LRUMap<string, boolean>(100);
   const headersUrlMap = new LRUMap<string, boolean>(100);
