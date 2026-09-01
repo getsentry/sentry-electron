@@ -20,16 +20,22 @@ app.on('ready', () => {
   });
 
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
+  // Windows CI runners don't always activate a programmatically shown window,
+  // so focus explicitly to ensure the session integration sees a focused window.
+  mainWindow.focus();
 
   setTimeout(() => {
     mainWindow.hide();
 
+    // Wait longer than backgroundTimeoutSeconds (1s) so the first session has
+    // reliably ended before we show the window again and start a second one.
     setTimeout(() => {
       mainWindow.show();
+      mainWindow.focus();
 
       setTimeout(() => {
         app.quit();
       }, 2000);
-    }, 2000);
+    }, 3000);
   }, 2000);
 });
