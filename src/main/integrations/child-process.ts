@@ -84,7 +84,7 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
       // only hook these events if we're after more than just the unresponsive event
       if (allReasons.length > 0) {
         const clientOptions = client.getOptions() as ElectronMainOptions;
-        const enableLogs = options.logs;
+        const logs = options.logs;
 
         app.on('child-process-gone', (_, details) => {
           const { reason } = details;
@@ -105,7 +105,7 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
               data: details,
             });
 
-            if (enableLogs) {
+            if (logs) {
               log(messageFmt, {
                 'sentry.origin': 'auto.electron.child-process',
                 exitCode: details.exitCode,
@@ -136,7 +136,7 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
               data: details,
             });
 
-            if (enableLogs) {
+            if (logs) {
               log(messageFmt, {
                 'sentry.origin': 'auto.electron.child-process',
                 exitCode: details.exitCode,

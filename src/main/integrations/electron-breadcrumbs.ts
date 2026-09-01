@@ -128,7 +128,7 @@ export const electronBreadcrumbsIntegration = defineIntegration(
       name: 'ElectronBreadcrumbs',
       setup(client: NodeClient) {
         const clientOptions = client.getOptions() as ElectronMainOptions | undefined;
-        const enableLogs = options.logs;
+        const logs = options.logs;
 
         function patchEventEmitter(
           emitter: NodeJS.EventEmitter | WebContents | BrowserWindow,
@@ -170,7 +170,7 @@ export const electronBreadcrumbsIntegration = defineIntegration(
                 attributes.url = breadcrumb.data.url;
               }
 
-              if (enableLogs) {
+              if (logs) {
                 logger.info(logger.fmt`electron.${category}.${event}`, attributes);
               }
             }

@@ -107,7 +107,6 @@ function createWrappedRequestFactory(
   { tracing, breadcrumbs, logs }: NetOptions,
   { tracePropagationTargets, propagateTraceparent }: ClientOptions,
 ): WrappedRequestMethodFactory {
-  const logsEnabled = !!logs;
   // We're caching results so we don't have to recompute regexp every time we create a request.
   const createSpanUrlMap = new LRUMap<string, boolean>(100);
   const headersUrlMap = new LRUMap<string, boolean>(100);
@@ -183,7 +182,7 @@ function createWrappedRequestFactory(
       },
     );
 
-    if (!logsEnabled) {
+    if (!logs) {
       return;
     }
 
