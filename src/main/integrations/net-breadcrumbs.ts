@@ -1,11 +1,17 @@
-import type { ClientOptions } from '@sentry/core';
+import type { Client, SpanAttributes } from '@sentry/core';
 import {
   addBreadcrumb,
   debug,
   defineIntegration,
   fill,
+  filterCollectedUrl,
+  filterCollectedUrlQuery,
   getBreadcrumbLogLevelFromHttpStatusCode,
+  getSanitizedUrlStringFromUrlObject,
   getTraceData,
+  getUrlQuery,
+  hasSpanStreamingEnabled,
+  isURLObjectRelative,
   LRUMap,
   parseStringToURLObject,
   SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN,
@@ -103,10 +109,49 @@ type RequestOptions = string | ClientRequestConstructorOptions;
 type RequestMethod = (opt: RequestOptions, ...args: unknown[]) => ClientRequest;
 type WrappedRequestMethodFactory = (original: RequestMethod) => RequestMethod;
 
+/**
+ * Builds the span name and OpenTelemetry-aligned attributes for an outgoing `net` request, mirroring
+ * the `http.client` spans emitted by `@sentry/node`'s fetch instrumentation. The SDK always sends the
+ * sanitized URL as the span name and the URL attributes; Relay then infers the low-cardinality name
+ * and high-cardinality description from these via the conventions rules.
+ */
+function getSpanDetails(method: string, url: string, client: Client): { name: string; attributes: SpanAttributes } {
+  const parsed = parseStringToURLObject(url);
+  const sanitizedUrl = parsed ? getSanitizedUrlStringFromUrlObject(parsed) : url;
+
+  const attributes: SpanAttributes = {
+    [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'auto.http.electron.net',
+    'http.request.method': method,
+    'url.full': filterCollectedUrl(url, client),
+  };
+
+  if (parsed) {
+    attributes['url.path'] = parsed.pathname;
+
+    const query = filterCollectedUrlQuery(getUrlQuery(parsed.search), client);
+    if (query) {
+      attributes['url.query'] = query;
+    }
+
+    if (!isURLObjectRelative(parsed)) {
+      attributes['server.address'] = parsed.hostname;
+      attributes['url.scheme'] = parsed.protocol.replace(/:$/, '');
+
+      if (parsed.port) {
+        attributes['server.port'] = Number(parsed.port);
+      }
+    }
+  }
+
+  return { name: `${method} ${sanitizedUrl}`, attributes };
+}
+
 function createWrappedRequestFactory(
   { tracing, breadcrumbs, logs }: NetOptions,
-  { tracePropagationTargets, propagateTraceparent }: ClientOptions,
+  client: Client,
 ): WrappedRequestMethodFactory {
+  const { tracePropagationTargets, propagateTraceparent } = client.getOptions();
+  const streamingEnabled = hasSpanStreamingEnabled(client);
   // We're caching results so we don't have to recompute regexp every time we create a request.
   const createSpanUrlMap = new LRUMap<string, boolean>(100);
   const headersUrlMap = new LRUMap<string, boolean>(100);
@@ -218,18 +263,11 @@ function createWrappedRequestFactory(
 
       const span = shouldCreateSpan(method, url)
         ? startInactiveSpan({
-            name: `${method} ${url}`,
-            onlyIfParent: true,
-            attributes: {
-              url,
-              type: 'net.request',
-              'http.method': method,
-            },
+            ...getSpanDetails(method, url, client),
+            onlyIfParent: !streamingEnabled,
             op: 'http.client',
           })
         : new SentryNonRecordingSpan();
-
-      span.setAttribute(SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN, 'auto.http.electron.net');
 
       if (shouldAttachTraceData(method, url)) {
         const inject = (): void => {
@@ -282,7 +320,7 @@ export const electronNetIntegration = defineIntegration((options: NetOptions = {
         return;
       }
 
-      fill(electronNet, 'request', createWrappedRequestFactory(options, client.getOptions()));
+      fill(electronNet, 'request', createWrappedRequestFactory(options, client));
     },
   };
 });
