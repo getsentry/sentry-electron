@@ -159,8 +159,8 @@ export type ElectronMainOptions = Pick<
 export function init(userOptions: ElectronMainOptions): void {
   const [major = 0] = process.versions.electron.split('.').map(Number);
 
-  if (major < 23) {
-    throw new Error('Sentry Electron SDK requires Electron 23 or higher');
+  if (major < 35) {
+    throw new Error('Sentry Electron SDK requires Electron 35 or higher');
   }
 
   const inferIpAddress = userOptions.dataCollection?.userInfo ?? true;
