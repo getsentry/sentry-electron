@@ -42,7 +42,7 @@ export interface NetOptions {
    *
    * Defaults to: false
    */
-  captureLogs?: boolean;
+  logs?: boolean;
 }
 
 /**
@@ -104,10 +104,10 @@ type RequestMethod = (opt: RequestOptions, ...args: unknown[]) => ClientRequest;
 type WrappedRequestMethodFactory = (original: RequestMethod) => RequestMethod;
 
 function createWrappedRequestFactory(
-  { tracing, breadcrumbs, captureLogs }: NetOptions,
+  { tracing, breadcrumbs, logs }: NetOptions,
   { tracePropagationTargets, propagateTraceparent }: ClientOptions,
 ): WrappedRequestMethodFactory {
-  const logsEnabled = !!captureLogs;
+  const logsEnabled = !!logs;
   // We're caching results so we don't have to recompute regexp every time we create a request.
   const createSpanUrlMap = new LRUMap<string, boolean>(100);
   const headersUrlMap = new LRUMap<string, boolean>(100);

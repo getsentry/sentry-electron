@@ -7,7 +7,7 @@ init({
   dsn: '__DSN__',
   debug: true,
   enableLogs: true,
-  integrations: [electronBreadcrumbsIntegration({ captureLogs: true })],
+  integrations: [electronBreadcrumbsIntegration({ logs: true })],
   onFatalError: () => {},
 });
 

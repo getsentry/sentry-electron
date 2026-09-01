@@ -23,13 +23,13 @@ export interface ChildProcessOptions extends NodeChildProcessOptions {
    *
    * default: false
    */
-  captureLogs: boolean;
+  logs: boolean;
 }
 
 const DEFAULT_OPTIONS: ChildProcessOptions = {
   breadcrumbs: EXIT_REASONS,
   events: ['abnormal-exit', 'launch-failed', 'integrity-failure'],
-  captureLogs: false,
+  logs: false,
 };
 
 type LogFn = (msg: ParameterizedString, attributes: Log['attributes']) => void;
@@ -70,7 +70,7 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
   const options: ChildProcessOptions = {
     breadcrumbs: Array.isArray(breadcrumbs) ? breadcrumbs : breadcrumbs === false ? [] : DEFAULT_OPTIONS.breadcrumbs,
     events: Array.isArray(events) ? events : events === false ? [] : DEFAULT_OPTIONS.events,
-    captureLogs: !!userOptions.captureLogs,
+    logs: !!userOptions.logs,
   };
 
   return {
@@ -84,7 +84,7 @@ export const childProcessIntegration = defineIntegration((userOptions: Partial<O
       // only hook these events if we're after more than just the unresponsive event
       if (allReasons.length > 0) {
         const clientOptions = client.getOptions() as ElectronMainOptions;
-        const enableLogs = options.captureLogs;
+        const enableLogs = options.logs;
 
         app.on('child-process-gone', (_, details) => {
           const { reason } = details;
