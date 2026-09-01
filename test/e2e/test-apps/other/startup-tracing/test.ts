@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import { electronTestRunner, SHORT_UUID_MATCHER, transactionEnvelope, UUID_MATCHER } from '../../..';
+import { electronTestRunner, getSpansFromEnvelope } from '../../..';
 
 electronTestRunner(
   __dirname,
@@ -10,117 +10,72 @@ electronTestRunner(
   async (ctx) => {
     await ctx
       .expect({
-        envelope: transactionEnvelope({
-          type: 'transaction',
-          platform: 'node',
-          transaction: 'Startup',
-          tags: {
-            'event.environment': 'javascript',
-            'event.origin': 'electron',
-            'event.process': 'browser',
-          },
-          contexts: {
-            trace: expect.objectContaining({
-              trace_id: UUID_MATCHER,
-              span_id: SHORT_UUID_MATCHER,
-              data: expect.objectContaining({
-                'sentry.source': 'url',
-                'sentry.sample_rate': 1,
-                'sentry.op': 'app.start',
-                'sentry.origin': 'auto.electron.startup',
-                'performance.timeOrigin': expect.any(Number),
-                effectiveConnectionType: expect.any(String),
-                deviceMemory: expect.any(String),
-                hardwareConcurrency: expect.any(String),
-                'performance.activationStart': 0,
-                'sentry.idle_span_finish_reason': 'idleTimeout',
-              }),
-              op: 'app.start',
-              origin: 'auto.electron.startup',
+        // In stream mode the renderer's pageload spans are streamed to the main process and
+        // merged into the single `Startup` segment (as in non-stream mode). The exact set of
+        // `browser.*`/`ui.long-task` spans varies between Electron/Chromium versions, so we
+        // assert the segment and the presence of the key main + renderer spans.
+        envelope: (envelope) => {
+          const [header] = envelope;
+          expect(header.sdk).toEqual({ name: 'sentry.javascript.electron', version: expect.any(String) });
+
+          const spans = getSpansFromEnvelope(envelope);
+          expect(spans).toBeDefined();
+
+          // The segment is the main process `Startup` span
+          const segment = spans?.find((s) => s.is_segment);
+          expect(segment).toMatchObject({
+            name: 'Startup',
+            is_segment: true,
+            status: 'ok',
+            attributes: expect.objectContaining({
+              'sentry.op': { value: 'app.start', type: 'string' },
+              'sentry.origin': { value: 'auto.electron.startup', type: 'string' },
+              'sentry.release': { value: 'startup-tracing@1.0.0', type: 'string' },
+              'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
+              'sentry.sample_rate': { value: 1, type: 'integer' },
+              // Renderer pageload measurements / trace metadata are merged onto the startup segment
+              'sentry.idle_span_finish_reason': { value: 'idleTimeout', type: 'string' },
+              // Numeric attribute types are inferred from the value so whole numbers get typed
+              // 'integer' and fractional values 'double'
+              'browser.web_vital.ttfb.value': {
+                value: expect.any(Number),
+                type: expect.stringMatching(/^(integer|double)$/),
+              },
+              'browser.web_vital.ttfb.request_time': {
+                value: expect.any(Number),
+                type: expect.stringMatching(/^(integer|double)$/),
+              },
+              'network.connection.effective_type': { value: expect.any(String), type: 'string' },
+              'network.connection.rtt': { value: expect.any(Number), type: 'integer' },
+              'device.memory.estimated_capacity': { value: expect.any(Number), type: 'integer' },
+              'device.processor_count': { value: expect.any(Number), type: 'integer' },
             }),
-          },
-          measurements: {
-            ttfb: { value: expect.any(Number), unit: 'millisecond' },
-            'connection.rtt': { value: expect.any(Number), unit: 'millisecond' },
-            'ttfb.requestTime': { value: expect.any(Number), unit: 'millisecond' },
-          },
-          spans: expect.arrayContaining([
-            {
-              span_id: SHORT_UUID_MATCHER,
-              trace_id: UUID_MATCHER,
-              data: expect.any(Object),
-              description: 'will-finish-launching',
-              parent_span_id: SHORT_UUID_MATCHER,
-              start_timestamp: expect.any(Number),
-              timestamp: expect.any(Number),
-              status: 'ok',
-              op: 'electron.will-finish-launching',
-              origin: 'auto.electron.startup',
-            },
-            {
-              span_id: SHORT_UUID_MATCHER,
-              trace_id: UUID_MATCHER,
-              data: expect.any(Object),
-              description: 'web-contents-created',
-              parent_span_id: SHORT_UUID_MATCHER,
-              start_timestamp: expect.any(Number),
-              timestamp: expect.any(Number),
-              status: 'ok',
-              op: 'electron.web-contents.created',
-              origin: 'auto.electron.startup',
-            },
-            {
-              span_id: SHORT_UUID_MATCHER,
-              trace_id: UUID_MATCHER,
-              data: expect.any(Object),
-              description: 'ready',
-              parent_span_id: SHORT_UUID_MATCHER,
-              start_timestamp: expect.any(Number),
-              timestamp: expect.any(Number),
-              status: 'ok',
-              op: 'electron.ready',
-              origin: 'auto.electron.startup',
-            },
-            {
-              span_id: SHORT_UUID_MATCHER,
-              trace_id: UUID_MATCHER,
-              data: expect.any(Object),
-              description: 'dom-ready',
-              parent_span_id: SHORT_UUID_MATCHER,
-              start_timestamp: expect.any(Number),
-              timestamp: expect.any(Number),
-              status: 'ok',
-              op: 'electron.web-contents.dom-ready',
-              origin: 'auto.electron.startup',
-            },
-            {
-              span_id: SHORT_UUID_MATCHER,
-              trace_id: UUID_MATCHER,
-              data: expect.any(Object),
-              description: 'app:///src/index.html',
-              parent_span_id: SHORT_UUID_MATCHER,
-              start_timestamp: expect.any(Number),
-              timestamp: expect.any(Number),
-              status: 'ok',
-              op: 'browser.response',
-              origin: 'auto.ui.browser.metrics',
-            },
-            {
-              span_id: SHORT_UUID_MATCHER,
-              trace_id: UUID_MATCHER,
-              data: expect.any(Object),
-              description: 'app:///src/index.html',
-              parent_span_id: SHORT_UUID_MATCHER,
-              start_timestamp: expect.any(Number),
-              timestamp: expect.any(Number),
-              status: 'ok',
-              op: 'browser.connect',
-              origin: 'auto.ui.browser.metrics',
-            },
-          ]),
-          transaction_info: expect.any(Object),
-          start_timestamp: expect.any(Number),
-        }),
+          });
+
+          // Everything is merged into the one startup trace/segment
+          for (const span of spans ?? []) {
+            expect(span.trace_id).toEqual(segment?.trace_id);
+            expect(span.attributes?.['sentry.segment.name']).toEqual({ value: 'Startup', type: 'string' });
+          }
+
+          // The main startup spans, the renderer wrapper span and the key browser metric spans
+          // are all present as children of the startup segment
+          const ops = (spans ?? []).map(
+            (s) => (s.attributes as Record<string, { value?: unknown }> | undefined)?.['sentry.op']?.value,
+          );
+          for (const op of [
+            'electron.will-finish-launching',
+            'electron.ready',
+            'electron.web-contents.created',
+            'electron.web-contents.dom-ready',
+            'electron.renderer',
+            'browser.connect',
+            'browser.request',
+            'browser.response',
+          ]) {
+            expect(ops).toContain(op);
+          }
+        },
       })
       .run();
   },

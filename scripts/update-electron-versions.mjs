@@ -9,7 +9,7 @@ const result = spawnSync('npm', ['view', 'electron', 'dist-tags', '--json'], { e
 const allTags = JSON.parse(result.stdout);
 
 const versions = [];
-let startVersion = 23;
+let startVersion = 35;
 
 while (true) {
   const versionTag = `${startVersion}-x-y`;

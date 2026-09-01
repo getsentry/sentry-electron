@@ -13,13 +13,11 @@ import {
   eventFiltersIntegration,
   functionToStringIntegration,
   getCurrentScope,
-  initOpenTelemetry,
   linkedErrorsIntegration,
   nativeNodeFetchIntegration,
   NodeClient,
   onUncaughtExceptionIntegration,
   onUnhandledRejectionIntegration,
-  setNodeAsyncContextStrategy,
 } from '@sentry/node';
 import { makeUtilityProcessTransport } from './transport.js';
 
@@ -65,18 +63,10 @@ export function init(userOptions: NodeOptions = {}): void {
     debug.enable();
   }
 
-  setNodeAsyncContextStrategy();
-
   const scope = getCurrentScope();
   scope.update(options.initialScope);
 
   const client = new NodeClient(options);
   scope.setClient(client);
   client.init();
-
-  // If users opt-out of this, they _have_ to set up OpenTelemetry themselves
-  // There is no way to use this SDK without OpenTelemetry!
-  if (!options.skipOpenTelemetrySetup) {
-    initOpenTelemetry(client);
-  }
 }

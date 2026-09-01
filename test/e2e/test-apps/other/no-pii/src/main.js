@@ -6,6 +6,9 @@ const { init } = require('@sentry/electron/main');
 init({
   dsn: '__DSN__',
   debug: true,
+  dataCollection: {
+    userInfo: false,
+  },
   onFatalError: () => {},
 });
 

@@ -106,7 +106,7 @@ function getSdk(sdk: SdkInfo | undefined): SdkInfo {
       },
     ],
     version: SDK_VERSION,
-    settings: { infer_ip: 'never' },
+    settings: { infer_ip: 'auto' },
     ...sdk,
   };
 }

@@ -7,8 +7,9 @@ init({
   dsn: '__DSN__',
   debug: true,
   tracesSampleRate: 1,
-  traceLifecycle: 'stream',
-  integrations: [startupTracingIntegration()],
+  // The renderer keeps the pageload span open past the streaming flush interval so we need to
+  // wait longer than the default 10 seconds
+  integrations: [startupTracingIntegration({ timeoutSeconds: 20 })],
   onFatalError: () => {},
 });
 

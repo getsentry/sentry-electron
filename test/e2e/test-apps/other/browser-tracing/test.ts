@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import { electronTestRunner, SHORT_UUID_MATCHER, transactionEnvelope, UUID_MATCHER } from '../../..';
+import { electronTestRunner, getSpansFromEnvelope } from '../../..';
 
 electronTestRunner(
   __dirname,
@@ -10,124 +10,44 @@ electronTestRunner(
   async (ctx) => {
     await ctx
       .expect({
-        envelope: transactionEnvelope({
-          platform: 'javascript',
-          type: 'transaction',
-          release: 'some-release',
-          transaction: 'app:///src/index.html',
-          start_timestamp: expect.any(Number),
-          transaction_info: {
-            source: 'custom',
-          },
-          contexts: {
-            trace: expect.objectContaining({
-              trace_id: UUID_MATCHER,
-              span_id: SHORT_UUID_MATCHER,
-              data: expect.objectContaining({
-                'sentry.origin': 'auto.pageload.browser',
-                'sentry.sample_rate': 1,
-                'sentry.source': 'url',
-              }),
-              op: 'pageload',
-              origin: 'auto.pageload.browser',
+        // The browser pageload transaction is streamed as a span envelope. The exact
+        // set of `browser.*` performance metric spans varies between Electron/Chromium
+        // versions, so we assert the pageload segment and the presence of the key
+        // metric spans rather than an exact list.
+        envelope: (envelope) => {
+          const [header] = envelope;
+          expect(header.sdk).toEqual({ name: 'sentry.javascript.electron', version: expect.any(String) });
+
+          const spans = getSpansFromEnvelope(envelope);
+          expect(spans).toBeDefined();
+
+          // The segment is the browser pageload span
+          const segment = spans?.find((s) => s.is_segment);
+          expect(segment).toMatchObject({
+            name: 'Pageload',
+            is_segment: true,
+            status: 'ok',
+            attributes: expect.objectContaining({
+              'sentry.op': { value: 'pageload', type: 'string' },
+              'sentry.origin': { value: 'auto.pageload.browser', type: 'string' },
+              'sentry.segment.name.source': { value: 'url', type: 'string' },
+              'sentry.sample_rate': { value: 1, type: 'integer' },
             }),
-          },
-          spans: expect.arrayContaining([
-            {
-              data: {
-                'sentry.op': 'browser.connect',
-                'sentry.origin': 'auto.ui.browser.metrics',
-              },
-              description: expect.any(String),
-              op: 'browser.connect',
-              origin: 'auto.ui.browser.metrics',
-              parent_span_id: SHORT_UUID_MATCHER,
-              span_id: SHORT_UUID_MATCHER,
-              start_timestamp: expect.any(Number),
-              timestamp: expect.any(Number),
-              trace_id: UUID_MATCHER,
-            },
-            {
-              data: {
-                'sentry.op': 'browser.cache',
-                'sentry.origin': 'auto.ui.browser.metrics',
-              },
-              description: expect.any(String),
-              op: 'browser.cache',
-              origin: 'auto.ui.browser.metrics',
-              parent_span_id: SHORT_UUID_MATCHER,
-              span_id: SHORT_UUID_MATCHER,
-              start_timestamp: expect.any(Number),
-              timestamp: expect.any(Number),
-              trace_id: UUID_MATCHER,
-            },
-            {
-              data: {
-                'sentry.op': 'browser.DNS',
-                'sentry.origin': 'auto.ui.browser.metrics',
-              },
-              description: expect.any(String),
-              op: 'browser.DNS',
-              origin: 'auto.ui.browser.metrics',
-              parent_span_id: SHORT_UUID_MATCHER,
-              span_id: SHORT_UUID_MATCHER,
-              start_timestamp: expect.any(Number),
-              timestamp: expect.any(Number),
-              trace_id: UUID_MATCHER,
-            },
-            {
-              data: {
-                'sentry.op': 'browser.request',
-                'sentry.origin': 'auto.ui.browser.metrics',
-              },
-              description: expect.any(String),
-              op: 'browser.request',
-              origin: 'auto.ui.browser.metrics',
-              parent_span_id: SHORT_UUID_MATCHER,
-              span_id: SHORT_UUID_MATCHER,
-              start_timestamp: expect.any(Number),
-              timestamp: expect.any(Number),
-              trace_id: UUID_MATCHER,
-            },
-            {
-              data: {
-                'sentry.op': 'browser.response',
-                'sentry.origin': 'auto.ui.browser.metrics',
-              },
-              description: expect.any(String),
-              op: 'browser.response',
-              origin: 'auto.ui.browser.metrics',
-              parent_span_id: SHORT_UUID_MATCHER,
-              span_id: SHORT_UUID_MATCHER,
-              start_timestamp: expect.any(Number),
-              timestamp: expect.any(Number),
-              trace_id: UUID_MATCHER,
-            },
-          ]),
-          measurements: {
-            'connection.rtt': {
-              unit: 'millisecond',
-              value: expect.any(Number),
-            },
-            ttfb: {
-              unit: 'millisecond',
-              value: expect.any(Number),
-            },
-            'ttfb.requestTime': {
-              unit: 'millisecond',
-              value: expect.any(Number),
-            },
-          },
-          tags: {
-            'event.environment': 'javascript',
-            'event.origin': 'electron',
-            'event.process': 'renderer',
-          },
-          request: {
-            headers: {},
-            url: 'app:///src/index.html',
-          },
-        }),
+          });
+
+          // All spans share the same trace
+          for (const span of spans ?? []) {
+            expect(span.trace_id).toEqual(segment?.trace_id);
+          }
+
+          // The key browser performance metric spans are present as children
+          const ops = (spans ?? []).map(
+            (s) => (s.attributes as Record<string, { value?: unknown }> | undefined)?.['sentry.op']?.value,
+          );
+          for (const op of ['browser.connect', 'browser.cache', 'browser.dns', 'browser.request', 'browser.response']) {
+            expect(ops).toContain(op);
+          }
+        },
       })
       .run();
   },
