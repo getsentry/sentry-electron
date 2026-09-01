@@ -37,6 +37,12 @@ export interface NetOptions {
    * Defaults to: true
    */
   tracing?: ShouldTraceFn | boolean;
+  /**
+   * Whether to also capture Sentry logs for net requests
+   *
+   * Defaults to: false
+   */
+  logs?: boolean;
 }
 
 /**
@@ -98,8 +104,8 @@ type RequestMethod = (opt: RequestOptions, ...args: unknown[]) => ClientRequest;
 type WrappedRequestMethodFactory = (original: RequestMethod) => RequestMethod;
 
 function createWrappedRequestFactory(
-  { tracing, breadcrumbs }: NetOptions,
-  { enableLogs, tracePropagationTargets, propagateTraceparent }: ClientOptions,
+  { tracing, breadcrumbs, logs }: NetOptions,
+  { tracePropagationTargets, propagateTraceparent }: ClientOptions,
 ): WrappedRequestMethodFactory {
   // We're caching results so we don't have to recompute regexp every time we create a request.
   const createSpanUrlMap = new LRUMap<string, boolean>(100);
@@ -176,7 +182,7 @@ function createWrappedRequestFactory(
       },
     );
 
-    if (!enableLogs) {
+    if (!logs) {
       return;
     }
 
