@@ -1,11 +1,6 @@
 import type { Integration, StackParser } from '@sentry/core';
-import {
-  createStackParser,
-  debug,
-  getIntegrationsToSetup,
-  nodeStackLineParser,
-  stackParserFromStackParserOptions,
-} from '@sentry/core';
+import { createStackParser, debug, getIntegrationsToSetup, stackParserFromStackParserOptions } from '@sentry/core';
+import { nodeStackLineParser } from '@sentry/core/server';
 import type { NodeOptions } from '@sentry/node';
 import {
   consoleIntegration,
