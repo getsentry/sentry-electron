@@ -24,7 +24,7 @@ export {
   addBreadcrumb,
   addEventProcessor,
   addIntegration,
-  bfcacheIntegration,
+  bfcacheMetricsIntegration,
   bindScopeToEmitter,
   breadcrumbsIntegration,
   browserApiErrorsIntegration,

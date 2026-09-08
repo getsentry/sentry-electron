@@ -113,7 +113,7 @@ export {
   openAIIntegration,
   OpenFeatureIntegrationHook,
   openFeatureIntegration,
-  otlpIntegration,
+  openTelemetryIntegration,
   parameterize,
   pinoIntegration,
   postgresIntegration,
