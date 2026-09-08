@@ -1,0 +1,16 @@
+# Configuration for the org-level dependency-review workflow.
+#
+# electron is a devDependency only (used to build and test the SDK, it is never
+# shipped to consumers) so these Electron advisories do not affect downstream
+# apps, which pin their own Electron version. They are flagged against the floor
+# of our supported range (35.7.5); newer Electron versions we test against are
+# patched.
+fail-on-severity: 'high'
+allow-ghsas:
+  - GHSA-v3j7-r9gq-3gjw # Electron: custom protocol supportFetchAPI cross-origin reads
+  - GHSA-9wfr-w7mm-pc7f # Electron: renderer command-line switch injection
+  - GHSA-jjp3-mq3x-295m # Electron: use-after-free in PowerMonitor
+  - GHSA-8337-3p73-46f4 # Electron: use-after-free in WebContents permission callbacks
+  - GHSA-h7rp-cf8h-j98x # Electron: context isolation bypass via Function.prototype.bind
+  - GHSA-532v-xpq5-8h95 # Electron: use-after-free in offscreen paint callback
+  - GHSA-9f4c-93c8-jc8g # Electron: sandboxed iframe allow-popups bypass
