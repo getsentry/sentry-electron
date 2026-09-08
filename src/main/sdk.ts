@@ -12,14 +12,12 @@ import {
   eventFiltersIntegration,
   functionToStringIntegration,
   getCurrentScope,
-  initOpenTelemetry,
   linkedErrorsIntegration,
   localVariablesIntegration,
   nativeNodeFetchIntegration,
   NodeClient,
   nodeContextIntegration,
   onUnhandledRejectionIntegration,
-  setNodeAsyncContextStrategy,
 } from '@sentry/node';
 import type { Session, WebContents } from 'electron';
 import { session } from 'electron';
@@ -155,23 +153,17 @@ export type ElectronMainOptions = Pick<
   Omit<ElectronMainOptionsInternal, 'getSessions' | 'ipcMode' | 'ipcNamespace'> &
   NodeOptions;
 
-function resolveUserInfo(options: ElectronMainOptions): boolean {
-  const base = options.dataCollection != null ? true : !!options.sendDefaultPii;
-  const dc = options.dataCollection ?? {};
-  return dc.userInfo ?? base;
-}
-
 /**
  * Initialize Sentry in the Electron main process
  */
 export function init(userOptions: ElectronMainOptions): void {
   const [major = 0] = process.versions.electron.split('.').map(Number);
 
-  if (major < 23) {
-    throw new Error('Sentry Electron SDK requires Electron 23 or higher');
+  if (major < 35) {
+    throw new Error('Sentry Electron SDK requires Electron 35 or higher');
   }
 
-  const inferIpAddress = resolveUserInfo(userOptions);
+  const inferIpAddress = userOptions.dataCollection?.userInfo ?? true;
 
   const optionsWithDefaults = {
     _metadata: { sdk: getSdkInfo(inferIpAddress) },
@@ -200,8 +192,6 @@ export function init(userOptions: ElectronMainOptions): void {
   removeRedundantIntegrations(options);
   configureUtilityProcessIPC();
 
-  setNodeAsyncContextStrategy();
-
   const scope = getCurrentScope();
   scope.update(options.initialScope);
 
@@ -223,12 +213,6 @@ export function init(userOptions: ElectronMainOptions): void {
   client.init();
 
   configureIPC(client, options);
-
-  // If users opt-out of this, they _have_ to set up OpenTelemetry themselves
-  // There is no way to use this SDK without OpenTelemetry!
-  if (!options.skipOpenTelemetrySetup) {
-    initOpenTelemetry(client);
-  }
 }
 
 /** A list of integrations which cause default integrations to be removed */

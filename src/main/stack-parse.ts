@@ -1,5 +1,6 @@
 import type { StackFrame, StackParser } from '@sentry/core';
-import { createStackParser, debug, nodeStackLineParser } from '@sentry/core';
+import { createStackParser, debug } from '@sentry/core';
+import { nodeStackLineParser } from '@sentry/core/server';
 import { createGetModuleFromFilename } from '@sentry/node';
 import type { WebContents, WebFrameMain } from 'electron';
 import { app } from 'electron';

@@ -1,3 +1,4 @@
+import { expect } from 'vitest';
 import { electronTestRunner, eventEnvelope } from '../../..';
 
 electronTestRunner(__dirname, async (ctx) => {
@@ -7,6 +8,21 @@ electronTestRunner(__dirname, async (ctx) => {
         level: 'error',
         platform: 'javascript',
         message: 'This is an error message',
+        exception: {
+          values: [
+            {
+              mechanism: {
+                handled: true,
+                synthetic: true,
+                type: 'auto.core.capture_console',
+              },
+              stacktrace: {
+                frames: expect.any(Array),
+              },
+              value: 'This is an error message',
+            },
+          ],
+        },
         extra: {
           arguments: ['This is an error message'],
         },

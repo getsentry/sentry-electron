@@ -1,12 +1,6 @@
 import type { Client, Event, Integration, StackFrame } from '@sentry/core';
-import {
-  callFrameToStackFrame,
-  captureEvent,
-  debug,
-  defineIntegration,
-  stripSentryFramesAndReverse,
-  watchdogTimer,
-} from '@sentry/core';
+import { captureEvent, debug, defineIntegration, stripSentryFramesAndReverse } from '@sentry/core';
+import { callFrameToStackFrame, watchdogTimer } from '@sentry/core/server';
 import { createGetModuleFromFilename } from '@sentry/node';
 import type { WebContents } from 'electron';
 import { app, powerMonitor } from 'electron';

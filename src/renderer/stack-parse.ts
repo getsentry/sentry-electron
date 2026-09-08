@@ -1,6 +1,7 @@
 import { chromeStackLineParser } from '@sentry/browser';
 import type { StackFrame, StackParser } from '@sentry/core';
-import { nodeStackLineParser, stripSentryFramesAndReverse } from '@sentry/core';
+import { stripSentryFramesAndReverse } from '@sentry/core';
+import { nodeStackLineParser } from '@sentry/core/server';
 
 const STACKTRACE_FRAME_LIMIT = 50;
 
