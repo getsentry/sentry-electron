@@ -1,5 +1,18 @@
 # Changelog
 
+## 7.19.0
+
+### New Features ✨
+
+- Update Sentry SDKs to v10.74.0 by @github-actions in [#1426](https://github.com/getsentry/sentry-electron/pull/1426)
+
+### Internal Changes 🔧
+
+- (deps-dev) Bump vitest from 4.1.0 to 4.1.11 by @dependabot in [#1427](https://github.com/getsentry/sentry-electron/pull/1427)
+- New Electron versions by @github-actions in [#1425](https://github.com/getsentry/sentry-electron/pull/1425)
+- Stabilize flaky window-good session test on Windows by @timfish in [#1419](https://github.com/getsentry/sentry-electron/pull/1419)
+- New Electron versions by @github-actions in [#1424](https://github.com/getsentry/sentry-electron/pull/1424)
+
 ## 7.18.0
 
 ### Breaking Changes
