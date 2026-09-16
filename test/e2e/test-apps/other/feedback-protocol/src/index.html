@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <script>
+      const { init, sendFeedback } = require('@sentry/electron/renderer');
+
+      init({
+        debug: true,
+      });
+
+      const attachment = 'x'.repeat(64 * 1024);
+
+      setTimeout(() => {
+        // A large body used to resolve before the protocol fetch finished, then die when the overlay closed.
+        sendFeedback(
+          {
+            name: 'John Doe',
+            email: 'john@doe.com',
+            message: 'I really like your App, thanks!',
+          },
+          {
+            attachments: [
+              {
+                filename: 'report.txt',
+                contentType: 'text/plain',
+                data: attachment,
+              },
+            ],
+          },
+        ).then(() => {
+          window.close();
+        });
+      }, 500);
+    </script>
+  </body>
+</html>

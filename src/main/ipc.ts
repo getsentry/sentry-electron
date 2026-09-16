@@ -8,6 +8,7 @@ import type {
   Event,
   ScopeData,
   SerializedStreamedSpan,
+  TransportMakeRequestResponse,
 } from '@sentry/core';
 import {
   _INTERNAL_captureSerializedLog,
@@ -15,6 +16,7 @@ import {
   debug,
   forEachEnvelopeItem,
   parseEnvelope,
+  uuid4,
   type SerializedLog,
   type SerializedMetric,
 } from '@sentry/core';
@@ -23,7 +25,7 @@ import type { WebContents } from 'electron';
 import { app, ipcMain, protocol, webContents } from 'electron';
 import { eventFromEnvelope, profileChunkFromEnvelope, spanContainerFromEnvelope } from '../common/envelope.js';
 import type { IpcUtils, RendererStatus } from '../common/ipc.js';
-import { ipcChannelUtils, IPCMode } from '../common/ipc.js';
+import { envelopeDeliveryStatus, ipcChannelUtils, IPCMode, NOT_DELIVERED } from '../common/ipc.js';
 import { registerProtocol } from './electron-normalize.js';
 import { createRendererEventLoopBlockStatusHandler } from './integrations/renderer-anr.js';
 import { rendererProfileFromIpc } from './integrations/renderer-profiling.js';
@@ -66,6 +68,99 @@ function newProtocolRenderer(): void {
         }
       }, debug.error);
     }
+  }
+}
+
+/** Stop waiting for ingest if main never emits `afterSendEvent`. Longer than `sendFeedback`'s 30s. */
+const RENDERER_ENVELOPE_SEND_TIMEOUT_MS = 60_000;
+
+/**
+ * Capture a renderer event and wait for the main client's ingest status.
+ *
+ * `sendFeedback` treats a 2xx from the renderer transport as delivered. This must
+ * be the status Sentry returned, not a handoff acknowledgement. A missing status
+ * (offline queue, disabled client) becomes 0 so that promise rejects.
+ */
+function deliverRendererEvent(
+  client: Client,
+  options: ElectronMainOptionsInternal,
+  event: Event,
+  dynamicSamplingContext: Partial<DynamicSamplingContext> | undefined,
+  attachments: Attachment[],
+  contents: WebContents | undefined,
+): Promise<TransportMakeRequestResponse> {
+  if (client.getOptions().enabled === false) {
+    debug.log('Not sending renderer envelope because the SDK is disabled');
+    return Promise.resolve(NOT_DELIVERED);
+  }
+
+  // Keep a stable id so a concurrent event cannot satisfy this wait.
+  const eventId = event.event_id || (event.event_id = uuid4());
+
+  return new Promise((resolve) => {
+    let settled = false;
+
+    const timeout = setTimeout(() => {
+      debug.warn('Timed out waiting for a renderer envelope to be sent to Sentry');
+      finish(NOT_DELIVERED);
+    }, RENDERER_ENVELOPE_SEND_TIMEOUT_MS);
+
+    const unsubscribe = client.on('afterSendEvent', (sentEvent, response) => {
+      if (sentEvent.event_id !== eventId) {
+        return;
+      }
+
+      const status = envelopeDeliveryStatus(response);
+      if ((status.statusCode ?? 0) < 200 || (status.statusCode ?? 0) >= 300) {
+        debug.warn(
+          `Renderer envelope was not delivered to Sentry (status ${status.statusCode}). A queued or dropped envelope is not a successful send.`,
+        );
+      }
+      finish(status);
+    });
+
+    function finish(response: TransportMakeRequestResponse): void {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timeout);
+      unsubscribe();
+      resolve(response);
+    }
+
+    try {
+      captureEventFromRenderer(options, event, dynamicSamplingContext, attachments, contents);
+    } catch (error) {
+      debug.error('Failed to capture renderer envelope:', error);
+      finish(NOT_DELIVERED);
+    }
+  });
+}
+
+/**
+ * Send an envelope that is not re-captured as an event (replay, spans, profiles).
+ *
+ * Uses the main transport directly so `beforeEnvelope` hooks are not run twice.
+ * A missing or failed status is not reported as 200.
+ */
+async function sendFromMainTransport(client: Client, envelope: Envelope): Promise<TransportMakeRequestResponse> {
+  if (client.getOptions().enabled === false) {
+    debug.log('Not sending renderer envelope because the SDK is disabled');
+    return NOT_DELIVERED;
+  }
+
+  const transport = client.getTransport();
+  if (!transport) {
+    debug.log('Not sending renderer envelope because no transport is configured');
+    return NOT_DELIVERED;
+  }
+
+  try {
+    return envelopeDeliveryStatus(await transport.send(envelope));
+  } catch (error) {
+    debug.error('Failed to send renderer envelope to Sentry:', error);
+    return NOT_DELIVERED;
   }
 }
 
@@ -149,13 +244,19 @@ export function flushSpanEnvelopeBuffer(extractTraceId?: string): SerializedStre
   return extracted;
 }
 
-function handleEnvelope(
+async function handleEnvelope(
   client: Client,
   options: ElectronMainOptionsInternal,
   env: Uint8Array | string,
   contents?: WebContents,
-): void {
-  const envelope = parseEnvelope(env);
+): Promise<TransportMakeRequestResponse> {
+  let envelope: Envelope;
+  try {
+    envelope = parseEnvelope(env);
+  } catch (error) {
+    debug.warn('sentry-electron received an invalid envelope', error);
+    return NOT_DELIVERED;
+  }
 
   const [envelopeHeader] = envelope;
   const dynamicSamplingContext = envelopeHeader.trace as DynamicSamplingContext | undefined;
@@ -186,57 +287,53 @@ function handleEnvelope(
       event.type === 'transaction' &&
       event.contexts?.trace?.origin === 'auto.pageload.browser'
     ) {
+      // Main owns this envelope and merges it into the startup trace. Not a feedback path.
       ipcMainHooks.emit('pageload-transaction', event, contents);
-      return;
+      return { statusCode: 200 };
     }
 
-    captureEventFromRenderer(options, event, dynamicSamplingContext, attachments, contents);
-  } else {
-    // Check if this is a profile_chunk envelope (from UI profiling)
-    const profileChunk = profileChunkFromEnvelope(envelope);
-    if (profileChunk) {
-      const normalizedEnvelope = normalizeProfileChunkEnvelope(options, envelope, app.getAppPath());
-      void getClient()?.getTransport()?.send(normalizedEnvelope);
-      return;
-    }
+    return deliverRendererEvent(client, options, event, dynamicSamplingContext, attachments, contents);
+  }
 
-    const spans = spanContainerFromEnvelope(envelope);
-    if (spans) {
-      const [normalizedSpanEnvelope, segmentOrigin] = normalizeSpanStreamingEnvelope(
-        options,
-        envelope,
-        app.getAppPath(),
-      );
+  // Check if this is a profile_chunk envelope (from UI profiling)
+  const profileChunk = profileChunkFromEnvelope(envelope);
+  if (profileChunk) {
+    const normalizedEnvelope = normalizeProfileChunkEnvelope(options, envelope, app.getAppPath());
+    return sendFromMainTransport(client, normalizedEnvelope);
+  }
 
-      // While the startup tracing integration is waiting for a renderer pageload, the pageload
-      // span tree can arrive over multiple envelopes because the renderer SDK flushes on an
-      // interval. The pageload segment span gets re-created in the startup trace, so pageload
-      // spans sent directly from earlier envelopes would reference a segment that is never sent.
-      // We buffer streamed span envelopes until the pageload segment arrives and then hand all
-      // spans from its trace to the integration so they can be merged into the startup span.
-      // Buffered spans from other traces are forwarded unmodified once the wait ends.
-      if (bufferedSpanEnvelopes) {
-        bufferedSpanEnvelopes.push(normalizedSpanEnvelope);
+  const spans = spanContainerFromEnvelope(envelope);
+  if (spans) {
+    const [normalizedSpanEnvelope, segmentOrigin] = normalizeSpanStreamingEnvelope(options, envelope, app.getAppPath());
 
-        if (segmentOrigin === 'auto.pageload.browser' && ipcMainHooks.listenerCount('pageload-spans') > 0) {
-          const pageloadTraceId = spanContainerFromEnvelope(normalizedSpanEnvelope)?.items.find(
-            (span) => span.is_segment,
-          )?.trace_id;
+    // While the startup tracing integration is waiting for a renderer pageload, the pageload
+    // span tree can arrive over multiple envelopes because the renderer SDK flushes on an
+    // interval. The pageload segment span gets re-created in the startup trace, so pageload
+    // spans sent directly from earlier envelopes would reference a segment that is never sent.
+    // We buffer streamed span envelopes until the pageload segment arrives and then hand all
+    // spans from its trace to the integration so they can be merged into the startup span.
+    // Buffered spans from other traces are forwarded unmodified once the wait ends.
+    if (bufferedSpanEnvelopes) {
+      bufferedSpanEnvelopes.push(normalizedSpanEnvelope);
 
-          ipcMainHooks.emit('pageload-spans', flushSpanEnvelopeBuffer(pageloadTraceId), contents);
-        }
+      if (segmentOrigin === 'auto.pageload.browser' && ipcMainHooks.listenerCount('pageload-spans') > 0) {
+        const pageloadTraceId = spanContainerFromEnvelope(normalizedSpanEnvelope)?.items.find(
+          (span) => span.is_segment,
+        )?.trace_id;
 
-        return;
+        ipcMainHooks.emit('pageload-spans', flushSpanEnvelopeBuffer(pageloadTraceId), contents);
       }
 
-      void getClient()?.getTransport()?.send(normalizedSpanEnvelope);
-      return;
+      // Main has the envelope and will forward it when the buffer flushes. Not a feedback path.
+      return { statusCode: 200 };
     }
 
-    const normalizedEnvelope = normalizeReplayEnvelope(options, envelope, app.getAppPath());
-    // Pass other types of envelope straight to the transport
-    void getClient()?.getTransport()?.send(normalizedEnvelope);
+    return sendFromMainTransport(client, normalizedSpanEnvelope);
   }
+
+  const normalizedEnvelope = normalizeReplayEnvelope(options, envelope, app.getAppPath());
+  // Pass other types of envelope straight to the transport
+  return sendFromMainTransport(client, normalizedEnvelope);
 }
 
 /** Is object defined and has keys */
@@ -371,7 +468,7 @@ function configureProtocol(client: Client, ipcUtil: IpcUtils, options: ElectronM
     .whenReady()
     .then(() => {
       for (const sesh of options.getSessions()) {
-        registerProtocol(sesh.protocol, ipcUtil.namespace, (request) => {
+        registerProtocol(sesh.protocol, ipcUtil.namespace, async (request) => {
           const getWebContents = (): WebContents | undefined => {
             const webContentsId = request.windowId ? WINDOW_ID_TO_WEB_CONTENTS?.get(request.windowId) : undefined;
             return webContentsId ? webContents.fromId(webContentsId) : undefined;
@@ -382,8 +479,14 @@ function configureProtocol(client: Client, ipcUtil: IpcUtils, options: ElectronM
             newProtocolRenderer();
           } else if (ipcUtil.urlMatches(request.url, 'scope') && data) {
             handleScope(options, data.toString());
-          } else if (ipcUtil.urlMatches(request.url, 'envelope') && data) {
-            handleEnvelope(client, options, data, getWebContents());
+          } else if (ipcUtil.urlMatches(request.url, 'envelope')) {
+            if (!data || data.length === 0) {
+              return NOT_DELIVERED;
+            }
+
+            // The protocol response is this status. The renderer fetch does not
+            // resolve until handoff and ingest have both finished.
+            return handleEnvelope(client, options, data, getWebContents());
           } else if (ipcUtil.urlMatches(request.url, 'structured-log') && data) {
             let log: SerializedLog;
             try {
@@ -415,6 +518,8 @@ function configureProtocol(client: Client, ipcUtil: IpcUtils, options: ElectronM
               rendererStatusChanged(status, contents);
             }
           }
+
+          return;
         });
       }
     })
@@ -444,9 +549,19 @@ function configureClassic(client: Client, ipcUtil: IpcUtils, options: ElectronMa
     }
   });
   ipcMain.on(ipcUtil.createKey('scope'), (_, jsonScope: string) => handleScope(options, jsonScope));
-  ipcMain.on(ipcUtil.createKey('envelope'), ({ sender }, env: Uint8Array | string) =>
-    handleEnvelope(client, options, env, sender),
-  );
+  // `send` has no reply. Kept so a preload that has not switched to `invoke` still delivers
+  // envelopes. Those callers cannot see ingest status.
+  ipcMain.on(ipcUtil.createKey('envelope'), ({ sender }, env: Uint8Array | string) => {
+    void handleEnvelope(client, options, env, sender);
+  });
+  ipcMain.handle(ipcUtil.createKey('envelope'), async ({ sender }, env: Uint8Array | string) => {
+    try {
+      return await handleEnvelope(client, options, env, sender);
+    } catch (error) {
+      debug.error('Failed to forward renderer envelope:', error);
+      return NOT_DELIVERED;
+    }
+  });
   ipcMain.on(ipcUtil.createKey('structured-log'), ({ sender }, log: SerializedLog) =>
     handleLogFromRenderer(client, options, log, sender),
   );

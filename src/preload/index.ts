@@ -26,7 +26,8 @@ export function hookupIpc(namespace: string = 'sentry-ipc'): void {
     const ipcObject = {
       sendRendererStart: () => ipcRenderer.send(ipcUtil.createKey('start')),
       sendScope: (scopeJson: string) => ipcRenderer.send(ipcUtil.createKey('scope'), scopeJson),
-      sendEnvelope: (envelope: Uint8Array | string) => ipcRenderer.send(ipcUtil.createKey('envelope'), envelope),
+      // invoke so the renderer can wait until main reports ingest status. send() cannot.
+      sendEnvelope: (envelope: Uint8Array | string) => ipcRenderer.invoke(ipcUtil.createKey('envelope'), envelope),
       sendStatus: (status: RendererStatus) => ipcRenderer.send(ipcUtil.createKey('status'), status),
       sendStructuredLog: (log: SerializedLog) => ipcRenderer.send(ipcUtil.createKey('structured-log'), log),
       sendMetric: (metric: SerializedMetric) => ipcRenderer.send(ipcUtil.createKey('metric'), metric),

@@ -13,10 +13,13 @@
       });
 
       setTimeout(() => {
+        // Resolve only after main has the envelope. Closing here must not abort the send.
         sendFeedback({
           name: 'John Doe',
           email: 'john@doe.com',
           message: 'I really like your App, thanks!',
+        }).then(() => {
+          window.close();
         });
       }, 500);
     </script>

@@ -3,7 +3,7 @@
 import type { Client, SerializedLog, SerializedMetric } from '@sentry/core';
 import { debug, getClient, uuid4 } from '@sentry/core';
 import type { IPCInterface, RendererStatus } from '../common/ipc.js';
-import { ipcChannelUtils, RENDERER_ID_HEADER } from '../common/ipc.js';
+import { decodeEnvelopeDeliveryStatus, ipcChannelUtils, RENDERER_ID_HEADER } from '../common/ipc.js';
 import type { ElectronRendererOptionsInternal } from './sdk.js';
 
 /** Gets the available IPC implementation */
@@ -35,7 +35,7 @@ function getImplementation(ipcKey: string): IPCInterface {
           // ignore
         });
       },
-      sendEnvelope: (body: string | Uint8Array) => {
+      sendEnvelope: async (body: string | Uint8Array) => {
         const requestBody =
           typeof body === 'string'
             ? body
@@ -43,13 +43,22 @@ function getImplementation(ipcKey: string): IPCInterface {
               ? body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength)
               : Uint8Array.from(body).buffer;
 
-        fetch(ipcUtil.createUrl('envelope'), {
-          method: 'POST',
-          body: requestBody,
-          headers,
-        }).catch(() => {
-          // ignore
-        });
+        // Await the handoff. A rejected fetch (scheme not registered, oversized body,
+        // or abort because the webContents was destroyed mid-upload) must not look
+        // like success. Resolving means main has the body and reported ingest status.
+        let response: Response;
+        try {
+          response = await fetch(ipcUtil.createUrl('envelope'), {
+            method: 'POST',
+            body: requestBody,
+            headers,
+          });
+        } catch (error) {
+          debug.error('Failed to hand envelope to the Electron main process via protocol:', error);
+          throw error;
+        }
+
+        return decodeEnvelopeDeliveryStatus(await response.text(), response.status);
       },
       sendStatus: (status: RendererStatus) => {
         fetch(ipcUtil.createUrl('status'), {

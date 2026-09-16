@@ -21,6 +21,10 @@ export function makeElectronOfflineTransport<T extends BaseTransportOptions>(
     //
     // The base Electron transport (`makeElectronTransport`) is wrapped by `makeOfflineTransport` which stores events to
     // disk when they fail to send.
+    //
+    // A queued envelope resolves as `{}` (no statusCode), not 200 (sentry-electron#942). Callers must not treat that
+    // as ingest success. The renderer maps a missing status to 0 so `sendFeedback` rejects; the envelope may still
+    // be sent from disk later.
     return makeOfflineTransport(baseTransport)({
       flushAtStartup: true,
       createStore: createOfflineStore,

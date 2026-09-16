@@ -1,0 +1,9 @@
+{
+  "name": "feedback-protocol",
+  "description": "User Feedback via Protocol closes after send",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "dependencies": {
+    "@sentry/electron": "5.6.0"
+  }
+}

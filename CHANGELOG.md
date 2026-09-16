@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Bug Fixes 🐛
+
+- Report renderer envelope handoff and ingest status instead of always returning 200. Protocol `fetch` is awaited, and a queued or dropped envelope is not a successful `sendFeedback`.
+
 ## 7.19.0
 
 ### New Features ✨
