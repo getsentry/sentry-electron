@@ -23,7 +23,12 @@ import {
 import { captureEvent, getClient, getCurrentScope } from '@sentry/node';
 import type { WebContents } from 'electron';
 import { app, ipcMain, protocol, webContents } from 'electron';
-import { eventFromEnvelope, profileChunkFromEnvelope, spanContainerFromEnvelope } from '../common/envelope.js';
+import {
+  eventFromEnvelope,
+  isFeedbackEvent,
+  profileChunkFromEnvelope,
+  spanContainerFromEnvelope,
+} from '../common/envelope.js';
 import type { IpcUtils, RendererStatus } from '../common/ipc.js';
 import { envelopeDeliveryStatus, ipcChannelUtils, IPCMode, NOT_DELIVERED } from '../common/ipc.js';
 import { registerProtocol } from './electron-normalize.js';
@@ -71,11 +76,70 @@ function newProtocolRenderer(): void {
   }
 }
 
-/** Stop waiting for ingest if main never emits `afterSendEvent`. Longer than `sendFeedback`'s 30s. */
+/** Safety net if a feedback send is accepted but `afterSendEvent` never fires. Longer than `sendFeedback`'s 30s. */
 const RENDERER_ENVELOPE_SEND_TIMEOUT_MS = 60_000;
 
+const feedbackDropWaiters = new Set<() => void>();
+const dropHookInstalled = new WeakSet<Client>();
+
+/** Drops that happen before the envelope is handed to the transport. These never emit `afterSendEvent`. */
+const PRE_SEND_DROP_REASONS = new Set([
+  'before_send',
+  'event_processor',
+  'sample_rate',
+  'queue_overflow',
+  'buffer_overflow',
+  'ignored',
+  'invalid',
+]);
+
 /**
- * Capture a renderer event and wait for the main client's ingest status.
+ * Resolve a feedback delivery immediately when main drops it.
+ *
+ * `afterSendEvent` never fires for a dropped event (`beforeSend` null, an event
+ * processor returning null, sample rate). Waiting on that hook would hold the
+ * renderer transport until the safety timeout. A drop is recorded synchronously
+ * with the category of the event, so a lone in-flight feedback can be attributed.
+ */
+function watchFeedbackDrop(client: Client, onDrop: () => void): () => void {
+  if (!dropHookInstalled.has(client)) {
+    dropHookInstalled.add(client);
+    const original = client.recordDroppedEvent.bind(client);
+    client.recordDroppedEvent = (reason, category, count = 1) => {
+      original(reason, category, count);
+      if (category !== 'feedback' || feedbackDropWaiters.size !== 1) {
+        return;
+      }
+      if (!PRE_SEND_DROP_REASONS.has(reason)) {
+        return;
+      }
+      for (const waiter of [...feedbackDropWaiters]) {
+        waiter();
+      }
+    };
+  }
+
+  feedbackDropWaiters.add(onDrop);
+  return () => {
+    feedbackDropWaiters.delete(onDrop);
+  };
+}
+
+/**
+ * Main has the envelope and will send it. This is not an ingest receipt.
+ *
+ * Used for every renderer envelope except feedback. `sendFeedback` is the only
+ * caller that treats 2xx as "Sentry received this".
+ */
+function acceptedByMain(client: Client): TransportMakeRequestResponse {
+  if (client.getOptions().enabled === false || !client.getTransport()) {
+    return NOT_DELIVERED;
+  }
+  return { statusCode: 200 };
+}
+
+/**
+ * Capture a renderer feedback event and wait for the main client's ingest status.
  *
  * `sendFeedback` treats a 2xx from the renderer transport as delivered. This must
  * be the status Sentry returned, not a handoff acknowledgement. A missing status
@@ -99,6 +163,7 @@ function deliverRendererEvent(
 
   return new Promise((resolve) => {
     let settled = false;
+    let unsubscribeDrop = (): void => undefined;
 
     const timeout = setTimeout(() => {
       debug.warn('Timed out waiting for a renderer envelope to be sent to Sentry');
@@ -119,6 +184,14 @@ function deliverRendererEvent(
       finish(status);
     });
 
+    const unsubscribeBeforeSend = client.on('beforeSendEvent', (sentEvent) => {
+      if (sentEvent.event_id !== eventId) {
+        return;
+      }
+      // The event is in the transport. A later drop belongs to a different capture.
+      unsubscribeDrop();
+    });
+
     function finish(response: TransportMakeRequestResponse): void {
       if (settled) {
         return;
@@ -126,8 +199,15 @@ function deliverRendererEvent(
       settled = true;
       clearTimeout(timeout);
       unsubscribe();
+      unsubscribeBeforeSend();
+      unsubscribeDrop();
       resolve(response);
     }
+
+    unsubscribeDrop = watchFeedbackDrop(client, () => {
+      debug.log('Renderer feedback was dropped before send');
+      finish(NOT_DELIVERED);
+    });
 
     try {
       captureEventFromRenderer(options, event, dynamicSamplingContext, attachments, contents);
@@ -139,29 +219,22 @@ function deliverRendererEvent(
 }
 
 /**
- * Send an envelope that is not re-captured as an event (replay, spans, profiles).
+ * Queue an envelope on the main transport and return without waiting for ingest.
  *
- * Uses the main transport directly so `beforeEnvelope` hooks are not run twice.
- * A missing or failed status is not reported as 200.
+ * Spans, replays and profiles are high-volume. The renderer only needs to know
+ * that main has the bytes. `beforeEnvelope` hooks are not run again here.
  */
-async function sendFromMainTransport(client: Client, envelope: Envelope): Promise<TransportMakeRequestResponse> {
-  if (client.getOptions().enabled === false) {
+function forwardEnvelope(client: Client, envelope: Envelope): TransportMakeRequestResponse {
+  const transport = client.getTransport();
+  if (client.getOptions().enabled === false || !transport) {
     debug.log('Not sending renderer envelope because the SDK is disabled');
     return NOT_DELIVERED;
   }
 
-  const transport = client.getTransport();
-  if (!transport) {
-    debug.log('Not sending renderer envelope because no transport is configured');
-    return NOT_DELIVERED;
-  }
-
-  try {
-    return envelopeDeliveryStatus(await transport.send(envelope));
-  } catch (error) {
+  void Promise.resolve(transport.send(envelope)).catch((error: unknown) => {
     debug.error('Failed to send renderer envelope to Sentry:', error);
-    return NOT_DELIVERED;
-  }
+  });
+  return acceptedByMain(client);
 }
 
 function captureEventFromRenderer(
@@ -289,17 +362,29 @@ async function handleEnvelope(
     ) {
       // Main owns this envelope and merges it into the startup trace. Not a feedback path.
       ipcMainHooks.emit('pageload-transaction', event, contents);
-      return { statusCode: 200 };
+      return acceptedByMain(client);
     }
 
-    return deliverRendererEvent(client, options, event, dynamicSamplingContext, attachments, contents);
+    if (isFeedbackEvent(event)) {
+      return deliverRendererEvent(client, options, event, dynamicSamplingContext, attachments, contents);
+    }
+
+    // Errors and transactions do not use sendFeedback. Queue them and return
+    // once main has the envelope so the renderer transport is not blocked on ingest.
+    try {
+      captureEventFromRenderer(options, event, dynamicSamplingContext, attachments, contents);
+    } catch (error) {
+      debug.error('Failed to capture renderer envelope:', error);
+      return NOT_DELIVERED;
+    }
+    return acceptedByMain(client);
   }
 
   // Check if this is a profile_chunk envelope (from UI profiling)
   const profileChunk = profileChunkFromEnvelope(envelope);
   if (profileChunk) {
     const normalizedEnvelope = normalizeProfileChunkEnvelope(options, envelope, app.getAppPath());
-    return sendFromMainTransport(client, normalizedEnvelope);
+    return forwardEnvelope(client, normalizedEnvelope);
   }
 
   const spans = spanContainerFromEnvelope(envelope);
@@ -325,15 +410,15 @@ async function handleEnvelope(
       }
 
       // Main has the envelope and will forward it when the buffer flushes. Not a feedback path.
-      return { statusCode: 200 };
+      return acceptedByMain(client);
     }
 
-    return sendFromMainTransport(client, normalizedSpanEnvelope);
+    return forwardEnvelope(client, normalizedSpanEnvelope);
   }
 
   const normalizedEnvelope = normalizeReplayEnvelope(options, envelope, app.getAppPath());
   // Pass other types of envelope straight to the transport
-  return sendFromMainTransport(client, normalizedEnvelope);
+  return forwardEnvelope(client, normalizedEnvelope);
 }
 
 /** Is object defined and has keys */

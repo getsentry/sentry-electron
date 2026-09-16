@@ -36,6 +36,17 @@ export function eventFromEnvelope(envelope: Envelope): [Event, Attachment[], Pro
   return event ? [event, attachments, profile] : undefined;
 }
 
+/**
+ * Only feedback must report ingest status back to the renderer.
+ *
+ * `sendFeedback` resolves on a 2xx transport status. Errors, transactions, spans
+ * and replays do not. Waiting for ingest on those would hold the renderer
+ * transport buffer for a network round-trip.
+ */
+export function isFeedbackEvent(event: Event): boolean {
+  return event.type === 'feedback';
+}
+
 /** Extracts profile_chunk from an envelope if present */
 export function profileChunkFromEnvelope(envelope: Envelope): ProfileChunk | undefined {
   let profileChunk: ProfileChunk | undefined;

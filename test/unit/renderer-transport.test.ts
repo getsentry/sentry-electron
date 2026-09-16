@@ -1,6 +1,7 @@
 import type { TransportMakeRequestResponse } from '@sentry/core';
 import { createEventEnvelope } from '@sentry/core';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { isFeedbackEvent } from '../../src/common/envelope';
 import { decodeEnvelopeDeliveryStatus, envelopeDeliveryStatus, NOT_DELIVERED } from '../../src/common/ipc';
 
 const sendEnvelope = vi.hoisted(() => vi.fn<() => Promise<TransportMakeRequestResponse>>());
@@ -35,6 +36,14 @@ async function send(
 
   return transport().send(createEventEnvelope({ message: 'report' }));
 }
+
+describe('isFeedbackEvent', () => {
+  test('only feedback waits for ingest', () => {
+    expect(isFeedbackEvent({ type: 'feedback' })).toBe(true);
+    expect(isFeedbackEvent({ message: 'error' })).toBe(false);
+    expect(isFeedbackEvent({ type: 'transaction' })).toBe(false);
+  });
+});
 
 describe('envelopeDeliveryStatus', () => {
   test('passes through ingest status codes', () => {

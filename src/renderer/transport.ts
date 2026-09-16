@@ -7,15 +7,16 @@ import { getIPC } from './ipc.js';
 /**
  * Creates a Transport that passes envelopes to the Electron main process.
  *
- * The status is main's ingest result, not an acknowledgement that the bytes
- * were queued locally. `sendFeedback` resolves only when this is 2xx.
+ * Every envelope waits until main has the body. It does not return 200 if that
+ * handoff fails.
  *
- * - Protocol fetch failures reject the handoff. This transport then returns
- *   status 0. It does not return 200.
- * - A 2xx means the main transport received a 2xx from Sentry ingest.
- * - A missing status (offline queue write, `enabled: false`, dropped before send)
- *   is status 0. An envelope left on disk for a later retry is not delivery, so
- *   `sendFeedback` must not treat it as "Sentry received this".
+ * Only feedback then waits for ingest. `sendFeedback` resolves on a 2xx, which
+ * means Sentry accepted it. A missing status (offline queue, `enabled: false`,
+ * dropped before send) is status 0, so the promise rejects. A queued envelope
+ * may still be sent from disk later; that is not delivery.
+ *
+ * Errors, spans, replays and profiles return once main has accepted them. They
+ * do not wait for the network round-trip.
  *
  * Rate-limit headers are not forwarded. Main owns rate limiting.
  */

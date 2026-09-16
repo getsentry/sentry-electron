@@ -4,7 +4,7 @@
 
 ### Bug Fixes 🐛
 
-- Report renderer envelope handoff and ingest status instead of always returning 200. Protocol `fetch` is awaited, and a queued or dropped envelope is not a successful `sendFeedback`.
+- Report renderer envelope handoff, and ingest status for feedback, instead of always returning 200. Protocol `fetch` is awaited. A dropped or queued feedback is not a successful `sendFeedback`. Other envelopes return once main has accepted them.
 
 ## 7.19.0
 
