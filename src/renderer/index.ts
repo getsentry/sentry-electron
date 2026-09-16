@@ -40,6 +40,7 @@ export {
   captureMessage,
   captureSession,
   chromeStackLineParser,
+  consoleIntegration,
   consoleLoggingIntegration,
   contextLinesIntegration,
   continueTrace,
