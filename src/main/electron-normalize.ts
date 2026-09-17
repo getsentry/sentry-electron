@@ -1,13 +1,7 @@
-import { parseSemver } from '@sentry/core';
 import type { Session } from 'electron';
 import { app } from 'electron';
 import { join } from 'path';
 import { RENDERER_ID_HEADER } from '../common/ipc.js';
-
-const parsed = parseSemver(process.versions.electron);
-const version = { major: parsed.major || 0, minor: parsed.minor || 0, patch: parsed.patch || 0 };
-
-export const ELECTRON_MAJOR_VERSION = version.major;
 
 export const EXIT_REASONS = [
   'clean-exit',
