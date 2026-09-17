@@ -43,21 +43,23 @@ interface InternalRequest {
  * Registers a custom protocol to receive events from the renderer
  *
  * Uses `protocol.handle` if available, otherwise falls back to `protocol.registerStringProtocol`
+ *
+ * The response body is whatever the callback resolves with, or empty
  */
 export function registerProtocol(
   protocol: Electron.Protocol,
   scheme: string,
-  callback: (request: InternalRequest) => void,
+  callback: (request: InternalRequest) => Promise<string | void>,
 ): void {
   if (supportsProtocolHandle()) {
     protocol.handle(scheme, async (request) => {
-      callback({
+      const body = await callback({
         windowId: request.headers.get(RENDERER_ID_HEADER) || undefined,
         url: request.url,
         body: Buffer.from(await request.arrayBuffer()),
       });
 
-      return new Response('');
+      return new Response(body || '');
     });
   } else {
     // eslint-disable-next-line deprecation/deprecation
@@ -66,9 +68,10 @@ export function registerProtocol(
         windowId: request.headers[RENDERER_ID_HEADER],
         url: request.url,
         body: request.uploadData?.[0]?.bytes,
-      });
-
-      complete('');
+      }).then(
+        (body) => complete(body || ''),
+        () => complete(''),
+      );
     });
   }
 }

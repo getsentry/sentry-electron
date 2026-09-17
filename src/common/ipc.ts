@@ -1,4 +1,4 @@
-import type { SerializedLog, SerializedMetric } from '@sentry/core';
+import type { SerializedLog, SerializedMetric, TransportMakeRequestResponse } from '@sentry/core';
 
 /** Ways to communicate between the renderer and main process  */
 export enum IPCMode {
@@ -22,6 +22,8 @@ export type Channel =
   | 'scope'
   /** IPC to pass envelopes to the main process. */
   | 'envelope'
+  /** IPC to pass feedback envelopes to the main process and get the send result back. */
+  | 'feedback'
   /** IPC to pass renderer status updates */
   | 'status'
   /** IPC to pass structured log messages */
@@ -85,6 +87,7 @@ export interface IPCInterface {
   sendRendererStart: () => void;
   sendScope: (scope: string) => void;
   sendEnvelope: (evn: Uint8Array | string) => void;
+  sendFeedback: (evn: Uint8Array | string) => Promise<TransportMakeRequestResponse>;
   sendStatus: (state: RendererStatus) => void;
   sendStructuredLog: (log: SerializedLog) => void;
   sendMetric: (metric: SerializedMetric) => void;
