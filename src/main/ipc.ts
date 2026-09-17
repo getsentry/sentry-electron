@@ -173,7 +173,12 @@ function normalizeDynamicSamplingContext(
 }
 
 /**
- * Handles a feedback envelope from a renderer and returns the send result
+ * Handles a feedback envelope from a renderer and returns the send result.
+ *
+ * Only feedback events are sent from here. Other event types must go via
+ * `captureEvent` so that `beforeSend` and `sampleRate` apply to them.
+ *
+ * Never throws so the renderer always gets a valid response.
  */
 async function handleFeedback(
   client: Client,
@@ -181,16 +186,22 @@ async function handleFeedback(
   env: Uint8Array | string,
   contents?: WebContents,
 ): Promise<TransportMakeRequestResponse> {
-  const envelope = parseEnvelope(env);
-  const dynamicSamplingContext = normalizeDynamicSamplingContext(client, options, envelope);
-  const eventAndAttachments = eventFromEnvelope(envelope);
+  try {
+    const envelope = parseEnvelope(env);
+    const dynamicSamplingContext = normalizeDynamicSamplingContext(client, options, envelope);
+    const eventAndAttachments = eventFromEnvelope(envelope);
 
-  if (!eventAndAttachments) {
+    if (eventAndAttachments?.[0].type !== 'feedback') {
+      debug.warn('sentry-electron received a non-feedback envelope on the feedback channel');
+      return {};
+    }
+
+    const [event, attachments] = eventAndAttachments;
+    return await sendFeedbackFromRenderer(client, options, event, dynamicSamplingContext, attachments, contents);
+  } catch (error) {
+    debug.warn('sentry-electron failed to send feedback from renderer', error);
     return {};
   }
-
-  const [event, attachments] = eventAndAttachments;
-  return sendFeedbackFromRenderer(client, options, event, dynamicSamplingContext, attachments, contents);
 }
 
 // While buffering is active, streamed span envelopes from renderers are held here so the startup
