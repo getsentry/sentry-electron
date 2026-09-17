@@ -142,7 +142,7 @@ export function flushSpanEnvelopeBuffer(extractTraceId?: string): SerializedStre
         }
       });
 
-      void getClient()?.getTransport()?.send(envelope);
+      void getClient()?.sendEnvelope(envelope);
     }
   }
 
@@ -196,7 +196,7 @@ function handleEnvelope(
     const profileChunk = profileChunkFromEnvelope(envelope);
     if (profileChunk) {
       const normalizedEnvelope = normalizeProfileChunkEnvelope(options, envelope, app.getAppPath());
-      void getClient()?.getTransport()?.send(normalizedEnvelope);
+      void client.sendEnvelope(normalizedEnvelope);
       return;
     }
 
@@ -229,13 +229,13 @@ function handleEnvelope(
         return;
       }
 
-      void getClient()?.getTransport()?.send(normalizedSpanEnvelope);
+      void client.sendEnvelope(normalizedSpanEnvelope);
       return;
     }
 
     const normalizedEnvelope = normalizeReplayEnvelope(options, envelope, app.getAppPath());
-    // Pass other types of envelope straight to the transport
-    void getClient()?.getTransport()?.send(normalizedEnvelope);
+    // Pass other types of envelope straight to the client
+    void client.sendEnvelope(normalizedEnvelope);
   }
 }
 

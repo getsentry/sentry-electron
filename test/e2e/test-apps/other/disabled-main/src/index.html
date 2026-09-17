@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <script>
+      const { init, replayIntegration, browserTracingIntegration } = require('@sentry/electron/renderer');
+
+      init({
+        debug: true,
+        integrations: [replayIntegration(), browserTracingIntegration()],
+        tracesSampleRate: 1,
+        replaysSessionSampleRate: 0,
+        replaysOnErrorSampleRate: 1,
+      });
+
+      setTimeout(() => {
+        throw new Error('Some renderer error');
+      }, 1000);
+    </script>
+  </body>
+</html>
