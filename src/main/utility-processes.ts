@@ -86,8 +86,8 @@ function handleEnvelopeFromUtility(env: Uint8Array | string): void {
 
     captureEventFromUtility(event, attachments);
   } else {
-    // Pass other types of envelope straight to the transport
-    void getClient()?.getTransport()?.send(envelope);
+    // Pass other types of envelope straight to the client
+    void getClient()?.sendEnvelope(envelope);
   }
 }
 
