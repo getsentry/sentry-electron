@@ -62,6 +62,7 @@ export function registerProtocol(
       return new Response(body || '');
     });
   } else {
+    // TODO: Remove this branch when the minimum supported Electron version is v25
     // eslint-disable-next-line deprecation/deprecation
     protocol.registerStringProtocol(scheme, (request, complete) => {
       callback({
