@@ -27,6 +27,7 @@ export function hookupIpc(namespace: string = 'sentry-ipc'): void {
       sendRendererStart: () => ipcRenderer.send(ipcUtil.createKey('start')),
       sendScope: (scopeJson: string) => ipcRenderer.send(ipcUtil.createKey('scope'), scopeJson),
       sendEnvelope: (envelope: Uint8Array | string) => ipcRenderer.send(ipcUtil.createKey('envelope'), envelope),
+      sendFeedback: (envelope: Uint8Array | string) => ipcRenderer.invoke(ipcUtil.createKey('feedback'), envelope),
       sendStatus: (status: RendererStatus) => ipcRenderer.send(ipcUtil.createKey('status'), status),
       sendStructuredLog: (log: SerializedLog) => ipcRenderer.send(ipcUtil.createKey('structured-log'), log),
       sendMetric: (metric: SerializedMetric) => ipcRenderer.send(ipcUtil.createKey('metric'), metric),

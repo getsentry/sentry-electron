@@ -9,6 +9,8 @@ init({
   onFatalError: () => {},
 });
 
+app.on('window-all-closed', () => app.quit());
+
 app.on('ready', () => {
   const mainWindow = new BrowserWindow({
     show: false,

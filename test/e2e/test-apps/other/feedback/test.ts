@@ -18,5 +18,6 @@ electronTestRunner(__dirname, { skipEsmAutoTransform: true }, async (ctx) => {
         },
       }),
     })
+    .expectErrorOutputToContain('sendFeedback resolved')
     .run();
 });
