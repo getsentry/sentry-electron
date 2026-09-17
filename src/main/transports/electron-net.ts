@@ -41,7 +41,7 @@ function getRequestOptions(url: string): Electron.ClientRequestConstructorOption
     hostname,
     path: `${pathname}${search}`,
     port: parseInt(port, 10),
-    protocol,
+    protocol: protocol as 'http:' | 'https:',
     // Use a non-persistent in-memory session to avoid triggering a macOS keychain
     // prompt during Chromium's cookie-store initialization of the default session.
     partition: 'sentry-electron',

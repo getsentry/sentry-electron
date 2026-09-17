@@ -9,14 +9,12 @@
       const {
         init,
         browserTracingIntegration,
-        spanStreamingIntegration,
         startInactiveSpan,
       } = require('@sentry/electron/renderer');
 
       init({
-        integrations: [spanStreamingIntegration(), browserTracingIntegration()],
+        integrations: [browserTracingIntegration()],
         tracesSampleRate: 1,
-        traceLifecycle: 'stream',
       });
 
       // Ends immediately so it gets streamed to the main process in an envelope flushed before

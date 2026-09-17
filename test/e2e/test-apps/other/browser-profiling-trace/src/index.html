@@ -6,7 +6,11 @@
   <body>
     <script>
       const crypto = require('crypto');
-      const { init, browserProfilingIntegration, startSpan } = require('@sentry/electron/renderer');
+      const {
+        init,
+        browserProfilingIntegration,
+        startSpan,
+      } = require('@sentry/electron/renderer');
 
       init({
         debug: true,

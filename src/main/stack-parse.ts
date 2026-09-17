@@ -1,40 +1,28 @@
 import type { StackFrame, StackParser } from '@sentry/core';
-import { createStackParser, debug, nodeStackLineParser } from '@sentry/core';
+import { createStackParser, debug } from '@sentry/core';
+import { nodeStackLineParser } from '@sentry/core/server';
 import { createGetModuleFromFilename } from '@sentry/node';
-import type { WebContents, WebFrameMain } from 'electron';
+import type { WebContents } from 'electron';
 import { app } from 'electron';
 import { electronRendererStackParser } from '../renderer/stack-parse.js';
-import { ELECTRON_MAJOR_VERSION } from './electron-normalize.js';
 
 // node.js stack parser but filename normalized before parsing the module
 export const defaultStackParser: StackParser = createStackParser(
   nodeStackLineParser(createGetModuleFromFilename(app.getAppPath())),
 );
 
-type ElectronV34Frame = WebFrameMain & {
-  collectJavaScriptCallStack(): Promise<string> | Promise<void>;
-};
-
 /**
  * Captures stack frames from a renderer process
- *
- * Requires Electron >= 34 and throws an error on older versions
  *
  * @param webContents The WebContents to capture stack frames from
  * @returns A promise that resolves to an array of Sentry StackFrames
  */
 export async function captureRendererStackFrames(webContents: WebContents): Promise<StackFrame[] | undefined> {
-  if (ELECTRON_MAJOR_VERSION < 34) {
-    throw new Error('Electron >= 34 required to capture stack frames via `frame.collectJavaScriptCallStack()`');
-  }
-
   if (webContents.isDestroyed()) {
     return undefined;
   }
 
-  const frame = webContents.mainFrame as ElectronV34Frame;
-
-  const stack = await frame.collectJavaScriptCallStack();
+  const stack = await webContents.mainFrame.collectJavaScriptCallStack();
   if (!stack) {
     return undefined;
   }

@@ -1,9 +1,17 @@
 This document details the changes between major versions of the Sentry Electron
 SDK.
 
+- [Upgrading from 7.x to 8.x](#upgrading-from-7x-to-8x)
 - [Upgrading from 6.x to 7.x](#upgrading-from-6x-to-7x)
 - [Upgrading from 5.x to 6.x](#upgrading-from-5x-to-6x)
 - [Upgrading from 4.x to 5.x](#upgrading-from-4x-to-5x)
+
+# Upgrading from 7.x to 8.x
+
+## Supported Electron Versions
+
+The Sentry Node SDK now requires Node >= 20.19.0 which means the Sentry Electron
+SDK now supports Electron >= 35.0.0.
 
 # Upgrading from 6.x to 7.x
 
