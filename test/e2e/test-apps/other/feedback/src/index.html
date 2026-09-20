@@ -5,7 +5,6 @@
   </head>
   <body>
     <script>
-      const crypto = require('crypto');
       const { init, sendFeedback } = require('@sentry/electron/renderer');
 
       init({
@@ -17,7 +16,13 @@
           name: 'John Doe',
           email: 'john@doe.com',
           message: 'I really like your App, thanks!',
-        });
+        }).then(
+          () => {
+            console.log('sendFeedback resolved');
+            window.close();
+          },
+          (e) => console.error('sendFeedback rejected', e),
+        );
       }, 500);
     </script>
   </body>

@@ -1,10 +1,18 @@
 /* eslint-disable no-restricted-globals */
 /* eslint-disable no-console */
-import type { Client, SerializedLog, SerializedMetric } from '@sentry/core';
+import type { Client, SerializedLog, SerializedMetric, TransportMakeRequestResponse } from '@sentry/core';
 import { debug, getClient, uuid4 } from '@sentry/core';
 import type { IPCInterface, RendererStatus } from '../common/ipc.js';
 import { ipcChannelUtils, RENDERER_ID_HEADER } from '../common/ipc.js';
 import type { ElectronRendererOptionsInternal } from './sdk.js';
+
+function toRequestBody(body: string | Uint8Array): string | ArrayBuffer {
+  return typeof body === 'string'
+    ? body
+    : body.buffer instanceof ArrayBuffer
+      ? body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength)
+      : Uint8Array.from(body).buffer;
+}
 
 /** Gets the available IPC implementation */
 function getImplementation(ipcKey: string): IPCInterface {
@@ -36,20 +44,22 @@ function getImplementation(ipcKey: string): IPCInterface {
         });
       },
       sendEnvelope: (body: string | Uint8Array) => {
-        const requestBody =
-          typeof body === 'string'
-            ? body
-            : body.buffer instanceof ArrayBuffer
-              ? body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength)
-              : Uint8Array.from(body).buffer;
-
         fetch(ipcUtil.createUrl('envelope'), {
           method: 'POST',
-          body: requestBody,
+          body: toRequestBody(body),
           headers,
         }).catch(() => {
           // ignore
         });
+      },
+      sendFeedback: async (body: string | Uint8Array) => {
+        const response = await fetch(ipcUtil.createUrl('feedback'), {
+          method: 'POST',
+          body: toRequestBody(body),
+          headers,
+        });
+
+        return (await response.json()) as TransportMakeRequestResponse;
       },
       sendStatus: (status: RendererStatus) => {
         fetch(ipcUtil.createUrl('status'), {
