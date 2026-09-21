@@ -28,20 +28,22 @@ interface InternalRequest {
 
 /**
  * Registers a custom protocol to receive events from the renderer
+ *
+ * The response body is whatever the callback resolves with, or empty
  */
 export function registerProtocol(
   protocol: Electron.Protocol,
   scheme: string,
-  callback: (request: InternalRequest) => void,
+  callback: (request: InternalRequest) => Promise<string | void>,
 ): void {
   protocol.handle(scheme, async (request) => {
-    callback({
+    const body = await callback({
       windowId: request.headers.get(RENDERER_ID_HEADER) || undefined,
       url: request.url,
       body: Buffer.from(await request.arrayBuffer()),
     });
 
-    return new Response('');
+    return new Response(body || '');
   });
 }
 

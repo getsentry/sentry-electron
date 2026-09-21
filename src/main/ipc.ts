@@ -6,19 +6,25 @@ import type {
   DynamicSamplingContext,
   Envelope,
   Event,
+  EventHint,
   ScopeData,
   SerializedStreamedSpan,
+  TransportMakeRequestResponse,
 } from '@sentry/core';
 import {
   _INTERNAL_captureSerializedLog,
   _INTERNAL_captureSerializedMetric,
+  addItemToEnvelope,
+  createAttachmentEnvelopeItem,
+  createEventEnvelope,
   debug,
   forEachEnvelopeItem,
   parseEnvelope,
+  prepareEvent,
   type SerializedLog,
   type SerializedMetric,
 } from '@sentry/core';
-import { captureEvent, getClient, getCurrentScope } from '@sentry/node';
+import { captureEvent, getClient, getCurrentScope, getIsolationScope } from '@sentry/node';
 import type { WebContents } from 'electron';
 import { app, ipcMain, protocol, webContents } from 'electron';
 import { eventFromEnvelope, profileChunkFromEnvelope, spanContainerFromEnvelope } from '../common/envelope.js';
@@ -69,13 +75,12 @@ function newProtocolRenderer(): void {
   }
 }
 
-function captureEventFromRenderer(
+function prepareRendererEvent(
   options: ElectronMainOptionsInternal,
   event: Event,
   dynamicSamplingContext: Partial<DynamicSamplingContext> | undefined,
-  attachments: Attachment[],
   contents: WebContents | undefined,
-): void {
+): Event {
   const process = contents ? options?.getRendererName?.(contents) || 'renderer' : 'renderer';
 
   // Ensure breadcrumbs are empty as they sent via scope updates
@@ -93,10 +98,111 @@ function captureEventFromRenderer(
     event.sdkProcessingMetadata = { ...event.sdkProcessingMetadata, dynamicSamplingContext };
   }
 
-  captureEvent(mergeEvents(event, { tags: { 'event.process': process } }), { attachments });
+  return mergeEvents(event, { tags: { 'event.process': process } });
+}
+
+function captureEventFromRenderer(
+  options: ElectronMainOptionsInternal,
+  event: Event,
+  dynamicSamplingContext: Partial<DynamicSamplingContext> | undefined,
+  attachments: Attachment[],
+  contents: WebContents | undefined,
+): void {
+  captureEvent(prepareRendererEvent(options, event, dynamicSamplingContext, contents), { attachments });
+}
+
+/**
+ * Sends a feedback event from a renderer and returns the transport result.
+ *
+ * `captureEvent` does not expose the send result, so the event is prepared
+ * and sent directly. `beforeSend` and `sampleRate` only apply to error
+ * events, so nothing that `captureEvent` would do is skipped for feedback.
+ */
+async function sendFeedbackFromRenderer(
+  client: Client,
+  options: ElectronMainOptionsInternal,
+  event: Event,
+  dynamicSamplingContext: Partial<DynamicSamplingContext> | undefined,
+  attachments: Attachment[],
+  contents: WebContents | undefined,
+): Promise<TransportMakeRequestResponse> {
+  const hint: EventHint = { attachments, event_id: event.event_id };
+  const clientOptions = client.getOptions();
+
+  const prepared = await prepareEvent(
+    clientOptions,
+    prepareRendererEvent(options, event, dynamicSamplingContext, contents),
+    hint,
+    getCurrentScope(),
+    client,
+    getIsolationScope(),
+  );
+
+  if (!prepared) {
+    return {};
+  }
+
+  let envelope = createEventEnvelope(prepared, client.getDsn(), clientOptions._metadata, clientOptions.tunnel);
+  for (const attachment of hint.attachments || []) {
+    envelope = addItemToEnvelope(envelope, createAttachmentEnvelopeItem(attachment));
+  }
+
+  return client.sendEnvelope(envelope);
 }
 
 let cached_public_key: string | undefined;
+
+function normalizeDynamicSamplingContext(
+  client: Client,
+  options: ElectronMainOptionsInternal,
+  envelope: Envelope,
+): DynamicSamplingContext | undefined {
+  const dynamicSamplingContext = envelope[0].trace as DynamicSamplingContext | undefined;
+
+  if (dynamicSamplingContext) {
+    if (!cached_public_key) {
+      cached_public_key = client.getDsn()?.publicKey;
+    }
+
+    dynamicSamplingContext.release = options.release;
+    dynamicSamplingContext.environment = options.environment;
+    dynamicSamplingContext.public_key = cached_public_key;
+  }
+
+  return dynamicSamplingContext;
+}
+
+/**
+ * Handles a feedback envelope from a renderer and returns the send result.
+ *
+ * Only feedback events are sent from here. Other event types must go via
+ * `captureEvent` so that `beforeSend` and `sampleRate` apply to them.
+ *
+ * Never throws so the renderer always gets a valid response.
+ */
+async function handleFeedback(
+  client: Client,
+  options: ElectronMainOptionsInternal,
+  env: Uint8Array | string,
+  contents?: WebContents,
+): Promise<TransportMakeRequestResponse> {
+  try {
+    const envelope = parseEnvelope(env);
+    const dynamicSamplingContext = normalizeDynamicSamplingContext(client, options, envelope);
+    const eventAndAttachments = eventFromEnvelope(envelope);
+
+    if (eventAndAttachments?.[0].type !== 'feedback') {
+      debug.warn('sentry-electron received a non-feedback envelope on the feedback channel');
+      return {};
+    }
+
+    const [event, attachments] = eventAndAttachments;
+    return await sendFeedbackFromRenderer(client, options, event, dynamicSamplingContext, attachments, contents);
+  } catch (error) {
+    debug.warn('sentry-electron failed to send feedback from renderer', error);
+    return {};
+  }
+}
 
 // While buffering is active, streamed span envelopes from renderers are held here so the startup
 // tracing integration can merge pageload spans that arrive over multiple envelopes. See
@@ -156,20 +262,7 @@ function handleEnvelope(
   contents?: WebContents,
 ): void {
   const envelope = parseEnvelope(env);
-
-  const [envelopeHeader] = envelope;
-  const dynamicSamplingContext = envelopeHeader.trace as DynamicSamplingContext | undefined;
-
-  if (dynamicSamplingContext) {
-    if (!cached_public_key) {
-      const dsn = client.getDsn();
-      cached_public_key = dsn?.publicKey;
-    }
-
-    dynamicSamplingContext.release = options.release;
-    dynamicSamplingContext.environment = options.environment;
-    dynamicSamplingContext.public_key = cached_public_key;
-  }
+  const dynamicSamplingContext = normalizeDynamicSamplingContext(client, options, envelope);
 
   const eventAndAttachments = eventFromEnvelope(envelope);
   if (eventAndAttachments) {
@@ -371,7 +464,7 @@ function configureProtocol(client: Client, ipcUtil: IpcUtils, options: ElectronM
     .whenReady()
     .then(() => {
       for (const sesh of options.getSessions()) {
-        registerProtocol(sesh.protocol, ipcUtil.namespace, (request) => {
+        registerProtocol(sesh.protocol, ipcUtil.namespace, async (request) => {
           const getWebContents = (): WebContents | undefined => {
             const webContentsId = request.windowId ? WINDOW_ID_TO_WEB_CONTENTS?.get(request.windowId) : undefined;
             return webContentsId ? webContents.fromId(webContentsId) : undefined;
@@ -384,6 +477,8 @@ function configureProtocol(client: Client, ipcUtil: IpcUtils, options: ElectronM
             handleScope(options, data.toString());
           } else if (ipcUtil.urlMatches(request.url, 'envelope') && data) {
             handleEnvelope(client, options, data, getWebContents());
+          } else if (ipcUtil.urlMatches(request.url, 'feedback') && data) {
+            return JSON.stringify(await handleFeedback(client, options, data, getWebContents()));
           } else if (ipcUtil.urlMatches(request.url, 'structured-log') && data) {
             let log: SerializedLog;
             try {
@@ -446,6 +541,9 @@ function configureClassic(client: Client, ipcUtil: IpcUtils, options: ElectronMa
   ipcMain.on(ipcUtil.createKey('scope'), (_, jsonScope: string) => handleScope(options, jsonScope));
   ipcMain.on(ipcUtil.createKey('envelope'), ({ sender }, env: Uint8Array | string) =>
     handleEnvelope(client, options, env, sender),
+  );
+  ipcMain.handle(ipcUtil.createKey('feedback'), ({ sender }, env: Uint8Array | string) =>
+    handleFeedback(client, options, env, sender),
   );
   ipcMain.on(ipcUtil.createKey('structured-log'), ({ sender }, log: SerializedLog) =>
     handleLogFromRenderer(client, options, log, sender),
