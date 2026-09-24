@@ -8,10 +8,101 @@ SDK.
 
 # Upgrading from 7.x to 8.x
 
+Most of the breaking changes in v8 come from the underlying Sentry JavaScript
+SDKs, so it's worth checking the
+[JavaScript v11 migration guide](https://docs.sentry.io/platforms/javascript/migration/v10-to-v11/).
+
 ## Supported Electron Versions
 
 The Sentry Node SDK now requires Node >= 20.19.0 which means the Sentry Electron
-SDK now supports Electron >= 35.0.0.
+SDK now supports Electron >= 35.0.0. `init` in the main process throws an error
+on older versions.
+
+## Span streaming is now the default
+
+Tracing now uses span streaming by default (`traceLifecycle: 'stream'`).
+Finished spans are buffered and sent in batches rather than as a single
+transaction when the root span ends, so the `beforeSendTransaction` and
+`ignoreTransactions` options no longer have any effect. Use `beforeSendSpan` and
+`ignoreSpans` instead.
+
+`beforeSendSpan` callbacks now receive the streamed span format. When using
+`traceLifecycle: 'static'`, wrap the callback with `withStaticSpan` to receive
+the previous span format, otherwise it won't be called.
+
+To keep sending transactions, set `traceLifecycle: 'static'`:
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "__DSN__",
+  traceLifecycle: "static",
+});
+```
+
+## IP addresses are now inferred by default
+
+The `sendDefaultPii` option has been removed and replaced by `dataCollection`.
+The SDK now records the user's IP address by default, so apps that didn't set
+`sendDefaultPii: true` in v7 will now send IP addresses. To opt out, set
+`dataCollection: { userInfo: false }`.
+
+## Electron `net` spans use OpenTelemetry attributes
+
+Spans created for Electron `net` requests now use the same attributes as the
+`http.client` spans from the Node and browser SDKs:
+
+- `url`, `http.method` and `type: 'net.request'` have been replaced with
+  `http.request.method`, `url.full`, `url.path`, `url.query`, `url.scheme`,
+  `server.address` and `server.port`.
+- The span name no longer includes the query string or fragment. With span
+  streaming, the span name is `${method} ${host}` (e.g. `GET example.com`).
+- With span streaming, spans are created even when there is no active parent
+  span.
+
+If you filter or group on the old span names or attributes in `beforeSendSpan`,
+dashboards or alerts, these will need updating.
+
+## OpenTelemetry is no longer set up by the SDK
+
+The SDK no longer sets up OpenTelemetry when `init` is called in the main or
+utility processes, and the `skipOpenTelemetrySetup` option has been removed. If
+you use your own OpenTelemetry setup, add `openTelemetryIntegration()` to link
+Sentry events to your OpenTelemetry spans and use `getOtlpTracesEndpoint()` to
+export spans to Sentry.
+
+## Removed exports
+
+The following exports have been removed from `@sentry/electron/main` and
+`@sentry/electron/utility`:
+
+- `inboundFiltersIntegration` (use `eventFiltersIntegration`)
+- `honoIntegration` and `setupHonoErrorHandler`
+- `connectIntegration` and `setupConnectErrorHandler`
+- `instrumentLangGraph`
+- `SentryContextManager`, `setNodeAsyncContextStrategy`,
+  `generateInstrumentOnce` and `validateOpenTelemetrySetup`
+- `SEMANTIC_ATTRIBUTE_SENTRY_SOURCE`
+- `experimentalUseDiagnosticsChannelInjection`,
+  `diagnosticsChannelInjectionIntegrations`,
+  `applyDiagnosticsChannelInjectionIntegrations` and
+  `isDiagnosticsChannelInjectionEnabled`. Diagnostics channel injection is now
+  enabled by default and can be disabled with
+  `enableRuntimeChannelInjection: false`.
+
+The following exports have been removed from `@sentry/electron/renderer`:
+
+- `instrumentOpenAiClient`, `instrumentAnthropicAiClient`,
+  `instrumentGoogleGenAIClient`, `instrumentLangGraph`, `instrumentStateGraph`,
+  `instrumentCreateReactAgent`, `instrumentLangChainEmbeddings` and
+  `createLangChainCallbackHandler`
+- `inboundFiltersIntegration` (use `eventFiltersIntegration`)
+- `SEMANTIC_ATTRIBUTE_SENTRY_SOURCE`
+
+See the
+[JavaScript v11 migration guide](https://docs.sentry.io/platforms/javascript/migration/v10-to-v11/)
+for replacements.
 
 # Upgrading from 6.x to 7.x
 
