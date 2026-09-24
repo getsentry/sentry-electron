@@ -1,11 +1,17 @@
-import type { ClientOptions } from '@sentry/core';
+import type { Client, SpanAttributes } from '@sentry/core';
 import {
   addBreadcrumb,
   debug,
   defineIntegration,
   fill,
+  filterCollectedUrl,
+  filterCollectedUrlQuery,
   getBreadcrumbLogLevelFromHttpStatusCode,
+  getSanitizedUrlStringFromUrlObject,
   getTraceData,
+  getUrlQuery,
+  hasSpanStreamingEnabled,
+  isURLObjectRelative,
   LRUMap,
   parseStringToURLObject,
   SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN,
@@ -15,6 +21,15 @@ import {
   stringMatchesSomePattern,
   withActiveSpan,
 } from '@sentry/core';
+import {
+  HTTP_REQUEST_METHOD,
+  SERVER_ADDRESS,
+  SERVER_PORT,
+  URL_FULL,
+  URL_PATH,
+  URL_QUERY,
+  URL_SCHEME,
+} from '@sentry/conventions/attributes';
 import { logger } from '@sentry/node';
 import type { ClientRequest, ClientRequestConstructorOptions, IncomingMessage } from 'electron';
 import { net as electronNet } from 'electron';
@@ -103,10 +118,61 @@ type RequestOptions = string | ClientRequestConstructorOptions;
 type RequestMethod = (opt: RequestOptions, ...args: unknown[]) => ClientRequest;
 type WrappedRequestMethodFactory = (original: RequestMethod) => RequestMethod;
 
+/**
+ * Builds the span name and OpenTelemetry-aligned attributes for an outgoing `net` request, mirroring
+ * the `http.client` spans emitted by `@sentry/node`'s fetch instrumentation. Under span streaming the
+ * name is the low-cardinality `${method} ${server.address}` and Relay infers the high-cardinality
+ * description from `url.full`. Without streaming the name is the full sanitized URL.
+ */
+function getSpanDetails(method: string, url: string, client: Client): { name: string; attributes: SpanAttributes } {
+  const parsed = parseStringToURLObject(url);
+  const sanitizedUrl = parsed ? getSanitizedUrlStringFromUrlObject(parsed) : url;
+
+  const attributes: SpanAttributes = {
+    [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'auto.http.electron.net',
+    [HTTP_REQUEST_METHOD]: method,
+    [URL_FULL]: filterCollectedUrl(url, client),
+  };
+
+  let serverAddress: string | undefined;
+
+  if (parsed) {
+    attributes[URL_PATH] = parsed.pathname;
+
+    const query = filterCollectedUrlQuery(getUrlQuery(parsed.search), client);
+    if (query) {
+      attributes[URL_QUERY] = query;
+    }
+
+    if (!isURLObjectRelative(parsed)) {
+      serverAddress = parsed.hostname;
+      attributes[SERVER_ADDRESS] = serverAddress;
+      attributes[URL_SCHEME] = parsed.protocol.replace(/:$/, '');
+
+      if (parsed.port) {
+        attributes[SERVER_PORT] = Number(parsed.port);
+      }
+    }
+  }
+
+  // Under span streaming the name must be low-cardinality (method + domain); Relay derives the
+  // detailed description from `url.full`. https://getsentry.github.io/sentry-conventions/names/#http-client
+  let name: string;
+  if (hasSpanStreamingEnabled(client)) {
+    name = serverAddress ? `${method} ${serverAddress}` : method;
+  } else {
+    name = `${method} ${sanitizedUrl}`;
+  }
+
+  return { name, attributes };
+}
+
 function createWrappedRequestFactory(
   { tracing, breadcrumbs, logs }: NetOptions,
-  { tracePropagationTargets, propagateTraceparent }: ClientOptions,
+  client: Client,
 ): WrappedRequestMethodFactory {
+  const { tracePropagationTargets, propagateTraceparent } = client.getOptions();
+  const streamingEnabled = hasSpanStreamingEnabled(client);
   // We're caching results so we don't have to recompute regexp every time we create a request.
   const createSpanUrlMap = new LRUMap<string, boolean>(100);
   const headersUrlMap = new LRUMap<string, boolean>(100);
@@ -218,18 +284,11 @@ function createWrappedRequestFactory(
 
       const span = shouldCreateSpan(method, url)
         ? startInactiveSpan({
-            name: `${method} ${url}`,
-            onlyIfParent: true,
-            attributes: {
-              url,
-              type: 'net.request',
-              'http.method': method,
-            },
+            ...getSpanDetails(method, url, client),
+            onlyIfParent: !streamingEnabled,
             op: 'http.client',
           })
         : new SentryNonRecordingSpan();
-
-      span.setAttribute(SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN, 'auto.http.electron.net');
 
       if (shouldAttachTraceData(method, url)) {
         const inject = (): void => {
@@ -282,7 +341,7 @@ export const electronNetIntegration = defineIntegration((options: NetOptions = {
         return;
       }
 
-      fill(electronNet, 'request', createWrappedRequestFactory(options, client.getOptions()));
+      fill(electronNet, 'request', createWrappedRequestFactory(options, client));
     },
   };
 });
