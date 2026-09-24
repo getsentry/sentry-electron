@@ -1,5 +1,20 @@
 # Changelog
 
+## 7.20.0
+
+### New Features ✨
+
+- Return the real send result for renderer `sendFeedback` by @timfish in [#1433](https://github.com/getsentry/sentry-electron/pull/1433)
+- Update Sentry SDKs to v10.75.0 by @github-actions in [#1431](https://github.com/getsentry/sentry-electron/pull/1431)
+
+### Bug Fixes 🐛
+
+- Honour `enabled: false` for envelopes forwarded from renderers and utility processes by @timfish in [#1432](https://github.com/getsentry/sentry-electron/pull/1432)
+
+### Internal Changes 🔧
+
+- New Electron versions by @github-actions in [#1430](https://github.com/getsentry/sentry-electron/pull/1430)
+
 ## 7.19.0
 
 ### New Features ✨
