@@ -8,10 +8,27 @@ SDK.
 
 # Upgrading from 7.x to 8.x
 
+Most of the breaking changes in v8 come from the underlying Sentry JavaScript
+SDKs, so it's worth checking the
+[JavaScript v11 migration guide](https://docs.sentry.io/platforms/javascript/migration/v10-to-v11/).
+
 ## Supported Electron Versions
 
 The Sentry Node SDK now requires Node >= 20.19.0 which means the Sentry Electron
 SDK now supports Electron >= 35.0.0.
+
+## Span streaming is now the default
+
+Tracing now uses span streaming by default (`traceLifecycle: 'stream'`). Spans
+are sent individually as they finish rather than being collected into a single
+transaction, so the `beforeSendTransaction` and `ignoreTransactions` options no
+longer have any effect.
+
+## IP addresses are now inferred by default
+
+The SDK now records the user's IP address by default, so setting
+`sendDefaultPii: true` is no longer required just to capture it. To opt out, set
+`dataCollection: { userInfo: false }`.
 
 # Upgrading from 6.x to 7.x
 
