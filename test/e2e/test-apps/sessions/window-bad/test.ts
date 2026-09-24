@@ -13,6 +13,8 @@ electronTestRunner(__dirname, async (ctx) => {
 
   await ctx
     .includeSessionEnvelopes()
+    // The error event is not guaranteed to arrive after the session envelopes
+    .ignoreExpectationOrder()
     .expect({
       envelope: (envelope) => {
         const session = getSessionFromEnvelope(envelope);

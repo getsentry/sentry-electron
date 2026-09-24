@@ -1,17 +1,10 @@
 import type { Client, Event, Integration, StackFrame } from '@sentry/core';
-import {
-  callFrameToStackFrame,
-  captureEvent,
-  debug,
-  defineIntegration,
-  stripSentryFramesAndReverse,
-  watchdogTimer,
-} from '@sentry/core';
+import { captureEvent, debug, defineIntegration, stripSentryFramesAndReverse } from '@sentry/core';
+import { callFrameToStackFrame, watchdogTimer } from '@sentry/core/server';
 import { createGetModuleFromFilename } from '@sentry/node';
 import type { WebContents } from 'electron';
 import { app, powerMonitor } from 'electron';
 import type { RendererStatus } from '../../common/ipc.js';
-import { ELECTRON_MAJOR_VERSION } from '../electron-normalize.js';
 import { addHeaderToSession } from '../header-injection.js';
 import type { ElectronMainOptionsInternal } from '../sdk.js';
 import { sessionAnr } from '../sessions.js';
@@ -195,18 +188,16 @@ export const rendererEventLoopBlockIntegration: (options?: Options) => RendererE
       setup: (client) => {
         clientOptions = client.getOptions() as ElectronMainOptionsInternal;
 
-        if (ELECTRON_MAJOR_VERSION >= 34) {
-          app.commandLine.appendSwitch('enable-features', 'DocumentPolicyIncludeJSCallStacksInCrashReports');
+        app.commandLine.appendSwitch('enable-features', 'DocumentPolicyIncludeJSCallStacksInCrashReports');
 
-          if (options.captureNativeStacktrace) {
-            app.on('ready', () => {
-              clientOptions
-                ?.getSessions()
-                .forEach((sesh) =>
-                  addHeaderToSession(sesh, 'Document-Policy', 'include-js-call-stacks-in-crash-reports'),
-                );
-            });
-          }
+        if (options.captureNativeStacktrace) {
+          app.on('ready', () => {
+            clientOptions
+              ?.getSessions()
+              .forEach((sesh) =>
+                addHeaderToSession(sesh, 'Document-Policy', 'include-js-call-stacks-in-crash-reports'),
+              );
+          });
         }
       },
       createRendererEventLoopBlockStatusHandler: (): RendererStatusHandler => {
@@ -228,10 +219,9 @@ export const rendererEventLoopBlockIntegration: (options?: Options) => RendererE
             let pauseAndCapture: (() => void) | undefined;
 
             if (message.config.captureStackTrace) {
-              const stackCaptureImpl =
-                options.captureNativeStacktrace && ELECTRON_MAJOR_VERSION >= 34
-                  ? nativeStackTraceCapture
-                  : debuggerStackTraceCapture;
+              const stackCaptureImpl = options.captureNativeStacktrace
+                ? nativeStackTraceCapture
+                : debuggerStackTraceCapture;
 
               pauseAndCapture = stackCaptureImpl(contents, (frames) => {
                 log('Event captured with stack frames');

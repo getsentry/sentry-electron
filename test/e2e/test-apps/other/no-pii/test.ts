@@ -8,6 +8,7 @@ electronTestRunner(__dirname, { skipEsmAutoTransform: true }, async (ctx) => {
         const event = getEventFromEnvelope(env);
         expect(event).toBeDefined();
         expect(event?.user?.ip_address).toBeUndefined();
+        expect(event?.sdk?.settings).toEqual({ infer_ip: 'never' });
       },
     })
     .run();

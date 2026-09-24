@@ -26,34 +26,35 @@ vi.mock('electron', () => ({
 }));
 
 import { net } from 'electron';
-import { context, propagation, trace } from '@opentelemetry/api';
-import { BasicTracerProvider } from '@opentelemetry/sdk-trace-base';
 import {
   createTransport,
   getActiveSpan,
   getCurrentScope,
-  getGlobalScope,
-  getIsolationScope,
+  getMainCarrier,
   resolvedSyncPromise,
+  SDK_VERSION,
   startSpan,
 } from '@sentry/core';
-import { getSentryResource, SentryPropagator, SentrySampler, SentrySpanProcessor } from '@sentry/opentelemetry';
-import { NodeClient, SentryContextManager, setNodeAsyncContextStrategy } from '@sentry/node';
+import { NodeClient } from '@sentry/node';
+import { setAsyncLocalStorageAsyncContextStrategy } from '@sentry/server-utils';
 import { electronNetIntegration } from '../../src/main/integrations/net-breadcrumbs';
 
 const TEST_DSN = 'https://username@domain/123';
 const NIL_TRACE_ID = '00000000000000000000000000000000';
 
 function resetGlobals(): void {
-  getCurrentScope().clear();
-  getCurrentScope().setClient(undefined);
-  getIsolationScope().clear();
-  getGlobalScope().clear();
+  // Scope.clear() was removed in v11, so drop the scope singletons to force fresh scopes
+  const sentryCarrier = getMainCarrier().__SENTRY__?.[SDK_VERSION];
+  if (sentryCarrier) {
+    delete sentryCarrier.globalScope;
+    delete sentryCarrier.defaultCurrentScope;
+    delete sentryCarrier.defaultIsolationScope;
+  }
 }
 
 function setupSdk(options: Record<string, any> = {}): NodeClient {
   resetGlobals();
-  setNodeAsyncContextStrategy();
+  const asyncLocalStorage = setAsyncLocalStorageAsyncContextStrategy();
 
   const client = new NodeClient({
     dsn: TEST_DSN,
@@ -64,33 +65,16 @@ function setupSdk(options: Record<string, any> = {}): NodeClient {
     ...options,
   });
 
+  client.asyncLocalStorageLookup = { asyncLocalStorage };
   getCurrentScope().setClient(client);
   client.init();
-
-  const provider = new BasicTracerProvider({
-    sampler: new SentrySampler(client),
-    resource: getSentryResource('node'),
-    forceFlushTimeoutMillis: 500,
-    spanProcessors: [new SentrySpanProcessor()],
-  });
-
-  trace.setGlobalTracerProvider(provider);
-  propagation.setGlobalPropagator(new SentryPropagator());
-  context.setGlobalContextManager(new SentryContextManager());
 
   return client;
 }
 
-function cleanupOtel(): void {
-  trace.disable();
-  context.disable();
-  propagation.disable();
-  resetGlobals();
-}
-
 describe('electron net trace header propagation', () => {
   afterEach(() => {
-    cleanupOtel();
+    resetGlobals();
   });
 
   test('TWP mode: propagates valid trace ID from scope propagation context', () => {
