@@ -28,7 +28,7 @@ electronTestRunner(__dirname, { skipEsmAutoTransform: true }, async (ctx) => {
     .expect({
       envelope: spanEnvelope('some-transaction', [
         {
-          name: 'GET http://localhost:8123/something',
+          name: 'GET localhost',
           span_id: SHORT_UUID_MATCHER,
           trace_id: UUID_MATCHER,
           parent_span_id: SHORT_UUID_MATCHER,
@@ -38,12 +38,15 @@ electronTestRunner(__dirname, { skipEsmAutoTransform: true }, async (ctx) => {
           status: 'error',
           attributes: expect.objectContaining({
             'sentry.op': { value: 'http.client', type: 'string' },
-            url: {
+            'http.request.method': { value: 'GET', type: 'string' },
+            'server.address': { value: 'localhost', type: 'string' },
+            'server.port': { value: 8123, type: 'integer' },
+            'url.full': {
               value: 'http://localhost:8123/something',
               type: 'string',
             },
-            type: { value: 'net.request', type: 'string' },
-            'http.method': { value: 'GET', type: 'string' },
+            'url.path': { value: '/something', type: 'string' },
+            'url.scheme': { value: 'http', type: 'string' },
             'sentry.origin': { value: 'auto.http.electron.net', type: 'string' },
             'http.response.status_code': { value: 500, type: 'integer' },
             'sentry.release': {
