@@ -64,13 +64,26 @@ Spans created for Electron `net` requests now use the same attributes as the
 If you filter or group on the old span names or attributes in `beforeSendSpan`,
 dashboards or alerts, these will need updating.
 
-## OpenTelemetry is no longer set up by the SDK
+## OpenTelemetry setup is now opt-in
 
-The SDK no longer sets up OpenTelemetry when `init` is called in the main or
-utility processes, and the `skipOpenTelemetrySetup` option has been removed. If
-you use your own OpenTelemetry setup, add `openTelemetryIntegration()` to link
-Sentry events to your OpenTelemetry spans and use `getOtlpTracesEndpoint()` to
-export spans to Sentry.
+The SDK no longer sets up OpenTelemetry by default. The `skipOpenTelemetrySetup`
+option has been replaced by `enableOpenTelemetrySetup`, which defaults to
+`false`. Set `enableOpenTelemetrySetup: true` in the main or utility process to
+register the Sentry OpenTelemetry tracer provider, so spans created with the
+OpenTelemetry API are sent to Sentry:
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "__DSN__",
+  enableOpenTelemetrySetup: true,
+});
+```
+
+If you use your own OpenTelemetry setup, leave this disabled. Instead, add
+`openTelemetryIntegration()` to link Sentry events to your OpenTelemetry spans
+and use `getOtlpTracesEndpoint()` to export spans to Sentry.
 
 ## Removed exports
 
