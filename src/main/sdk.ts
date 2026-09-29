@@ -12,6 +12,7 @@ import {
   eventFiltersIntegration,
   functionToStringIntegration,
   getCurrentScope,
+  initOpenTelemetry,
   linkedErrorsIntegration,
   localVariablesIntegration,
   nativeNodeFetchIntegration,
@@ -213,6 +214,10 @@ export function init(userOptions: ElectronMainOptions): void {
   client.init();
 
   configureIPC(client, options);
+
+  if (options.enableOpenTelemetrySetup) {
+    initOpenTelemetry(client);
+  }
 }
 
 /** A list of integrations which cause default integrations to be removed */
