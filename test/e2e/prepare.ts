@@ -134,6 +134,14 @@ export async function installDepsAndBuild(
   await exec(`${packageManager} install`, { cwd: executionBasePath });
 
   if (hasBuildScript) {
+    if (process.platform === 'win32') {
+      // Compiling native modules during install leaves the MSVC telemetry process (vctip.exe) running with its
+      // working directory inside the module's build directory. This stops electron-rebuild from removing it (EBUSY).
+      await exec('taskkill /F /IM vctip.exe').catch(() => {
+        // Not running
+      });
+    }
+
     log('Running build script...');
     await exec(`${packageManager} run build`, { cwd: executionBasePath });
   }
