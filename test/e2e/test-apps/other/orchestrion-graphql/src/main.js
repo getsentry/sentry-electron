@@ -1,5 +1,5 @@
 const { app } = require('electron');
-const { init, startSpan, flush, graphqlIntegration } = require('@sentry/electron/main');
+const { init, startSpan, graphqlIntegration } = require('@sentry/electron/main');
 
 init({
   dsn: '__DSN__',
@@ -19,6 +19,5 @@ app.on('ready', async () => {
     await graphql({ schema, source: '{ hello }', rootValue: { hello: () => 'world' } });
   });
 
-  await flush(2000);
   setTimeout(() => app.quit(), 1000);
 });
