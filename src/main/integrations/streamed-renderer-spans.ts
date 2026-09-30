@@ -136,6 +136,7 @@ export function applyStreamedRendererSpans(
       parentSpan,
       attributes: {
         [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'auto.electron.startup',
+        [ELECTRON_PROCESS]: segment?.attributes?.[ELECTRON_PROCESS]?.value || 'renderer',
       },
     },
     (rendererSpan) => {

@@ -33,6 +33,9 @@ electronTestRunner(
               'sentry.segment.name.source': { value: 'url', type: 'string' },
               'sentry.sample_rate': { value: 1, type: 'integer' },
               'os.name': { value: expect.any(String), type: 'string' },
+              // URLs are normalized relative to the app path
+              'url.full': { value: 'app:///src/index.html', type: 'string' },
+              'url.path': { value: '/src/index.html', type: 'string' },
             }),
           });
 
