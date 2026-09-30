@@ -8,6 +8,7 @@ import {
   eventFiltersIntegration,
   functionToStringIntegration,
   getCurrentScope,
+  initOpenTelemetry,
   linkedErrorsIntegration,
   nativeNodeFetchIntegration,
   NodeClient,
@@ -64,4 +65,8 @@ export function init(userOptions: NodeOptions = {}): void {
   const client = new NodeClient(options);
   scope.setClient(client);
   client.init();
+
+  if (options.enableOpenTelemetrySetup) {
+    initOpenTelemetry(client);
+  }
 }

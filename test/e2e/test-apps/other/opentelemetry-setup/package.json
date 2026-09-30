@@ -1,0 +1,10 @@
+{
+  "name": "opentelemetry-setup",
+  "description": "OpenTelemetry Setup",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
+    "@sentry/electron": "5.6.0"
+  }
+}
