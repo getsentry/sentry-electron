@@ -76,13 +76,21 @@ function newProtocolRenderer(): void {
   }
 }
 
+/** Gets the process name used to tag data from a renderer */
+export function getRendererProcessName(
+  options: ElectronMainOptionsInternal | undefined,
+  contents: WebContents | undefined,
+): string {
+  return contents ? options?.getRendererName?.(contents) || 'renderer' : 'renderer';
+}
+
 function prepareRendererEvent(
   options: ElectronMainOptionsInternal,
   event: Event,
   dynamicSamplingContext: Partial<DynamicSamplingContext> | undefined,
   contents: WebContents | undefined,
 ): Event {
-  const process = contents ? options?.getRendererName?.(contents) || 'renderer' : 'renderer';
+  const process = getRendererProcessName(options, contents);
 
   // Ensure breadcrumbs are empty as they sent via scope updates
   event.breadcrumbs = event.breadcrumbs || [];
@@ -383,7 +391,7 @@ function handleAttributes(
   maybeAttributes?: SerializedLog['attributes'],
   includeOsDevice: boolean = true,
 ): SerializedLog['attributes'] {
-  const process = contents ? options?.getRendererName?.(contents) || 'renderer' : 'renderer';
+  const process = getRendererProcessName(options, contents);
 
   return applyProcessAttributes(client, options, process, maybeAttributes, includeOsDevice);
 }
