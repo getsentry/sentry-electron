@@ -15,19 +15,9 @@ export const normalizePathsIntegration = defineIntegration(() => {
           forEachEnvelopeItem(envelope, (item, type) => {
             if (type === 'profile') {
               normaliseProfile(item[1] as Profile, app.getAppPath());
-            }
-          });
-        });
-      });
-
-      // `@sentry/profiling-node` sends profile chunks straight to the transport so the
-      // `beforeEnvelope` hook is not called for them
-      const transport = client.getTransport();
-      if (transport) {
-        const send = transport.send.bind(transport);
-        transport.send = (envelope) => {
-          forEachEnvelopeItem(envelope, (item, type) => {
-            if (type === 'profile_chunk') {
+            } else if (type === 'profile_chunk') {
+              // Chunks from `@sentry/profiling-node` only reach this hook once
+              // https://github.com/getsentry/sentry-javascript/pull/24896 is released
               normaliseProfileChunk(
                 item[1] as ProfileChunk,
                 app.getAppPath(),
@@ -35,10 +25,8 @@ export const normalizePathsIntegration = defineIntegration(() => {
               );
             }
           });
-
-          return send(envelope);
-        };
-      }
+        });
+      });
     },
     processEvent(event) {
       return normalizePaths(event, app.getAppPath());

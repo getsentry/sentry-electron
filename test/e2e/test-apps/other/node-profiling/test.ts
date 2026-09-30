@@ -69,12 +69,15 @@ electronTestRunner(__dirname, async (ctx) => {
           release: 'some-release',
           environment: 'development',
           measurements: expect.any(Object),
-          // Frame paths are normalized relative to the app path
-          profile: expect.objectContaining({
-            frames: expect.arrayContaining([
-              expect.objectContaining({ abs_path: expect.stringMatching(/^app:\/\/\/src\/main\.m?js$/) }),
-            ]),
-          }),
+          // TODO: Enable this once https://github.com/getsentry/sentry-javascript/pull/24896 is
+          // released. Until then, chunks from `@sentry/profiling-node` do not pass through the
+          // `beforeEnvelope` hook so their frame paths are not normalized.
+          //
+          // profile: expect.objectContaining({
+          //   frames: expect.arrayContaining([
+          //     expect.objectContaining({ abs_path: expect.stringMatching(/^app:\/\/\/src\/main\.m?js$/) }),
+          //   ]),
+          // }),
         },
         'node',
       ),
