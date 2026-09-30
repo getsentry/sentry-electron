@@ -69,6 +69,12 @@ electronTestRunner(__dirname, async (ctx) => {
           release: 'some-release',
           environment: 'development',
           measurements: expect.any(Object),
+          // Frame paths are normalized relative to the app path
+          profile: expect.objectContaining({
+            frames: expect.arrayContaining([
+              expect.objectContaining({ abs_path: expect.stringMatching(/^app:\/\/\/src\/main\.m?js$/) }),
+            ]),
+          }),
         },
         'node',
       ),

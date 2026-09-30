@@ -153,7 +153,7 @@ async function sendFeedbackFromRenderer(
 
 let cached_public_key: string | undefined;
 
-function normalizeDynamicSamplingContext(
+export function normalizeDynamicSamplingContext(
   client: Client,
   options: ElectronMainOptionsInternal,
   envelope: Envelope,
@@ -385,6 +385,20 @@ function handleAttributes(
 ): SerializedLog['attributes'] {
   const process = contents ? options?.getRendererName?.(contents) || 'renderer' : 'renderer';
 
+  return applyProcessAttributes(client, options, process, maybeAttributes, includeOsDevice);
+}
+
+/**
+ * Applies the main process release, environment, SDK and context attributes to a span, log or
+ * metric from another process
+ */
+export function applyProcessAttributes(
+  client: Client,
+  options: ElectronMainOptionsInternal,
+  process: string,
+  maybeAttributes?: SerializedLog['attributes'],
+  includeOsDevice: boolean = true,
+): SerializedLog['attributes'] {
   const attributes: SerializedLog['attributes'] = maybeAttributes || {};
 
   if (options.release) {

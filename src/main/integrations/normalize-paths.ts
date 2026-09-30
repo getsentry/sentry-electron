@@ -1,7 +1,8 @@
-import type { Profile } from '@sentry/core';
+import type { Profile, ProfileChunk } from '@sentry/core';
 import { defineIntegration, forEachEnvelopeItem, normalizeUrlToBase } from '@sentry/core';
 import { app } from 'electron';
-import { normaliseProfile, normalizePaths } from '../normalize.js';
+import { normaliseProfile, normaliseProfileChunk, normalizePaths } from '../normalize.js';
+import type { ElectronMainOptionsInternal } from '../sdk.js';
 
 export const normalizePathsIntegration = defineIntegration(() => {
   return {
@@ -18,6 +19,26 @@ export const normalizePathsIntegration = defineIntegration(() => {
           });
         });
       });
+
+      // `@sentry/profiling-node` sends profile chunks straight to the transport so the
+      // `beforeEnvelope` hook is not called for them
+      const transport = client.getTransport();
+      if (transport) {
+        const send = transport.send.bind(transport);
+        transport.send = (envelope) => {
+          forEachEnvelopeItem(envelope, (item, type) => {
+            if (type === 'profile_chunk') {
+              normaliseProfileChunk(
+                item[1] as ProfileChunk,
+                app.getAppPath(),
+                client.getOptions() as ElectronMainOptionsInternal,
+              );
+            }
+          });
+
+          return send(envelope);
+        };
+      }
     },
     processEvent(event) {
       return normalizePaths(event, app.getAppPath());
