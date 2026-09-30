@@ -27,6 +27,7 @@ import {
 // dynamically from the request/response lifecycle.
 const SENTRY_SEGMENT_NAME_SOURCE = 'sentry.segment.name.source';
 const HTTP_REQUEST_HEADER_USER_AGENT = 'http.request.header.user_agent';
+const ELECTRON_PROCESS = 'electron.process';
 
 /** Converts a serialized span status into a `SpanStatus` */
 export function parseStatus(status: string): SpanStatus {
@@ -66,6 +67,7 @@ const NON_INHERITED_SEGMENT_ATTRIBUTES = new Set<string>([
   SENTRY_ENVIRONMENT,
   URL_FULL,
   HTTP_REQUEST_HEADER_USER_AGENT,
+  ELECTRON_PROCESS,
 ]);
 
 // Attributes that pin a streamed child span to the original renderer segment or SDK. These are not

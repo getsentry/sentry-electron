@@ -9,6 +9,7 @@ import type {
   EventHint,
   ScopeData,
   SerializedStreamedSpan,
+  SerializedStreamedSpanContainer,
   TransportMakeRequestResponse,
 } from '@sentry/core';
 import {
@@ -295,6 +296,8 @@ function handleEnvelope(
 
     const spans = spanContainerFromEnvelope(envelope);
     if (spans) {
+      handleSpansFromRenderer(client, options, spans, contents);
+
       const [normalizedSpanEnvelope, segmentOrigin] = normalizeSpanStreamingEnvelope(
         options,
         envelope,
@@ -378,6 +381,7 @@ function handleAttributes(
   options: ElectronMainOptionsInternal,
   contents: WebContents | undefined,
   maybeAttributes?: SerializedLog['attributes'],
+  includeOsDevice: boolean = true,
 ): SerializedLog['attributes'] {
   const process = contents ? options?.getRendererName?.(contents) || 'renderer' : 'renderer';
 
@@ -395,6 +399,10 @@ function handleAttributes(
   attributes['sentry.sdk.version'] = { value: SDK_VERSION, type: 'string' };
 
   attributes['electron.process'] = { value: process, type: 'string' };
+
+  if (!includeOsDevice) {
+    return attributes;
+  }
 
   const osDeviceAttributes = getOsDeviceLogAttributes(client);
 
@@ -415,6 +423,28 @@ function handleAttributes(
   }
 
   return attributes;
+}
+
+/**
+ * Streamed spans from renderers are forwarded without passing through the main process client, so
+ * we apply the main process release, environment, SDK and context attributes here.
+ */
+function handleSpansFromRenderer(
+  client: Client,
+  options: ElectronMainOptionsInternal,
+  container: SerializedStreamedSpanContainer,
+  contents: WebContents | undefined,
+): void {
+  // IP address inference is controlled from the main process, as it is for events
+  container.ingest_settings = {
+    ...container.ingest_settings,
+    infer_ip: client.getDataCollectionOptions().userInfo ? 'auto' : 'never',
+  };
+
+  for (const span of container.items) {
+    // Like main process spans, only segment spans get the OS and device attributes
+    span.attributes = handleAttributes(client, options, contents, span.attributes, !!span.is_segment) || {};
+  }
 }
 
 function handleLogFromRenderer(
@@ -573,4 +603,8 @@ export function configureIPC(client: Client, options: ElectronMainOptionsInterna
   if ((options.ipcMode & IPCMode.Classic) > 0) {
     configureClassic(client, ipcUtil, options);
   }
+
+  // The OS and device attributes resolve asynchronously so we fetch them before the first renderer
+  // spans arrive
+  void app.whenReady().then(() => getOsDeviceLogAttributes(client));
 }

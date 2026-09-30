@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import { electronTestRunner, getSpansFromEnvelope } from '../../..';
+import { electronTestRunner, getSpansFromEnvelope, SDK_VERSION } from '../../..';
 
 electronTestRunner(
   __dirname,
@@ -32,13 +32,25 @@ electronTestRunner(
               'sentry.origin': { value: 'auto.pageload.browser', type: 'string' },
               'sentry.segment.name.source': { value: 'url', type: 'string' },
               'sentry.sample_rate': { value: 1, type: 'integer' },
+              'os.name': { value: expect.any(String), type: 'string' },
             }),
           });
 
-          // All spans share the same trace
+          // All spans share the same trace and get the main process release, environment and SDK
           for (const span of spans ?? []) {
             expect(span.trace_id).toEqual(segment?.trace_id);
+            expect(span.attributes).toMatchObject({
+              'sentry.release': { value: 'some-release', type: 'string' },
+              'sentry.environment': { value: 'development', type: 'string' },
+              'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
+              'sentry.sdk.version': { value: SDK_VERSION, type: 'string' },
+              'electron.process': { value: 'renderer', type: 'string' },
+            });
           }
+
+          // IP address inference is controlled by the main process
+          const container = envelope[1][0]?.[1] as { ingest_settings?: { infer_ip?: string } };
+          expect(container.ingest_settings?.infer_ip).toEqual('auto');
 
           // The key browser performance metric spans are present as children
           const ops = (spans ?? []).map(
