@@ -12,6 +12,12 @@ Most of the breaking changes in v8 come from the underlying Sentry JavaScript
 SDKs, so it's worth checking the
 [JavaScript v11 migration guide](https://docs.sentry.io/platforms/javascript/migration/v10-to-v11/).
 
+We recommend that you upgrade to the latest 7.x release first, because most of
+what v8 removes is already deprecated there.
+
+v8 requires Sentry self-hosted 26.4.2 or higher. Lower versions may continue to
+work, but are not supported.
+
 ## Supported Electron Versions
 
 The Sentry Node SDK now requires Node >= 20.19.0 which means the Sentry Electron
@@ -29,6 +35,9 @@ transaction when the root span ends, so the `beforeSendTransaction` and
 `beforeSendSpan` callbacks now receive the streamed span format. When using
 `traceLifecycle: 'static'`, wrap the callback with `withStaticSpan` to receive
 the previous span format, otherwise it won't be called.
+
+Scope `tags` and `extra` are not applied to streamed spans. Use `setAttribute`
+and `setAttributes` to set data that should be searchable on spans.
 
 To keep sending transactions, set `traceLifecycle: 'static'`:
 
