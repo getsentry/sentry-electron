@@ -1,5 +1,29 @@
 # Changelog
 
+## 8.0.0
+
+### Breaking Changes 🛠
+
+- Emit OTel-aligned http.client attributes from the net integration by @timfish in [#1421](https://github.com/getsentry/sentry-electron/pull/1421)
+- VNext by @timfish in [#1415](https://github.com/getsentry/sentry-electron/pull/1415)
+
+### Bug Fixes 🐛
+
+- Add missing main process context to data from other processes by @timfish in [#1445](https://github.com/getsentry/sentry-electron/pull/1445)
+- Support `enableOpenTelemetrySetup` in main and utility processes by @timfish in [#1442](https://github.com/getsentry/sentry-electron/pull/1442)
+
+### Documentation 📚
+
+- Add 7.x to 8.x migration notes by @timfish in [#1438](https://github.com/getsentry/sentry-electron/pull/1438)
+
+### Internal Changes 🔧
+
+- (deps) Bump brace-expansion from 5.0.7 to 5.0.12 by @dependabot in [#1443](https://github.com/getsentry/sentry-electron/pull/1443)
+- Kill lingering vctip.exe before e2e native rebuilds on Windows by @timfish in [#1441](https://github.com/getsentry/sentry-electron/pull/1441)
+- Add e2e test for v11 orchestrion instrumentation by @timfish in [#1437](https://github.com/getsentry/sentry-electron/pull/1437)
+- New Electron versions by @github-actions in [#1436](https://github.com/getsentry/sentry-electron/pull/1436)
+- New Electron versions by @github-actions in [#1434](https://github.com/getsentry/sentry-electron/pull/1434)
+
 ## 7.20.0
 
 ### New Features ✨
