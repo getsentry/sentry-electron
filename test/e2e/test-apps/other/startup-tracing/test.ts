@@ -75,6 +75,19 @@ electronTestRunner(
           ]) {
             expect(ops).toContain(op);
           }
+
+          // Spans keep the name of the process they were created in
+          const processFor = (op: string): unknown =>
+            (
+              spans?.find((s) => s.attributes?.['sentry.op']?.value === op)?.attributes as
+                | Record<string, { value?: unknown }>
+                | undefined
+            )?.['electron.process']?.value;
+
+          expect(segment?.attributes?.['electron.process']).toEqual({ value: 'browser', type: 'string' });
+          expect(processFor('electron.ready')).toEqual('browser');
+          expect(processFor('electron.renderer')).toEqual('renderer');
+          expect(processFor('browser.request')).toEqual('renderer');
         },
       })
       .run();

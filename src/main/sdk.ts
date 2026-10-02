@@ -210,6 +210,11 @@ export function init(userOptions: ElectronMainOptions): void {
     };
   });
 
+  client.on('processSpan', (span) => {
+    // Spans re-created from renderer spans already have the renderer process name
+    span.attributes = { 'electron.process': 'browser', ...span.attributes };
+  });
+
   scope.setClient(client);
   client.init();
 

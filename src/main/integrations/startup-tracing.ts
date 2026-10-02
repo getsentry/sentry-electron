@@ -1,13 +1,16 @@
 import type { Event, SerializedStreamedSpan, Span, StartSpanOptions } from '@sentry/core';
 import {
   defineIntegration,
+  getClient,
   SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN,
   setMeasurement,
   startSpanManual,
   timestampInSeconds,
 } from '@sentry/core';
+import type { WebContents } from 'electron';
 import { app } from 'electron';
-import { flushSpanEnvelopeBuffer, ipcMainHooks, startSpanEnvelopeBuffering } from '../ipc.js';
+import { flushSpanEnvelopeBuffer, getRendererProcessName, ipcMainHooks, startSpanEnvelopeBuffering } from '../ipc.js';
+import type { ElectronMainOptionsInternal } from '../sdk.js';
 import { applyStreamedRendererSpans, parseStatus } from './streamed-renderer-spans.js';
 
 export interface StartupTracingOptions {
@@ -66,11 +69,14 @@ function zeroLengthSpan(options: StartSpanOptions): void {
   );
 }
 
-type RendererPageload = { event: Event } | { spans: SerializedStreamedSpan[] } | undefined;
+type RendererPageload =
+  | { event: Event; contents: WebContents | undefined }
+  | { spans: SerializedStreamedSpan[] }
+  | undefined;
 
 function waitForRendererPageload(timeout: number): Promise<RendererPageload> {
   return new Promise((resolve) => {
-    const onTransaction = (event: Event): void => finish({ event });
+    const onTransaction = (event: Event, contents: WebContents | undefined): void => finish({ event, contents });
     const onSpans = (spans: SerializedStreamedSpan[]): void => finish({ spans });
 
     const timer = setTimeout(() => finish(undefined), timeout);
@@ -87,12 +93,22 @@ function waitForRendererPageload(timeout: number): Promise<RendererPageload> {
   });
 }
 
-function applyRendererSpansAndMeasurements(parentSpan: Span, event: Event | undefined, endTimestamp: number): number {
+function applyRendererSpansAndMeasurements(
+  parentSpan: Span,
+  event: Event | undefined,
+  contents: WebContents | undefined,
+  endTimestamp: number,
+): number {
   let lastEndTimestamp = endTimestamp;
 
   if (!event) {
     return lastEndTimestamp;
   }
+
+  // These spans are re-created in the main process so we keep the name of the renderer process
+  const rendererProcess = {
+    'electron.process': getRendererProcessName(getClient()?.getOptions() as ElectronMainOptionsInternal, contents),
+  };
 
   const rendererStartTime = event.start_timestamp || event.timestamp;
   parentSpan.setAttribute('performance.timeOrigin', rendererStartTime);
@@ -105,6 +121,7 @@ function applyRendererSpansAndMeasurements(parentSpan: Span, event: Event | unde
       parentSpan,
       attributes: {
         [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'auto.electron.startup',
+        ...rendererProcess,
       },
     },
     (rendererSpan) => {
@@ -122,7 +139,7 @@ function applyRendererSpansAndMeasurements(parentSpan: Span, event: Event | unde
               name: spanJson.description || 'electron.renderer',
               op: spanJson.op,
               startTime,
-              attributes: spanJson.data,
+              attributes: { ...spanJson.data, ...rendererProcess },
               parentSpan: rendererSpan,
             },
             (span) => {
@@ -257,7 +274,12 @@ export const startupTracingIntegration = defineIntegration((options: StartupTrac
           if (pageload && 'spans' in pageload) {
             lastEndTimestamp = applyStreamedRendererSpans(parentSpan, pageload.spans, lastEndTimestamp);
           } else {
-            lastEndTimestamp = applyRendererSpansAndMeasurements(parentSpan, pageload?.event, lastEndTimestamp);
+            lastEndTimestamp = applyRendererSpansAndMeasurements(
+              parentSpan,
+              pageload?.event,
+              pageload?.contents,
+              lastEndTimestamp,
+            );
           }
 
           parentSpan.end(lastEndTimestamp * 1000);

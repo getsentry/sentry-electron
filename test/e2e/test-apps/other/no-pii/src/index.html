@@ -5,11 +5,14 @@
   </head>
   <body>
     <script>
-      const { init } = require('@sentry/electron/renderer');
+      const { init, startSpan } = require('@sentry/electron/renderer');
 
       init({
         debug: true,
+        tracesSampleRate: 1,
       });
+
+      startSpan({ name: 'renderer-span' }, () => {});
 
       setTimeout(() => {
         throw new Error('Some renderer error');

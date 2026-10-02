@@ -236,6 +236,20 @@ export function normalizeSpanStreamingEnvelope(
             );
           }
 
+          const urlFull = span.attributes?.['url.full'];
+          if (typeof urlFull?.value === 'string') {
+            urlFull.value = normalizeUrlToBase(urlFull.value, basePath);
+          }
+
+          // `url.path` has no scheme so we only replace it when it is a path inside the app
+          const urlPath = span.attributes?.['url.path'];
+          if (typeof urlPath?.value === 'string') {
+            const normalizedPath = normalizeUrlToBase(urlPath.value, basePath);
+            if (normalizedPath !== urlPath.value && normalizedPath.startsWith('app://')) {
+              urlPath.value = normalizedPath.slice('app://'.length);
+            }
+          }
+
           if (span.is_segment) {
             segmentOrigin = span.attributes?.['sentry.origin']?.value as string | undefined;
           }

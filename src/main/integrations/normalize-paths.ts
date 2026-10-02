@@ -1,7 +1,8 @@
-import type { Profile } from '@sentry/core';
+import type { Profile, ProfileChunk } from '@sentry/core';
 import { defineIntegration, forEachEnvelopeItem, normalizeUrlToBase } from '@sentry/core';
 import { app } from 'electron';
-import { normaliseProfile, normalizePaths } from '../normalize.js';
+import { normaliseProfile, normaliseProfileChunk, normalizePaths } from '../normalize.js';
+import type { ElectronMainOptionsInternal } from '../sdk.js';
 
 export const normalizePathsIntegration = defineIntegration(() => {
   return {
@@ -14,6 +15,14 @@ export const normalizePathsIntegration = defineIntegration(() => {
           forEachEnvelopeItem(envelope, (item, type) => {
             if (type === 'profile') {
               normaliseProfile(item[1] as Profile, app.getAppPath());
+            } else if (type === 'profile_chunk') {
+              // Chunks from `@sentry/profiling-node` only reach this hook once
+              // https://github.com/getsentry/sentry-javascript/pull/24896 is released
+              normaliseProfileChunk(
+                item[1] as ProfileChunk,
+                app.getAppPath(),
+                client.getOptions() as ElectronMainOptionsInternal,
+              );
             }
           });
         });

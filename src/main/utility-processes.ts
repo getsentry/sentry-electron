@@ -1,10 +1,22 @@
-import type { Attachment, Event } from '@sentry/core';
-import { debug, parseEnvelope } from '@sentry/core';
+import type {
+  Attachment,
+  Client,
+  Envelope,
+  Event,
+  SerializedLog,
+  SerializedMetric,
+  SerializedStreamedSpanContainer,
+} from '@sentry/core';
+import { debug, forEachEnvelopeItem, parseEnvelope } from '@sentry/core';
 import { captureEvent, getClient } from '@sentry/node';
 import * as electron from 'electron';
 import { eventFromEnvelope } from '../common/envelope.js';
 import { getMagicMessage, isMagicMessage } from '../common/ipc.js';
+import { applyProcessAttributes, normalizeDynamicSamplingContext } from './ipc.js';
 import { mergeEvents } from './merge.js';
+import { normalizeSpanStreamingEnvelope } from './normalize.js';
+import type { ElectronMainOptionsInternal } from './sdk.js';
+import { SDK_VERSION } from './version.js';
 
 function log(message: string): void {
   debug.log(`[Utility Process] ${message}`);
@@ -86,9 +98,42 @@ function handleEnvelopeFromUtility(env: Uint8Array | string): void {
 
     captureEventFromUtility(event, attachments);
   } else {
-    // Pass other types of envelope straight to the client
-    void getClient()?.sendEnvelope(envelope);
+    const client = getClient();
+
+    if (client) {
+      void client.sendEnvelope(prepareEnvelopeFromUtility(client, envelope));
+    }
   }
+}
+
+/**
+ * Spans, logs and metrics from utility processes are forwarded without passing through the main
+ * process client, so we apply the main process release, environment, SDK and context attributes.
+ */
+function prepareEnvelopeFromUtility(client: Client, envelope: Envelope): Envelope {
+  const options = client.getOptions() as ElectronMainOptionsInternal;
+
+  normalizeDynamicSamplingContext(client, options, envelope);
+
+  if (envelope[0].sdk) {
+    envelope[0].sdk = { name: 'sentry.javascript.electron', version: SDK_VERSION };
+  }
+
+  forEachEnvelopeItem(envelope, (item, type) => {
+    if (type === 'span') {
+      for (const span of (item[1] as SerializedStreamedSpanContainer).items) {
+        // Like main process spans, only segment spans get the OS and device attributes
+        span.attributes = applyProcessAttributes(client, options, 'utility', span.attributes, !!span.is_segment) || {};
+      }
+    } else if (type === 'log' || type === 'trace_metric') {
+      for (const entry of (item[1] as { items: Array<SerializedLog | SerializedMetric> }).items) {
+        entry.attributes = applyProcessAttributes(client, options, 'utility', entry.attributes);
+      }
+    }
+  });
+
+  const [normalizedEnvelope] = normalizeSpanStreamingEnvelope(options, envelope, electron.app.getAppPath());
+  return normalizedEnvelope;
 }
 
 function captureEventFromUtility(event: Event, attachments: Attachment[]): void {

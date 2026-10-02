@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Startup Tracing Static Renderer Test</title>
+  </head>
+  <body>
+    <script>
+      const { init, browserTracingIntegration } = require('@sentry/electron/renderer');
+
+      init({
+        integrations: [browserTracingIntegration()],
+        tracesSampleRate: 1,
+        traceLifecycle: 'static',
+      });
+    </script>
+  </body>
+</html>

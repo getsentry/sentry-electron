@@ -15,10 +15,10 @@ function pbkdf2Span(): StreamedSpanJSON {
     status: 'ok',
     attributes: expect.objectContaining({
       'sentry.origin': { value: 'manual', type: 'string' },
-      'sentry.environment': { value: 'production', type: 'string' },
+      'sentry.environment': { value: 'development', type: 'string' },
       'sentry.segment.name': { value: 'Long work', type: 'string' },
       'sentry.segment.id': { value: SHORT_UUID_MATCHER, type: 'string' },
-      'sentry.sdk.name': { value: 'sentry.javascript.browser', type: 'string' },
+      'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
     }),
   };
 }
@@ -53,10 +53,10 @@ electronTestRunner(__dirname, async (ctx) => {
             attributes: expect.objectContaining({
               'sentry.origin': { value: 'manual', type: 'string' },
               'sentry.sample_rate': { value: 1, type: 'integer' },
-              'sentry.environment': { value: 'production', type: 'string' },
+              'sentry.environment': { value: 'development', type: 'string' },
               'sentry.segment.name': { value: 'Long work', type: 'string' },
               'sentry.segment.id': { value: SHORT_UUID_MATCHER, type: 'string' },
-              'sentry.sdk.name': { value: 'sentry.javascript.browser', type: 'string' },
+              'sentry.sdk.name': { value: 'sentry.javascript.electron', type: 'string' },
               'sentry.profiler_id': { value: UUID_MATCHER, type: 'string' },
               'sentry.segment.name.source': { value: 'custom', type: 'string' },
             }),
