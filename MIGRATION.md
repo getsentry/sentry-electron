@@ -50,12 +50,22 @@ Sentry.init({
 });
 ```
 
-## IP addresses are now inferred by default
+## `sendDefaultPii` is replaced by `dataCollection`
 
-The `sendDefaultPii` option has been removed and replaced by `dataCollection`.
+The `sendDefaultPii` option has been removed and replaced by `dataCollection`,
+which collects more data by default. See the
+[JavaScript migration guide](https://github.com/getsentry/sentry-javascript/blob/develop/MIGRATION.md#senddefaultpii-is-replaced-by-datacollection)
+for details.
+
 The SDK now records the user's IP address by default, so apps that didn't set
 `sendDefaultPii: true` in v7 will now send IP addresses. To opt out, set
 `dataCollection: { userInfo: false }`.
+
+## The `enableLogs` option was removed
+
+Logs are now captured whenever you use a logging API or integration. See the
+[JavaScript migration guide](https://github.com/getsentry/sentry-javascript/blob/develop/MIGRATION.md#the-enablelogs-option-was-removed)
+for details.
 
 ## Electron `net` spans use OpenTelemetry attributes
 
