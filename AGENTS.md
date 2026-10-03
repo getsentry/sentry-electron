@@ -6,9 +6,9 @@ The end-to-end tests in [`test/e2e`](./test/e2e) launch real Electron apps. A fe
 successfully, especially from an agent shell such as Claude Code:
 
 - **`unset ELECTRON_RUN_AS_NODE` first.** Some agent shells, such as Claude Code, export `ELECTRON_RUN_AS_NODE=1`,
-  which makes every Electron binary run as plain Node. When that happens `require('electron').app` is `undefined` and every test crashes
-  at SDK load (`normalize.js` calling `app.getAppPath()`) or times out. This is not a broken harness — it only affects
-  shells where that variable is set.
+  which makes every Electron binary run as plain Node. When that happens `require('electron').app` is `undefined` and
+  every test crashes at SDK load (`normalize.js` calling `app.getAppPath()`) or times out. This is not a broken
+  harness — it only affects shells where that variable is set.
 - **Set `ELECTRON_VERSION`.** The runner throws `ELECTRON_VERSION is not set` otherwise. The SDK needs Electron 35 or
   higher, so use a version in that range whose binary is already cached (e.g. `39.8.10`).
 - **Build and pack the SDK first.** The test apps install `sentry-electron-v<version>.tgz` from the repo root, and
