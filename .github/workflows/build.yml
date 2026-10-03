@@ -89,9 +89,24 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ github.sha }}
+      - name: Core dump diagnostics (before)
+        if: runner.os == 'Linux'
+        run: |
+          cat /proc/sys/kernel/core_pattern
+          ulimit -c
+          df -h / /tmp
+          systemctl is-active apport || true
+          systemctl is-active systemd-coredump.socket || true
       - name: Run E2E Tests
         timeout-minutes: 10
         run: yarn e2e --shard=${{ matrix.shard }}/4
+      - name: Core dump diagnostics (after)
+        if: always() && runner.os == 'Linux'
+        run: |
+          df -h / /tmp
+          sudo du -sh /var/lib/apport/coredump /var/crash /var/lib/systemd/coredump 2>/dev/null || true
+          sudo ls -la /var/lib/apport/coredump /var/crash /var/lib/systemd/coredump 2>/dev/null | head -40 || true
+          find . -maxdepth 3 -name 'core*' -type f -size +1M -not -path './node_modules/*' -exec ls -la {} + | head -20 || true
 
   required_jobs_passed:
     name: All required jobs passed or were skipped
