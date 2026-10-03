@@ -10,10 +10,27 @@ import { makeRendererTransport } from './transport.js';
 
 /** Get the default integrations for the renderer SDK. */
 export function getDefaultIntegrations(options: ElectronRendererOptions): Integration[] {
-  return [
-    ...getDefaultBrowserIntegrations(options).filter((i) => i.name !== 'BrowserSession' && i.name !== 'CultureContext'),
-    scopeToMainIntegration(),
-  ];
+  return [...removeUnsupported(getDefaultBrowserIntegrations(options)), scopeToMainIntegration()];
+}
+
+function removeUnsupported(integrations: Integration[]): Integration[] {
+  return integrations.filter((i) => i.name !== 'BrowserSession' && i.name !== 'CultureContext');
+}
+
+function wrapIntegrations(options: ElectronRendererOptions): BrowserOptions['integrations'] {
+  const userIntegrations = options.integrations;
+  const addScopeToMain = options.defaultIntegrations !== false;
+
+  return (defaults) => {
+    const integrations = removeUnsupported(defaults);
+    if (addScopeToMain) {
+      integrations.push(scopeToMainIntegration());
+    }
+
+    return typeof userIntegrations === 'function'
+      ? userIntegrations(integrations)
+      : [...integrations, ...(userIntegrations || [])];
+  };
 }
 
 export interface ElectronRendererOptionsInternal extends Omit<BrowserOptions, 'dsn' | 'environment' | 'release'> {
@@ -64,9 +81,9 @@ If init has been called in the preload and contextIsolation is disabled, is not 
   // events using the main process.
   options.sendClientReports = false;
 
-  if (options.defaultIntegrations === undefined) {
-    options.defaultIntegrations = getDefaultIntegrations(options);
-  }
+  // Framework SDKs only set `defaultIntegrations` when it is undefined, so
+  // we adapt their defaults through `integrations` instead.
+  options.integrations = wrapIntegrations(options);
 
   if (options.stackParser === undefined) {
     options.stackParser = electronRendererStackParser;
