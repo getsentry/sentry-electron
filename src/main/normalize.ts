@@ -200,10 +200,7 @@ function normalizeStandaloneSpan(options: ElectronMainOptionsInternal, span: Spa
     span.description = normalizeUrlToBase(span.description, basePath);
   }
 
-  const data = span.data;
-  if (!data) {
-    return;
-  }
+  const data = (span.data = span.data || {});
 
   for (const key of ['transaction', 'sentry.segment.name', 'url.full']) {
     const value = data[key];
@@ -213,11 +210,11 @@ function normalizeStandaloneSpan(options: ElectronMainOptionsInternal, span: Spa
   }
 
   // The main process options own the release and environment
-  if ('release' in data && options.release) {
+  if (options.release) {
     data.release = options.release;
   }
 
-  if ('environment' in data && options.environment) {
+  if (options.environment) {
     data.environment = options.environment;
   }
 }
