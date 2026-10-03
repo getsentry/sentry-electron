@@ -295,6 +295,9 @@ function handleEnvelope(
 
     const spans = spanContainerFromEnvelope(envelope);
     if (spans) {
+      // A v1 standalone span has the same item type but no `items`
+      const isContainer = Array.isArray(spans.items);
+
       const [normalizedSpanEnvelope, segmentOrigin] = normalizeSpanStreamingEnvelope(
         options,
         envelope,
@@ -308,7 +311,7 @@ function handleEnvelope(
       // We buffer streamed span envelopes until the pageload segment arrives and then hand all
       // spans from its trace to the integration so they can be merged into the startup span.
       // Buffered spans from other traces are forwarded unmodified once the wait ends.
-      if (bufferedSpanEnvelopes) {
+      if (bufferedSpanEnvelopes && isContainer) {
         bufferedSpanEnvelopes.push(normalizedSpanEnvelope);
 
         if (segmentOrigin === 'auto.pageload.browser' && ipcMainHooks.listenerCount('pageload-spans') > 0) {
