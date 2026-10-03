@@ -213,11 +213,11 @@ function normalizeStandaloneSpan(options: ElectronMainOptionsInternal, span: Spa
   }
 
   // The main process options own the release and environment
-  if ('release' in data) {
+  if ('release' in data && options.release) {
     data.release = options.release;
   }
 
-  if ('environment' in data) {
+  if ('environment' in data && options.environment) {
     data.environment = options.environment;
   }
 }
