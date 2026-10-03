@@ -5,6 +5,7 @@ import type {
   ProfileChunk,
   ReplayEvent,
   SerializedStreamedSpanContainer,
+  SpanJSON,
 } from '@sentry/core';
 import {
   addItemToEnvelope,
@@ -193,6 +194,34 @@ export function normalizeProfileChunkEnvelope(
   return isProfileChunk ? modifiedEnvelope : envelope;
 }
 
+/** Normalizes a v1 standalone span, which is not in a span container */
+function normalizeStandaloneSpan(options: ElectronMainOptionsInternal, span: SpanJSON, basePath: string): void {
+  if (span.description) {
+    span.description = normalizeUrlToBase(span.description, basePath);
+  }
+
+  const data = span.data;
+  if (!data) {
+    return;
+  }
+
+  for (const key of ['transaction', 'sentry.segment.name', 'url.full']) {
+    const value = data[key];
+    if (typeof value === 'string') {
+      data[key] = normalizeUrlToBase(value, basePath);
+    }
+  }
+
+  // The main process options own the release and environment
+  if ('release' in data) {
+    data.release = options.release;
+  }
+
+  if ('environment' in data) {
+    data.environment = options.environment;
+  }
+}
+
 /**
  * Normalizes span envelope items and returns the modified envelope
  */
@@ -215,17 +244,11 @@ export function normalizeSpanStreamingEnvelope(
   forEachEnvelopeItem(envelope, (item, type) => {
     if (type === 'span') {
       isSpanContainer = true;
-      const [headers, spanContainer] = item as [
-        {
-          type: 'span';
-          item_count: number;
-          content_type: 'application/vnd.sentry.items.span.v2+json';
-        },
-        SerializedStreamedSpanContainer,
-      ];
+      const spanContainer = item[1] as unknown as SerializedStreamedSpanContainer | SpanJSON;
 
-      // Normalize paths in span container frames
-      if (spanContainer?.items) {
+      if (!('items' in spanContainer)) {
+        normalizeStandaloneSpan(options, spanContainer, basePath);
+      } else if (spanContainer.items) {
         for (const span of spanContainer.items) {
           span.name = normalizeUrlToBase(span.name, basePath);
 
@@ -256,7 +279,7 @@ export function normalizeSpanStreamingEnvelope(
         }
       }
 
-      modifiedEnvelope = addItemToEnvelope(modifiedEnvelope, [headers, spanContainer]);
+      modifiedEnvelope = addItemToEnvelope(modifiedEnvelope, item);
     }
   });
 
