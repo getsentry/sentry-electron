@@ -74,7 +74,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, windows-2022, macos-latest]
+        os: [ubuntu-24.04, windows-2022, macos-latest]
         electron: ${{ fromJson(needs.build.outputs.matrix) }}
         shard: [1, 2, 3, 4]
     env:
@@ -89,6 +89,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ github.sha }}
+      # systemd-coredump keeps a crashed process alive until it has the
+      # whole core. This makes the native crash tests time out.
+      - name: Disable core dumps
+        if: runner.os == 'Linux'
+        run: sudo sysctl -w kernel.core_pattern=core
       - name: Run E2E Tests
         timeout-minutes: 10
         run: yarn e2e --shard=${{ matrix.shard }}/4
