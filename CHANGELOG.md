@@ -1,5 +1,25 @@
 # Changelog
 
+## 8.1.0
+
+### New Features ✨
+
+- Update Sentry SDKs to v11.4.0 by @github-actions in [#1446](https://github.com/getsentry/sentry-electron/pull/1446)
+
+### Bug Fixes 🐛
+
+- Handle v1 standalone span envelopes from renderers by @timfish in [#1450](https://github.com/getsentry/sentry-electron/pull/1450)
+- Keep framework SDK default integrations in renderer init by @timfish in [#1452](https://github.com/getsentry/sentry-electron/pull/1452)
+
+### Documentation 📚
+
+- Rename CLAUDE.md to AGENTS.md and update e2e guidance by @timfish in [#1453](https://github.com/getsentry/sentry-electron/pull/1453)
+
+### Internal Changes 🔧
+
+- Upgrade ubuntu 20.04/22.04 runners to 24.04 by @joshuarli in [#1449](https://github.com/getsentry/sentry-electron/pull/1449)
+- New Electron versions by @github-actions in [#1444](https://github.com/getsentry/sentry-electron/pull/1444)
+
 ## 8.0.0
 
 ### Breaking Changes 🛠
