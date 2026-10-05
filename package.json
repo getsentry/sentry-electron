@@ -82,7 +82,8 @@
   "license": "MIT",
   "types": "./index.d.ts",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "tag": "v7"
   },
   "scripts": {
     "set-version": "node scripts/update-version.js",
