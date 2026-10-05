@@ -79,6 +79,8 @@ export {
   graphqlIntegration,
   groqIntegration,
   hapiIntegration,
+  honoIntegration,
+  honoMiddleware,
   httpHeadersToSpanAttributes,
   httpIntegration,
   httpServerIntegration,
