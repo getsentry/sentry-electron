@@ -1,5 +1,17 @@
 # Changelog
 
+## 7.20.1
+
+### Bug Fixes 🐛
+
+- Handle v1 standalone span envelopes from renderers (v7) by @timfish in [#1451](https://github.com/getsentry/sentry-electron/pull/1451)
+- Keep framework SDK default integrations in renderer init (v7) by @timfish in [#1454](https://github.com/getsentry/sentry-electron/pull/1454)
+
+### Internal Changes 🔧
+
+- Change the publish tag by @timfish in [#1455](https://github.com/getsentry/sentry-electron/pull/1455)
+- New Electron versions by @github-actions in [#1434](https://github.com/getsentry/sentry-electron/pull/1434)
+
 ## 7.20.0
 
 ### New Features ✨
