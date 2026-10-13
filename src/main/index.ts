@@ -117,6 +117,7 @@ export {
   mysql2Integration,
   mysqlIntegration,
   nativeNodeFetchIntegration,
+  neonIntegration,
   NodeClient,
   nodeContextIntegration,
   nodeRuntimeMetricsIntegration,
