@@ -1,5 +1,24 @@
 # Changelog
 
+## 8.2.0
+
+### New Features ✨
+
+- Update JavaScript SDKs to v11.7.0 by @sentry-junior in [#1464](https://github.com/getsentry/sentry-electron/pull/1464)
+- Update JavaScript SDKs to v11.6.0 by @sentry-junior in [#1462](https://github.com/getsentry/sentry-electron/pull/1462)
+- Update JavaScript SDKs to v11.5.0 by @sentry-junior in [#1457](https://github.com/getsentry/sentry-electron/pull/1457)
+
+### Internal Changes 🔧
+
+#### Deps
+
+- Bump shell-quote from 1.10.0 to 1.12.0 by @dependabot in [#1458](https://github.com/getsentry/sentry-electron/pull/1458)
+- Bump source-map-js from 1.2.1 to 1.2.2 by @dependabot in [#1459](https://github.com/getsentry/sentry-electron/pull/1459)
+
+#### Other
+
+- New Electron versions by @github-actions in [#1456](https://github.com/getsentry/sentry-electron/pull/1456)
+
 ## 8.1.0
 
 ### New Features ✨
