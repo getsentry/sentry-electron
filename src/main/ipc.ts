@@ -50,29 +50,57 @@ export const ipcMainHooks = new EventEmitter<IpcMainEvents>();
 let KNOWN_RENDERERS: Set<number> | undefined;
 let WINDOW_ID_TO_WEB_CONTENTS: Map<string, number> | undefined;
 
-function newProtocolRenderer(): void {
+/**
+ * Finds the webContents that sent a protocol `start` request and maps its
+ * window id to it.
+ *
+ * Every page load creates a new window id in the renderer, so a reload
+ * reaches here with an id that no webContents maps to yet. The lookup
+ * probes every webContents, including ones already mapped, so the stale
+ * mapping of a reloaded renderer is replaced.
+ */
+function newProtocolRenderer(startWindowId: string | undefined): void {
   KNOWN_RENDERERS = KNOWN_RENDERERS || new Set();
   WINDOW_ID_TO_WEB_CONTENTS = WINDOW_ID_TO_WEB_CONTENTS || new Map();
 
+  if (startWindowId && WINDOW_ID_TO_WEB_CONTENTS.has(startWindowId)) {
+    return;
+  }
+
   for (const wc of webContents.getAllWebContents()) {
     const wcId = wc.id;
-    if (KNOWN_RENDERERS.has(wcId)) {
+
+    if (wc.isDestroyed()) {
       continue;
     }
 
-    if (!wc.isDestroyed()) {
-      wc.executeJavaScript('window.__SENTRY_RENDERER_ID__').then((windowId: string | undefined) => {
-        if (windowId && KNOWN_RENDERERS && WINDOW_ID_TO_WEB_CONTENTS) {
-          KNOWN_RENDERERS.add(wcId);
-          WINDOW_ID_TO_WEB_CONTENTS.set(windowId, wcId);
+    wc.executeJavaScript('window.__SENTRY_RENDERER_ID__').then((windowId: string | undefined) => {
+      if (!windowId || !KNOWN_RENDERERS || !WINDOW_ID_TO_WEB_CONTENTS) {
+        return;
+      }
 
-          wc.once('destroyed', () => {
-            KNOWN_RENDERERS?.delete(wcId);
-            WINDOW_ID_TO_WEB_CONTENTS?.delete(windowId);
-          });
+      for (const [previousWindowId, previousWcId] of WINDOW_ID_TO_WEB_CONTENTS) {
+        if (previousWcId === wcId && previousWindowId !== windowId) {
+          WINDOW_ID_TO_WEB_CONTENTS.delete(previousWindowId);
         }
-      }, debug.error);
-    }
+      }
+
+      WINDOW_ID_TO_WEB_CONTENTS.set(windowId, wcId);
+
+      if (!KNOWN_RENDERERS.has(wcId)) {
+        KNOWN_RENDERERS.add(wcId);
+
+        wc.once('destroyed', () => {
+          KNOWN_RENDERERS?.delete(wcId);
+
+          for (const [mappedWindowId, mappedWcId] of WINDOW_ID_TO_WEB_CONTENTS || []) {
+            if (mappedWcId === wcId) {
+              WINDOW_ID_TO_WEB_CONTENTS?.delete(mappedWindowId);
+            }
+          }
+        });
+      }
+    }, debug.error);
   }
 }
 
@@ -529,7 +557,7 @@ function configureProtocol(client: Client, ipcUtil: IpcUtils, options: ElectronM
 
           const data = request.body;
           if (ipcUtil.urlMatches(request.url, 'start')) {
-            newProtocolRenderer();
+            newProtocolRenderer(request.windowId);
           } else if (ipcUtil.urlMatches(request.url, 'scope') && data) {
             handleScope(options, data.toString());
           } else if (ipcUtil.urlMatches(request.url, 'envelope') && data) {
