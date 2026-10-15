@@ -228,6 +228,7 @@ export const rendererEventLoopBlockIntegration: (options?: Options) => RendererE
 
       const disable = (): void => watchdog.enabled(false);
       const enable = (): void => watchdog.enabled(true);
+      const suspend = (): void => watchdog.suspend();
 
       // A destroyed webContents never polls again, so the watchdog must
       // stop too or it reports a block that never happened
@@ -238,7 +239,7 @@ export const rendererEventLoopBlockIntegration: (options?: Options) => RendererE
         if (!contents.isDestroyed()) {
           contents.off('blur', disable);
           contents.off('focus', enable);
-          contents.off('render-process-gone', disable);
+          contents.off('render-process-gone', suspend);
         }
 
         powerMonitor.off('suspend', disable);
@@ -250,9 +251,11 @@ export const rendererEventLoopBlockIntegration: (options?: Options) => RendererE
       contents.on('blur', disable);
       contents.on('focus', enable);
       // A crashed renderer stops polling until it is reloaded. The
-      // reloaded page sends its visibility, which enables the watchdog
-      // again, so the watchdog and the debugger session are kept.
-      contents.on('render-process-gone', disable);
+      // watchdog is held until the first message from the reloaded page
+      // rather than disabled, because in protocol mode that page's
+      // visibility status can be dropped while its new id is still being
+      // mapped. The watchdog and the debugger session are kept.
+      contents.on('render-process-gone', suspend);
       contents.once('destroyed', teardown);
       powerMonitor.on('suspend', disable);
       powerMonitor.on('resume', enable);

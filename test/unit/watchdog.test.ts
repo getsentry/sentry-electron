@@ -72,6 +72,22 @@ describe('createWatchdog', () => {
     watchdog.stop();
   });
 
+  test('does not fire while suspended and resumes on the next poll', () => {
+    const callback = vi.fn();
+    const watchdog = createWatchdog(createFakeTimer, POLL_INTERVAL, THRESHOLD, callback);
+
+    watchdog.suspend();
+    vi.advanceTimersByTime(POLL_INTERVAL + THRESHOLD + 40);
+    expect(callback).not.toHaveBeenCalled();
+
+    watchdog.poll();
+    vi.advanceTimersByTime(40);
+    vi.advanceTimersByTime(POLL_INTERVAL + THRESHOLD + 40);
+    expect(callback).toHaveBeenCalledTimes(1);
+
+    watchdog.stop();
+  });
+
   test('never fires after stop', () => {
     const callback = vi.fn();
     const watchdog = createWatchdog(createFakeTimer, POLL_INTERVAL, THRESHOLD, callback);

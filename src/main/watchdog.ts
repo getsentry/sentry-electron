@@ -8,6 +8,8 @@ export interface Watchdog {
   poll: () => void;
   /** Turns the callback on or off. Polling continues either way. */
   enabled: (state: boolean) => void;
+  /** Holds the callback until the next `poll()`. `enabled` is kept. */
+  suspend: () => void;
   /** Stops the watchdog. It cannot be restarted. */
   stop: () => void;
 }
@@ -25,13 +27,14 @@ export function createWatchdog(
   const timer = createTimer();
   let triggered = false;
   let enabled = true;
+  let suspended = false;
 
   const interval = setInterval(() => {
     const diffMs = timer.getTimeMs();
 
     if (!triggered && diffMs > pollInterval + anrThreshold) {
       triggered = true;
-      if (enabled) {
+      if (enabled && !suspended) {
         callback();
       }
     }
@@ -41,16 +44,16 @@ export function createWatchdog(
     }
   }, 20);
 
-  // Not unref'd on purpose. In the Electron main process libuv only runs
-  // timers while a referenced handle exists, so an unref'd interval can
-  // stall when the app is otherwise idle.
-
   return {
     poll: () => {
+      suspended = false;
       timer.reset();
     },
     enabled: (state: boolean) => {
       enabled = state;
+    },
+    suspend: () => {
+      suspended = true;
     },
     stop: () => {
       clearInterval(interval);
