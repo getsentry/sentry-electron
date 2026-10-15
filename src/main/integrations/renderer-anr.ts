@@ -251,10 +251,10 @@ export const rendererEventLoopBlockIntegration: (options?: Options) => RendererE
       contents.on('blur', disable);
       contents.on('focus', enable);
       // A crashed renderer stops polling until it is reloaded. The
-      // watchdog is held until the first message from the reloaded page
-      // rather than disabled, because in protocol mode that page's
-      // visibility status can be dropped while its new id is still being
-      // mapped. The watchdog and the debugger session are kept.
+      // watchdog is held until the reloaded page polls rather than
+      // disabled, because in protocol mode that page's visibility status
+      // can be dropped while its new id is still being mapped. The
+      // watchdog and the debugger session are kept.
       contents.on('render-process-gone', suspend);
       contents.once('destroyed', teardown);
       powerMonitor.on('suspend', disable);

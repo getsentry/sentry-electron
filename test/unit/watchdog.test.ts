@@ -72,7 +72,7 @@ describe('createWatchdog', () => {
     watchdog.stop();
   });
 
-  test('does not fire while suspended and resumes on the next poll', () => {
+  test('does not fire while suspended, and one stale poll does not lift the hold', () => {
     const callback = vi.fn();
     const watchdog = createWatchdog(createFakeTimer, POLL_INTERVAL, THRESHOLD, callback);
 
@@ -80,6 +80,24 @@ describe('createWatchdog', () => {
     vi.advanceTimersByTime(POLL_INTERVAL + THRESHOLD + 40);
     expect(callback).not.toHaveBeenCalled();
 
+    // A message from the crashed process that was still in flight
+    watchdog.poll();
+    vi.advanceTimersByTime(40);
+    vi.advanceTimersByTime(POLL_INTERVAL + THRESHOLD + 40);
+    expect(callback).not.toHaveBeenCalled();
+
+    watchdog.stop();
+  });
+
+  test('resumes on the second poll after suspend', () => {
+    const callback = vi.fn();
+    const watchdog = createWatchdog(createFakeTimer, POLL_INTERVAL, THRESHOLD, callback);
+
+    watchdog.suspend();
+    vi.advanceTimersByTime(POLL_INTERVAL + THRESHOLD + 40);
+
+    watchdog.poll();
+    vi.advanceTimersByTime(POLL_INTERVAL);
     watchdog.poll();
     vi.advanceTimersByTime(40);
     vi.advanceTimersByTime(POLL_INTERVAL + THRESHOLD + 40);

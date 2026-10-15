@@ -8,7 +8,11 @@ export interface Watchdog {
   poll: () => void;
   /** Turns the callback on or off. Polling continues either way. */
   enabled: (state: boolean) => void;
-  /** Holds the callback until the next `poll()`. `enabled` is kept. */
+  /**
+   * Holds the callback until two more polls arrive. `enabled` is kept.
+   * Two, because one message from a crashed process can still be in
+   * flight when the hold starts.
+   */
   suspend: () => void;
   /** Stops the watchdog. It cannot be restarted. */
   stop: () => void;
@@ -27,14 +31,14 @@ export function createWatchdog(
   const timer = createTimer();
   let triggered = false;
   let enabled = true;
-  let suspended = false;
+  let pollsUntilResume = 0;
 
   const interval = setInterval(() => {
     const diffMs = timer.getTimeMs();
 
     if (!triggered && diffMs > pollInterval + anrThreshold) {
       triggered = true;
-      if (enabled && !suspended) {
+      if (enabled && pollsUntilResume === 0) {
         callback();
       }
     }
@@ -46,14 +50,16 @@ export function createWatchdog(
 
   return {
     poll: () => {
-      suspended = false;
+      if (pollsUntilResume > 0) {
+        pollsUntilResume -= 1;
+      }
       timer.reset();
     },
     enabled: (state: boolean) => {
       enabled = state;
     },
     suspend: () => {
-      suspended = true;
+      pollsUntilResume = 2;
     },
     stop: () => {
       clearInterval(interval);
