@@ -2,7 +2,7 @@ import type { Event, ScopeData } from '@sentry/core';
 import { applyScopeDataToEvent, debug, defineIntegration, makeDsn, uuid4 } from '@sentry/core';
 import type { NodeClient, NodeOptions } from '@sentry/node';
 import { app, crashReporter } from 'electron';
-import { addScopeListener, getScopeData } from '../../common/scope.js';
+import { getScopeData, onScopeChange } from '../../common/scope.js';
 import { EVENT_DEFAULTS_TTL_MS, getEventDefaults, getSdkInfo } from '../context.js';
 import { CRASH_REASONS } from '../electron-normalize.js';
 import { mergeEvents } from '../merge.js';
@@ -163,14 +163,13 @@ export const electronMinidumpIntegration = defineIntegration(() => {
 
   function setupScopeListener(client: NodeClient): void {
     const update = createScopeSaver<ScopeData, Event>(
+      getScopeData,
       () => getEventDefaults(client),
       (scope, defaults) => updateExtraParams(client, scope, defaults),
       EVENT_DEFAULTS_TTL_MS,
     );
 
-    addScopeListener((scope) => {
-      update(scope);
-    });
+    onScopeChange(update);
   }
 
   return {
