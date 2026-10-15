@@ -22,7 +22,7 @@ import {
   setNodeAsyncContextStrategy,
 } from '@sentry/node';
 import type { Session, WebContents } from 'electron';
-import { session } from 'electron';
+import { app, session } from 'electron';
 import { IPCMode } from '../common/ipc.js';
 import { getDefaultEnvironment, getDefaultReleaseName, getSdkInfo } from './context.js';
 import { additionalContextIntegration } from './integrations/additional-context.js';
@@ -41,6 +41,7 @@ import { screenshotsIntegration } from './integrations/screenshots.js';
 import { sentryMinidumpIntegration } from './integrations/sentry-minidump/index.js';
 import { configureIPC } from './ipc.js';
 import { getOsDeviceLogAttributes } from './log.js';
+import { limitContextLinesForRendererEvents } from './renderer-event.js';
 import { defaultStackParser } from './stack-parse.js';
 import type { ElectronOfflineTransportOptions } from './transports/electron-offline-net.js';
 import { makeElectronOfflineTransport } from './transports/electron-offline-net.js';
@@ -198,6 +199,7 @@ export function init(userOptions: ElectronMainOptions): void {
   }
 
   removeRedundantIntegrations(options);
+  options.integrations = options.integrations.map((i) => limitContextLinesForRendererEvents(i, () => app.getAppPath()));
   configureUtilityProcessIPC();
 
   setNodeAsyncContextStrategy();
