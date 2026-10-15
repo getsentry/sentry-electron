@@ -89,6 +89,22 @@ describe('createWatchdog', () => {
     watchdog.stop();
   });
 
+  test('resume lifts the hold at once', () => {
+    const callback = vi.fn();
+    const watchdog = createWatchdog(createFakeTimer, POLL_INTERVAL, THRESHOLD, callback);
+
+    watchdog.suspend();
+    vi.advanceTimersByTime(POLL_INTERVAL + THRESHOLD + 40);
+
+    watchdog.poll();
+    watchdog.resume();
+    vi.advanceTimersByTime(40);
+    vi.advanceTimersByTime(POLL_INTERVAL + THRESHOLD + 40);
+    expect(callback).toHaveBeenCalledTimes(1);
+
+    watchdog.stop();
+  });
+
   test('resumes on the second poll after suspend', () => {
     const callback = vi.fn();
     const watchdog = createWatchdog(createFakeTimer, POLL_INTERVAL, THRESHOLD, callback);

@@ -9,11 +9,13 @@ export interface Watchdog {
   /** Turns the callback on or off. Polling continues either way. */
   enabled: (state: boolean) => void;
   /**
-   * Holds the callback until two more polls arrive. `enabled` is kept.
-   * Two, because one message from a crashed process can still be in
-   * flight when the hold starts.
+   * Holds the callback until `resume()` or until two more polls arrive.
+   * `enabled` is kept. Two polls, because one message from a crashed
+   * process can still be in flight when the hold starts.
    */
   suspend: () => void;
+  /** Lifts a hold at once */
+  resume: () => void;
   /** Stops the watchdog. It cannot be restarted. */
   stop: () => void;
 }
@@ -60,6 +62,9 @@ export function createWatchdog(
     },
     suspend: () => {
       pollsUntilResume = 2;
+    },
+    resume: () => {
+      pollsUntilResume = 0;
     },
     stop: () => {
       clearInterval(interval);
