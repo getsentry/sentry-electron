@@ -33,6 +33,12 @@ export function getDefaultEnvironment(): string {
 }
 
 /**
+ * How long scope saves may reuse the event defaults. Building them runs
+ * every event processor and some are slow, such as `app.getAppMetrics()`.
+ */
+export const EVENT_DEFAULTS_TTL_MS = 5_000;
+
+/**
  * Gets the default event data by calling all event processors.
  */
 export async function getEventDefaults(client: NodeClient): Promise<Event> {
