@@ -59,15 +59,17 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
   }
 
   function setupScopeListener(client: NodeClient): void {
-    const save = createScopeSaver<ScopeData, Event>(
+    const saver = createScopeSaver<ScopeData, Event>(
       getScopeData,
       () => getEventDefaults(client),
       (scope, event) => scopeStore?.set({ scope, event }),
       EVENT_DEFAULTS_TTL_MS,
     );
 
-    onScopeChange(save);
-    save();
+    onScopeChange(saver.save);
+    // Screen and GPU context only exist once the app is ready
+    void app.whenReady().then(saver.refresh);
+    saver.save();
   }
 
   async function sendNativeCrashes(
