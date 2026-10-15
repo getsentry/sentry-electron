@@ -1,7 +1,7 @@
 import type { Event, Integration } from '@sentry/core';
 import { isAbsolute, relative, resolve } from 'path';
 
-const RENDERER_EVENT_KEY = '__sentry_electron_renderer_event__';
+const RENDERER_EVENT_KEY = Symbol('sentry-electron-renderer-event');
 
 /** Marks the event as sent from a renderer process */
 export function markRendererEvent(event: Event): void {
@@ -10,7 +10,7 @@ export function markRendererEvent(event: Event): void {
 
 /** Was the event sent from a renderer process */
 export function isRendererEvent(event: Event): boolean {
-  return event.sdkProcessingMetadata?.[RENDERER_EVENT_KEY] === true;
+  return (event.sdkProcessingMetadata as Record<symbol, unknown> | undefined)?.[RENDERER_EVENT_KEY] === true;
 }
 
 function isPathInDirectory(path: string | undefined, directory: string): boolean {

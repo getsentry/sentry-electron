@@ -44,6 +44,7 @@ describe('limitContextLinesForRendererEvents', () => {
 
     const result = await wrapped.processEvent?.(event, {}, {} as never);
 
+    expect(wrapped).not.toBe(integration);
     expect(result).toBe(event);
     expect(frames(event).map((frame) => frame.context_line)).toEqual(['context', undefined, undefined, undefined]);
   });
