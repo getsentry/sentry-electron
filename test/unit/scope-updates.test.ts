@@ -92,6 +92,29 @@ describe('createScopeSaver', () => {
     expect(getDefaults).toHaveBeenCalledTimes(1);
   });
 
+  test('a slow older run does not write over a newer save', async () => {
+    let resolveFirst: (value: string) => void = () => undefined;
+    const getDefaults = vi
+      .fn<() => Promise<string>>()
+      .mockImplementationOnce(() => new Promise((resolve) => (resolveFirst = resolve)))
+      .mockResolvedValue('second');
+    const save = vi.fn();
+    const update = createScopeSaver<number, string>(getDefaults, save, TTL);
+
+    update(1);
+    await vi.advanceTimersByTimeAsync(TTL);
+    expect(save).not.toHaveBeenCalled();
+
+    update(2);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenCalledWith(2, 'second');
+
+    resolveFirst('first');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(save).toHaveBeenCalledTimes(1);
+  });
+
   test('does not cache rejected defaults', async () => {
     const getDefaults = vi.fn().mockRejectedValueOnce(new Error('nope')).mockResolvedValue('defaults');
     const save = vi.fn();
