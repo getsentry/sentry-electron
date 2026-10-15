@@ -4,9 +4,10 @@ import type { NodeClient } from '@sentry/node';
 import { chromeStackLineParser } from '@sentry/browser';
 import { app, crashReporter } from 'electron';
 import { addScopeListener, getScopeData } from '../../../common/scope.js';
-import { getEventDefaults } from '../../context.js';
+import { EVENT_DEFAULTS_TTL_MS, getEventDefaults } from '../../context.js';
 import { EXIT_REASONS, getSentryCachePath } from '../../electron-normalize.js';
 import { getRendererProperties, trackRendererProperties } from '../../renderers.js';
+import { createScopeSaver } from '../../scope-updates.js';
 import type { ElectronMainOptions } from '../../sdk.js';
 import { previousSessionWasAbnormal, restorePreviousSession, setPreviousSessionAsCurrent } from '../../sessions.js';
 import { BufferedWriteStore } from '../../store.js';
@@ -58,22 +59,17 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
   }
 
   function setupScopeListener(client: NodeClient): void {
-    function scopeChanged(scope: ScopeData): void {
-      // Since the initial scope read is async, we need to ensure that any writes do not beat that
-      // https://github.com/getsentry/sentry-electron/issues/585
-      setImmediate(async () =>
-        scopeStore?.set({
-          scope,
-          event: await getEventDefaults(client),
-        }),
-      );
-    }
+    const save = createScopeSaver<ScopeData, Event>(
+      () => getEventDefaults(client),
+      (scope, event) => scopeStore?.set({ scope, event }),
+      EVENT_DEFAULTS_TTL_MS,
+    );
 
     addScopeListener((scope) => {
-      scopeChanged(scope);
+      save(scope);
     });
 
-    scopeChanged(getScopeData());
+    save(getScopeData());
   }
 
   async function sendNativeCrashes(
