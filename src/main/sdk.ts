@@ -40,6 +40,7 @@ import { screenshotsIntegration } from './integrations/screenshots.js';
 import { sentryMinidumpIntegration } from './integrations/sentry-minidump/index.js';
 import { configureIPC } from './ipc.js';
 import { getOsDeviceLogAttributes } from './log.js';
+import { skipContextLinesForRendererEvents } from './renderer-event.js';
 import { defaultStackParser } from './stack-parse.js';
 import type { ElectronOfflineTransportOptions } from './transports/electron-offline-net.js';
 import { makeElectronOfflineTransport } from './transports/electron-offline-net.js';
@@ -191,6 +192,7 @@ export function init(userOptions: ElectronMainOptions): void {
   }
 
   removeRedundantIntegrations(options);
+  options.integrations = options.integrations.map(skipContextLinesForRendererEvents);
   configureUtilityProcessIPC();
 
   const scope = getCurrentScope();

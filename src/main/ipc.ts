@@ -37,6 +37,7 @@ import { rendererProfileFromIpc } from './integrations/renderer-profiling.js';
 import { getOsDeviceLogAttributes } from './log.js';
 import { mergeEvents } from './merge.js';
 import { normalizeProfileChunkEnvelope, normalizeReplayEnvelope, normalizeSpanStreamingEnvelope } from './normalize.js';
+import { markRendererEvent } from './renderer-event.js';
 import type { ElectronMainOptionsInternal } from './sdk.js';
 import { SDK_VERSION } from './version.js';
 
@@ -106,6 +107,8 @@ function prepareRendererEvent(
   if (dynamicSamplingContext) {
     event.sdkProcessingMetadata = { ...event.sdkProcessingMetadata, dynamicSamplingContext };
   }
+
+  markRendererEvent(event);
 
   return mergeEvents(event, { tags: { 'event.process': process } });
 }
