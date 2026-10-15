@@ -1,4 +1,5 @@
 import type { Event, Integration } from '@sentry/core';
+import { isAbsolute, relative, resolve } from 'path';
 
 const RENDERER_EVENT_KEY = '__sentry_electron_renderer_event__';
 
@@ -12,11 +13,20 @@ export function isRendererEvent(event: Event): boolean {
   return event.sdkProcessingMetadata?.[RENDERER_EVENT_KEY] === true;
 }
 
+function isPathInDirectory(path: string | undefined, directory: string): boolean {
+  if (!path || !isAbsolute(path)) {
+    return false;
+  }
+
+  const rel = relative(resolve(directory), resolve(path));
+  return !!rel && !rel.startsWith('..') && !isAbsolute(rel);
+}
+
 /**
- * Renderer stack frames are URLs from the renderer, not paths in the main
- * process filesystem, so main process context lines do not apply to them.
+ * Renderer stack frames can only get main process context lines from files
+ * in the app directory, such as preload scripts.
  */
-export function skipContextLinesForRendererEvents(integration: Integration): Integration {
+export function limitContextLinesForRendererEvents(integration: Integration, getAppPath: () => string): Integration {
   const processEvent = integration.processEvent?.bind(integration);
 
   if (integration.name !== 'ContextLines' || !processEvent) {
@@ -25,6 +35,25 @@ export function skipContextLinesForRendererEvents(integration: Integration): Int
 
   return {
     ...integration,
-    processEvent: (event, hint, client) => (isRendererEvent(event) ? event : processEvent(event, hint, client)),
+    processEvent: async (event, hint, client) => {
+      if (!isRendererEvent(event)) {
+        return processEvent(event, hint, client);
+      }
+
+      const appPath = getAppPath();
+      // ContextLines adds context to the frame objects so the frames in the
+      // original event get it too
+      const values = (event.exception?.values || []).map((exception) => ({
+        ...exception,
+        stacktrace: exception.stacktrace && {
+          ...exception.stacktrace,
+          frames: exception.stacktrace.frames?.filter((frame) => isPathInDirectory(frame.filename, appPath)),
+        },
+      }));
+
+      await processEvent({ ...event, exception: { values } }, hint, client);
+
+      return event;
+    },
   };
 }
