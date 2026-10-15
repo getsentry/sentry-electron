@@ -4,25 +4,33 @@ import { createScopeSaver } from '../../src/main/scope-updates';
 const TTL = 1000;
 
 describe('createScopeSaver', () => {
+  let scope = 0;
+  const getScope = vi.fn(() => scope);
+
   beforeEach(() => {
     vi.useFakeTimers();
+    scope = 0;
+    getScope.mockClear();
   });
 
   afterEach(() => {
     vi.useRealTimers();
   });
 
-  test('merges synchronous scope changes into one save with the last scope', async () => {
+  test('merges synchronous changes into one save and reads the scope once', async () => {
     const getDefaults = vi.fn().mockResolvedValue('defaults');
     const save = vi.fn();
-    const update = createScopeSaver<number, string>(getDefaults, save, TTL);
+    const update = createScopeSaver<number, string>(getScope, getDefaults, save, TTL);
 
     for (let i = 0; i < 1000; i++) {
-      update(i);
+      scope = i;
+      update();
     }
 
+    expect(getScope).not.toHaveBeenCalled();
     expect(save).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(0);
+    expect(getScope).toHaveBeenCalledTimes(1);
     expect(getDefaults).toHaveBeenCalledTimes(1);
     expect(save).toHaveBeenCalledTimes(1);
     expect(save).toHaveBeenCalledWith(999, 'defaults');
@@ -31,10 +39,11 @@ describe('createScopeSaver', () => {
   test('saves on each turn but builds the defaults once within the ttl', async () => {
     const getDefaults = vi.fn().mockResolvedValue('defaults');
     const save = vi.fn();
-    const update = createScopeSaver<number, string>(getDefaults, save, TTL);
+    const update = createScopeSaver<number, string>(getScope, getDefaults, save, TTL);
 
     for (let i = 0; i < 10; i++) {
-      update(i);
+      scope = i;
+      update();
       await vi.advanceTimersByTimeAsync(10);
     }
 
@@ -46,11 +55,13 @@ describe('createScopeSaver', () => {
   test('rebuilds the defaults when a save finds them expired', async () => {
     const getDefaults = vi.fn().mockResolvedValueOnce('first').mockResolvedValueOnce('second');
     const save = vi.fn();
-    const update = createScopeSaver<number, string>(getDefaults, save, TTL);
+    const update = createScopeSaver<number, string>(getScope, getDefaults, save, TTL);
 
-    update(1);
+    scope = 1;
+    update();
     await vi.advanceTimersByTimeAsync(TTL);
-    update(2);
+    scope = 2;
+    update();
     await vi.advanceTimersByTimeAsync(0);
 
     expect(save).toHaveBeenNthCalledWith(1, 1, 'first');
@@ -60,12 +71,15 @@ describe('createScopeSaver', () => {
   test('saves once more with fresh defaults after the ttl when cached defaults were used', async () => {
     const getDefaults = vi.fn().mockResolvedValueOnce('first').mockResolvedValueOnce('second');
     const save = vi.fn();
-    const update = createScopeSaver<number, string>(getDefaults, save, TTL);
+    const update = createScopeSaver<number, string>(getScope, getDefaults, save, TTL);
 
-    update(1);
+    scope = 1;
+    update();
     await vi.advanceTimersByTimeAsync(100);
-    update(2);
-    update(3);
+    scope = 2;
+    update();
+    scope = 3;
+    update();
     await vi.advanceTimersByTimeAsync(100);
     expect(save).toHaveBeenCalledTimes(2);
     expect(save).toHaveBeenLastCalledWith(3, 'first');
@@ -83,9 +97,10 @@ describe('createScopeSaver', () => {
   test('does not arm a catch-up save when the defaults were just built', async () => {
     const getDefaults = vi.fn().mockResolvedValue('defaults');
     const save = vi.fn();
-    const update = createScopeSaver<number, string>(getDefaults, save, TTL);
+    const update = createScopeSaver<number, string>(getScope, getDefaults, save, TTL);
 
-    update(1);
+    scope = 1;
+    update();
     await vi.advanceTimersByTimeAsync(TTL * 2);
 
     expect(save).toHaveBeenCalledTimes(1);
@@ -99,13 +114,15 @@ describe('createScopeSaver', () => {
       .mockImplementationOnce(() => new Promise((resolve) => (resolveFirst = resolve)))
       .mockResolvedValue('second');
     const save = vi.fn();
-    const update = createScopeSaver<number, string>(getDefaults, save, TTL);
+    const update = createScopeSaver<number, string>(getScope, getDefaults, save, TTL);
 
-    update(1);
+    scope = 1;
+    update();
     await vi.advanceTimersByTimeAsync(TTL);
     expect(save).not.toHaveBeenCalled();
 
-    update(2);
+    scope = 2;
+    update();
     await vi.advanceTimersByTimeAsync(0);
     expect(save).toHaveBeenCalledTimes(1);
     expect(save).toHaveBeenCalledWith(2, 'second');
@@ -118,13 +135,15 @@ describe('createScopeSaver', () => {
   test('does not cache rejected defaults', async () => {
     const getDefaults = vi.fn().mockRejectedValueOnce(new Error('nope')).mockResolvedValue('defaults');
     const save = vi.fn();
-    const update = createScopeSaver<number, string>(getDefaults, save, TTL);
+    const update = createScopeSaver<number, string>(getScope, getDefaults, save, TTL);
 
-    update(1);
+    scope = 1;
+    update();
     await vi.advanceTimersByTimeAsync(0);
     expect(save).not.toHaveBeenCalled();
 
-    update(2);
+    scope = 2;
+    update();
     await vi.advanceTimersByTimeAsync(0);
     expect(save).toHaveBeenCalledTimes(1);
     expect(save).toHaveBeenCalledWith(2, 'defaults');
@@ -134,11 +153,13 @@ describe('createScopeSaver', () => {
   test('a rejecting save does not break later saves', async () => {
     const getDefaults = vi.fn().mockResolvedValue('defaults');
     const save = vi.fn().mockRejectedValueOnce(new Error('nope')).mockResolvedValue(undefined);
-    const update = createScopeSaver<number, string>(getDefaults, save, TTL);
+    const update = createScopeSaver<number, string>(getScope, getDefaults, save, TTL);
 
-    update(1);
+    scope = 1;
+    update();
     await vi.advanceTimersByTimeAsync(0);
-    update(2);
+    scope = 2;
+    update();
     await vi.advanceTimersByTimeAsync(0);
 
     expect(save).toHaveBeenCalledTimes(2);

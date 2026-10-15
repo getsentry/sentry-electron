@@ -1,21 +1,22 @@
 import { debug } from '@sentry/core';
 
 /**
- * Creates a function that saves the latest scope together with event
- * defaults that are at most `ttlMs` old.
+ * Creates a function that schedules a save of the current scope together
+ * with event defaults that are at most `ttlMs` old.
  *
- * Scope changes in one event loop turn are merged into one save on the
- * next turn. The defaults are rebuilt only when a save finds them
- * expired. A save that used cached defaults arms one timer so the saved
- * data catches up once they expire. This matters because some context,
- * such as screen and GPU details, only exists after the app is ready.
+ * Calls in one event loop turn are merged into one save on the next
+ * turn, and the scope is read once when that save runs. The defaults
+ * are rebuilt only when a save finds them expired. A save that used
+ * cached defaults arms one timer so the saved data catches up once they
+ * expire. This matters because some context, such as screen and GPU
+ * details, only exists after the app is ready.
  */
 export function createScopeSaver<TScope, TDefaults>(
+  getScope: () => TScope,
   getDefaults: () => Promise<TDefaults>,
   save: (scope: TScope, defaults: TDefaults) => void | Promise<void>,
   ttlMs: number,
-): (scope: TScope) => void {
-  let latest: TScope;
+): () => void {
   let scheduled = false;
   let runs = 0;
   let defaults: Promise<TDefaults> | undefined;
@@ -40,7 +41,7 @@ export function createScopeSaver<TScope, TDefaults>(
   async function run(): Promise<void> {
     scheduled = false;
     const thisRun = ++runs;
-    const scope = latest;
+    const scope = getScope();
     const now = Date.now();
 
     if (!defaults || now >= expires) {
@@ -72,8 +73,5 @@ export function createScopeSaver<TScope, TDefaults>(
     await save(scope, resolved);
   }
 
-  return (scope: TScope) => {
-    latest = scope;
-    schedule();
-  };
+  return schedule;
 }

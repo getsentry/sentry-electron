@@ -3,7 +3,7 @@ import { applyScopeDataToEvent, captureEvent, createStackParser, debug, defineIn
 import type { NodeClient } from '@sentry/node';
 import { chromeStackLineParser } from '@sentry/browser';
 import { app, crashReporter } from 'electron';
-import { addScopeListener, getScopeData } from '../../../common/scope.js';
+import { getScopeData, onScopeChange } from '../../../common/scope.js';
 import { EVENT_DEFAULTS_TTL_MS, getEventDefaults } from '../../context.js';
 import { EXIT_REASONS, getSentryCachePath } from '../../electron-normalize.js';
 import { getRendererProperties, trackRendererProperties } from '../../renderers.js';
@@ -60,16 +60,14 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
 
   function setupScopeListener(client: NodeClient): void {
     const save = createScopeSaver<ScopeData, Event>(
+      getScopeData,
       () => getEventDefaults(client),
       (scope, event) => scopeStore?.set({ scope, event }),
       EVENT_DEFAULTS_TTL_MS,
     );
 
-    addScopeListener((scope) => {
-      save(scope);
-    });
-
-    save(getScopeData());
+    onScopeChange(save);
+    save();
   }
 
   async function sendNativeCrashes(
