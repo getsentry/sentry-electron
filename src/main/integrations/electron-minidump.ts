@@ -162,14 +162,16 @@ export const electronMinidumpIntegration = defineIntegration(() => {
   }
 
   function setupScopeListener(client: NodeClient): void {
-    const update = createScopeSaver<ScopeData, Event>(
+    const saver = createScopeSaver<ScopeData, Event>(
       getScopeData,
       () => getEventDefaults(client),
       (scope, defaults) => updateExtraParams(client, scope, defaults),
       EVENT_DEFAULTS_TTL_MS,
     );
 
-    onScopeChange(update);
+    onScopeChange(saver.save);
+    // Screen and GPU context only exist once the app is ready
+    void app.whenReady().then(saver.refresh);
   }
 
   return {
