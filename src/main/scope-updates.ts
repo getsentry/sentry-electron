@@ -17,6 +17,7 @@ export function createScopeSaver<TScope, TDefaults>(
 ): (scope: TScope) => void {
   let latest: TScope;
   let scheduled = false;
+  let runs = 0;
   let defaults: Promise<TDefaults> | undefined;
   let expires = 0;
   let refresh: NodeJS.Timeout | undefined;
@@ -38,6 +39,7 @@ export function createScopeSaver<TScope, TDefaults>(
 
   async function run(): Promise<void> {
     scheduled = false;
+    const thisRun = ++runs;
     const scope = latest;
     const now = Date.now();
 
@@ -59,7 +61,15 @@ export function createScopeSaver<TScope, TDefaults>(
       refresh.unref();
     }
 
-    await save(scope, await defaults);
+    const resolved = await defaults;
+
+    // A newer run holds a newer scope, so a slow older one must not
+    // write over it
+    if (thisRun !== runs) {
+      return;
+    }
+
+    await save(scope, resolved);
   }
 
   return (scope: TScope) => {
