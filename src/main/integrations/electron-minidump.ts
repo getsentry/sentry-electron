@@ -3,10 +3,11 @@ import { applyScopeDataToEvent, debug, defineIntegration, makeDsn, uuid4 } from 
 import type { NodeClient, NodeOptions } from '@sentry/node';
 import { app, crashReporter } from 'electron';
 import { addScopeListener, getScopeData } from '../../common/scope.js';
-import { getEventDefaults, getSdkInfo } from '../context.js';
+import { EVENT_DEFAULTS_TTL_MS, getEventDefaults, getSdkInfo } from '../context.js';
 import { CRASH_REASONS } from '../electron-normalize.js';
 import { mergeEvents } from '../merge.js';
 import { normalizePaths } from '../normalize.js';
+import { createScopeSaver } from '../scope-updates.js';
 import { checkPreviousSession, sessionCrashed, unreportedDuringLastSession } from '../sessions.js';
 
 /** Is object defined and has keys */
@@ -93,14 +94,12 @@ export function minidumpUrlFromDsn(dsn: string): string | undefined {
  * Sends minidumps via the Electron built-in uploader.
  */
 export const electronMinidumpIntegration = defineIntegration(() => {
-  /** Counter used to ensure no race condition when updating extra params */
-  let updateEpoch = 0;
   let lastParamCount = 0;
 
-  async function getNativeUploaderEvent(client: NodeClient, scope: ScopeData): Promise<Event> {
+  function getNativeUploaderEvent(client: NodeClient, scope: ScopeData, defaults: Event): Event {
     const { userInfo: inferIpAddress } = client.getDataCollectionOptions();
 
-    const event = mergeEvents(await getEventDefaults(client), {
+    const event = mergeEvents(defaults, {
       sdk: getSdkInfo(inferIpAddress),
       event_id: uuid4(),
       level: 'fatal',
@@ -116,35 +115,26 @@ export const electronMinidumpIntegration = defineIntegration(() => {
     return normalizePaths(event, app.getAppPath());
   }
 
-  function updateExtraParams(client: NodeClient, scope: ScopeData): void {
-    updateEpoch += 1;
-    const currentEpoch = updateEpoch;
+  function updateExtraParams(client: NodeClient, scope: ScopeData, defaults: Event): void {
+    const event = getNativeUploaderEvent(client, scope, defaults);
 
-    getNativeUploaderEvent(client, scope)
-      .then((event) => {
-        if (currentEpoch !== updateEpoch) {
-          return;
-        }
+    // Update the extra parameters in the main process
+    const mainParams = getNativeUploaderExtraParams(event);
+    const count = Object.keys(mainParams).length;
 
-        // Update the extra parameters in the main process
-        const mainParams = getNativeUploaderExtraParams(event);
-        const count = Object.keys(mainParams).length;
+    // Remove any extra parameters that extend beyond the current count
+    if (lastParamCount > count) {
+      for (let i = count + 1; i <= lastParamCount; i++) {
+        crashReporter.removeExtraParameter(`sentry__${i}`);
+      }
+    }
 
-        // Remove any extra parameters that extend beyond the current count
-        if (lastParamCount > count) {
-          for (let i = count + 1; i <= lastParamCount; i++) {
-            crashReporter.removeExtraParameter(`sentry__${i}`);
-          }
-        }
+    for (const [key, value] of Object.entries(mainParams)) {
+      crashReporter.addExtraParameter(key, value);
+    }
 
-        for (const [key, value] of Object.entries(mainParams)) {
-          crashReporter.addExtraParameter(key, value);
-        }
-
-        // Track how many parameters we added so we can remove extras next time
-        lastParamCount = count;
-      })
-      .catch((error) => debug.error(error));
+    // Track how many parameters we added so we can remove extras next time
+    lastParamCount = count;
   }
 
   function startCrashReporter(options: NodeOptions): void {
@@ -172,8 +162,14 @@ export const electronMinidumpIntegration = defineIntegration(() => {
   }
 
   function setupScopeListener(client: NodeClient): void {
+    const update = createScopeSaver<ScopeData, Event>(
+      () => getEventDefaults(client),
+      (scope, defaults) => updateExtraParams(client, scope, defaults),
+      EVENT_DEFAULTS_TTL_MS,
+    );
+
     addScopeListener((scope) => {
-      updateExtraParams(client, scope);
+      update(scope);
     });
   }
 
