@@ -18,7 +18,9 @@ function log(message: string, ...args: unknown[]): void {
 
 // Upper bound for the scriptId -> url map of one renderer. Each eval
 // parses a new script, so without a bound the map grows for the life
-// of the renderer.
+// of the renderer. Evicting a script that is still on the stack loses
+// its filename in the ANR event, so the cap is generous: 10,000
+// entries is about 1 MB and more scripts than a page normally parses.
 const MAX_TRACKED_SCRIPTS = 10_000;
 
 interface ScriptParsedEventDataType {
