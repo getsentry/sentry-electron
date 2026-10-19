@@ -1,5 +1,15 @@
 # Changelog
 
+## 7.20.2
+
+### Bug Fixes 🐛
+
+#### V7
+
+- Only add main process context lines to renderer frames in the app directory by @timfish in [#1475](https://github.com/getsentry/sentry-electron/pull/1475)
+- Allow removal of `message` listeners on utility processes by @timfish in [#1474](https://github.com/getsentry/sentry-electron/pull/1474)
+- Stop re-running event processors on every main process scope change by @timfish in [#1470](https://github.com/getsentry/sentry-electron/pull/1470)
+
 ## 7.20.1
 
 ### Bug Fixes 🐛
