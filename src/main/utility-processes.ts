@@ -12,6 +12,7 @@ import { captureEvent, getClient } from '@sentry/node';
 import * as electron from 'electron';
 import { eventFromEnvelope } from '../common/envelope.js';
 import { getMagicMessage, isMagicMessage } from '../common/ipc.js';
+import { hideMatchingMessages } from './filter-listeners.js';
 import { applyProcessAttributes, normalizeDynamicSamplingContext } from './ipc.js';
 import { mergeEvents } from './merge.js';
 import { normalizeSpanStreamingEnvelope } from './normalize.js';
@@ -61,28 +62,8 @@ export function configureUtilityProcessIPC(): void {
         }
       });
 
-      // We proxy child.on so we can filter messages from the child SDK and ensure that users do not see them
-      // eslint-disable-next-line typescript/unbound-method
-      child.on = new Proxy(child.on, {
-        apply: (target, thisArg, args: [string, (message: unknown) => unknown]) => {
-          const [event, listener] = args;
-
-          if (event === 'message') {
-            return Reflect.apply(target, thisArg, [
-              event,
-              (msg: unknown) => {
-                if (isMagicMessage(msg)) {
-                  return;
-                }
-
-                return listener(msg);
-              },
-            ]);
-          }
-
-          return Reflect.apply(target, thisArg, args);
-        },
-      });
+      // Users must not see the messages the child SDK sends us
+      hideMatchingMessages(child, 'message', isMagicMessage);
 
       return child;
     },
