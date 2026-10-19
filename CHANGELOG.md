@@ -1,5 +1,22 @@
 # Changelog
 
+## 8.3.0
+
+### New Features ✨
+
+- Update JavaScript SDKs to v11.8.0 by @sentry-junior in [#1471](https://github.com/getsentry/sentry-electron/pull/1471)
+
+### Bug Fixes 🐛
+
+- Stop renderer ANR watchdogs leaking and re-map protocol renderers after reload by @timfish in [#1473](https://github.com/getsentry/sentry-electron/pull/1473)
+- Stop re-running event processors on every main process scope change by @timfish in [#1468](https://github.com/getsentry/sentry-electron/pull/1468)
+- Allow removal of `message` listeners on utility processes by @timfish in [#1472](https://github.com/getsentry/sentry-electron/pull/1472)
+- Only add main process context lines to renderer frames in the app directory by @timfish in [#1469](https://github.com/getsentry/sentry-electron/pull/1469)
+
+### Internal Changes 🔧
+
+- Remove previous auto SDK updates by @timfish in [#1465](https://github.com/getsentry/sentry-electron/pull/1465)
+
 ## 8.2.0
 
 ### New Features ✨
