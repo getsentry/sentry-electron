@@ -8,13 +8,13 @@
   },
   "main": "dist/main.js",
   "devDependencies": {
-    "@sentry/webpack-plugin": "^2.2.0",
-    "html-webpack-plugin": "^5.3.2",
-    "warnings-to-errors-webpack-plugin": "^2.0.1",
-    "webpack": "^5.48.0",
-    "webpack-cli": "^4.7.2"
+    "@sentry/bundler-plugins": "^11.8.0",
+    "html-webpack-plugin": "^5.6.8",
+    "warnings-to-errors-webpack-plugin": "^2.3.0",
+    "webpack": "^5.111.1",
+    "webpack-cli": "^7.2.3"
   },
   "dependencies": {
-    "@sentry/electron": "5.6.0"
+    "@sentry/electron": "^8.3.0"
   }
 }
