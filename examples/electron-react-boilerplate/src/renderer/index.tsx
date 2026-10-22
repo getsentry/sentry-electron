@@ -1,4 +1,4 @@
-import { render } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import App from './App';
 import { init } from '@sentry/electron/renderer';
 import { init as reactInit } from '@sentry/react';
@@ -9,4 +9,4 @@ setTimeout(() => {
   throw new Error('Some renderer error');
 }, 1000);
 
-render(<App />, document.getElementById('root'));
+createRoot(document.getElementById('root')!).render(<App />);

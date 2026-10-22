@@ -10,7 +10,7 @@
  */
 import { app, BrowserWindow } from 'electron';
 import { autoUpdater } from 'electron-updater';
-import log from 'electron-log';
+import log from 'electron-log/main';
 import { resolveHtmlPath } from './util';
 import * as Sentry from '@sentry/electron/main';
 

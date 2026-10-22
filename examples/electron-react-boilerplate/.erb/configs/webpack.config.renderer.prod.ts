@@ -6,7 +6,6 @@ import path from 'path';
 import webpack from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
-import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import { merge } from 'webpack-merge';
 import TerserPlugin from 'terser-webpack-plugin';
@@ -101,10 +100,6 @@ const configuration: webpack.Configuration = {
 
     new MiniCssExtractPlugin({
       filename: 'style.css',
-    }),
-
-    new BundleAnalyzerPlugin({
-      analyzerMode: process.env.ANALYZE === 'true' ? 'server' : 'disabled',
     }),
 
     new HtmlWebpackPlugin({
