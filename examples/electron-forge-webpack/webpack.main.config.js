@@ -1,4 +1,4 @@
-const { sentryWebpackPlugin } = require('@sentry/webpack-plugin');
+const { sentryWebpackPlugin } = require('@sentry/bundler-plugins/webpack');
 
 module.exports = {
   /**

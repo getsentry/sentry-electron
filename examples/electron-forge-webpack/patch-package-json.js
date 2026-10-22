@@ -5,5 +5,5 @@ const { join } = require('path');
 // Forge moves this into the packaged app to test but we're using the raw webpack output
 const path = join(__dirname, 'package.json');
 const pkgJson = JSON.parse(readFileSync(path, 'utf8'));
-pkgJson.main = `.webpack/${process.arch}/main`;
+pkgJson.main = `.webpack/${process.arch}/main/index.cjs`;
 writeFileSync(path, JSON.stringify(pkgJson, null, 2), 'utf8');

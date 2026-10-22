@@ -1,6 +1,6 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 // const WarningsToErrorsPlugin = require('warnings-to-errors-webpack-plugin');
-const { sentryWebpackPlugin } = require('@sentry/webpack-plugin');
+const { sentryWebpackPlugin } = require('@sentry/bundler-plugins/webpack');
 
 const sentryWebpackPluginOptions = {
   authToken: 'some invalid auth token',
