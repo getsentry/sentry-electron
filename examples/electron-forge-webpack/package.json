@@ -2,7 +2,7 @@
   "name": "electron-forge-webpack",
   "description": "Electron Forge Webpack example",
   "version": "1.0.0",
-  "main": ".webpack/main",
+  "main": ".webpack/main/index.cjs",
   "scripts": {
     "build": "yarn package && yarn patch-package-json",
     "package": "electron-forge package",
@@ -31,15 +31,15 @@
     }
   },
   "devDependencies": {
-    "@electron-forge/cli": "^7.5.0",
-    "@electron-forge/plugin-webpack": "^7.5.0",
-    "@sentry/webpack-plugin": "^2.22.6",
-    "@vercel/webpack-asset-relocator-loader": "1.6.0",
-    "electron": "^33.0.2",
-    "node-loader": "^2.0.0"
+    "@electron-forge/cli": "^8.0.1",
+    "@electron-forge/plugin-webpack": "^8.0.1",
+    "@sentry/bundler-plugins": "^11.8.0",
+    "@vercel/webpack-asset-relocator-loader": "1.11.0",
+    "electron": "^44.7.0",
+    "node-loader": "^2.1.0"
   },
   "dependencies": {
-    "@sentry/electron": "5.6.0",
-    "electron-squirrel-startup": "^1.0.0"
+    "@sentry/electron": "^8.3.0",
+    "electron-squirrel-startup": "^1.0.1"
   }
 }
