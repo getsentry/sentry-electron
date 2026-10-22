@@ -109,6 +109,7 @@ export async function prepareTestFiles(
         .replace(/"@sentry\/profiling-node": ".*"/, `"@sentry/profiling-node": "${JS_SDK_VERSION}"`)
         .replace(/"@sentry\/integrations": ".*"/, `"@sentry/integrations": "${JS_SDK_VERSION}"`)
         .replace(/"@sentry\/vue": ".*"/, `"@sentry/vue": "${JS_SDK_VERSION}"`)
+        .replace(/"@sentry\/bundler-plugins": ".*"/, `"@sentry/bundler-plugins": "${JS_SDK_VERSION}"`)
         .replace(/"electron": ".*"/, `"electron": "${electronVersion}"`);
     }
 
