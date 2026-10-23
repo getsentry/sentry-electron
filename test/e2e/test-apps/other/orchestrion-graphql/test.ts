@@ -20,13 +20,13 @@ electronTestRunner(
           expect(spans?.some((span) => span.is_segment && span.name === 'orchestrion-graphql')).toBe(true);
 
           // The executed graphql query span, injected by orchestrion's diagnostics-channel
-          // instrumentation. The `auto.graphql.diagnostic_channel` origin is what proves the
+          // instrumentation. The `auto.graphql.graphql` origin is what proves the
           // loader hook actually injected the instrumentation into the `graphql` module.
           const executeSpan = spans?.find((span) => span.attributes?.['graphql.processing.type']?.value === 'execute');
           expect(executeSpan).toBeDefined();
           expect(executeSpan?.name).toBe('GraphQL query');
           expect(executeSpan?.attributes?.['sentry.origin']).toEqual({
-            value: 'auto.graphql.diagnostic_channel',
+            value: 'auto.graphql.graphql',
             type: 'string',
           });
           expect(executeSpan?.attributes?.['sentry.op']).toEqual({ value: 'graphql', type: 'string' });

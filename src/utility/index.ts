@@ -119,6 +119,7 @@ export {
   mysqlIntegration,
   nativeNodeFetchIntegration,
   neonIntegration,
+  nitroIntegration,
   NodeClient,
   nodeContextIntegration,
   nodeRuntimeMetricsIntegration,
