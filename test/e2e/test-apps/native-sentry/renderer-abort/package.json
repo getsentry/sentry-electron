@@ -1,0 +1,15 @@
+{
+  "name": "native-sentry-renderer-abort",
+  "description": "Native Renderer Abort",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "scripts": {
+    "build": "node-gyp rebuild"
+  },
+  "dependencies": {
+    "@sentry/electron": "5.6.0"
+  },
+  "devDependencies": {
+    "node-gyp": "^12.0.0"
+  }
+}
