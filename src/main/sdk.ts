@@ -92,7 +92,9 @@ export function getDefaultIntegrations(options: ElectronMainOptions): Integratio
 }
 
 export interface ElectronMainOptionsInternal
-  extends Options<ElectronOfflineTransportOptions>, Omit<NodeOptions, 'transport' | 'transportOptions'> {
+  extends
+    Omit<Options<ElectronOfflineTransportOptions>, 'tunnel'>,
+    Omit<NodeOptions, 'transport' | 'transportOptions'> {
   /**
    * Inter-process communication mode to receive event and scope from renderers
    *
