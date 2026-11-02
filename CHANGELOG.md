@@ -1,5 +1,30 @@
 # Changelog
 
+## 8.4.0
+
+### New Features ✨
+
+- Update JavaScript SDKs to v11.10.0 by @sentry-junior in [#1485](https://github.com/getsentry/sentry-electron/pull/1485)
+- Update JavaScript SDKs to v11.9.0 by @sentry-junior in [#1480](https://github.com/getsentry/sentry-electron/pull/1480)
+
+### Documentation 📚
+
+- Use dark-mode-aware Sentry logo in READMEs by @szokeasaurusrex with @sentry-junior in [#1483](https://github.com/getsentry/sentry-electron/pull/1483)
+
+### Internal Changes 🔧
+
+#### Deps
+
+- Bump qs from 6.15.2 to 6.17.0 by @dependabot in [#1482](https://github.com/getsentry/sentry-electron/pull/1482)
+- Bump vite from 8.3.0 to 8.3.4 by @dependabot in [#1476](https://github.com/getsentry/sentry-electron/pull/1476)
+
+#### Other
+
+- (node) Bump Node to 22.23.4 by @geoffg-sentry with @sentry-junior in [#1481](https://github.com/getsentry/sentry-electron/pull/1481)
+- Update electron-react-boilerplate example to React 19 by @timfish in [#1479](https://github.com/getsentry/sentry-electron/pull/1479)
+- New Electron versions by @timfish with @github-actions in [#1460](https://github.com/getsentry/sentry-electron/pull/1460)
+- Update examples to Forge 8 and @sentry/bundler-plugins by @timfish in [#1478](https://github.com/getsentry/sentry-electron/pull/1478)
+
 ## 8.3.0
 
 ### New Features ✨
