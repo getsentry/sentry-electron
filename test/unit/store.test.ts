@@ -44,6 +44,22 @@ describe('Store', () => {
     await expectFilesInDirectory(tempDir.name, 0);
   });
 
+  test('setSync is not overwritten by in-flight async writes', async () => {
+    const store = new Store<TestType | undefined>(tempDir.name, 'test-store', undefined);
+    const path = join(tempDir.name, 'test-store.json');
+
+    const pending = [store.set({ num: 1, str: 'async' }), store.set({ num: 2, str: 'async' })];
+    store.setSync({ num: 3, str: 'sync' });
+    await Promise.all(pending);
+
+    expect(await fs.readFile(path, 'utf-8')).to.equal('{"num":3,"str":"sync"}');
+    expect(await store.get()).to.eql({ num: 3, str: 'sync' });
+
+    // Writes made after setSync still apply
+    await store.clear();
+    await expectFilesInDirectory(tempDir.name, 0);
+  });
+
   test('Throttled store', async () => {
     const store = new BufferedWriteStore<TestType | undefined>(tempDir.name, 'test-store', undefined);
     await expectFilesInDirectory(tempDir.name, 0);
