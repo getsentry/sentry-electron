@@ -1,0 +1,9 @@
+{
+  "name": "session-app-exit",
+  "description": "Session with app.exit()",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "dependencies": {
+    "@sentry/electron": "5.6.0"
+  }
+}

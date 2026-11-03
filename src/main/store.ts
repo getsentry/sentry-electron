@@ -1,5 +1,5 @@
 import { debug } from '@sentry/core';
-import { promises as fs } from 'fs';
+import { mkdirSync, promises as fs, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { Mutex } from './mutex.js';
 
@@ -96,6 +96,22 @@ export class Store<T> {
    */
   public async update(fn: (current: T) => T): Promise<void> {
     await this.set(fn(await this.get()));
+  }
+
+  /**
+   * Writes data to disk synchronously.
+   *
+   * Use this only when the process may end before async writes finish.
+   */
+  public setSync(data: T): void {
+    this._data = data;
+
+    try {
+      mkdirSync(dirname(this._path), { recursive: true });
+      writeFileSync(this._path, JSON.stringify(data));
+    } catch (e) {
+      debug.warn('Failed to write to store', e);
+    }
   }
 
   /** Returns store to its initial state */
