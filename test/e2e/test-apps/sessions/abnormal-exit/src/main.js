@@ -22,11 +22,11 @@ app.on('ready', () => {
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
 });
 
-// We only exit abnormally on the first run
+// We force kill the app on the first run
 // The second run is where the session is uploaded
 setTimeout(() => {
   if (process.env.APP_FIRST_RUN) {
-    process.exit();
+    process.kill(process.pid, 'SIGKILL');
   } else {
     app.quit();
   }
