@@ -156,7 +156,7 @@ function getSpanDetails(method: string, url: string, client: Client): { name: st
   }
 
   // Under span streaming the name must be low-cardinality (method + domain); Relay derives the
-  // detailed description from `url.full`. https://getsentry.github.io/sentry-conventions/names/#http-client
+  // detailed description from `url.full`. https://conventions.sentry.dev/names/#http-client
   let name: string;
   if (hasSpanStreamingEnabled(client)) {
     name = serverAddress ? `${method} ${serverAddress}` : method;
