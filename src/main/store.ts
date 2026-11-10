@@ -1,5 +1,5 @@
 import { debug } from '@sentry/core';
-import { promises as fs } from 'fs';
+import { mkdirSync, promises as fs, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { Mutex } from './mutex.js';
 
@@ -27,6 +27,8 @@ export class Store<T> {
   private readonly _initial: T;
   /** A mutex to ensure that there aren't races while reading and writing files */
   private readonly _lock: Mutex;
+  /** Number of `setSync` calls */
+  private _syncWrites: number;
 
   /**
    * Creates a new store.
@@ -39,6 +41,7 @@ export class Store<T> {
     this._lock = new Mutex();
     this._path = join(path, `${id}.json`);
     this._initial = initial;
+    this._syncWrites = 0;
   }
 
   /**
@@ -46,7 +49,14 @@ export class Store<T> {
    * @param data New data to replace the previous one.
    */
   public async set(data: T): Promise<void> {
+    const syncWrites = this._syncWrites;
+
     await this._lock.runExclusive(async () => {
+      // A sync write made after this call has newer data
+      if (this._syncWrites !== syncWrites) {
+        return;
+      }
+
       this._data = data;
 
       try {
@@ -59,6 +69,11 @@ export class Store<T> {
         } else {
           await fs.mkdir(dirname(this._path), { recursive: true });
           await fs.writeFile(this._path, JSON.stringify(data));
+        }
+
+        // A sync write made during this async write must not be lost
+        if (this._syncWrites !== syncWrites) {
+          this._writeSync(this._data);
         }
       } catch (e) {
         debug.warn('Failed to write to store', e);
@@ -96,6 +111,27 @@ export class Store<T> {
    */
   public async update(fn: (current: T) => T): Promise<void> {
     await this.set(fn(await this.get()));
+  }
+
+  /**
+   * Writes data to disk synchronously.
+   *
+   * Use this only when the process may end before async writes finish.
+   */
+  public setSync(data: T): void {
+    this._syncWrites += 1;
+    this._data = data;
+
+    try {
+      this._writeSync(data);
+    } catch (e) {
+      debug.warn('Failed to write to store', e);
+    }
+  }
+
+  private _writeSync(data: T | undefined): void {
+    mkdirSync(dirname(this._path), { recursive: true });
+    writeFileSync(this._path, JSON.stringify(data));
   }
 
   /** Returns store to its initial state */

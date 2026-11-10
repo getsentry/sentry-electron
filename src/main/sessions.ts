@@ -11,7 +11,7 @@ import {
 } from '@sentry/core';
 import type { NodeClient } from '@sentry/node';
 import { flush } from '@sentry/node';
-import { app } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import { getSentryCachePath } from './electron-normalize.js';
 import { Store } from './store.js';
 
@@ -124,8 +124,10 @@ export async function setPreviousSessionAsCurrent(): Promise<Session | undefined
   if (previous) {
     previousSession = undefined;
 
-    if (previous.status === 'ok') {
-      scope.setSession(makeSession(previous));
+    if (previous.status === 'ok' || previous.status === 'exited') {
+      // A minidump from the previous run means it crashed, even if it
+      // was persisted as exited.
+      scope.setSession(makeSession({ ...previous, status: 'ok' }));
     }
   }
 
@@ -139,63 +141,47 @@ export function restorePreviousSession(session: Session): void {
 
 /** Report the previous session as abnormal */
 export async function previousSessionWasAbnormal(): Promise<void> {
-  const client = getClient<NodeClient>();
-
-  const previous = await previousSession;
-
-  if (previous && client) {
-    // Ignore if the previous session is already ended
-    if (previous.status !== 'ok') {
-      previousSession = undefined;
-      return;
-    }
-
-    debug.log('Found previous abnormal session');
-
-    const sesh = makeSession(previous);
-
-    updateSession(sesh, {
-      status: 'abnormal',
-      errors: (sesh.errors || 0) + 1,
-      release: (previous as unknown as SerializedSession).attrs?.release,
-      environment: (previous as unknown as SerializedSession).attrs?.environment,
-    });
-
-    client.sendSession(sesh);
-
-    previousSession = undefined;
-  }
+  return checkPreviousSession(false);
 }
 
-/** Checks if the previous session needs sending as crashed or abnormal  */
+/** Checks if the previous session needs sending as crashed, abnormal or exited */
 export async function checkPreviousSession(crashed: boolean): Promise<void> {
   const client = getClient<NodeClient>();
 
   const previous = await previousSession;
 
   if (previous && client) {
-    // Ignore if the previous session is already ended
-    if (previous.status !== 'ok') {
-      previousSession = undefined;
+    previousSession = undefined;
+
+    if (previous.status !== 'ok' && previous.status !== 'exited') {
       return;
     }
 
-    const status: SessionStatus = crashed ? 'crashed' : 'abnormal';
-
-    debug.log(`Found previous ${status} session`);
-
     const sesh = makeSession(previous);
+    const attrs = (previous as unknown as SerializedSession).attrs;
 
-    updateSession(sesh, {
-      status,
-      errors: (sesh.errors || 0) + 1,
-      release: (previous as unknown as SerializedSession).attrs?.release,
-      environment: (previous as unknown as SerializedSession).attrs?.environment,
-    });
+    if (previous.status === 'exited' && !crashed) {
+      debug.log('Found previous exited session');
+      // Keep the timestamp and duration from when the session ended
+      updateSession(sesh, {
+        timestamp: previous.timestamp,
+        release: attrs?.release,
+        environment: attrs?.environment,
+      });
+    } else {
+      const status: SessionStatus = crashed ? 'crashed' : 'abnormal';
+
+      debug.log(`Found previous ${status} session`);
+
+      updateSession(sesh, {
+        status,
+        errors: (sesh.errors || 0) + 1,
+        release: attrs?.release,
+        environment: attrs?.environment,
+      });
+    }
 
     client.sendSession(sesh);
-
-    previousSession = undefined;
   }
 }
 
@@ -258,6 +244,51 @@ export function endSessionOnExit(): void {
     app.removeListener('will-quit', exitHandler);
     app.on('will-quit', exitHandler);
   });
+
+  // On Windows, 'before-quit' and 'will-quit' are not emitted on system
+  // shutdown, restart or user logoff. Windows can end the process soon
+  // after 'session-end', so we write the ended session to disk and send
+  // it on the next start.
+  if (process.platform === 'win32') {
+    for (const window of BrowserWindow.getAllWindows()) {
+      window.once('session-end', persistSessionAsExited);
+    }
+
+    app.on('browser-window-created', (_, window) => {
+      window.once('session-end', persistSessionAsExited);
+    });
+  }
+
+  // `app.exit()` does not emit 'before-quit' or 'will-quit'
+  const originalExit = app.exit.bind(app);
+  app.exit = (exitCode?: number): void => {
+    persistSessionAsExited();
+    originalExit(exitCode);
+  };
+}
+
+/**
+ * Synchronously writes the current session to disk as exited.
+ *
+ * The session is not ended in memory. If the app still exits through
+ * 'will-quit', the session is sent then and removed from disk.
+ */
+function persistSessionAsExited(): void {
+  const session = getIsolationScope().getSession();
+
+  if (session?.status !== 'ok') {
+    return;
+  }
+
+  if (persistTimer) {
+    clearInterval(persistTimer);
+  }
+
+  debug.log('[Session] Persisting session as exited');
+
+  const exited = makeSession(makeSessionSafeToSerialize(session));
+  updateSession(exited, { status: 'exited' });
+  getSessionStore().setSync(makeSessionSafeToSerialize(exited));
 }
 
 /** Handles the exit */
