@@ -17,6 +17,7 @@ export type {
 } from '@sentry/core';
 
 export {
+  _INTERNAL_installTunnelHooks,
   addBreadcrumb,
   addEventProcessor,
   addIntegration,
