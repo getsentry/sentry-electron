@@ -142,6 +142,7 @@ export {
   openFeatureIntegration,
   openTelemetryIntegration,
   parameterize,
+  piAiIntegration,
   piDurableIntegration,
   pinoIntegration,
   postgresIntegration,
