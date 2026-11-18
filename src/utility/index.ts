@@ -56,6 +56,7 @@ export {
   eveInstrumentation,
   eveIntegration,
   eventFiltersIntegration,
+  experimentalReportSdkConfigIntegration,
   expressErrorHandler,
   expressIntegration,
   extraErrorDataIntegration,
