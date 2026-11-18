@@ -4,7 +4,6 @@ import {
   debug,
   defineIntegration,
   fill,
-  filterCollectedUrl,
   filterCollectedUrlQuery,
   getBreadcrumbLogLevelFromHttpStatusCode,
   getSanitizedUrlStringFromUrlObject,
@@ -35,6 +34,7 @@ import type { ClientRequest, ClientRequestConstructorOptions, IncomingMessage } 
 import { net as electronNet } from 'electron';
 import type { UrlObject } from 'url';
 import { format as urlFormat } from 'url';
+import { filterUrl } from '../data-collection.js';
 
 type ShouldTraceFn = (method: string, url: string) => boolean;
 
@@ -131,7 +131,7 @@ function getSpanDetails(method: string, url: string, client: Client): { name: st
   const attributes: SpanAttributes = {
     [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'auto.http.electron.net',
     [HTTP_REQUEST_METHOD]: method,
-    [URL_FULL]: filterCollectedUrl(url, client),
+    [URL_FULL]: filterUrl(url, client),
   };
 
   let serverAddress: string | undefined;
@@ -229,13 +229,14 @@ function createWrappedRequestFactory(
     res?: IncomingMessage,
   ): void => {
     const level = getBreadcrumbLogLevelFromHttpStatusCode(res?.statusCode);
+    const filteredUrl = filterUrl(url, client);
 
     addBreadcrumb(
       {
         type: 'http',
         category: 'electron.net',
         data: {
-          url,
+          url: filteredUrl,
           method: method,
           status_code: res?.statusCode,
         },
@@ -259,13 +260,13 @@ function createWrappedRequestFactory(
 
     switch (level) {
       case 'error':
-        logger.error(logger.fmt`Electron.net request failed: ${method} ${url}`, attributes);
+        logger.error(logger.fmt`Electron.net request failed: ${method} ${filteredUrl}`, attributes);
         break;
       case 'warning':
-        logger.warn(logger.fmt`Electron.net request warning: ${method} ${url}`, attributes);
+        logger.warn(logger.fmt`Electron.net request warning: ${method} ${filteredUrl}`, attributes);
         break;
       default:
-        logger.info(logger.fmt`Electron.net request succeeded: ${method} ${url}`, attributes);
+        logger.info(logger.fmt`Electron.net request succeeded: ${method} ${filteredUrl}`, attributes);
     }
   };
 

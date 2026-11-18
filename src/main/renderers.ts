@@ -1,6 +1,7 @@
 import type { Client } from '@sentry/core';
-import { filterCollectedUrl, normalizeUrlToBase, stripUrlQueryAndFragment } from '@sentry/core';
+import { normalizeUrlToBase } from '@sentry/core';
 import { app } from 'electron';
+import { filterUrl } from './data-collection.js';
 
 interface Renderer {
   id: number;
@@ -51,19 +52,6 @@ export function trackRendererProperties(): void {
   });
 }
 
-/**
- * Applies `dataCollection.urlQueryParams` to a navigation URL.
- * A fragment has no keys to filter, so it is only removed when
- * query param collection is off.
- */
-export function filterNavigationUrl(url: string, client: Client): string {
-  if (client.getDataCollectionOptions().urlQueryParams === false) {
-    return stripUrlQueryAndFragment(url);
-  }
-
-  return filterCollectedUrl(url, client);
-}
-
 /** Gets the properties for a renderer with `dataCollection` applied */
 export function getRendererProperties(id: number, client: Client): Renderer | undefined {
   const state = RENDERERS?.get(id);
@@ -72,5 +60,5 @@ export function getRendererProperties(id: number, client: Client): Renderer | un
     return state;
   }
 
-  return { ...state, url: filterNavigationUrl(state.url, client) };
+  return { ...state, url: filterUrl(state.url, client) };
 }
