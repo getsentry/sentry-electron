@@ -173,7 +173,7 @@ export const sentryMinidumpIntegration = defineIntegration((options: Options = {
       return {
         contexts: {
           electron: {
-            crashed_url: getRendererProperties(contents.id)?.url || 'unknown',
+            crashed_url: getRendererProperties(contents.id, client)?.url || 'unknown',
             details,
           },
         },

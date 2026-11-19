@@ -1,5 +1,7 @@
+import type { Client } from '@sentry/core';
 import { normalizeUrlToBase } from '@sentry/core';
 import { app } from 'electron';
+import { filterUrl } from './data-collection.js';
 
 interface Renderer {
   id: number;
@@ -50,7 +52,13 @@ export function trackRendererProperties(): void {
   });
 }
 
-/** Gets the properties for a renderer */
-export function getRendererProperties(id: number): Renderer | undefined {
-  return RENDERERS?.get(id);
+/** Gets the properties for a renderer with `dataCollection` applied */
+export function getRendererProperties(id: number, client: Client): Renderer | undefined {
+  const state = RENDERERS?.get(id);
+
+  if (state?.url === undefined) {
+    return state;
+  }
+
+  return { ...state, url: filterUrl(state.url, client) };
 }

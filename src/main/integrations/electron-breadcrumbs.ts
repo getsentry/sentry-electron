@@ -149,7 +149,7 @@ export const electronBreadcrumbsIntegration = defineIntegration(
               };
 
               if (id) {
-                breadcrumb.data = { ...getRendererProperties(id) };
+                breadcrumb.data = { ...getRendererProperties(id, client) };
 
                 if (!options.captureWindowTitles && breadcrumb.data?.title) {
                   delete breadcrumb.data?.title;
