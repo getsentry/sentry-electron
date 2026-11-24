@@ -1,0 +1,53 @@
+# getsentry/sentry-electron fa4d330cac9dc0395f5f9d963bc8990dafd6572a
+
+# Desktop apps: a Node main process (wraps @sentry/node), browser renderer processes (wrap
+# @sentry/browser), preload scripts, utility processes, and IPC between them.
+
+rubric = "sdk"
+
+# Code every process builds on: entry point and IPC/envelope/scope protocol shared by main
+# and renderer.
+[[area]]
+paths = ["src/common/**", "src/index.ts"]
+families = ["desktop", "server", "browser"]
+shared_core = true
+
+# Main process: Node runtime, native crash (minidump) handling, offline store sent on next
+# launch, child-process and renderer watchdogs.
+[[area]]
+paths = ["src/main/**"]
+families = ["desktop", "server", "native"]
+
+[[area]]
+paths = ["src/renderer/**", "src/preload/**"]
+families = ["desktop", "browser"]
+
+[[area]]
+paths = ["src/utility/**", "src/native/**"]
+families = ["desktop", "server"]
+
+# Bundled SDK pins (@sentry/browser, @sentry/node, @sentry/core, @sentry/node-native peer) and the
+# exports map live in package.json (tagged dependencies by defaults.toml); yarn.lock is the
+# dependency set the package is built from.
+[[area]]
+paths = ["package.json", "yarn.lock"]
+families = ["desktop", "server", "browser", "native"]
+shared_core = true
+
+[[kind]]
+paths = ["test/**", "scripts/getPathCheck/**"]
+kind = "tests"
+
+[[kind]]
+paths = ["examples/**"]
+kind = "samples"
+
+[[kind]]
+paths = [
+  "scripts/**", "rollup.config.mjs", "**/tsconfig*.json", ".npmignore",
+]
+kind = "build-release"
+
+[[kind]]
+paths = [".oxfmtrc.json", ".oxlintrc.json", "test/tslint.json"]
+kind = "dev-tooling"
