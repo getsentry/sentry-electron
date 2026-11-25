@@ -1,0 +1,34 @@
+const path = require('path');
+
+const { app, BrowserWindow } = require('electron');
+const { init, mainProcessSessionIntegration } = require('@sentry/electron/main');
+
+init({
+  dsn: '__DSN__',
+  debug: true,
+  release: process.env.APP_FIRST_RUN ? 'release-change@1.0.0' : 'release-change@1.0.1',
+  integrations: [mainProcessSessionIntegration()],
+  onFatalError: () => {},
+});
+
+app.on('ready', () => {
+  const mainWindow = new BrowserWindow({
+    show: false,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+    },
+  });
+
+  mainWindow.loadFile(path.join(__dirname, 'index.html'));
+});
+
+// We force kill the app on the first run
+// The second run is where the session is uploaded
+setTimeout(() => {
+  if (process.env.APP_FIRST_RUN) {
+    process.kill(process.pid, 'SIGKILL');
+  } else {
+    app.quit();
+  }
+}, 4000);

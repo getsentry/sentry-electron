@@ -1,0 +1,9 @@
+{
+  "name": "session-abnormal-exit-release-change",
+  "description": "Session with Abnormal Exit before a release change",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "dependencies": {
+    "@sentry/electron": "5.6.0"
+  }
+}
