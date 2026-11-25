@@ -1,4 +1,4 @@
-import type { SerializedSession, Session, SessionContext, SessionStatus } from '@sentry/core';
+import type { Session, SessionContext, SessionStatus } from '@sentry/core';
 import {
   captureSession,
   debug,
@@ -42,7 +42,10 @@ let persistTimer: ReturnType<typeof setInterval> | undefined;
 
 /** Starts a session */
 export function startSession(sendOnCreate: boolean): void {
-  const session = startSessionCore();
+  // The client only adds these when it sends a session. The persisted
+  // copy needs them so a later launch reports it under this release.
+  const { release, environment } = getClient()?.getOptions() || {};
+  const session = startSessionCore({ release, environment });
 
   if (sendOnCreate) {
     captureSession();
@@ -158,27 +161,17 @@ export async function checkPreviousSession(crashed: boolean): Promise<void> {
     }
 
     const sesh = makeSession(previous);
-    const attrs = (previous as unknown as SerializedSession).attrs;
 
     if (previous.status === 'exited' && !crashed) {
       debug.log('Found previous exited session');
       // Keep the timestamp and duration from when the session ended
-      updateSession(sesh, {
-        timestamp: previous.timestamp,
-        release: attrs?.release,
-        environment: attrs?.environment,
-      });
+      updateSession(sesh, { timestamp: previous.timestamp });
     } else {
       const status: SessionStatus = crashed ? 'crashed' : 'abnormal';
 
       debug.log(`Found previous ${status} session`);
 
-      updateSession(sesh, {
-        status,
-        errors: (sesh.errors || 0) + 1,
-        release: attrs?.release,
-        environment: attrs?.environment,
-      });
+      updateSession(sesh, { status, errors: (sesh.errors || 0) + 1 });
     }
 
     client.sendSession(sesh);
