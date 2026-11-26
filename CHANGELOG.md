@@ -1,5 +1,34 @@
 # Changelog
 
+## 8.5.0
+
+### New Features ✨
+
+- Update JavaScript SDKs to v11.16.0 by @sentry-junior in [#1498](https://github.com/getsentry/sentry-electron/pull/1498)
+- Update JavaScript SDKs to v11.14.0 by @sentry-junior in [#1495](https://github.com/getsentry/sentry-electron/pull/1495)
+- Update JavaScript SDKs to v11.13.0 by @sentry-junior in [#1493](https://github.com/getsentry/sentry-electron/pull/1493)
+- Update JavaScript SDKs to v11.12.0 by @sentry-junior in [#1492](https://github.com/getsentry/sentry-electron/pull/1492)
+- Update JavaScript SDKs to v11.11.0 by @sentry-junior in [#1490](https://github.com/getsentry/sentry-electron/pull/1490)
+
+### Bug Fixes 🐛
+
+- Persist release and environment with the main process session by @timfish in [#1503](https://github.com/getsentry/sentry-electron/pull/1503)
+- Apply `dataCollection.urlQueryParams` to renderer navigation and `net` URLs by @timfish in [#1496](https://github.com/getsentry/sentry-electron/pull/1496)
+- End sessions on Windows shutdown and `app.exit()` by @timfish in [#1486](https://github.com/getsentry/sentry-electron/pull/1486)
+
+### Documentation 📚
+
+- Point Sentry Conventions links to conventions.sentry.dev by @cleptric in [#1489](https://github.com/getsentry/sentry-electron/pull/1489)
+
+### Internal Changes 🔧
+
+- (release) Bump craft to 3.9.0 and update config by @sentry-junior in [#1487](https://github.com/getsentry/sentry-electron/pull/1487)
+- New Electron versions by @timfish with @github-actions in [#1497](https://github.com/getsentry/sentry-electron/pull/1497)
+- New Electron versions by @timfish with @github-actions in [#1494](https://github.com/getsentry/sentry-electron/pull/1494)
+- New Electron versions by @timfish with @github-actions in [#1491](https://github.com/getsentry/sentry-electron/pull/1491)
+- New Electron versions by @timfish with @github-actions in [#1488](https://github.com/getsentry/sentry-electron/pull/1488)
+- New Electron versions by @timfish with @github-actions in [#1484](https://github.com/getsentry/sentry-electron/pull/1484)
+
 ## 8.4.0
 
 ### New Features ✨
