@@ -17,7 +17,6 @@ export type {
 } from '@sentry/core';
 
 export {
-  _INTERNAL_installTunnelHooks,
   addBreadcrumb,
   addEventProcessor,
   addIntegration,
@@ -37,6 +36,7 @@ export {
   captureMessage,
   captureSession,
   childProcessIntegration,
+  clickhouseIntegration,
   close,
   consoleIntegration,
   consoleLoggingIntegration,
