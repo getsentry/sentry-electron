@@ -36,6 +36,7 @@ export {
   captureFeedback,
   captureMessage,
   captureSession,
+  clickhouseIntegration,
   close,
   consoleIntegration,
   consoleLoggingIntegration,

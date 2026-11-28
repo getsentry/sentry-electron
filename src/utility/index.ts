@@ -37,6 +37,7 @@ export {
   captureMessage,
   captureSession,
   childProcessIntegration,
+  clickhouseIntegration,
   close,
   consoleIntegration,
   consoleLoggingIntegration,
